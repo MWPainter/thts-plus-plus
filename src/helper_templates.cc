@@ -25,13 +25,13 @@ namespace thts::helper {
         stringstream ss;
         ss << "[";
         bool first_iter = true;
-        for (const T val : vec) {
+        for (const T& val : vec) {
             if (!first_iter) {
                 ss << ",";
             } else {
                 first_iter = false;
             }
-            ss << val << ",";
+            ss << val;
         }
         ss << "]";
         return ss.str();
@@ -45,7 +45,7 @@ namespace thts::helper {
         stringstream ss;
         ss << "{";
         bool first_iter = true;
-        for (pair<const K, V> pr : mp) {
+        for (const pair<const K, V>& pr : mp) {
             if (!first_iter) {
                 ss << ",";
             } else {

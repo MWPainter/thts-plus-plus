@@ -14,6 +14,51 @@ using namespace thts;
 
 namespace thts {
     /**
+     * Implementation of (null) Observation 
+     */
+    size_t Observation::hash() const {
+        throw "Trying to use default implementation of Observation::hash";
+    }
+    
+    bool Observation::equals_itfc(const Observation& other) const {
+        throw "Trying to use default implementation of Observation::equals_itfc";
+    }
+    
+    string Observation::get_pretty_print_string() const {
+        throw "Trying to use default implementation of Observation::get_pretty_print_string";
+    }
+
+    /**
+     * Implementation of (null) State 
+     */
+    size_t State::hash() const {
+        throw "Trying to use default implementation of State::hash";
+    }
+    
+    bool State::equals_itfc(const Observation& other) const {
+        throw "Trying to use default implementation of State::equals_itfc";
+    }
+    
+    string State::get_pretty_print_string() const {
+        throw "Trying to use default implementation of State::get_pretty_print_string";
+    }
+
+    /**
+     * Implementation of (null) Action 
+     */
+    size_t Action::hash() const {
+        throw "Trying to use default implementation of Action::hash";
+    }
+    
+    bool Action::equals_itfc(const Action& other) const {
+        throw "Trying to use default implementation of Action::equals_itfc";
+    }
+    
+    string Action::get_pretty_print_string() const {
+        throw "Trying to use default implementation of Action::get_pretty_print_string";
+    }
+
+    /**
      * Implementation of virtual hash function for IntState
      */
     size_t IntState::hash() const {
@@ -28,7 +73,7 @@ namespace thts {
             const IntState& oth = dynamic_cast<const IntState&>(other);
             return equals(oth);
         }
-        catch (bad_cast) {
+        catch (const bad_cast&) {
             return false;
         }
     }
@@ -66,7 +111,7 @@ namespace thts {
             const IntPairState& oth = dynamic_cast<const IntPairState&>(other);
             return equals(oth);
         }
-        catch (bad_cast) {
+        catch (const bad_cast&) {
             return false;
         }
     }
@@ -102,7 +147,7 @@ namespace thts {
             const IntAction& oth = dynamic_cast<const IntAction&>(other);
             return equals(oth);
         }
-        catch (bad_cast) {
+        catch (const bad_cast&) {
             return false;
         }
     }
@@ -138,7 +183,7 @@ namespace thts {
             const StringAction& oth = dynamic_cast<const StringAction&>(other);
             return equals(oth);
         }
-        catch (bad_cast) {
+        catch (const bad_cast&) {
             return false;
         }
     }
@@ -168,18 +213,13 @@ namespace std {
     /**
      * Implementation of std::hash<Observation>, calling the virtual hash function.
      */
-    template <>
-    struct hash<Observation> {
-        size_t operator()(const Observation& observation) const {
-            return observation.hash();
-        }
-    };
-    template <>
-    struct hash<shared_ptr<const Observation>> {
-        size_t operator()(const shared_ptr<const Observation>& observation) const {
-            return observation->hash();
-        }
-    };
+    size_t hash<Observation>::operator()(const Observation& observation) const {
+        return observation.hash();
+    }
+
+    size_t hash<shared_ptr<const Observation>>::operator()(const shared_ptr<const Observation>& observation) const {
+        return observation->hash();
+    }
 
     /**
      * Implementation of std::equal_to<Observation>, calling the equals function.
@@ -187,21 +227,20 @@ namespace std {
     inline bool operator==(const Observation& lhs, const Observation& rhs) {
         return lhs.equals_itfc(rhs);
     }
-    template <>
-    struct equal_to<Observation> {
-        bool operator()(const Observation& lhs, const Observation& rhs) const {
-            return lhs.equals_itfc(rhs);
-        }
-    };
+
     inline bool operator==(const shared_ptr<const Observation>& lhs, const shared_ptr<const Observation>& rhs) {
         return lhs->equals_itfc(*rhs);
     }
-    template <>
-    struct equal_to<shared_ptr<const Observation>> {
-        bool operator()(const shared_ptr<const Observation>& lhs, const shared_ptr<const Observation>& rhs) const {
-            return lhs->equals_itfc(*rhs);
-        }
-    };
+
+    bool equal_to<Observation>::operator()(const Observation& lhs, const Observation& rhs) const {
+        return lhs.equals_itfc(rhs);
+    }
+
+    bool equal_to<shared_ptr<const Observation>>::operator()(
+        const shared_ptr<const Observation>& lhs, const shared_ptr<const Observation>& rhs) const 
+    {
+        return lhs->equals_itfc(*rhs);
+    }
 
     /**
      * Override output stream << operator for Observation, using get_pretty_print_string function.
@@ -210,6 +249,7 @@ namespace std {
         os << observation.get_pretty_print_string();
         return os;
     }
+
     ostream& operator<<(ostream& os, const shared_ptr<const Observation>& observation) {
         os << observation->get_pretty_print_string();
         return os;
@@ -218,39 +258,33 @@ namespace std {
     /**
      * Implementation of std::hash<State>, calling the virtual hash function.
      */
-    template <>
-    struct hash<State> {
-        size_t operator()(const State& state) const {
-            return state.hash();
-        }
-    };
-    template <>
-    struct hash<shared_ptr<const State>> {
-        size_t operator()(const shared_ptr<const State>& state) const {
-            return state->hash();
-        }
-    };
+    size_t hash<State>::operator()(const State& state) const {
+        return state.hash();
+    }
+    
+    size_t hash<shared_ptr<const State>>::operator()(const shared_ptr<const State>& state) const {
+        return state->hash();
+    }
     /**
      * Implementation of std::equal_to<State>, calling the equals function.
      */
     inline bool operator==(const State& lhs, const State& rhs) {
         return lhs.equals_itfc(rhs);
     }
-    template <>
-    struct equal_to<State> {
-        bool operator()(const State& lhs, const State& rhs) const {
-            return lhs.equals_itfc(rhs);
-        }
-    };
+
     inline bool operator==(const shared_ptr<const State>& lhs, const shared_ptr<const State>& rhs) {
         return lhs->equals_itfc(*rhs);
     }
-    template <>
-    struct equal_to<shared_ptr<const State>> {
-        bool operator()(const shared_ptr<const State>& lhs, const shared_ptr<const State>& rhs) const {
-            return lhs->equals_itfc(*rhs);
-        }
-    };
+
+    bool equal_to<State>::operator()(const State& lhs, const State& rhs) const {
+        return lhs.equals_itfc(rhs);
+    }
+
+    bool equal_to<shared_ptr<const State>>::operator()(
+        const shared_ptr<const State>& lhs, const shared_ptr<const State>& rhs) const 
+    {
+        return lhs->equals_itfc(*rhs);
+    }
 
     /**
      * Override output stream << operator for State, using get_pretty_print_string function.
@@ -259,6 +293,7 @@ namespace std {
         os << state.get_pretty_print_string();
         return os;
     }
+
     ostream& operator<<(ostream& os, const shared_ptr<const State>& state) {
         os << state->get_pretty_print_string();
         return os;
@@ -267,18 +302,13 @@ namespace std {
     /**
      * Implementation of std::hash<Action>, calling the virtual hash function.
      */
-    template <>
-    struct hash<Action> {
-        size_t operator()(const Action& action) const {
-            return action.hash();
-        }
-    };
-    template <>
-    struct hash<shared_ptr<const Action>> {
-        size_t operator()(const shared_ptr<const Action>& action) const {
-            return action->hash();
-        }
-    };
+    size_t hash<Action>::operator()(const Action& action) const {
+        return action.hash();
+    }
+
+    size_t hash<shared_ptr<const Action>>::operator()(const shared_ptr<const Action>& action) const {
+        return action->hash();
+    }
 
     /**
      * Implementation of std::equal_to<Action>, calling the equals function.
@@ -286,21 +316,20 @@ namespace std {
     inline bool operator==(const Action& lhs, const Action& rhs) {
         return lhs.equals_itfc(rhs);
     }
-    template <>
-    struct equal_to<Action> {
-        bool operator()(const Action& lhs, const Action& rhs) const {
-            return lhs.equals_itfc(rhs);
-        }
-    };
+
     inline bool operator==(const shared_ptr<const Action>& lhs, const shared_ptr<const Action>& rhs) {
         return lhs->equals_itfc(*rhs);
     }
-    template <>
-    struct equal_to<shared_ptr<const Action>> {
-        bool operator()(const shared_ptr<const Action>& lhs, const shared_ptr<const Action>& rhs) const {
-            return lhs->equals_itfc(*rhs);
-        }
-    };
+
+    bool equal_to<Action>::operator()(const Action& lhs, const Action& rhs) const {
+        return lhs.equals_itfc(rhs);
+    }
+
+    bool equal_to<shared_ptr<const Action>>::operator()(
+        const shared_ptr<const Action>& lhs, const shared_ptr<const Action>& rhs) const 
+    {
+        return lhs->equals_itfc(*rhs);
+    }
 
     /**
      * Override output stream << operator for Action, using get_pretty_print_string function.
@@ -309,7 +338,51 @@ namespace std {
         os << action.get_pretty_print_string();
         return os;
     }
+
     ostream& operator<<(ostream& os, const shared_ptr<const Action>& action) {
+        os << action->get_pretty_print_string();
+        return os;
+    }
+
+    /**
+     * Overrride output strea m<< operator for derived State and Action classes
+     */
+    ostream& operator<<(ostream& os, const IntState& state) {
+        os << state.get_pretty_print_string();
+        return os;
+    }
+    
+    ostream& operator<<(ostream& os, const shared_ptr<const IntState>& state) {
+        os << state->get_pretty_print_string();
+        return os;
+    }
+
+    ostream& operator<<(ostream& os, const IntPairState& state) {
+        os << state.get_pretty_print_string();
+        return os;
+    }
+    
+    ostream& operator<<(ostream& os, const shared_ptr<const IntPairState>& state) {
+        os << state->get_pretty_print_string();
+        return os;
+    }
+
+    ostream& operator<<(ostream& os, const IntAction& action) {
+        os << action.get_pretty_print_string();
+        return os;
+    }
+    
+    ostream& operator<<(ostream& os, const shared_ptr<const IntAction>& action) {
+        os << action->get_pretty_print_string();
+        return os;
+    }
+
+    ostream& operator<<(ostream& os, const StringAction action) {
+        os << action.get_pretty_print_string();
+        return os;
+    }
+    
+    ostream& operator<<(ostream& os, const shared_ptr<const StringAction>& action) {
         os << action->get_pretty_print_string();
         return os;
     }
@@ -353,25 +426,19 @@ namespace std {
     /**
      * Implementation of std::hash<DNodeIdTuple>.
      */
-    template <>
-    struct hash<DNodeIdTuple> {
-        size_t operator()(const DNodeIdTuple& tpl) const {
-            size_t hash_val = 0;
-            hash_val = helper::hash_combine(hash_val, get<0>(tpl));
-            hash_val = helper::hash_combine(hash_val, get<1>(tpl));
-            return hash_val;
-        }
-    };
+    size_t hash<DNodeIdTuple>::operator()(const DNodeIdTuple& tpl) const {
+        size_t hash_val = 0;
+        hash_val = helper::hash_combine(hash_val, get<0>(tpl));
+        hash_val = helper::hash_combine(hash_val, get<1>(tpl));
+        return hash_val;
+    }
 
     /**
      * Implementation of std::equal_to<DNodeIdTuple>.
      */
-    template <>
-    struct equal_to<DNodeIdTuple> {
-        bool operator()(const DNodeIdTuple& lhs, const DNodeIdTuple& rhs) const {
-            return get<0>(lhs) == get<0>(rhs) && get<1>(lhs) == get<1>(rhs);
-        }
-    };
+    bool equal_to<DNodeIdTuple>::operator()(const DNodeIdTuple& lhs, const DNodeIdTuple& rhs) const {
+        return get<0>(lhs) == get<0>(rhs) && get<1>(lhs) == get<1>(rhs);
+    }
 
     /**
      * Override output stream << operator for DNodeIdTuple.
@@ -384,26 +451,20 @@ namespace std {
     /**
      * Implementation of std::hash<CNodeIdTuple>.
      */
-    template <>
-    struct hash<CNodeIdTuple> {
-        size_t operator()(const CNodeIdTuple& tpl) const {
-            size_t hash_val = 0;
-            hash_val = helper::hash_combine(hash_val, get<0>(tpl));
-            hash_val = helper::hash_combine(hash_val, get<1>(tpl));
-            hash_val = helper::hash_combine(hash_val, get<2>(tpl));
-            return hash_val;
-        }
-    };
+    size_t hash<CNodeIdTuple>::operator()(const CNodeIdTuple& tpl) const {
+        size_t hash_val = 0;
+        hash_val = helper::hash_combine(hash_val, get<0>(tpl));
+        hash_val = helper::hash_combine(hash_val, get<1>(tpl));
+        hash_val = helper::hash_combine(hash_val, get<2>(tpl));
+        return hash_val;
+    }
 
     /**
      * Implementation of std::equal_to<CNodeIdTuple>.
      */
-    template <>
-    struct equal_to<CNodeIdTuple> {
-        bool operator()(const CNodeIdTuple& lhs, const CNodeIdTuple& rhs) const {
-            return get<0>(lhs) == get<0>(rhs) && get<1>(lhs) == get<1>(rhs) && get<2>(lhs) == get<2>(rhs);
-        }
-    };
+    bool equal_to<CNodeIdTuple>::operator()(const CNodeIdTuple& lhs, const CNodeIdTuple& rhs) const {
+        return get<0>(lhs) == get<0>(rhs) && get<1>(lhs) == get<1>(rhs) && get<2>(lhs) == get<2>(rhs);
+    }
 
     /**
      * Override output stream << operator for CNodeIdTuple.

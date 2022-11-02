@@ -9,32 +9,6 @@
 using namespace std;
 using namespace thts;
 
-// // TODO: move to thts_manager.cpp?
-// namespace std {
-//     /**
-//      * Implement hash for chance node transposition table keys (see thts_manager.h).
-//      */
-//     class hash<CNodeIdTuple> {
-//         public:
-//             size_t operator()(const CNodeIdTuple& cnode_id_tuple) const {
-//                 size_t hash_val = 0;
-//                 hash_val = helper::hash_combine(hash_val, get<0>(cnode_id_tuple));
-//                 return helper::hash_combine(hash_val, get<1>(cnode_id_tuple));
-//                 return helper::hash_combine(hash_val, get<2>(cnode_id_tuple));
-//             }
-//     };
-
-//     /**
-//      * Implement equal_to for chance node transposition table keys (see thts_manager.h).
-//      */
-//     class equal_to<CNodeIdTuple> {
-//         public:
-//             bool operator()(const CNodeIdTuple& lhs, const CNodeIdTuple& rhs) const {
-//                 return get<0>(lhs) == get<0>(rhs) && get<1>(lhs) == get<1>(rhs) && get<2>(lhs) == get<2>(rhs);
-//             }
-//     };
-// }
-
 
 namespace thts {
     /**

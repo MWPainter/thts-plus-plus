@@ -1,9 +1,11 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 /**
  * thts_types.h
@@ -27,12 +29,15 @@ namespace thts {
      * Virtual functions are used to provide hash, equality and printing functionality. In thts_types.cpp, we 
      * implement the std::hash<Observation> and std::equal_to<Observation> classes using these virtual functions, 
      * as well as the operator<< for ostreams.
+     * 
+     * N.B. Implementations are provided, but are such that a direct instance of Observation is equivalent to a 
+     * 'NullObservation'.
      */
     class Observation {
         public:
-            virtual std::size_t hash() const = 0;
-            virtual bool equals_itfc(const Observation& other) const = 0;
-            virtual std::string get_pretty_print_string() const = 0;
+            virtual std::size_t hash() const;
+            virtual bool equals_itfc(const Observation& other) const;
+            virtual std::string get_pretty_print_string() const;
     };
 
 
@@ -43,12 +48,15 @@ namespace thts {
      * Virtual functions are used to provide hash, equality and printing functionality. In thts_types.cpp, we 
      * implement the std::hash<State> and std::equal_to<State> classes using these virtual functions, 
      * as well as the operator<< for ostreams.
+     * 
+     * N.B. Implementations are provided, but are such that a direct instance of State is equivalent to a 
+     * 'NullState'.
      */
     class State : public Observation {
         public:
-            virtual std::size_t hash() const = 0;
-            virtual bool equals_itfc(const Observation& other) const = 0;
-            virtual std::string get_pretty_print_string() const = 0;
+            virtual std::size_t hash() const;
+            virtual bool equals_itfc(const Observation& other) const;
+            virtual std::string get_pretty_print_string() const;
     };
     
 
@@ -59,12 +67,15 @@ namespace thts {
      * Virtual functions are used to provide hash, equality and printing functionality. In thts_types.cpp, we 
      * implement the std::hash<Action> and std::equal_to<Action> classes using these virtual functions, 
      * as well as the operator<< for ostreams.
+     * 
+     * N.B. Implementations are provided, but are such that a direct instance of Action is equivalent to a 
+     * 'NullAction'.
      */
     class Action {
         public:
-            virtual std::size_t hash() const = 0;
-            virtual bool equals_itfc(const Action& other) const = 0;
-            virtual std::string get_pretty_print_string() const = 0;
+            virtual std::size_t hash() const;
+            virtual bool equals_itfc(const Action& other) const;
+            virtual std::string get_pretty_print_string() const;
     };
 
 
@@ -133,14 +144,18 @@ namespace thts {
     /**
      * Typedef for heuristic function pointers
      * First used in thts_decision_node.h and thts_chance_node.h
+     * N.B. The & here is to get address as we want function pointers
      */  
-    typedef double (*HeuristicFnPtr) (std::shared_ptr<const State>, std::shared_ptr<const Action>);
+    double _DummyHeuristicFn(std::shared_ptr<const State> s, std::shared_ptr<const Action> a);
+    typedef decltype(&_DummyHeuristicFn) HeuristicFnPtr;
 
     /**
      * Typedef for (action) prior function pointers
      * First used in thts_decision_node.h and thts_chance_node.h
+     * N.B. The & here is to get address as we want function pointers
      */
-    typedef std::unordered_map<Action,double> (*PriorFnPtr) (std::shared_ptr<const State>); //, shared_ptr<const Action>);
+    std::unordered_map<const Action,double> _DummyPriorFn(std::shared_ptr<const State> s);
+    typedef decltype(&_DummyPriorFn) PriorFnPtr; 
 
 
 
@@ -186,43 +201,86 @@ namespace std {
     using namespace thts;
 
     /**
-     * Hash, equality and output stream functins for Observation.
+     * Hash, equality class and output stream function definitions for Observation.
      */
-    template <> struct hash<Observation>;
-    template <> struct hash<shared_ptr<const Observation>>;
+    template <> 
+    struct hash<Observation> {
+        size_t operator()(const Observation&) const;
+    };
+
+    template <> 
+    struct hash<shared_ptr<const Observation>> {
+        size_t operator()(const shared_ptr<const Observation>&) const;
+    };
     
     inline bool operator==(const Observation& lhs, const Observation& rhs);
-    template <> struct equal_to<Observation>;
     inline bool operator==(const shared_ptr<const Observation>& lhs, const shared_ptr<const Observation>& rhs);
-    template <> struct equal_to<shared_ptr<const Observation>>;
+
+    template <> 
+    struct equal_to<Observation> {
+        bool operator()(const Observation&, const Observation&) const;
+    };
+
+    template <> 
+    struct equal_to<shared_ptr<const Observation>> {
+        bool operator()(const shared_ptr<const Observation>&, const shared_ptr<const Observation>&) const;
+    };
 
     ostream& operator<<(ostream& os, const Observation& observation);
     ostream& operator<<(ostream& os, const shared_ptr<const Observation>& observation);
 
     /**
-     * Hash, equality and output stream functins for State.
+     * Hash, equality class and output stream function definitions for State.
      */
-    template <> struct hash<State>;
-    template <> struct hash<shared_ptr<const State>>;
+    template <> 
+    struct hash<State> {
+        size_t operator()(const State&) const;
+    };
+
+    template <> 
+    struct hash<std::shared_ptr<const State>> {
+        size_t operator()(const shared_ptr<const State>&) const;
+    };
     
     inline bool operator==(const State& lhs, const State& rhs);
-    template <> struct equal_to<State>;
     inline bool operator==(const shared_ptr<const State>& lhs, const shared_ptr<const State>& rhs);
-    template <> struct equal_to<shared_ptr<const State>>;
+
+    template <> 
+    struct equal_to<State> {
+        bool operator()(const State&, const State&) const;
+    };
+
+    template <> 
+    struct equal_to<shared_ptr<const State>> {
+        bool operator()(const shared_ptr<const State>&, const shared_ptr<const State>&) const;
+    };
 
     ostream& operator<<(ostream& os, const State& state);
     ostream& operator<<(ostream& os, const shared_ptr<const State>& state);
 
     /**
-     * Hash, equality and output stream functins for Action.
+     * Hash, equality class and output stream function definitions for Action.
      */
-    template <> struct hash<Action>;
-    template <> struct hash<shared_ptr<const Action>>;
+    template <> 
+    struct hash<Action> {
+        size_t operator()(const Action&) const;
+    };
+
+    template <> 
+    struct hash<shared_ptr<const Action>> {
+        size_t operator()(const shared_ptr<const Action>&) const;
+    };
     
     inline bool operator==(const Action& lhs, const Action& rhs);
-    template <> struct equal_to<Action>;
     inline bool operator==(const shared_ptr<const Action>& lhs, const shared_ptr<const Action>& rhs);
-    template <> struct equal_to<shared_ptr<const Action>>;
+
+    template <> struct equal_to<Action> {
+        bool operator()(const Action&, const Action&) const;
+    };
+
+    template <> struct equal_to<shared_ptr<const Action>> {
+        bool operator()(const shared_ptr<const Action>&, const shared_ptr<const Action>&) const;
+    };
 
     ostream& operator<<(ostream& os, const Action& action);
     ostream& operator<<(ostream& os, const shared_ptr<const Action>& Action);
@@ -239,15 +297,31 @@ namespace std {
     /**
      * Hash, equality and stream functions for DNodeIdTuple
      */
-    template <> struct hash<DNodeIdTuple>;
-    template <> struct equal_to<DNodeIdTuple>;
+    template <> 
+    struct hash<DNodeIdTuple> {
+        size_t operator()(const DNodeIdTuple&) const;
+    };
+
+    template <> 
+    struct equal_to<DNodeIdTuple> {
+        bool operator()(const DNodeIdTuple&, const DNodeIdTuple&) const;
+    };
+
     ostream& operator<<(ostream& os, const DNodeIdTuple& tpl);
 
     /**
      * Hash, equality and stream functions for CNodeIdTuple
      */
-    template <> struct hash<CNodeIdTuple>;
-    template <> struct equal_to<CNodeIdTuple>;
+    template <> 
+    struct hash<CNodeIdTuple> {
+        size_t operator()(const CNodeIdTuple&) const;
+    };
+
+    template <> 
+    struct equal_to<CNodeIdTuple> {
+        bool operator()(const CNodeIdTuple&, const CNodeIdTuple&) const;
+    };
+
     ostream& operator<<(ostream& os, const CNodeIdTuple& tpl);
 
     /**

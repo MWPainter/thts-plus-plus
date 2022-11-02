@@ -6,33 +6,10 @@
 #include <tuple>
 #include <utility>
 
+#include <iostream>
+
 using namespace std;
 using namespace thts;
-
-// // TODO: move to thts_manager.cpp?
-// namespace std {
-//     /**
-//      * Implement hash for decision node transposition table keys (see thts_manager.h)
-//      */
-//     class hash<DNodeIdTuple> {
-//         public:
-//             size_t operator()(const DNodeIdTuple& dnode_id_tuple) const {
-//                 size_t hash_val = 0;
-//                 hash_val = thts::helper::hash_combine(hash_val, get<0>(dnode_id_tuple));
-//                 return thts::helper::hash_combine(hash_val, get<1>(dnode_id_tuple));
-//             }
-//     };
-
-//     /**
-//      * Implement equal_to for decision node transposition table keys (see thts_manager.h)
-//      */
-//     class equal_to<DNodeIdTuple> {
-//         public:
-//             bool operator()(const DNodeIdTuple& lhs, const DNodeIdTuple& rhs) const {
-//                 return get<0>(lhs) == get<0>(rhs) && get<1>(lhs) == get<1>(rhs);
-//             }
-//     };
-// }
 
 
 namespace thts {
