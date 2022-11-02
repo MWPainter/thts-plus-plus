@@ -1,4 +1,4 @@
-CXX = g++
+CXX = g++-12
 
 SOURCES = $(wildcard src/*.cpp)
 OBJECTS = $(SOURCES:.cpp=.o)
@@ -28,8 +28,8 @@ $(TARGET_THTS_TESTS_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
 $(TARGET_THTS_TESTS_DEBUG): $(TARGET_THTS_TESTS)
 
 clean: 
-	@rm -rf build
-	@rm $(OBJECTS) $(TESTS_OBJECTS) > /dev/null
-	@rm $(TARGET_THTS_TESTS) > /dev/null
+	@rm -rf build > /dev/null 2> /dev/null
+	@rm $(OBJECTS) $(TESTS_OBJECTS) > /dev/null 2> /dev/null
+	@rm $(TARGET_THTS_TESTS) > /dev/null 2> /dev/null
 
 .PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TESTS)
