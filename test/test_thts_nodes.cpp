@@ -8,7 +8,6 @@
 
 #include <iostream>
 #include <memory>
-#include <optional>
 #include <string>
 
 using namespace std;
@@ -31,9 +30,9 @@ namespace thts_test{
                 int decision_timestep) :
                     ThtsDNode(thts_manager,thts_env,state,decision_depth,decision_timestep) {}
 
-            shared_ptr<Action> select_action_itfc(ThtsEnvContext& ctx) { return nullptr; }
+            shared_ptr<const Action> select_action_itfc(ThtsEnvContext& ctx) { return nullptr; }
 
-            shared_ptr<Action> recommend_action_itfc(optional<ThtsEnvContext>& ctx) { return nullptr; }
+            shared_ptr<const Action> recommend_action_itfc(ThtsEnvContext& ctx) { return nullptr; }
 
             void backup_itfc(
                     const vector<double>& trial_rewards_before_node, 
@@ -68,7 +67,7 @@ namespace thts_test{
                 int decision_timestep) :
                     ThtsCNode(thts_manager,thts_env,state,action,decision_depth,decision_timestep) {}
 
-            shared_ptr<Observation> sample_observation_itfc(ThtsEnvContext& ctx) { return nullptr; }
+            shared_ptr<const Observation> sample_observation_itfc(ThtsEnvContext& ctx) { return nullptr; }
 
             void backup_itfc(
                     const vector<double>& trial_rewards_before_node, 

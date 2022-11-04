@@ -286,6 +286,18 @@ namespace std {
     ostream& operator<<(ostream& os, const shared_ptr<const Action>& Action);
 
     /**
+     * Output stream overloeads for Observation, State and Action subclasses defined above
+     */ 
+    ostream& operator<<(ostream& os, const IntState& state);
+    ostream& operator<<(ostream& os, const shared_ptr<const IntState>& state);
+    ostream& operator<<(ostream& os, const IntPairState& state);
+    ostream& operator<<(ostream& os, const shared_ptr<const IntPairState>& state);
+    ostream& operator<<(ostream& os, const IntAction& action);
+    ostream& operator<<(ostream& os, const shared_ptr<const IntAction>& action);
+    ostream& operator<<(ostream& os, const StringAction& action);
+    ostream& operator<<(ostream& os, const shared_ptr<const StringAction>& action);
+
+    /**
      * Output stream overloeads for common vector and map typedefs
      */ 
     ostream& operator<<(ostream& os, const ActionVector& vec);

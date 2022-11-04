@@ -73,7 +73,7 @@ namespace thts_test{
 
                 shared_ptr<ActionVector> valid_actions = make_shared<ActionVector>();
                 for (shared_ptr<const StringAction> act : *valid_actions_itfc) {
-                    valid_actions->push_back(std::static_pointer_cast<const Action>(act));
+                    valid_actions->push_back(static_pointer_cast<const Action>(act));
                 }
                 return valid_actions;
             }
@@ -86,7 +86,7 @@ namespace thts_test{
                 shared_ptr<IntPairStateDistr> distr_itfc = get_transition_distribution(state_itfc, action_itfc);
                 
                 shared_ptr<ObservationDistr> distr = make_shared<ObservationDistr>(); 
-                for (pair<std::shared_ptr<const IntPairState>,double> key_val_pair : *distr_itfc) {
+                for (pair<shared_ptr<const IntPairState>,double> key_val_pair : *distr_itfc) {
                     shared_ptr<const Observation> obsv = static_pointer_cast<const Observation>(key_val_pair.first);
                     double prob = key_val_pair.second;
                     distr->insert_or_assign(obsv, prob);
@@ -100,7 +100,7 @@ namespace thts_test{
                 shared_ptr<const IntPairState> state_itfc = static_pointer_cast<const IntPairState>(state);
                 shared_ptr<const StringAction> action_itfc = static_pointer_cast<const StringAction>(action);
                 shared_ptr<const IntPairState> obsv = sample_transition_distribution(state_itfc, action_itfc);
-                return std::static_pointer_cast<const Observation>(obsv);
+                return static_pointer_cast<const Observation>(obsv);
             }
 
             virtual double get_reward_itfc(

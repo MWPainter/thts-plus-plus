@@ -36,12 +36,20 @@ namespace thts {
      *          Specifies if we are planning for a two player game
      * 
      * Member variables:
-     *      TODO: write this one 
-     *      TODO: check other object docstrings
-     *      TODO: document test + fix tests
-     *      TODO: fix transposition table
-     *      TODO: push code
-     *      TODO: gmock + CI
+     *      dmap:
+     *          A transposition table for decision nodes
+     *      cmap:
+     *          A transposition table for chance nodes
+     *      mcts_mode:
+     *          If running in mcts_mode (see options above)
+     *      use_transposition_table:
+     *          If using the transposition tables (i.e. dmap and cmap)
+     *      is_two_player_game:
+     *          If we are planning for a two player game, rather than a reward maximisation environment
+     *      heuristic_fn_ptr:
+     *          A pointer to the heuristic function
+     *      prior_fn_ptr:
+     *          A pointer to the prior (Q-value) function, that returns a map from actions to prior value estimates
      */
     class ThtsManager {
 
@@ -52,6 +60,9 @@ namespace thts {
             bool mcts_mode = true;
             bool use_transposition_table = false;
             bool is_two_player_game = false;
+
+            HeuristicFnPtr heuristic_fn_ptr;
+            PriorFnPtr prior_fn_ptr;
 
             ThtsManager(
                 bool mcts_mode=true, 

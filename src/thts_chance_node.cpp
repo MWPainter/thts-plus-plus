@@ -23,8 +23,7 @@ namespace thts {
         shared_ptr<const Action> action,
         int decision_depth,
         int decision_timestep,
-        shared_ptr<ThtsDNode> parent,
-        HeuristicFnPtr heuristic_fn_ptr) :
+        shared_ptr<ThtsDNode> parent) :
             thts_manager(thts_manager),
             thts_env(thts_env),
             state(state),
@@ -32,8 +31,9 @@ namespace thts {
             decision_depth(decision_depth),
             decision_timestep(decision_timestep),
             num_visits(0),
-            parent(parent),
-            heuristic_fn_ptr(heuristic_fn_ptr)  {}
+            parent(parent) 
+    {
+    }
 
     /**
      * Default implementation of visit just increments the number of times visited counter.

@@ -34,7 +34,6 @@ namespace thts::helper {
     template <typename T>
     std::string vector_pretty_print_string(const std::vector<T>& vec);
 
-
     /**
      * Helper function for printing unordered_map types to strings. Assumes that the types K,V can be fed into an 
      * ostream.

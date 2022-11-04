@@ -18,8 +18,32 @@ namespace thts {
     typedef std::unordered_map<std::shared_ptr<const Action>,std::shared_ptr<ThtsCNode>> CNodeChildMap;
 
     /**
-     * TODO: abstract base class for DNodes, list of attributes.
-     * TODO: write around parent = the parent that CONSTRUCTED this node
+     * An abstract base class for Decision Node.
+     * 
+     * This class provides some base implementations that can be useful across different Thts algorithms. Including 
+     * a transposition table implementation and pretty print functions for debugging.
+     * 
+     * Member variables:
+     *      thts_manager: 
+     *          A ThtsManager object that stores the 'global' information about how the Thts algorithm should operate,
+     *          so that an implementation can provide multiple modes of operation. Additionally stores the 
+     *          transposition tables
+     *      thts_env:
+     *          A ThtsEnv object that provides the dynamics of the environment being planned in
+     *      state:
+     *          The state associated with this node, which we want to make a decision for (what is the best action)
+     *      decision_depth:
+     *          The decision depth of the node in this tree
+     *      decision_timestep:
+     *          The timestep corresponding to the current state in the larger planning problem. This is necessary 
+     *          when the Thts algorithm is used at each timestep to make a decision. For example, this is necessary in 
+     *          a two player game to decide who's turn it is
+     *      num_visits:
+     *          The number of times the node has been visited (had the 'visit' function called)
+     *      parent:
+     *          A pointer to this nodes parent node. nullptr if this node is the root node
+     *      children:
+     *          A map from Action objects to child ThtsCNode objects
      */
     class ThtsDNode {
         // Allow ThtsCNode access to private members
@@ -36,9 +60,6 @@ namespace thts {
             std::shared_ptr<ThtsCNode> parent;
             CNodeChildMap children;
 
-            HeuristicFnPtr heuristic_fn_ptr;
-            PriorFnPtr prior_fn_ptr;
-
         public: 
             /**
              * Constructor.
@@ -51,9 +72,7 @@ namespace thts {
                 std::shared_ptr<const State> state,
                 int decision_depth,
                 int decision_timestep,
-                std::shared_ptr<ThtsCNode> parent=nullptr,
-                HeuristicFnPtr heuristic_fn_ptr=&helper::zero_heuristic_fn,
-                PriorFnPtr prior_fn_ptr=nullptr); 
+                std::shared_ptr<ThtsCNode> parent=nullptr); 
 
             /**
              * Default destructor is sufficient. But need to declare it virtual.
@@ -81,7 +100,7 @@ namespace thts {
              * Returns:
              *      The selected action
              */
-            virtual std::shared_ptr<Action> select_action_itfc(ThtsEnvContext& ctx) = 0;
+            virtual std::shared_ptr<const Action> select_action_itfc(ThtsEnvContext& ctx) = 0;
 
             /**
              * Recommends an action from this node.
@@ -94,7 +113,7 @@ namespace thts {
              * Returns:
              *      The recommended action
              */
-            virtual std::shared_ptr<Action> recommend_action_itfc(optional<ThtsEnvContext>& ctx) = 0;
+            virtual std::shared_ptr<const Action> recommend_action_itfc(ThtsEnvContext& ctx) = 0;
 
             /**
              * Thts backup function.
@@ -168,7 +187,7 @@ namespace thts {
              * Returns:
              *      string representing the current value of this node
              */
-            virtual string get_pretty_print_val() = 0;
+            virtual std::string get_pretty_print_val() = 0;
 
         public:
             /**
@@ -262,7 +281,7 @@ namespace thts {
 
         private:
             /**
-             * TODO: write docstring
+             * A helper function that actually implements 'get_pretty_pring_string' above.
              */
             void get_pretty_print_string_helper(std::stringstream& ss, int depth, int num_tabs);
     };
