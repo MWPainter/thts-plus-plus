@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include "helper.h"
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
 #include "thts_env.h"

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "helper.h"
 #include "helper_templates.h"
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
@@ -67,9 +68,13 @@ namespace thts {
             ThtsManager(
                 bool mcts_mode=true, 
                 bool use_transposition_table=false, 
-                bool is_two_player_game=false) :
+                bool is_two_player_game=false,
+                HeuristicFnPtr heuristic_fn_ptr=helper::zero_heuristic_fn,
+                PriorFnPtr prior_fn_ptr=nullptr) :
                     mcts_mode(mcts_mode), 
                     use_transposition_table(use_transposition_table), 
-                    is_two_player_game(is_two_player_game) {};
+                    is_two_player_game(is_two_player_game),
+                    heuristic_fn_ptr(heuristic_fn_ptr),
+                    prior_fn_ptr(prior_fn_ptr) {};
     };
 }
