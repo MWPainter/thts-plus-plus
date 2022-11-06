@@ -1,5 +1,8 @@
+# Externals from other branches
+external/KataGo
+
 # Outputs
-thts-tests
+thts-test
 
 # Prerequisites
 *.d
