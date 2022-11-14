@@ -26,6 +26,7 @@
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
 #include "thts_env.h"
+#include "thts_env_context.h"
 #include "thts_manager.h"
 
 #include <memory>
@@ -55,9 +56,24 @@ namespace thts {
         friend _DNode;
 
         /**
-         * TODO: Core DNode implementation functions. Implement in .cpp and add any docstrings.
+         * Core _CNode implementation.
+         */
+        protected:
+            /**
+             * TODO: add your member variables here
+             * TODO: add any additional member functions here 
+             * (Change access modifiers as needed)
+             */
+
+
+
+        /**
+         * Core ThtsCNode implementation functions.
          */
         public: 
+            /**
+             * Constructor
+             */
             _CNode(
                 std::shared_ptr<_Manager> thts_manager,
                 std::shared_ptr<_Env> thts_env,
@@ -67,8 +83,40 @@ namespace thts {
                 int decision_timestep,
                 std::shared_ptr<ThtsDNode> parent=nullptr);
 
+            /**
+             * Implements the thts visit function for the node
+             * 
+             * Args:
+             *      ctx: A context provided to all thts functions throughout a trial to pass intermediate/transient info
+             */
             void visit(_Context& ctx);
+            
+            /**
+             * Implements the thts sample_observation function for the node
+             * 
+             * Args:
+             *      ctx: A context provided to all thts functions throughout a trial to pass intermediate/transient info
+             * 
+             * Returns:
+             *      The sampled observation
+             */
             std::shared_ptr<const _O> sample_observation(_Context& ctx);
+            
+            /**
+             * Implements the thts backup function for the node
+             * 
+             * Args:
+             *      trial_rewards_before_node: 
+             *          A list of rewards recieved (at each timestep) on the trial prior to reaching this node.
+             *      trial_rewards_after_node:
+             *          A list of rewards recieved (at each timestep) on the trial after reaching this node. This list 
+             *          includes the reward from R(state,action) that would have been recieved from taking an action 
+             *          from this node.
+             *      trial_cumulative_return_after_node:
+             *          Sum of rewards in the 'trial_rewards_after_node' list
+             *      trial_cumulative_return:
+             *          Sum of rewards in both of the 'trial_rewards_after_node' and 'trial_rewards_before_node' lists
+             */
             void backup(
                 const std::vector<double>& trial_rewards_before_node, 
                 const std::vector<double>& trial_rewards_after_node, 
@@ -76,30 +124,112 @@ namespace thts {
                 const double trial_cumulative_return,
                 _Context& ctx);
 
-            std::shared_ptr<const _S> compute_next_state_from_observation(std::shared_ptr<const _O> observation);
+            /**
+             * A helper function that transforms an sampled observation into a state that can be used for a child 
+             * decision node.
+             * 
+             * Args:
+             *      observation: The observation we want to compute a successor state from (could be belief state)
+             * 
+             * Returns:
+             *      The successor state to be used for planning that resulted from taking 'action' from 'state' 
+             *      (member variables) and observing 'observation'
+             */
+            std::shared_ptr<const _S> compute_next_state_from_observation(std::shared_ptr<const _O> observation) const;
 
         protected:
-            // TODO: delete docstring + write own
-            // Just creates an instance of _DNode on the heap and returns a pointer to it.
-            std::shared_ptr<_DNode> create_child_node_helper(std::shared_ptr<const _O> observation);
+            /**
+             * A helper function that makes a child node object on the heap and returns it. 
+             * 
+             * The 'create_child_node' boilerplate function uses this function to make a new child, add it to the 
+             * children map (or bypass making the node using the transposition table if using). The function is marked 
+             * const to enforce that we don't accidently try to duplicate logic surrounding adding children and 
+             * interacting with the transposition table.
+             * 
+             * Args:
+             *      observation: An observation to create a child node for
+             * 
+             * Returns:
+             *      A pointer to a new _DNode object
+             */
+            std::shared_ptr<_DNode> create_child_node_helper(std::shared_ptr<const _O> observation) const;
 
-            virtual std::string get_pretty_print_val();
+            /**
+             * Returns a string representation of the value of this node currently. Used for pretty printing.
+             * 
+             * Returns:
+             *      A string representing the value of this node
+             */
+            virtual std::string get_pretty_print_val() const;
+
+
 
         /**
-         * Boilerplate function definitions. Boilerplate implementations provided in thts_chance_node_template.h
+         * Boilerplate function definitions. 
+         * 
+         * Functionality implemented in thts_decision_node.h, but it's useful to have wrappers to avoid needing to 
+         * use pointer casts frequently.
+         * 
+         * Boilerplate implementations provided in thts_chance_node_template.h
          */
         public:
+            /**
+             * Mark destructor as virtual.
+             */
             virtual ~_CNode() = default;
 
-            // Creates a child node, possibly grabbing it from a transposition table
-            std::shared_ptr<_DNode> create_child_node_itfc(std::shared_ptr<const _O> observation) ;
+            /**
+             * Creates a child node, handles the internal management of the creation and returns a pointer to it.
+             * 
+             * This funciton is a wrapper for the create_child_node_itfc function definted in thts_decision_node.cpp, 
+             * and handles the casting required to use it.
+             * 
+             * - If the child already exists in children, it returns a pointer to that child.
+             * - (If using transposition table) If the child already exists in the transposition table, but not in 
+             *      children, it adds the child to children and then returns a pointer to it.
+             * - If the child hasn't been created before, it makes the child (using 'create_child_node_helper'), and 
+             *      inserts it appropriately into children (and the transposition table if relevant).
+             * 
+             * Args:
+             *      action: An action to create a child node for
+             * 
+             * Returns:
+             *      A pointer to a new child chance node
+             */
+            std::shared_ptr<_DNode> create_child_node(std::shared_ptr<const _O> observation);
 
-            bool has_child(std::shared_ptr<const _O> observation);
-            shared_ptr<_DNode> get_child(shared_ptr<const _O> observation);
+            /**
+             * If this node has a child object corresponding to 'observation'.
+             * 
+             * Args:
+             *      observation: An observation to check if we have a child for
+             * 
+             * Returns:
+             *      true if we have a child corresponding to 'observation'
+             */
+            bool has_child_node(std::shared_ptr<const _O> observation) const;
+
+            /**
+             * Retrieves a child node from the children map.
+             * 
+             * If a child doesn't exist for the observation, an exception will be thrown.
+             * 
+             * Args:
+             *      observation: The observation to get the corresponding child of
+             * 
+             * Returns:
+             *      A pointer to the child node corresponding to 'observation'
+             */
+            shared_ptr<_DNode> get_child_node(shared_ptr<const _O> observation) const;
+
+
 
         /**
-         * ThtsDNode interface function definitions. Boilerplate implementations provided from 
-         * thts_chance_node_template.h
+         * ThtsCNode interface function definitions, used by thts subroutines to interact with this node. Copied from 
+         * thts_chance_node.h. 
+         * 
+         * Boilerplate definitions are provided in thts_chance_node_template.h, that wrap above functions in pointer 
+         * casts.
          */
         public:
             virtual void visit_itfc(ThtsEnvContext& ctx);
@@ -112,30 +242,37 @@ namespace thts {
                 ThtsEnvContext& ctx);
 
             virtual std::shared_ptr<const State> compute_next_state_from_observation_itfc(
-                std::shared_ptr<const Observation> observation);
+                std::shared_ptr<const Observation> observation) const;
 
             virtual std::shared_ptr<ThtsDNode> create_child_node_helper_itfc(
-                std::shared_ptr<const Observation> observation);
+                std::shared_ptr<const Observation> observation) const;
             // virtual std::shared_ptr<ThtsDNode> create_child_node_itfc(
             //    std::shared_ptr<const Observation> observation) final;
                 
+
+
         /**
-         * Implemented in thts_chance_node.cpp
+         * Implemented in thts_chance_node.{h,cpp}
          */
         // public:
-        //     bool is_two_player_game();
-        //     bool is_opponent();
-        //     int get_num_children();
+        //     bool is_two_player_game() const;
+        //     bool is_opponent() const;
+        //     int get_num_children() const;
 
-        //     bool has_child_itfc(std::shared_ptr<const Observation> observation);
-        //     std::shared_ptr<ThtsDNode> get_child_node_itfc(std::shared_ptr<const Observation> observation);
+        //     bool has_child_node_itfc(std::shared_ptr<const Observation> observation) const;
+        //     std::shared_ptr<ThtsDNode> get_child_node_itfc(std::shared_ptr<const Observation> observation) const;
 
-        //     std::string get_pretty_print_string(int depth);
+        //     std::string get_pretty_print_string(int depth) const;
 
         // private:
-        //     void get_pretty_print_string_helper(std::stringstream& ss, int depth, int num_tabs);
+        //     void get_pretty_print_string_helper(std::stringstream& ss, int depth, int num_tabs) const;
     };
 }
+
+
+
+
+
 
 /**
  * -----------------------------------
@@ -185,11 +322,11 @@ namespace thts {
     {   
     }
 
-    shared_ptr<const _S> compute_next_state_from_observation(shared_ptr<const _O> observation) {
+    shared_ptr<const _S> _CNode::compute_next_state_from_observation(shared_ptr<const _O> observation) const {
         return static_pointer_cast<const _S>(observation);
     }
 
-    shared_ptr<_DNode> _CNode::create_child_node_helper(shared_ptr<const _O> observation) {
+    shared_ptr<_DNode> _CNode::create_child_node_helper(shared_ptr<const _O> observation) const {
         shared_ptr<const _S> next_state = compute_next_state_from_observation(observation);
         return make_shared<_DNode>(
             thts_manager, 
@@ -200,7 +337,7 @@ namespace thts {
             this);
     }
 
-    string get_pretty_print_val() {
+    string _CNode::get_pretty_print_val() const {
         return "";
     }
 }
@@ -210,18 +347,18 @@ namespace thts {
  * All this code basically calls the corresponding base implementation function, with approprtiate casts before/after.
  */
 namespace thts {
-    shared_ptr<_DNode> _CNode::create_child_node_itfc(shared_ptr<const _O> observation) {
+    shared_ptr<_DNode> _CNode::create_child_node(shared_ptr<const _O> observation) {
         shared_ptr<const Observation> obsv_itfc = static_pointer_cast<const Observation>(action);
         shared_ptr<ThtsDNode> new_child = ThtsCNode::create_child_node_itfc(obsv_itfc);
         return static_pointer_cast<_DNode>(new_child);
 
     }
 
-    bool _CNode::has_child(std::shared_ptr<const _O> observation) {
-        return ThtsCNode::has_child_itfc(static_pointer_cast<const Observation>(observation));
+    bool _CNode::has_child_node(std::shared_ptr<const _O> observation) const {
+        return ThtsCNode::has_child_node_itfc(static_pointer_cast<const Observation>(observation));
     }
     
-    shared_ptr<_DNode> _CNode::get_child(shared_ptr<const _O> observation) {
+    shared_ptr<_DNode> _CNode::get_child_node(shared_ptr<const _O> observation) const {
         shared_ptr<const Observation> obsv_itfc = static_pointer_cast<const Observation>(observation);
         shared_ptr<ThtsDNode> new_child = ThtsCNode::get_child_node_itfc(obsv_itfc);
         return static_pointer_cast<_DNode>(new_child);
@@ -260,14 +397,14 @@ namespace thts {
     }
 
     shared_ptr<const State> _CNode::compute_next_state_from_observation_itfc(
-        shared_ptr<const Observation> observation)
+        shared_ptr<const Observation> observation) const
     {
         shared_ptr<const _O> obsv_itfc = static_pointer_cast<const _O>(observation);
         shared_ptr<const _S> state = compute_next_state_from_observation(obsv_itfc);
         return static_pointer_cast<const State>(state);
     }
 
-    shared_ptr<ThtsDNode> _CNode::create_child_node_helper_itfc(shared_ptr<const Observation> observation) {
+    shared_ptr<ThtsDNode> _CNode::create_child_node_helper_itfc(shared_ptr<const Observation> observation) const {
         shared_ptr<const _O> obsv_itfc = static_pointer_cast<const _O>(observation);
         shared_ptr<_DNode> child_node = create_child_node_helper(obsv_itfc);
         return static_pointer_cast<ThtsDNode>(child_node);

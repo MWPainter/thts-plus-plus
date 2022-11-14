@@ -99,12 +99,15 @@ namespace thts {
              * Args:
              *      state: The state to sample an observation from
              *      action: The action taken to sample an observation for
+             *      thts_manager: A pointer to the thts_manager to access the random number sampling interface
              * 
              * Returns:
              *      Returns an observation sampled from taking 'action' from 'state'
              */
             virtual std::shared_ptr<const Observation> sample_transition_distribution_itfc(
-                std::shared_ptr<const State> state, std::shared_ptr<const Action> action) const = 0;
+                std::shared_ptr<const State> state, 
+                std::shared_ptr<const Action> action, 
+                std::shared_ptr<ThtsManager> thts_manager) const = 0;
             
             /**
              * Returns the reward for a given state, action, observation tuple.

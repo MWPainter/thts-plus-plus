@@ -1,6 +1,6 @@
-#include "test_thts_nodes.h"
+#include "test/test_thts_nodes.h"
 
-#include "test_thts_env.h"
+#include "test/test_thts_env.h"
 
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"

@@ -4,6 +4,7 @@
  * To use the template, copy the relevant sections into your .h and .cpp files, and make the following find and replace
  * operations:
  *      _Env -> YourEnvClass
+ *      _Manager -> YourThtsManagerClass (often ThtsManager should be sufficient)
  *      _S -> YourStateClass
  *      _A -> YourActionClass
  *      _O -> YourObservationClass
@@ -20,6 +21,7 @@
 #pragma once
 
 #include "thts_env.h"
+#include "thts_manager.h"
 #include "thts_types.h"
 
 #include <memory>
@@ -31,6 +33,7 @@
 
 namespace thts{
     // TODO: delete these forward declarations (added to stop IDEs showing compile errors).
+    class _Manager;
     class _S;
     class _A;
     class _O;
@@ -61,7 +64,9 @@ namespace thts{
                 std::shared_ptr<const _S> state, std::shared_ptr<const _A> action) const;
 
             std::shared_ptr<const _O> sample_transition_distribution(
-                std::shared_ptr<const _S> state, std::shared_ptr<const _A> action) const;
+                std::shared_ptr<const _S> state, 
+                std::shared_ptr<const _A> action, 
+                std::shared_ptr<_Manager> thts_manager) const;
 
             double get_reward(
                 std::shared_ptr<const _S> state, 
@@ -77,7 +82,9 @@ namespace thts{
             virtual std::shared_ptr<ObservationDistr> get_transition_distribution_itfc(
                 std::shared_ptr<const State> state, std::shared_ptr<const Action> action) const;
             virtual std::shared_ptr<const Observation> sample_transition_distribution_itfc(
-                std::shared_ptr<const State> state, std::shared_ptr<const Action> action) const;
+                std::shared_ptr<const State> state, 
+                std::shared_ptr<const Action> action, 
+                std::shared_ptr<ThtsManager> thts_manager) const;
             virtual double get_reward_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
@@ -124,7 +131,7 @@ namespace thts {
     }
 
     shared_ptr<const _O> _Env::sample_transition_distribution(
-        shared_ptr<const _S> state, shared_ptr<const _A> action) const 
+        shared_ptr<const _S> state, shared_ptr<const _A> action, shared_ptr<_Manager> thts_manager) const 
     {
         return nullptr;
     }
@@ -183,11 +190,12 @@ namespace thts {
     }
 
     shared_ptr<const Observation> _Env::sample_transition_distribution_itfc(
-        shared_ptr<const State> state, shared_ptr<const Action> action) const 
+        shared_ptr<const State> state, shared_ptr<const Action> action, shared_ptr<ThtsManager> thts_manager) const 
     {
         shared_ptr<const _S> state_itfc = static_pointer_cast<const _S>(state);
         shared_ptr<const _A> action_itfc = static_pointer_cast<const _A>(action);
-        shared_ptr<const _O> obsv = sample_transition_distribution(state_itfc, action_itfc);
+        shared_ptr<_Manager> manager_itfc = static_pointer_cast<_Manager>(thts_manager);
+        shared_ptr<const _O> obsv = sample_transition_distribution(state_itfc, action_itfc, manager_itfc);
         return static_pointer_cast<const Observation>(obsv);
     }
 

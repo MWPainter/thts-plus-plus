@@ -1,5 +1,6 @@
-#include "test_thts_env.h"
-#include "test_thts_nodes.h"
+#include "test/test_thts_env.h"
+#include "test/test_thts_nodes.h"
+#include "test/algorithms/test_uct_nodes.h"
 
 #include <iostream>
 
@@ -13,6 +14,8 @@ int main(int argc, char *argv[]) {
     run_thts_env_tests();
     cout << endl << endl << endl;
     run_thts_node_tests();
+    cout << endl << endl << endl;
+    run_uct_node_tests();
     return 0;
 }
 

@@ -26,8 +26,8 @@ namespace thts {
             state(state),
             decision_depth(decision_depth),
             decision_timestep(decision_timestep),
-            num_visits(0),
-            parent(parent) 
+            parent(parent),
+            num_visits(0)
     {
     }
 
@@ -39,31 +39,34 @@ namespace thts {
     }
 
     /**
+     * This node is a leaf node iff the state corresponds to a sink state
+     */
+    bool ThtsDNode::is_leaf() const {
+        return thts_env->is_sink_state_itfc(state);
+    }
+
+    /**
      * Wrapper around 'create_child_node_helper' that include logic for using a transposition table.
      * 
+     * If child already exists then just return it.
+     * 
      * If not using a transposition table, we call the helper and put the child in our children map. 
-     * If using a transposition table, we first check the transposition table to try get it from there. If it's not in 
-     * the table, we make the child and insert it in children and the transposition table.
+     * 
+     * If using a transposition table, it actually doesn't matter. Chance nodes will only 'transpose' iff this 
+     * decision node is 'transposed'. So we don't need to consider a transposition table for chance nodes. Because it
+     * is implemented via the transposition table for decision nodes.
      */
     shared_ptr<ThtsCNode> ThtsDNode::create_child_node_itfc(shared_ptr<const Action> action) {
+        if (has_child_node_itfc(action)) return get_child_node_itfc(action);
+
         if (!thts_manager->use_transposition_table) {
             shared_ptr<ThtsCNode> child_node = create_child_node_helper_itfc(action);
             children[action] = child_node;
             return child_node;
         }
 
-        CNodeTable& cmap = thts_manager->cmap;
-        CNodeIdTuple cnode_id = make_tuple(decision_timestep, state, action);
-        auto iter = cmap.find(cnode_id);
-        if (iter != cmap.end()) {
-            shared_ptr<ThtsCNode> child_node = cmap[cnode_id];
-            children[action] = child_node;
-            return child_node;
-        }
-
         shared_ptr<ThtsCNode> child_node = create_child_node_helper_itfc(action);
         children[action] = child_node;
-        cmap[cnode_id] = child_node;
         return child_node;
     }
 
@@ -73,14 +76,14 @@ namespace thts {
      * TODO: this current implementation will lead to bugs if trying to reuse trees. Consider changing implementation 
      * to use parent. And make sure root node doesn't have a parent in thts routine.
      */
-    bool ThtsDNode::is_root_node() {
+    bool ThtsDNode::is_root_node() const {
         return decision_depth == 0;
     }
 
     /**
      * Just passes information out of the thts manager 
      */
-    bool ThtsDNode::is_two_player_game() {
+    bool ThtsDNode::is_two_player_game() const {
         return thts_manager->is_two_player_game;
     }
 
@@ -88,7 +91,7 @@ namespace thts {
      * In 2 player games, opponent is the agent going second. If the decision timestep is odd, then this node is an 
      * opponent node. (And we can check for oddness by checking last bit of decision timestep).
      */
-    bool ThtsDNode::is_opponent() {
+    bool ThtsDNode::is_opponent() const {
         if (!is_two_player_game()) return false;
         return (decision_timestep & 1) == 1;
     }
@@ -96,7 +99,7 @@ namespace thts {
     /**
      * Number of children = length of children map.
      */
-    int ThtsDNode::get_num_children() {
+    int ThtsDNode::get_num_children() const {
         return children.size();
     }
 
@@ -105,7 +108,7 @@ namespace thts {
      * iterator if it is not in the map. So if the returned iterator == children.end() then a child doesn't exist for 
      * that action in the children map.
      */
-    bool ThtsDNode::has_child_itfc(shared_ptr<const Action> action) {
+    bool ThtsDNode::has_child_node_itfc(shared_ptr<const Action> action) const {
         auto iterator = children.find(action);
         return iterator != children.end();
     }
@@ -113,8 +116,8 @@ namespace thts {
     /**
      * Just looks up action in 'children' map.
      */
-    shared_ptr<ThtsCNode> ThtsDNode::get_child_node_itfc(shared_ptr<const Action> action) {
-        return children[action];
+    shared_ptr<ThtsCNode> ThtsDNode::get_child_node_itfc(shared_ptr<const Action> action) const {
+        return children.at(action);
     }
 
     /**
@@ -123,7 +126,7 @@ namespace thts {
      * The helper function uses a depth with respect to the tree, rather than decision depth, hence why it is multiplied
      * by two.
      */
-    string ThtsDNode::get_pretty_print_string(int depth) {   
+    string ThtsDNode::get_pretty_print_string(int depth) const {   
         int num_tabs = 0;
         stringstream ss;
         get_pretty_print_string_helper(ss, 2*depth, num_tabs);
@@ -138,12 +141,12 @@ namespace thts {
      * 
      * TODO: add nice way of only displaying the 5 most visited actions
      */
-    void ThtsDNode::get_pretty_print_string_helper(stringstream& ss, int depth, int num_tabs) {
+    void ThtsDNode::get_pretty_print_string_helper(stringstream& ss, int depth, int num_tabs) const {
         // Print out this nodes info
         // for (int i=0; i<num_tabs; i++) ss << "|\t";
         ss << "D(vl=" << get_pretty_print_val() << ",#v=" << num_visits << ")[";
 
-        // Base case
+        // Base case 
         if (depth == 0) {
             if (!is_leaf()) ss << "...";
             ss << "],";
@@ -151,13 +154,13 @@ namespace thts {
         }
 
         // print out child trees recursively
-        for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& key_val_pair : children) {
-            shared_ptr<const Action> action = key_val_pair.first;
-            shared_ptr<ThtsCNode> child_node = key_val_pair.second;
+        for (const pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& key_val_pair : children) {
+            const Action& action = *(key_val_pair.first);
+            ThtsCNode& child_node = *(key_val_pair.second);
             ss << "\n";
             for (int i=0; i<num_tabs+1; i++) ss << "|\t";
             ss << "\"" << action << "\"->";
-            child_node->get_pretty_print_string_helper(ss, depth-1, num_tabs+1);
+            child_node.get_pretty_print_string_helper(ss, depth-1, num_tabs+1);
         }
 
         // Print out closing bracket
@@ -178,7 +181,7 @@ namespace thts {
      * Saves a tree to a given filename
      * TODO: implement, and remove throwing exception
      */
-    bool ThtsDNode::save(string& filename) {
+    bool ThtsDNode::save(string& filename) const {
         throw 0;
     }
 }

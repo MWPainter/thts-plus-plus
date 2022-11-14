@@ -57,9 +57,9 @@ namespace thts {
             std::shared_ptr<const Action> action;
             int decision_depth;
             int decision_timestep;
+            std::shared_ptr<ThtsDNode> parent;
 
             int num_visits;
-            std::shared_ptr<ThtsDNode> parent;
             DNodeChildMap children;
 
         public: 
@@ -161,7 +161,7 @@ namespace thts {
              *      A pointer to a newly created child node on the heap
              */
             virtual std::shared_ptr<ThtsDNode> create_child_node_helper_itfc(
-                std::shared_ptr<const Observation> observation) = 0;
+                std::shared_ptr<const Observation> observation) const = 0;
 
             /**
              * Computes the next state given the current state (stored in this object) and an observation. 
@@ -175,7 +175,7 @@ namespace thts {
              *      A successor state (corresponding to the state for children[observation])
              */
             virtual std::shared_ptr<const State> compute_next_state_from_observation_itfc(
-                std::shared_ptr<const Observation> observation) = 0;
+                std::shared_ptr<const Observation> observation) const = 0;
 
             /**
              * Helper for pretty printing. Should return some string representing the current 'value' of this node.
@@ -183,7 +183,7 @@ namespace thts {
              * Returns:
              *      string representing the current value of this node
              */
-            virtual std::string get_pretty_print_val() = 0;
+            virtual std::string get_pretty_print_val() const = 0;
 
         public:
 
@@ -193,7 +193,7 @@ namespace thts {
              * Returns:
              *      True if currently planning for a two player game
              */
-            bool is_two_player_game();
+            bool is_two_player_game() const;
 
             /**
              * Returns if this node is planning as the opponent in a two player game.
@@ -203,7 +203,7 @@ namespace thts {
              * Returns:
              *      If this node is planning as the opponent in a two player game
              */
-            bool is_opponent();
+            bool is_opponent() const;
 
             /**
              * Helper function to get number of children this node currently has.
@@ -211,7 +211,7 @@ namespace thts {
              * Returns:
              *      Number of children in 'children' map
              */
-            int get_num_children();
+            int get_num_children() const;
 
             /**
              * Helper function to check if node has a child for the given observation
@@ -222,7 +222,7 @@ namespace thts {
              * Returns:
              *      Returns true if node has a child corresponding to 'observation'
              */
-            bool has_child_itfc(std::shared_ptr<const Observation> observation);
+            bool has_child_node_itfc(std::shared_ptr<const Observation> observation) const;
 
             /**
              * Returns a pointer to a child of this node.
@@ -233,7 +233,7 @@ namespace thts {
              * Returns:
              *      A pointer to the child decision node.
              */
-            std::shared_ptr<ThtsDNode> get_child_node_itfc(std::shared_ptr<const Observation> observation);
+            std::shared_ptr<ThtsDNode> get_child_node_itfc(std::shared_ptr<const Observation> observation) const;
 
             /**
              * Pretty prints the tree to a string.
@@ -244,12 +244,12 @@ namespace thts {
              * Returns:
              *      A string that is a pretty representation of the top part of the tree, rooted at this node
              */
-            std::string get_pretty_print_string(int depth);
+            std::string get_pretty_print_string(int depth) const;
 
         private:
             /**
              * A helper function that actually implements 'get_pretty_pring_string' above.
              */
-            void get_pretty_print_string_helper(std::stringstream& ss, int depth, int num_tabs);
+            void get_pretty_print_string_helper(std::stringstream& ss, int depth, int num_tabs) const;
     };
 }

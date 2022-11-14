@@ -1,6 +1,7 @@
 #pragma once
 
 #include "thts_env.h"
+#include "thts_manager.h"
 #include "thts_types.h"
 
 #include <memory>
@@ -18,6 +19,59 @@ namespace thts_test{
      */
     void run_thts_env_tests();
 
+    /**
+     * TODO: docstring
+     * 
+     * TODO: add tests for probabilistic outcomes at some point
+     */  
+    class TestThtsManager : public ThtsManager {
+        private:
+            int int_indx;
+            vector<int> int_mock_numbers;
+            int uniform_indx;
+            vector<double> uniform_mock_numbers;
+
+        public:          
+            TestThtsManager(
+                bool mcts_mode=true, 
+                bool use_transposition_table=false, 
+                bool is_two_player_game=false,
+                HeuristicFnPtr heuristic_fn_ptr=helper::zero_heuristic_fn,
+                PriorFnPtr prior_fn_ptr=nullptr,
+                int seed=60415) :
+                    ThtsManager(
+                        mcts_mode, 
+                        use_transposition_table,
+                        is_two_player_game,
+                        heuristic_fn_ptr,
+                        prior_fn_ptr,
+                        seed),
+                    int_indx(0),
+                    uniform_indx(0) {};
+
+            void push_random_ints(vector<int>& rand_ints) {
+                int_mock_numbers.insert(int_mock_numbers.end(), rand_ints.begin(), rand_ints.end());
+            }
+
+            void push_random_uniforms(vector<double>& rand_uniforms) {
+                uniform_mock_numbers.insert(uniform_mock_numbers.end(), rand_uniforms.begin(), rand_uniforms.end());
+            }
+
+            virtual int get_rand_int(int min_included, int max_excluded) {
+                if (int_indx < int_mock_numbers.size()) {
+                    return int_mock_numbers[int_indx++];
+                }
+                return ThtsManager::get_rand_int(min_included,max_excluded);
+            };
+
+            virtual double get_rand_uniform() {
+                if (uniform_indx < uniform_mock_numbers.size()) {
+                    return uniform_mock_numbers[uniform_indx++];
+                }
+                return ThtsManager::get_rand_uniform();
+            };
+    };
+
     /** 
      * Implement a simple ThtsEnv subclass to be used for testing
      * TODO: document class properly
@@ -27,6 +81,7 @@ namespace thts_test{
 
         private:
             int grid_size;
+            double stay_prob;
 
         protected:
             string env_id = "test_thts_env_id";
@@ -35,7 +90,7 @@ namespace thts_test{
             /**
              * Node implementation
              */
-            TestThtsEnv(int grid_size);
+            TestThtsEnv(int grid_size, double stay_prob=0.0);
 
             shared_ptr<const IntPairState> get_initial_state() const;
 
@@ -47,7 +102,9 @@ namespace thts_test{
                 shared_ptr<const IntPairState> state, shared_ptr<const StringAction> action) const;
 
             shared_ptr<const IntPairState> sample_transition_distribution(
-                shared_ptr<const IntPairState> state, shared_ptr<const StringAction> action) const;
+                shared_ptr<const IntPairState> state, 
+                shared_ptr<const StringAction> action, 
+                shared_ptr<TestThtsManager> manager) const;
 
             double get_reward(
                 shared_ptr<const IntPairState> state, 
@@ -95,11 +152,13 @@ namespace thts_test{
             }
 
             virtual shared_ptr<const Observation> sample_transition_distribution_itfc(
-                shared_ptr<const State> state, shared_ptr<const Action> action) const 
+                shared_ptr<const State> state, shared_ptr<const Action> action, shared_ptr<ThtsManager> manager) const 
             {
                 shared_ptr<const IntPairState> state_itfc = static_pointer_cast<const IntPairState>(state);
                 shared_ptr<const StringAction> action_itfc = static_pointer_cast<const StringAction>(action);
-                shared_ptr<const IntPairState> obsv = sample_transition_distribution(state_itfc, action_itfc);
+                shared_ptr<TestThtsManager> manager_itfc = static_pointer_cast<TestThtsManager>(manager);
+                shared_ptr<const IntPairState> obsv = sample_transition_distribution(
+                    state_itfc, action_itfc, manager_itfc);
                 return static_pointer_cast<const Observation>(obsv);
             }
 

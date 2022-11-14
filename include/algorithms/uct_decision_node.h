@@ -1,28 +1,7 @@
-/**
- * Template for ThtsDNode subclasses, because it involves some boilerplate code that will generally look the same.
- * 
- * To use the template, copy the relevant sections into your .h and .cpp files, and make the following find and replace
- * operations:
- *      _DNode -> YourDNodeClass
- *      _CNode -> YourCNodeClass
- *      _Manager -> YourThtsManagerClass (often ThtsManager should be sufficient)
- *      _Context -> YourThtsEnvContextClass (often ThtsEnvContext should be sufficient)
- *      _Env -> YourEnvClass
- *      _S -> YourStateClass
- *      _A -> YourActionClass
- *      _O -> YourObservationClass
- * 
- * Finally, complete all of the TODO comments inline.
- */
-
-/**
- * -----------------------------------
- * .h template - copy into .h file
- * -----------------------------------
- */
-
 #pragma once
 
+#include "algorithms/uct_chance_node.h"
+#include "algorithms/uct_manager.h"
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
 #include "thts_env.h"
@@ -35,50 +14,126 @@
 #include <unordered_map>
 
 namespace thts {
-    // TODO: delete these forward declarations (added to stop IDEs showing compile errors).
-    class _S;
-    class _A;
-    class _O;
-    class _Manager;
-    class _Context;
-    class _Env;
 
-    // forward declare corresponding _CNode class
-    class _CNode;
+    // forward declare corresponding UctCNode class
+    class UctCNode;
 
     /**
-     * TODO: Your docstring here
+     * Implementation of UCT (decision nodes) in Thts schema. 
+     * 
+     * Member variables:
+     *      actions: A cached list of actions
+     *      avg_return: The average return from this node
+     *      policy_prior: A map from actions to probabilities representing a policy prior (over action/child nodes)
      */
-    class _DNode : public ThtsDNode {
-        // Allow _CNode access to private members
-        friend _CNode;
+    class UctDNode : public ThtsDNode {
+        // Allow UctCNode access to private members
+        friend UctCNode;
 
         /**
-         * Core _DNode implementation.
+         * Core UctDNode implementation.
          */
         protected:
+            std::shared_ptr<ActionVector> actions;
+            double avg_return;
+            std::unordered_map<std::shared_ptr<const Action>,double> policy_prior;
+
             /**
-             * TODO: add your member variables here
-             * TODO: add any additional member functions here 
-             * (Change access modifiers as needed)
+             * Returns if we have a valid 'policy_prior' to use.
+             * 
+             * If we have a prior over the child nodes, we may want to use that. However checking 
+             * 'thts_manager->prior_fn != nullptr' isn't very readible, so we provide this function.
+             * 
+             * Returns:
+             *      if 'policy_prior' is valid and can be used
              */
+            inline bool has_prior() const;
+
+            /**
+             * Computes the ucb term for a single child for use in selecting actions.
+             * 
+             * Args:
+             *      num_visits: The number of visits to this node
+             *      child_visits: The number of time the child node has been visited
+             * 
+             * Returns:
+             *      The confidence interval term for a ucb value
+             */
+            virtual double compute_ucb_term(int num_visits, int child_visits) const;
+
+            /**
+             * Helper function for 'select_action_ucb' that computes the ucb values
+             * 
+             * Args:
+             *      ucb_values: An unordered map to be filled with ucb values by this function 
+             *      ctx: The thts context given to a select aciton call
+             * 
+             * Returns:
+             *      A map from actions to their corresponding ucb values
+             */
+            void fill_ucb_values(
+                std::unordered_map<std::shared_ptr<const Action>,double>& ucb_values, ThtsEnvContext& ctx) const;
+
+            /**
+             * Implementation of thts 'select_action' function: that selects actions according to a hybrid 
+             * implementation of the ucb and pucb algorithms.
+             * 
+             * Args:
+             *      ctx: The thts context given to a select aciton call
+             * 
+             * Returns:
+             *      The selected action
+             */
+            virtual std::shared_ptr<const Action> select_action_ucb(ThtsEnvContext& ctx);
+
+            /**
+             * An implementation thts 'select_action' function: that selects a uniformly random action. 
+             * 
+             * Returns:
+             *      The selected action
+             */
+            std::shared_ptr<const Action> select_action_random();
+
+            /**
+             * Recommends the action corresponding to the child with the best avg_return.
+             * 
+             * Returns:
+             *      An action recomendation for the state corresponding to this node
+             */
+            std::shared_ptr<const Action> recommend_action_best_empirical() const;
+
+            /**
+             * Recommends the action corresponding to the most visited child node.
+             * 
+             * Returns:
+             *      An action recomendation for the state corresponding to this node
+             */
+            std::shared_ptr<const Action> recommend_action_most_visited() const;
+
+            /**
+             * Performs an 'avg_return' backup, i.e. it encorporates a new value into the current average.
+             * 
+             * Args:
+             *      trial_return_after_node: The cumulative return achieved after this node, for the current trial
+             */
+            void backup_average_return(const double trial_return_after_node);
 
 
 
         /**
          * Core ThtsDNode implementation functions.
          */
-        public:  
+        public: 
             /**
              * Constructor
              */
-            _DNode(
-                std::shared_ptr<_Manager> thts_manager,
-                std::shared_ptr<_Env> thts_env,
-                std::shared_ptr<const _S> state,
+            UctDNode(
+                std::shared_ptr<UctManager> thts_manager,
+                std::shared_ptr<ThtsEnv> thts_env,
+                std::shared_ptr<const State> state,
                 int decision_depth,
                 int decision_timestep,
-                std::shared_ptr<_CNode> parent=nullptr); 
+                std::shared_ptr<UctCNode> parent=nullptr); 
             
             /**
              * Implements the thts visit function for the node
@@ -86,7 +141,7 @@ namespace thts {
              * Args:
              *      ctx: A context provided to all thts functions throughout a trial to pass intermediate/transient info
              */
-            void visit(_Context& ctx);
+            void visit(ThtsEnvContext& ctx);
             
             /**
              * Implements the thts select_action function for the node
@@ -97,7 +152,7 @@ namespace thts {
              * Returns:
              *      The selected action
              */
-            std::shared_ptr<const _A> select_action(_Context& ctx);
+            std::shared_ptr<const Action> select_action(ThtsEnvContext& ctx);
             
             /**
              * Implements the thts recommend_action function for the node
@@ -108,10 +163,12 @@ namespace thts {
              * Returns:
              *      The recommended action
              */
-            std::shared_ptr<const _A> recommend_action(_Context& ctx) const;
+            std::shared_ptr<const Action> recommend_action(ThtsEnvContext& ctx) const;
             
             /**
              * Implements the thts backup function for the node
+             * 
+             * Args:
              * 
              * Args:
              *      trial_rewards_before_node: 
@@ -130,7 +187,17 @@ namespace thts {
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                _Context& ctx);
+                ThtsEnvContext& ctx);
+
+            /**
+             * Returns if the node is a leaf node (with respect to the environment, NOT the tree).
+             * 
+             * Use to decide if this a 'true' leaf of the tree (it has no possible nodes that can be expanded).
+             * 
+             * Returns:
+             *      If this node corresponds to a 'leaf state' in the environment
+             */
+            virtual bool is_leaf() const;
 
         protected:
             /**
@@ -145,15 +212,15 @@ namespace thts {
              *      action: An action to create a child node for
              * 
              * Returns:
-             *      A pointer to a new _CNode object
+             *      A pointer to a new UctCNode object
              */
-            std::shared_ptr<_CNode> create_child_node_helper(std::shared_ptr<const _A> action) const;
+            std::shared_ptr<UctCNode> create_child_node_helper(std::shared_ptr<const Action> action) const;
 
             /**
              * Returns a string representation of the value of this node currently. Used for pretty printing.
              * 
              * Returns:
-             *      A string representing the value of this node
+             *      A string of 'avg_return'
              */
             virtual std::string get_pretty_print_val() const;
         
@@ -171,7 +238,7 @@ namespace thts {
             /**
              * Mark destructor as virtual.
              */
-            virtual ~_DNode() = default;
+            virtual ~UctDNode() = default;
 
             /**
              * Creates a child node, handles the internal management of the creation and returns a pointer to it.
@@ -191,7 +258,7 @@ namespace thts {
              * Returns:
              *      A pointer to a new child chance node
              */
-            virtual std::shared_ptr<_CNode> create_child_node(std::shared_ptr<const _A> action);
+            virtual std::shared_ptr<UctCNode> create_child_node(std::shared_ptr<const Action> action);
 
             /**
              * If this node has a child object corresponding to 'action'.
@@ -202,7 +269,7 @@ namespace thts {
              * Returns:
              *      true if we have a child corresponding to 'action'
              */
-            bool has_child_node(std::shared_ptr<const _A> action) const;
+            bool has_child_node(std::shared_ptr<const Action> action) const;
 
             /**
              * Retrieves a child node from the children map.
@@ -215,7 +282,8 @@ namespace thts {
              * Returns:
              *      A pointer to the child node corresponding to 'action'
              */
-            std::shared_ptr<_CNode> get_child_node(std::shared_ptr<const _A> action) const;
+            std::shared_ptr<UctCNode> get_child_node(std::shared_ptr<const Action> action) const;
+
 
 
 
@@ -237,8 +305,7 @@ namespace thts {
                 const double trial_cumulative_return,
                 ThtsEnvContext& ctx);
 
-            virtual std::shared_ptr<ThtsCNode> create_child_node_helper_itfc(
-                std::shared_ptr<const Action> action) const;
+            virtual std::shared_ptr<ThtsCNode> create_child_node_helper_itfc(std::shared_ptr<const Action> action) const;
             // virtual std::shared_ptr<ThtsCNode> create_child_node_itfc(std::shared_ptr<const Action> action) final;
 
 
@@ -254,7 +321,7 @@ namespace thts {
         //     int get_num_children() const;
 
         //     bool has_child_node_itfc(std::shared_ptr<const Action> action) const;
-        //     std::shared_ptr<ThtsCNode> get_child_node_itfc(std::shared_ptr<const Action> action) const;
+        //     std::shared_ptr<ThtsCNode> get_child_node_itfc(std::shared_ptr<const Action> action);
 
         //     std::string get_pretty_print_string(int depth) const;
 
@@ -264,139 +331,4 @@ namespace thts {
         // private:
         //     void get_pretty_print_string_helper(std::stringstream& ss, int depth, int num_tabs) const;
     };
-}
-
-
-
-
-
-/**
- * -----------------------------------
- * .cpp template - copy into .cpp file
- * -----------------------------------
- */
-
-// TODO: add include for your header file
-
-using namespace std; 
-
-/**
- * TODO: implement your class here.
- */
-namespace thts {
-    _DNode::_DNode(
-        shared_ptr<_Manager> thts_manager,
-        shared_ptr<_Env> thts_env,
-        shared_ptr<const _S> state,
-        int decision_depth,
-        int decision_timestep,
-        shared_ptr<_CNode> parent) :
-            ThtsDNode(
-                static_pointer_cast<ThtsManager>(thts_manager),
-                static_pointer_cast<ThtsEnv>(thts_env),
-                static_pointer_cast<const State>(state),
-                decision_depth,
-                decision_timestep,
-                static_pointer_cast<ThtsCNode>(parent)) {}
-    
-    void _DNode::visit(_Context& ctx) {
-        num_visits += 1;
-    }
-
-    shared_ptr<const _A> _DNode::select_action(_Context& ctx) {
-        return nullptr;
-    }
-
-    shared_ptr<const _A> _DNode::recommend_action(_Context& ctx) const {
-        return nullptr;
-    }
-
-    void _DNode::backup(
-        const vector<double>& trial_rewards_before_node, 
-        const vector<double>& trial_rewards_after_node, 
-        const double trial_cumulative_return_after_node, 
-        const double trial_cumulative_return,
-        _Context& ctx) 
-    {
-    }
-
-    shared_ptr<_CNode> _DNode::create_child_node_helper(shared_ptr<const _A> action) const {
-        return make_shared<_CNode>(
-            thts_manager, 
-            thts_env, 
-            state, 
-            action, 
-            decision_depth, 
-            decision_timestep, 
-            this);
-    }
-
-    string _DNode::get_pretty_print_val() const {
-        return "";
-    }
-}
-
-/**
- * Boilerplate function definitions.
- * All this code basically calls the corresponding base implementation function, with approprtiate casts before/after.
- */
-namespace thts {
-    shared_ptr<_CNode> _DNode::create_child_node(shared_ptr<const _A> action) {
-        shared_ptr<const Action> act_itfc = static_pointer_cast<const Action>(action);
-        shared_ptr<ThtsCNode> new_child = ThtsDNode::create_child_node_itfc(act_itfc);
-        return static_pointer_cast<_CNode>(new_child);
-    }
-
-    bool _DNode::has_child_node(shared_ptr<const _A> action) const {
-        return ThtsDNode::has_child_node_itfc(static_pointer_cast<const Action>(action));
-    }
-    shared_ptr<_CNode> _DNode::get_child_node(shared_ptr<const _A> action) const {
-        shared_ptr<const Action> act_itfc = static_pointer_cast<const Action>(action);
-        shared_ptr<ThtsCNode> new_child = ThtsDNode::get_child_node_itfc(act_itfc);
-        return static_pointer_cast<_CNode>(new_child);
-    }
-}
-
-/**
- * Boilerplate ThtsDNode interface implementation. Copied from thts_decision_node_template.h.
- */
-namespace thts {
-    void _DNode::visit_itfc(ThtsEnvContext& ctx) {
-        _Context& ctx_itfc = (_Context&) ctx;
-        visit(ctx_itfc);
-    }
-
-    shared_ptr<const Action> _DNode::select_action_itfc(ThtsEnvContext& ctx) {
-        _Context& ctx_itfc = (_Context&) ctx;
-        shared_ptr<const _A> action = select_action(ctx_itfc);
-        return static_pointer_cast<const Action>(action);
-    }
-
-    shared_ptr<const Action> _DNode::recommend_action_itfc(ThtsEnvContext& ctx) const {
-        _Context& ctx_itfc = (_Context&) ctx;
-        shared_ptr<const _A> action = recommend_action(ctx_itfc);
-        return static_pointer_cast<const Action>(action);
-    }
-
-    void _DNode::backup_itfc(
-        const vector<double>& trial_rewards_before_node, 
-        const vector<double>& trial_rewards_after_node, 
-        const double trial_cumulative_return_after_node, 
-        const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
-    {
-        _Context& ctx_itfc = (_Context&) ctx;
-        backup(
-            trial_rewards_before_node, 
-            trial_rewards_after_node, 
-            trial_cumulative_return_after_node, 
-            trial_cumulative_return, 
-            ctx_itfc);
-    }
-
-    shared_ptr<ThtsCNode> _DNode::create_child_node_helper_itfc(shared_ptr<const Action> action) const {
-        shared_ptr<const _A> act_itfc = static_pointer_cast<const _A>(action);
-        shared_ptr<_CNode> child_node = create_child_node_helper(act_itfc);
-        return static_pointer_cast<ThtsCNode>(child_node);
-    }
 }

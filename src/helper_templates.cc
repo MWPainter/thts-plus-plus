@@ -1,12 +1,14 @@
 #include "helper_templates.h"
 
 #include <cstddef>
+#include <float.h>
 #include <functional>
 #include <sstream>
 
-using namespace std;
 
 namespace thts::helper {
+    using namespace std;
+
     /**
      * Adapted from boost: https://www.boost.org/doc/libs/1_55_0/doc/html/hash/reference.html#boost.hash_combine
      */
@@ -17,9 +19,56 @@ namespace thts::helper {
     }
 
     /**
+     * Select max value with randomly breaking ties
+     */
+    template <typename T, typename NumericT>
+    T get_max_key_break_ties_randomly(unordered_map<T,NumericT>& map, ThtsManager& thts_manager) {
+        NumericT best_val = -DBL_MAX;
+        vector<T> best_keys;
+        for (pair<const T,NumericT> pr : map) {
+            NumericT val = pr.second;
+            if (val < best_val) continue;
+            if (val > best_val) {
+                best_keys = vector<T>();
+                best_val = val;
+            }
+            const T key = pr.first;
+            best_keys.push_back(key);
+        }
+
+        int indx = thts_manager.get_rand_int(0,best_keys.size());
+        return best_keys[indx];
+    }
+
+    /**
+     * Sampling from distribution
+     */
+    template <typename T>
+    T sample_from_distribution(unordered_map<T,double>& distribution, ThtsManager& thts_manager, bool normalised=true) {
+        double sum_weights = 1.0
+        if (!normalised) {
+            sum_weights = 0.0
+            for (auto pr : distribution) {
+                sum_weights += pr.second;
+            }
+        }
+
+        double rand_val = thts_manager.get_rand_uniform();
+        double running_sum = 0.0;
+        for (pair<T,double> pr : distribution) {
+            running_sum += pr.second / sum_weights;
+            if (rand_val < running_sum) {
+                return pr.first;
+            }
+        }
+
+        throw "Error in sampling if get here. Did you mean to set normalised=false in sampling from distribution?"
+    }
+
+
+    /**
      * Printing vectors
      */
-
     template <typename T>
     string vector_pretty_print_string(const vector<T>& vec) {
         stringstream ss;

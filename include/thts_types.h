@@ -154,7 +154,7 @@ namespace thts {
      * First used in thts_decision_node.h and thts_chance_node.h
      * N.B. The & here is to get address as we want function pointers
      */
-    std::unordered_map<const Action,double> _DummyPriorFn(std::shared_ptr<const State> s);
+    std::unordered_map<std::shared_ptr<const Action>,double> _DummyPriorFn(std::shared_ptr<const State> s);
     typedef decltype(&_DummyPriorFn) PriorFnPtr; 
 
 
@@ -184,13 +184,6 @@ namespace thts {
      */
     typedef std::tuple<int,std::shared_ptr<const Observation>> DNodeIdTuple;
     typedef std::unordered_map<DNodeIdTuple,std::shared_ptr<ThtsDNode>> DNodeTable;
-
-    /**
-     * Typedef for cnode id tuples, for readability.
-     * First used transposition table implementation, in thts_manager.h, thts_decision_node.h and thts_chance_node.h
-     */
-    typedef std::tuple<int,std::shared_ptr<const State>,std::shared_ptr<const Action>> CNodeIdTuple;
-    typedef std::unordered_map<CNodeIdTuple,std::shared_ptr<ThtsCNode>> CNodeTable;
 }
 
 /**
@@ -322,23 +315,7 @@ namespace std {
     ostream& operator<<(ostream& os, const DNodeIdTuple& tpl);
 
     /**
-     * Hash, equality and stream functions for CNodeIdTuple
-     */
-    template <> 
-    struct hash<CNodeIdTuple> {
-        size_t operator()(const CNodeIdTuple&) const;
-    };
-
-    template <> 
-    struct equal_to<CNodeIdTuple> {
-        bool operator()(const CNodeIdTuple&, const CNodeIdTuple&) const;
-    };
-
-    ostream& operator<<(ostream& os, const CNodeIdTuple& tpl);
-
-    /**
      * Output streams for transposition tables
      */
     ostream& operator<<(ostream& os, const DNodeTable& tbl);
-    ostream& operator<<(ostream& os, const CNodeTable& tbl);
 }

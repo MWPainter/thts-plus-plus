@@ -54,9 +54,9 @@ namespace thts {
             std::shared_ptr<const State> state;
             int decision_depth;
             int decision_timestep;
+            std::shared_ptr<ThtsCNode> parent;
 
             int num_visits;
-            std::shared_ptr<ThtsCNode> parent;
             CNodeChildMap children;
 
         public: 
@@ -112,7 +112,7 @@ namespace thts {
              * Returns:
              *      The recommended action
              */
-            virtual std::shared_ptr<const Action> recommend_action_itfc(ThtsEnvContext& ctx) = 0;
+            virtual std::shared_ptr<const Action> recommend_action_itfc(ThtsEnvContext& ctx) const = 0;
 
             /**
              * Thts backup function.
@@ -146,7 +146,7 @@ namespace thts {
              * Returns:
              *      If this node corresponds to a 'leaf state' in the environment
              */
-            virtual bool is_leaf() = 0;
+            virtual bool is_leaf() const;
 
             /**
              * Creates a child node and inserts it in the unordered_map 'children'.
@@ -178,7 +178,8 @@ namespace thts {
              * Returns:
              *      A pointer to a newly created child node on the heap
              */
-            virtual std::shared_ptr<ThtsCNode> create_child_node_helper_itfc(std::shared_ptr<const Action> action) = 0;
+            virtual std::shared_ptr<ThtsCNode> create_child_node_helper_itfc(
+                std::shared_ptr<const Action> action) const = 0;
 
             /**
              * Helper for pretty printing. Should return some string representing the current 'value' of this node.
@@ -186,7 +187,7 @@ namespace thts {
              * Returns:
              *      string representing the current value of this node
              */
-            virtual std::string get_pretty_print_val() = 0;
+            virtual std::string get_pretty_print_val() const = 0;
 
         public:
             /**
@@ -195,7 +196,7 @@ namespace thts {
              * Returns:
              *      True if current node is the root node
              */
-            bool is_root_node();
+            bool is_root_node() const;
 
             /**
              * Returns if this node is planning for a two player game.
@@ -203,7 +204,7 @@ namespace thts {
              * Returns:
              *      True if currently planning for a two player game
              */
-            bool is_two_player_game();
+            bool is_two_player_game() const;
 
             /**
              * Returns if this node is planning as the opponent in a two player game.
@@ -213,7 +214,7 @@ namespace thts {
              * Returns:
              *      If this node is planning as the opponent in a two player game
              */
-            bool is_opponent();
+            bool is_opponent() const;
 
             /**
              * Helper function to get number of children this node currently has.
@@ -221,7 +222,7 @@ namespace thts {
              * Returns:
              *      Number of children in 'children' map
              */
-            int get_num_children();
+            int get_num_children() const;
 
             /**
              * Helper function to check if node has a child for the given action
@@ -232,7 +233,7 @@ namespace thts {
              * Returns:
              *      Returns true if node has a child corresponding to 'action'
              */
-            bool has_child_itfc(std::shared_ptr<const Action> action);
+            bool has_child_node_itfc(std::shared_ptr<const Action> action) const;
 
             /**
              * Returns a pointer to a child of this node.
@@ -243,7 +244,7 @@ namespace thts {
              * Returns:
              *      A pointer to the child chance node.
              */
-            std::shared_ptr<ThtsCNode> get_child_node_itfc(std::shared_ptr<const Action> action);
+            std::shared_ptr<ThtsCNode> get_child_node_itfc(std::shared_ptr<const Action> action) const;
 
             /**
              * Pretty prints the tree to a string.
@@ -254,7 +255,7 @@ namespace thts {
              * Returns:
              *      A string that is a pretty representation of the top part of the tree, rooted at this node
              */
-            std::string get_pretty_print_string(int depth);
+            std::string get_pretty_print_string(int depth) const;
 
             /**
              * Loads a tree from a given filename.
@@ -276,12 +277,12 @@ namespace thts {
              * Returns:
              *      True if saving was successful.
              */
-            bool save(std::string& filename);
+            bool save(std::string& filename) const;
 
         private:
             /**
              * A helper function that actually implements 'get_pretty_pring_string' above.
              */
-            void get_pretty_print_string_helper(std::stringstream& ss, int depth, int num_tabs);
+            void get_pretty_print_string_helper(std::stringstream& ss, int depth, int num_tabs) const;
     };
 }
