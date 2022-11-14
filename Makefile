@@ -5,11 +5,15 @@ CXX = g++-12
 BINDIR = bin
 
 SOURCES = $(wildcard src/*.cpp)
+SOURCES += $(wildcard src/algorithms/*.cpp)
 OBJECTS = $(patsubst src/%.cpp, $(BINDIR)/%.o, $(SOURCES))
+#OBJECTS += $(patsubst src/algorithms/%.cpp, $(BINDIR)/algorithms/%.o, $(SOURCES))
 TESTS = $(wildcard test/*.cpp)
+TESTS += $(wildcard test/algorithms/*.cpp)
 TEST_OBJECTS = $(patsubst test/%.cpp, $(BINDIR)/test/%.o, $(TESTS))
+#TEST_OBJECTS += $(patsubst test/algorithms/%.cpp, $(BINDIR)/test/algorithms/%.o, $(TESTS))
 
-INCLUDES= -Iinclude/ -Isrc/ -Iexternal/
+INCLUDES= -Iinclude/ -Isrc/ -Iexternal/ -I.
 
 CPPFLAGS = $(INCLUDES) -Wall -std=c++17
 CPPFLAGS_DEBUG = -g
@@ -27,7 +31,8 @@ all: $(TARGET_THTS_TEST)
 
 # Rule to make sure all build directories exist
 bin-exists:
-	@mkdir -p $(BINDIR)/test
+	@mkdir -p $(BINDIR)/test/algorithms
+	@mkdir -p $(BINDIR)/algorithms
 
 # compiling source files
 $(BINDIR)/%.o : src/%.cpp bin-exists

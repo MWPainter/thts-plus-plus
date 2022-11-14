@@ -15,7 +15,7 @@ namespace thts {
         shared_ptr<const Action> action,
         int decision_depth,
         int decision_timestep,
-        shared_ptr<ThtsDNode> parent) :
+        shared_ptr<const UctDNode> parent) :
             ThtsCNode(
                 static_pointer_cast<ThtsManager>(thts_manager),
                 thts_env,
@@ -23,7 +23,7 @@ namespace thts {
                 action,
                 decision_depth,
                 decision_timestep,
-                static_pointer_cast<ThtsDNode>(parent)),
+                static_pointer_cast<const ThtsDNode>(parent)),
             next_state_distr(),
             avg_return(0.0)
     {  
@@ -90,18 +90,18 @@ namespace thts {
     shared_ptr<UctDNode> UctCNode::create_child_node_helper(shared_ptr<const State> observation) const {
         shared_ptr<const State> next_state = observation;
         return make_shared<UctDNode>(
-            thts_manager, 
+            static_pointer_cast<UctManager>(thts_manager), 
             thts_env, 
             next_state,
             decision_depth+1, 
             decision_timestep+1, 
-            this);
+            static_pointer_cast<const UctCNode>(shared_from_this()));
     }
 
     /**
      * Pretty print val = print current avg_return in node
      */
-    string UctDNode::get_pretty_print_val() const {
+    string UctCNode::get_pretty_print_val() const {
         stringstream ss;
         ss << avg_return;
         return ss.str();
@@ -114,7 +114,7 @@ namespace thts {
  */
 namespace thts {
     shared_ptr<UctDNode> UctCNode::create_child_node(shared_ptr<const State> observation) {
-        shared_ptr<const Observation> obsv_itfc = static_pointer_cast<const Observation>(action);
+        shared_ptr<const Observation> obsv_itfc = static_pointer_cast<const Observation>(observation);
         shared_ptr<ThtsDNode> new_child = ThtsCNode::create_child_node_itfc(obsv_itfc);
         return static_pointer_cast<UctDNode>(new_child);
 

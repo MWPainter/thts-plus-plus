@@ -133,7 +133,7 @@ namespace thts {
                 std::shared_ptr<const State> state,
                 int decision_depth,
                 int decision_timestep,
-                std::shared_ptr<UctCNode> parent=nullptr); 
+                std::shared_ptr<const UctCNode> parent=nullptr); 
             
             /**
              * Implements the thts visit function for the node

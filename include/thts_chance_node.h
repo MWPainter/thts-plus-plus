@@ -46,7 +46,7 @@ namespace thts {
      *      children:
      *          A map from Action objects to child ThtsCNode objects
      */
-    class ThtsCNode {
+    class ThtsCNode : public std::enable_shared_from_this<ThtsCNode> {
         // Allow ThtsDNode access to private members
         friend ThtsDNode;
 
@@ -57,7 +57,7 @@ namespace thts {
             std::shared_ptr<const Action> action;
             int decision_depth;
             int decision_timestep;
-            std::shared_ptr<ThtsDNode> parent;
+            std::shared_ptr<const ThtsDNode> parent;
 
             int num_visits;
             DNodeChildMap children;
@@ -75,7 +75,7 @@ namespace thts {
                 std::shared_ptr<const Action> action,
                 int decision_depth,
                 int decision_timestep,
-                std::shared_ptr<ThtsDNode> parent=nullptr);
+                std::shared_ptr<const ThtsDNode> parent=nullptr);
 
             /**
              * Default destructor is sufficient. But need to declare it virtual.

@@ -32,7 +32,7 @@ namespace thts_test{
 
             shared_ptr<const Action> select_action_itfc(ThtsEnvContext& ctx) { return nullptr; }
 
-            shared_ptr<const Action> recommend_action_itfc(ThtsEnvContext& ctx) { return nullptr; }
+            shared_ptr<const Action> recommend_action_itfc(ThtsEnvContext& ctx) const { return nullptr; }
 
             void backup_itfc(
                     const vector<double>& trial_rewards_before_node, 
@@ -44,13 +44,13 @@ namespace thts_test{
             bool is_leaf() { return false; }
         
         protected:
-            shared_ptr<ThtsCNode> create_child_node_helper_itfc(shared_ptr<const Action> action) { 
+            shared_ptr<ThtsCNode> create_child_node_helper_itfc(shared_ptr<const Action> action) const { 
                 shared_ptr<TestThtsCNode> new_child_ptr = make_shared<TestThtsCNode>(
                     thts_manager,thts_env,state,action,decision_depth,decision_timestep);
                 return static_pointer_cast<ThtsCNode>(new_child_ptr); 
             }
 
-            string get_pretty_print_val() { return "0.0"; }
+            string get_pretty_print_val() const { return "0.0"; }
     };
 
     /**
@@ -76,19 +76,21 @@ namespace thts_test{
                     const double trial_cumulative_return,
                     ThtsEnvContext& ctx) {}
 
-            shared_ptr<const State> compute_next_state_from_observation_itfc(shared_ptr<const Observation> observation) {
+            shared_ptr<const State> compute_next_state_from_observation_itfc(
+                shared_ptr<const Observation> observation) const 
+            {
                 return static_pointer_cast<const State>(observation);
             }
 
         protected:
-            shared_ptr<ThtsDNode> create_child_node_helper_itfc(shared_ptr<const Observation> observation) { 
+            shared_ptr<ThtsDNode> create_child_node_helper_itfc(shared_ptr<const Observation> observation) const { 
                 shared_ptr<const State> next_state = compute_next_state_from_observation_itfc(observation);
                 shared_ptr<TestThtsDNode> new_child_ptr = make_shared<TestThtsDNode>(
                     thts_manager,thts_env,next_state,decision_depth+1,decision_timestep+1);
                 return new_child_ptr;
             }
 
-            string get_pretty_print_val() { return "0.0"; }
+            string get_pretty_print_val() const { return "0.0"; }
     };
 
     /**

@@ -1,8 +1,6 @@
 #pragma once
 
 #include "helper.h"
-#include "thts_chance_node.h"
-#include "thts_decision_node.h"
 #include "thts_types.h"
 
 #include <cstdlib>
@@ -85,16 +83,16 @@ namespace thts {
                 bool mcts_mode=true, 
                 bool use_transposition_table=false, 
                 bool is_two_player_game=false,
-                HeuristicFnPtr heuristic_fn_ptr=helper::zero_heuristic_fn,
-                PriorFnPtr prior_fn_ptr=nullptr,
+                HeuristicFnPtr heuristic_fn=helper::zero_heuristic_fn,
+                PriorFnPtr prior_fn=nullptr,
                 int seed=60415) :
+                    gen(seed),
+                    uniform_distr(0.0,1.0),
                     mcts_mode(mcts_mode), 
                     use_transposition_table(use_transposition_table), 
                     is_two_player_game(is_two_player_game),
                     heuristic_fn(heuristic_fn),
-                    prior_fn(prior_fn),
-                    gen(seed),
-                    uniform_distr(0.0,1.0) 
+                    prior_fn(prior_fn)
             {
                 if (seed == 0) {
                     std::random_device rd;

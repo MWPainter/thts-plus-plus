@@ -4,6 +4,7 @@
 #include "thts_manager.h"
 #include "thts_types.h"
 
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -26,9 +27,9 @@ namespace thts_test{
      */  
     class TestThtsManager : public ThtsManager {
         private:
-            int int_indx;
+            size_t int_indx;
             vector<int> int_mock_numbers;
-            int uniform_indx;
+            size_t uniform_indx;
             vector<double> uniform_mock_numbers;
 
         public:          

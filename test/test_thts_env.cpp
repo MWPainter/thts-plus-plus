@@ -143,7 +143,7 @@ namespace thts_test{
         // Also check that getting the entirer transition distribution happens correctly
         shared_ptr<IntPairStateDistr> distribution = env.get_transition_distribution(init_state, act);
         cout << *(distribution) << endl << endl;
-        cout << TestThtsEnv(2,0.5).get_transition_distribution(init_state,act) << endl << endl;
+        cout << *(TestThtsEnv(2,0.5).get_transition_distribution(init_state,act)) << endl << endl;
 
         // Repeat all of the above, but using the interface, AND, only printing out at the end to check shared memory 
         // is allocated correctly. (Should get some garbage if not).
@@ -179,7 +179,7 @@ namespace thts_test{
         
         shared_ptr<ObservationDistr> distr_0 = env.get_transition_distribution_itfc(state_0, act_0);
         cout << *(distr_0) << endl << endl;
-        cout << TestThtsEnv(2,0.5).get_transition_distribution_itfc(init_state,act) << endl << endl;
+        cout << *(TestThtsEnv(2,0.5).get_transition_distribution_itfc(init_state,act)) << endl << endl;
 
 
     }

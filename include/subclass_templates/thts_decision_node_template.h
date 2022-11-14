@@ -78,7 +78,7 @@ namespace thts {
                 std::shared_ptr<const _S> state,
                 int decision_depth,
                 int decision_timestep,
-                std::shared_ptr<_CNode> parent=nullptr); 
+                std::shared_ptr<const _CNode> parent=nullptr); 
             
             /**
              * Implements the thts visit function for the node
@@ -290,14 +290,14 @@ namespace thts {
         shared_ptr<const _S> state,
         int decision_depth,
         int decision_timestep,
-        shared_ptr<_CNode> parent) :
+        shared_ptr<const _CNode> parent) :
             ThtsDNode(
                 static_pointer_cast<ThtsManager>(thts_manager),
                 static_pointer_cast<ThtsEnv>(thts_env),
                 static_pointer_cast<const State>(state),
                 decision_depth,
                 decision_timestep,
-                static_pointer_cast<ThtsCNode>(parent)) {}
+                static_pointer_cast<const ThtsCNode>(parent)) {}
     
     void _DNode::visit(_Context& ctx) {
         num_visits += 1;
@@ -328,7 +328,7 @@ namespace thts {
             action, 
             decision_depth, 
             decision_timestep, 
-            this);
+            static_pointer_cast<const _DNode>(shared_from_this()));
     }
 
     string _DNode::get_pretty_print_val() const {
@@ -350,6 +350,7 @@ namespace thts {
     bool _DNode::has_child_node(shared_ptr<const _A> action) const {
         return ThtsDNode::has_child_node_itfc(static_pointer_cast<const Action>(action));
     }
+    
     shared_ptr<_CNode> _DNode::get_child_node(shared_ptr<const _A> action) const {
         shared_ptr<const Action> act_itfc = static_pointer_cast<const Action>(action);
         shared_ptr<ThtsCNode> new_child = ThtsDNode::get_child_node_itfc(act_itfc);

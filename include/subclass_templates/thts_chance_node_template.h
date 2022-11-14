@@ -81,7 +81,7 @@ namespace thts {
                 std::shared_ptr<const _A> action,
                 int decision_depth,
                 int decision_timestep,
-                std::shared_ptr<ThtsDNode> parent=nullptr);
+                std::shared_ptr<const _DNode> parent=nullptr);
 
             /**
              * Implements the thts visit function for the node
@@ -220,7 +220,7 @@ namespace thts {
              * Returns:
              *      A pointer to the child node corresponding to 'observation'
              */
-            shared_ptr<_DNode> get_child_node(shared_ptr<const _O> observation) const;
+            std::shared_ptr<_DNode> get_child_node(std::shared_ptr<const _O> observation) const;
 
 
 
@@ -295,7 +295,7 @@ namespace thts {
         shared_ptr<const _A> action,
         int decision_depth,
         int decision_timestep,
-        shared_ptr<ThtsDNode> parent) :
+        shared_ptr<const _DNode> parent) :
             ThtsCNode(
                 static_pointer_cast<ThtsManager>(thts_manager),
                 static_pointer_cast<ThtsEnv>(thts_env),
@@ -303,7 +303,7 @@ namespace thts {
                 static_pointer_cast<const Action>(action),
                 decision_depth,
                 decision_timestep,
-                static_pointer_cast<ThtsDNode>(parent)) {}
+                static_pointer_cast<const ThtsDNode>(parent)) {}
 
     void _CNode::visit(_Context& ctx) {
         num_visits += 1;
@@ -334,7 +334,7 @@ namespace thts {
             next_state,
             decision_depth+1, 
             decision_timestep+1, 
-            this);
+            static_pointer_cast<const _CNode>(shared_from_this()));
     }
 
     string _CNode::get_pretty_print_val() const {
@@ -348,7 +348,7 @@ namespace thts {
  */
 namespace thts {
     shared_ptr<_DNode> _CNode::create_child_node(shared_ptr<const _O> observation) {
-        shared_ptr<const Observation> obsv_itfc = static_pointer_cast<const Observation>(action);
+        shared_ptr<const Observation> obsv_itfc = static_pointer_cast<const Observation>(observation);
         shared_ptr<ThtsDNode> new_child = ThtsCNode::create_child_node_itfc(obsv_itfc);
         return static_pointer_cast<_DNode>(new_child);
 

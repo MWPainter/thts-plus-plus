@@ -22,14 +22,14 @@ namespace thts {
         shared_ptr<const State> state,
         int decision_depth,
         int decision_timestep,
-        shared_ptr<UctCNode> parent) :
+        shared_ptr<const UctCNode> parent) :
             ThtsDNode(
                 static_pointer_cast<ThtsManager>(thts_manager),
-                static_pointer_cast<ThtsEnv>(thts_env),
-                static_pointer_cast<const State>(state),
+                thts_env,
+                state,
                 decision_depth,
                 decision_timestep,
-                static_pointer_cast<ThtsCNode>(parent)),
+                static_pointer_cast<const ThtsCNode>(parent)),
             actions(thts_env->get_valid_actions_itfc(state)),
             avg_return(0.0) 
     {   
@@ -263,7 +263,7 @@ namespace thts {
             action, 
             decision_depth, 
             decision_timestep, 
-            this);
+            static_pointer_cast<const UctDNode>(shared_from_this()));
     }
 
     /**

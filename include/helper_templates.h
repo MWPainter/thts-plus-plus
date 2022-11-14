@@ -49,7 +49,8 @@ namespace thts::helper {
      *      An item sampled from the distribution
      */
     template <typename T>
-    T sample_from_distribution(std::unordered_map<T,double>& distribution, ThtsManager& thts_manager, bool normalised=true);
+    T sample_from_distribution(
+        std::unordered_map<T,double>& distribution, ThtsManager& thts_manager, bool normalised=true);
 
     /**
      * Helper function for printing vector types to strings. Assumes that the type T can be fed into an ostream.

@@ -23,7 +23,7 @@ namespace thts {
         shared_ptr<const Action> action,
         int decision_depth,
         int decision_timestep,
-        shared_ptr<ThtsDNode> parent) :
+        shared_ptr<const ThtsDNode> parent) :
             thts_manager(thts_manager),
             thts_env(thts_env),
             state(state),

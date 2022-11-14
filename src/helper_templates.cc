@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <float.h>
 #include <functional>
+#include <limits>
 #include <sstream>
 
 
@@ -23,7 +24,7 @@ namespace thts::helper {
      */
     template <typename T, typename NumericT>
     T get_max_key_break_ties_randomly(unordered_map<T,NumericT>& map, ThtsManager& thts_manager) {
-        NumericT best_val = -DBL_MAX;
+        NumericT best_val = std::numeric_limits<NumericT>::lowest();
         vector<T> best_keys;
         for (pair<const T,NumericT> pr : map) {
             NumericT val = pr.second;
@@ -44,10 +45,10 @@ namespace thts::helper {
      * Sampling from distribution
      */
     template <typename T>
-    T sample_from_distribution(unordered_map<T,double>& distribution, ThtsManager& thts_manager, bool normalised=true) {
-        double sum_weights = 1.0
+    T sample_from_distribution(unordered_map<T,double>& distribution, ThtsManager& thts_manager, bool normalised) {
+        double sum_weights = 1.0;
         if (!normalised) {
-            sum_weights = 0.0
+            sum_weights = 0.0;
             for (auto pr : distribution) {
                 sum_weights += pr.second;
             }
@@ -62,7 +63,7 @@ namespace thts::helper {
             }
         }
 
-        throw "Error in sampling if get here. Did you mean to set normalised=false in sampling from distribution?"
+        throw "Error in sampling if get here. Did you mean to set normalised=false in sampling from distribution?";
     }
 
 

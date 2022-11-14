@@ -1,6 +1,7 @@
 #pragma once
 
 #include "thts_env_context.h"
+#include "thts_manager.h"
 #include "thts_types.h"
 
 #include <memory>

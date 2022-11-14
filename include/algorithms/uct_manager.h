@@ -37,8 +37,8 @@ namespace thts {
      */
     class UctManager : public ThtsManager {
         public:
-            static const double USE_AUTO_BIAS = -1.0;
-            static const double AUTO_BIAS_MIN_BIAS = 0.001;
+            static constexpr double USE_AUTO_BIAS = -1.0;
+            static constexpr double AUTO_BIAS_MIN_BIAS = 0.001;
 
             double bias;
             int heuristic_psuedo_trials;

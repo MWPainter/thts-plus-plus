@@ -41,7 +41,7 @@ namespace thts {
              * Returns:
              *      The sampled next state
              */
-            shared_ptr<const State> sample_observation_random();
+            std::shared_ptr<const State> sample_observation_random();
 
             /**
              * Performs an 'avg_return' backup, i.e. it encorporates a new value into the current average.
@@ -67,7 +67,7 @@ namespace thts {
                 std::shared_ptr<const Action> action,
                 int decision_depth,
                 int decision_timestep,
-                std::shared_ptr<ThtsDNode> parent=nullptr);
+                std::shared_ptr<const UctDNode> parent=nullptr);
 
             /**
              * Implements the thts visit function for the node
@@ -193,7 +193,7 @@ namespace thts {
              * Returns:
              *      A pointer to the child node corresponding to 'observation'
              */
-            shared_ptr<UctDNode> get_child_node(shared_ptr<const State> observation) const;
+            std::shared_ptr<UctDNode> get_child_node(std::shared_ptr<const State> observation) const;
 
 
 
