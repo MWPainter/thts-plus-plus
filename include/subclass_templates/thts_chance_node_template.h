@@ -13,6 +13,9 @@
  *      _O -> YourObservationClass
  * 
  * Finally, complete all of the TODO comments inline.
+ * 
+ * TODO: delete any <<<POMDP -> POMDP>>> or <<<MDP -> MDP>>> sections depending on if need to implement a partially 
+ * observable interface.
  */
 
 /**
@@ -124,20 +127,27 @@ namespace thts {
                 const double trial_cumulative_return,
                 _Context& ctx);
 
-            /**
-             * A helper function that transforms an sampled observation into a state that can be used for a child 
-             * decision node.
-             * 
-             * Args:
-             *      observation: The observation we want to compute a successor state from (could be belief state)
-             * 
-             * Returns:
-             *      The successor state to be used for planning that resulted from taking 'action' from 'state' 
-             *      (member variables) and observing 'observation'
-             */
-            std::shared_ptr<const _S> compute_next_state_from_observation(std::shared_ptr<const _O> observation) const;
-
         protected:
+// //<<< POMDP
+//             /**
+//              * A helper function that makes a child node object on the heap and returns it. 
+//              * 
+//              * The 'create_child_node' boilerplate function uses this function to make a new child, add it to the 
+//              * children map (or bypass making the node using the transposition table if using). The function is marked 
+//              * const to enforce that we don't accidently try to duplicate logic surrounding adding children and 
+//              * interacting with the transposition table.
+//              * 
+//              * Args:
+//              *      observation: The observation object leading to the child node
+//              *      next_state: The next state to construct the child node with
+//              * 
+//              * Returns:
+//              *      A pointer to a new _DNode object
+//              */
+//             std::shared_ptr<_DNode> create_child_node_helper(
+//                 std::shared_ptr<const _O> observation, std::shared_ptr<const _S> next_state) const;
+// // //POMDP >>>
+//<<< MDP
             /**
              * A helper function that makes a child node object on the heap and returns it. 
              * 
@@ -147,12 +157,14 @@ namespace thts {
              * interacting with the transposition table.
              * 
              * Args:
-             *      observation: An observation to create a child node for
+             *      observation: The observation (next state) object leading to the child node
+             *      next_state: The next state to construct the child node with
              * 
              * Returns:
              *      A pointer to a new _DNode object
              */
             std::shared_ptr<_DNode> create_child_node_helper(std::shared_ptr<const _O> observation) const;
+// //MDP >>>
 
             /**
              * Returns a string representation of the value of this node currently. Used for pretty printing.
@@ -178,6 +190,30 @@ namespace thts {
              */
             virtual ~_CNode() = default;
 
+// //<<< POMDP
+//             /**
+//              * Creates a child node, handles the internal management of the creation and returns a pointer to it.
+//              * 
+//              * This funciton is a wrapper for the create_child_node_itfc function definted in thts_decision_node.cpp, 
+//              * and handles the casting required to use it.
+//              * 
+//              * - If the child already exists in children, it returns a pointer to that child.
+//              * - (If using transposition table) If the child already exists in the transposition table, but not in 
+//              *      children, it adds the child to children and then returns a pointer to it.
+//              * - If the child hasn't been created before, it makes the child (using 'create_child_node_helper'), and 
+//              *      inserts it appropriately into children (and the transposition table if relevant).
+//              * 
+//              * Args:
+//              *      observation: The observation object leading to the child node
+//              *      next_state: The next state to construct the child node with
+//              * 
+//              * Returns:
+//              *      A pointer to a new child chance node
+//              */
+//             std::shared_ptr<_DNode> create_child_node(
+//                 std::shared_ptr<const _O> observation, std::shared_ptr<const _S> next_state);
+// //POMDP >>>
+//<<< MDP
             /**
              * Creates a child node, handles the internal management of the creation and returns a pointer to it.
              * 
@@ -191,12 +227,13 @@ namespace thts {
              *      inserts it appropriately into children (and the transposition table if relevant).
              * 
              * Args:
-             *      action: An action to create a child node for
+             *      observation: The observation (next state) object leading to the child node
              * 
              * Returns:
              *      A pointer to a new child chance node
              */
             std::shared_ptr<_DNode> create_child_node(std::shared_ptr<const _O> observation);
+//MDP >>>
 
             /**
              * If this node has a child object corresponding to 'observation'.
@@ -241,13 +278,10 @@ namespace thts {
                 const double trial_cumulative_return,
                 ThtsEnvContext& ctx);
 
-            virtual std::shared_ptr<const State> compute_next_state_from_observation_itfc(
-                std::shared_ptr<const Observation> observation) const;
-
             virtual std::shared_ptr<ThtsDNode> create_child_node_helper_itfc(
-                std::shared_ptr<const Observation> observation) const;
+                std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state) const;
             // virtual std::shared_ptr<ThtsDNode> create_child_node_itfc(
-            //    std::shared_ptr<const Observation> observation) final;
+            //    std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state) final;
                 
 
 
@@ -322,12 +356,23 @@ namespace thts {
     {   
     }
 
-    shared_ptr<const _S> _CNode::compute_next_state_from_observation(shared_ptr<const _O> observation) const {
-        return static_pointer_cast<const _S>(observation);
-    }
-
-    shared_ptr<_DNode> _CNode::create_child_node_helper(shared_ptr<const _O> observation) const {
-        shared_ptr<const _S> next_state = compute_next_state_from_observation(observation);
+// //<<< POMDP
+//     shared_ptr<_DNode> _CNode::create_child_node_helper(
+//         shared_ptr<const _O> observation, shared_ptr<const _S> next_state) const 
+//     {
+//         return make_shared<_DNode>(
+//             thts_manager, 
+//             thts_env, 
+//             next_state,
+//             decision_depth+1, 
+//             decision_timestep+1, 
+//             static_pointer_cast<const _CNode>(shared_from_this()));
+//     }
+// //POMDP >>>
+//<<< MDP
+    shared_ptr<_DNode> _CNode::create_child_node_helper(shared_ptr<const _O> observation) const 
+    {  
+        shared_ptr<const _S> next_state = static_pointer_cast<const _S>(observation);
         return make_shared<_DNode>(
             thts_manager, 
             thts_env, 
@@ -336,6 +381,7 @@ namespace thts {
             decision_timestep+1, 
             static_pointer_cast<const _CNode>(shared_from_this()));
     }
+//MDP >>>
 
     string _CNode::get_pretty_print_val() const {
         return "";
@@ -347,12 +393,22 @@ namespace thts {
  * All this code basically calls the corresponding base implementation function, with approprtiate casts before/after.
  */
 namespace thts {
+// //<<< POMDP
+//     shared_ptr<_DNode> _CNode::create_child_node(shared_ptr<const _O> observation, shared_ptr<const _S> next_state) {
+//         shared_ptr<const Observation> obsv_itfc = static_pointer_cast<const Observation>(observation);
+//         shared_ptr<const State> next_state_itfc = static_pointer_cast<const State>(next_state);
+//         shared_ptr<ThtsDNode> new_child = ThtsCNode::create_child_node_itfc(obsv_itfc, next_state_itfc);
+//         return static_pointer_cast<_DNode>(new_child);
+//     }
+// //POMDP >>>
+//<<< MDP
     shared_ptr<_DNode> _CNode::create_child_node(shared_ptr<const _O> observation) {
         shared_ptr<const Observation> obsv_itfc = static_pointer_cast<const Observation>(observation);
-        shared_ptr<ThtsDNode> new_child = ThtsCNode::create_child_node_itfc(obsv_itfc);
+        shared_ptr<const State> next_state_itfc = static_pointer_cast<const State>(observation);
+        shared_ptr<ThtsDNode> new_child = ThtsCNode::create_child_node_itfc(obsv_itfc, next_state_itfc);
         return static_pointer_cast<_DNode>(new_child);
-
     }
+//MDP >>>
 
     bool _CNode::has_child_node(std::shared_ptr<const _O> observation) const {
         return ThtsCNode::has_child_node_itfc(static_pointer_cast<const Observation>(observation));
@@ -396,18 +452,23 @@ namespace thts {
             ctx_itfc);
     }
 
-    shared_ptr<const State> _CNode::compute_next_state_from_observation_itfc(
-        shared_ptr<const Observation> observation) const
+// //<<< POMDP
+//     shared_ptr<ThtsDNode> _CNode::create_child_node_helper_itfc(
+//         shared_ptr<const Observation> observation, shared_ptr<const State> next_state) const 
+//     {
+//         shared_ptr<const _O> obsv_itfc = static_pointer_cast<const _O>(observation);
+//         shared_ptr<const _S> next_state_itfc = static_pointer_cast<const _S>(next_state);
+//         shared_ptr<_DNode> child_node = create_child_node_helper(obsv_itfc, next_state_itfc);
+//         return static_pointer_cast<ThtsDNode>(child_node);
+//     }
+// //POMDP >>>
+//<<< MDP
+    shared_ptr<ThtsDNode> _CNode::create_child_node_helper_itfc(
+        shared_ptr<const Observation> observation, shared_ptr<const State> next_state) const 
     {
-        shared_ptr<const _O> obsv_itfc = static_pointer_cast<const _O>(observation);
-        shared_ptr<const _S> state = compute_next_state_from_observation(obsv_itfc);
-        return static_pointer_cast<const State>(state);
-    }
-
-    shared_ptr<ThtsDNode> _CNode::create_child_node_helper_itfc(shared_ptr<const Observation> observation) const {
         shared_ptr<const _O> obsv_itfc = static_pointer_cast<const _O>(observation);
         shared_ptr<_DNode> child_node = create_child_node_helper(obsv_itfc);
         return static_pointer_cast<ThtsDNode>(child_node);
-
     }
+//MDP >>>
 }

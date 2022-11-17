@@ -120,12 +120,12 @@ namespace thts {
              * interacting with the transposition table.
              * 
              * Args:
-             *      observation: An observation to create a child node for
+             *      observation: The observation (next state) object leading to the child node
              * 
              * Returns:
              *      A pointer to a new _DNode object
              */
-            std::shared_ptr<UctDNode> create_child_node_helper(std::shared_ptr<const State> observation) const;
+            std::shared_ptr<UctDNode> create_child_node_helper(std::shared_ptr<const State> observation) const; 
 
             /**
              * Returns a string representation of the value of this node currently. Used for pretty printing.
@@ -164,12 +164,12 @@ namespace thts {
              *      inserts it appropriately into children (and the transposition table if relevant).
              * 
              * Args:
-             *      action: An action to create a child node for
+             *      observation: The observation (next state) object leading to the child node
              * 
              * Returns:
              *      A pointer to a new child chance node
              */
-            std::shared_ptr<UctDNode> create_child_node(std::shared_ptr<const State> observation);
+            std::shared_ptr<UctDNode> create_child_node(std::shared_ptr<const State> Observation);
 
             /**
              * If this node has a child object corresponding to 'observation'.
@@ -214,13 +214,10 @@ namespace thts {
                 const double trial_cumulative_return,
                 ThtsEnvContext& ctx);
 
-            virtual std::shared_ptr<const State> compute_next_state_from_observation_itfc(
-                std::shared_ptr<const Observation> observation) const;
-
             virtual std::shared_ptr<ThtsDNode> create_child_node_helper_itfc(
-                std::shared_ptr<const Observation> observation) const;
+                std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state) const;
             // virtual std::shared_ptr<ThtsDNode> create_child_node_itfc(
-            //    std::shared_ptr<const Observation> observation) final;
+            //    std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state) final;
                 
 
 

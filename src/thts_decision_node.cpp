@@ -52,19 +52,11 @@ namespace thts {
      * 
      * If not using a transposition table, we call the helper and put the child in our children map. 
      * 
-     * If using a transposition table, it actually doesn't matter. Chance nodes will only 'transpose' iff this 
-     * decision node is 'transposed'. So we don't need to consider a transposition table for chance nodes. Because it
-     * is implemented via the transposition table for decision nodes.
+     * As transposition table is implemented for decision nodes, we don't need to use one for chance nodes. If two 
+     * chance nodes would be transpositions, then their parent (decision) nodes would be transpositions!
      */
     shared_ptr<ThtsCNode> ThtsDNode::create_child_node_itfc(shared_ptr<const Action> action) {
         if (has_child_node_itfc(action)) return get_child_node_itfc(action);
-
-        if (!thts_manager->use_transposition_table) {
-            shared_ptr<ThtsCNode> child_node = create_child_node_helper_itfc(action);
-            children[action] = child_node;
-            return child_node;
-        }
-
         shared_ptr<ThtsCNode> child_node = create_child_node_helper_itfc(action);
         children[action] = child_node;
         return child_node;
@@ -139,11 +131,10 @@ namespace thts {
      * Should be a one-and-done function that can be reused. It's pretty much all just building a string that lays out 
      * nodes 'get_pretty_print_val' values in a nice format. 
      * 
-     * TODO: add nice way of only displaying the 5 most visited actions
+     * TODO: add nice way of only displaying the X most visited actions
      */
     void ThtsDNode::get_pretty_print_string_helper(stringstream& ss, int depth, int num_tabs) const {
         // Print out this nodes info
-        // for (int i=0; i<num_tabs; i++) ss << "|\t";
         ss << "D(vl=" << get_pretty_print_val() << ",#v=" << num_visits << ")[";
 
         // Base case 

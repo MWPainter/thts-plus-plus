@@ -24,15 +24,9 @@ namespace thts {
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const ThtsDNode>(parent)),
-            next_state_distr(),
+            next_state_distr(thts_env->get_transition_distribution_itfc(state,action)),
             avg_return(0.0)
     {  
-        shared_ptr<ObservationDistr> obsv_distr = thts_env->get_transition_distribution_itfc(state,action);
-        for (pair<shared_ptr<const Observation>,double> pr : *obsv_distr) { 
-            shared_ptr<const State> state = compute_next_state_from_observation_itfc(pr.first);
-            next_state_distr->insert_or_assign(state, pr.second);
-        }
-
         if (thts_manager->use_heuristic_at_chance_nodes && thts_manager->heuristic_fn != nullptr) {
             num_visits = thts_manager->heuristic_psuedo_trials;
             avg_return = thts_manager->heuristic_fn(state, action);
@@ -48,6 +42,8 @@ namespace thts {
 
     /**
      * Implementation of sample_observation, that uses the sample from distribution helper function.
+     * 
+     * thts_env->sample_observation
      */
     shared_ptr<const State> UctCNode::sample_observation_random() {
         shared_ptr<const State> sampled_state = helper::sample_from_distribution(*next_state_distr, *thts_manager);
@@ -87,8 +83,9 @@ namespace thts {
     /**
      * Make a new UctDNode on the heap, with correct arguments for a child node.
      */
-    shared_ptr<UctDNode> UctCNode::create_child_node_helper(shared_ptr<const State> observation) const {
-        shared_ptr<const State> next_state = observation;
+    shared_ptr<UctDNode> UctCNode::create_child_node_helper(shared_ptr<const State> observation) const
+    {
+        shared_ptr<const State> next_state = static_pointer_cast<const State>(observation);
         return make_shared<UctDNode>(
             static_pointer_cast<UctManager>(thts_manager), 
             thts_env, 
@@ -113,9 +110,11 @@ namespace thts {
  * All this code basically calls the corresponding base implementation function, with approprtiate casts before/after.
  */
 namespace thts {
-    shared_ptr<UctDNode> UctCNode::create_child_node(shared_ptr<const State> observation) {
+    shared_ptr<UctDNode> UctCNode::create_child_node(shared_ptr<const State> observation) 
+    {
         shared_ptr<const Observation> obsv_itfc = static_pointer_cast<const Observation>(observation);
-        shared_ptr<ThtsDNode> new_child = ThtsCNode::create_child_node_itfc(obsv_itfc);
+        shared_ptr<const State> next_state_itfc = static_pointer_cast<const State>(observation);
+        shared_ptr<ThtsDNode> new_child = ThtsCNode::create_child_node_itfc(obsv_itfc, next_state_itfc);
         return static_pointer_cast<UctDNode>(new_child);
 
     }
@@ -162,16 +161,11 @@ namespace thts {
             ctx_itfc);
     }
 
-    shared_ptr<const State> UctCNode::compute_next_state_from_observation_itfc(
-        shared_ptr<const Observation> observation) const
+    shared_ptr<ThtsDNode> UctCNode::create_child_node_helper_itfc(
+        shared_ptr<const Observation> observation, shared_ptr<const State> next_state) const 
     {
-        return static_pointer_cast<const State>(observation);
-    }
-
-    shared_ptr<ThtsDNode> UctCNode::create_child_node_helper_itfc(shared_ptr<const Observation> observation) const {
         shared_ptr<const State> obsv_itfc = static_pointer_cast<const State>(observation);
         shared_ptr<UctDNode> child_node = create_child_node_helper(obsv_itfc);
         return static_pointer_cast<ThtsDNode>(child_node);
-
     }
 }

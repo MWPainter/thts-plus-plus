@@ -35,6 +35,7 @@ namespace thts {
      */
     class Observation {
         public:
+            virtual ~Observation() = default;
             virtual std::size_t hash() const;
             virtual bool equals_itfc(const Observation& other) const;
             virtual std::string get_pretty_print_string() const;
@@ -54,6 +55,7 @@ namespace thts {
      */
     class State : public Observation {
         public:
+            virtual ~State() = default;
             virtual std::size_t hash() const;
             virtual bool equals_itfc(const Observation& other) const;
             virtual std::string get_pretty_print_string() const;
@@ -73,6 +75,7 @@ namespace thts {
      */
     class Action {
         public:
+            virtual ~Action() = default;
             virtual std::size_t hash() const;
             virtual bool equals_itfc(const Action& other) const;
             virtual std::string get_pretty_print_string() const;
@@ -88,9 +91,10 @@ namespace thts {
             int state;
 
             IntState(int state) : state(state) {}
+            virtual ~IntState() = default;
             virtual std::size_t hash() const;
-            virtual bool equals_itfc(const Observation& other) const;
             bool equals(const IntState& other) const;
+            virtual bool equals_itfc(const Observation& other) const;
             virtual std::string get_pretty_print_string() const;
     };
 
@@ -103,9 +107,10 @@ namespace thts {
 
             IntPairState(std::pair<int,int> pr) : state(pr) {}
             IntPairState(int first, int second) : state(std::make_pair(first,second)) {}
+            virtual ~IntPairState() = default;
             virtual std::size_t hash() const;
-            virtual bool equals_itfc(const Observation& other) const;
             bool equals(const IntPairState& other) const;
+            virtual bool equals_itfc(const Observation& other) const;
             virtual std::string get_pretty_print_string() const;
     };
 
@@ -119,9 +124,10 @@ namespace thts {
             int action;
 
             IntAction(int action) : action(action) {}
+            virtual ~IntAction() = default;
             virtual std::size_t hash() const;
-            virtual bool equals_itfc(const Action& other) const;
             bool equals(const IntAction& other) const;
+            virtual bool equals_itfc(const Action& other) const;
             virtual std::string get_pretty_print_string() const;
     };
 
@@ -133,9 +139,10 @@ namespace thts {
             std::string action;
 
             StringAction(std::string action) : action(action) {}
+            virtual ~StringAction() = default;
             virtual std::size_t hash() const;
-            virtual bool equals_itfc(const Action& other) const;
             bool equals(const StringAction& other) const;
+            virtual bool equals_itfc(const Action& other) const;
             virtual std::string get_pretty_print_string() const;
     };
 

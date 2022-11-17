@@ -1,3 +1,4 @@
+//DONE
 #pragma once
 
 #include "helper.h"
@@ -30,9 +31,11 @@ namespace thts {
      *          If mcts_mode is false, then trials are run to completion (until max depth or a sink state is reached).
      *      transposition_table:
      *          Specifies if a transposition table is to be used. Nodes are stored in a table upon creation, keyed by 
-     *          (depth, State, optional<Action>) tuples. When creating a new node, we first look if it exists in the table 
-     *          already, and if it does we return that instead. This requires State and Action objects to have std::hash and 
-     *          std::equal_to definitions.
+     *          (depth, Observation) tuples. When creating a new node, we first look if it exists in the table 
+     *          already, and if it does we return that instead. This requires State and Action objects to have 
+     *          std::hash and std::equal_to definitions. NOTE: should only use transposition_table if the 
+     *          (depth,Observation) tuples have a one to one correspondance with decision nodes, otherwise this may 
+     *          cause bugs.
      *      is_two_player_game:
      *          Specifies if we are planning for a two player game
      * 
@@ -53,15 +56,24 @@ namespace thts {
      *      prior_fn_ptr:
      *          A pointer to the prior (Q-value) function, that returns a map from actions to prior value estimates
      * Private member variables:
-     *      gen:   
-     *          A 'mersenne_twister_engine' used to see the (uniform) random number generation
-     *      uniform_distr: 
+     *      rd:
+     *          A 'random_device' which is the computers source of (psuedo) random numbers
+     *      real_gen:   
+     *          A 'mersenne_twister_engine' used to seed the uniform [0,1) random number generation
+     *      real_distr: 
      *          A random number generator for real numbers in the range [0,1)
+     *      int_gen:   
+     *          A 'mersenne_twister_engine' used to seed the uniform [0,1) random number generation
+     *      int_distr: 
+     *          A random number generator for integer numbers in the range [0,RAND_MAX)
      */
     class ThtsManager {
         private:
-            std::mt19937 gen;
-            std::uniform_real_distribution<double> uniform_distr;
+            std::random_device rd;
+            std::mt19937 int_gen;
+            std::mt19937 real_gen;
+            std::uniform_int_distribution<int> int_distr;
+            std::uniform_real_distribution<double> real_distr;
 
         public:
             DNodeTable dmap;
@@ -86,8 +98,10 @@ namespace thts {
                 HeuristicFnPtr heuristic_fn=helper::zero_heuristic_fn,
                 PriorFnPtr prior_fn=nullptr,
                 int seed=60415) :
-                    gen(seed),
-                    uniform_distr(0.0,1.0),
+                    int_gen(seed),
+                    real_gen(seed),
+                    int_distr(0,RAND_MAX),
+                    real_distr(0.0,1.0),
                     mcts_mode(mcts_mode), 
                     use_transposition_table(use_transposition_table), 
                     is_two_player_game(is_two_player_game),
@@ -95,18 +109,22 @@ namespace thts {
                     prior_fn(prior_fn)
             {
                 if (seed == 0) {
-                    std::random_device rd;
-                    gen = std::mt19937(rd());
+                    int_gen = std::mt19937(rd());
+                    real_gen = std::mt19937(rd());
                 }
-                std::srand(seed);
             };
+
+            /**
+             * Any classes intended to be inherited from should make destructor virtual
+             */
+            virtual ~ThtsManager() = default;
 
             /**
              * Returns a uniform random integer in the range [min_included, max_excluded).
              * N.B. Marked virtual so that these functions can be mocked easily.
              */
             virtual int get_rand_int(int min_included, int max_excluded) {
-                int len = std::rand() % (max_excluded - min_included);
+                int len = int_distr(int_gen) % (max_excluded - min_included);
                 return min_included + len;
             };
             
@@ -115,7 +133,7 @@ namespace thts {
              * N.B. Marked virtual so that these functions can be mocked easily.
              */
             virtual double get_rand_uniform() {
-                return uniform_distr(gen);
+                return real_distr(real_gen);
             };
     };
 }

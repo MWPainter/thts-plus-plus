@@ -51,11 +51,13 @@ namespace thts {
      * If using a transposition table, we first check the transposition table to try get it from there. If it's not in 
      * the table, we make the child and insert it in children and the transposition table.
      */
-    shared_ptr<ThtsDNode> ThtsCNode::create_child_node_itfc(shared_ptr<const Observation> observation) {
+    shared_ptr<ThtsDNode> ThtsCNode::create_child_node_itfc(
+        shared_ptr<const Observation> observation, shared_ptr<const State> next_state) 
+    {
         if (has_child_node_itfc(observation)) return get_child_node_itfc(observation);
 
         if (!thts_manager->use_transposition_table) {
-            shared_ptr<ThtsDNode> child_node = create_child_node_helper_itfc(observation);
+            shared_ptr<ThtsDNode> child_node = create_child_node_helper_itfc(observation, next_state);
             children[observation] = child_node;
             return child_node;
         }
@@ -69,7 +71,7 @@ namespace thts {
             return child_node;
         }
 
-        shared_ptr<ThtsDNode> child_node = create_child_node_helper_itfc(observation);
+        shared_ptr<ThtsDNode> child_node = create_child_node_helper_itfc(observation, next_state);
         children[observation] = child_node;
         dmap[dnode_id] = child_node;
         return child_node;
@@ -134,11 +136,10 @@ namespace thts {
      * Should be a one-and-done function that can be reused. It's pretty much all just building a string that lays out 
      * nodes 'get_pretty_print_val' values in a nice format. 
      * 
-     * TODO: nice way of only displaying the 5 most visited actions
+     * TODO: add nice way of only displaying the X most sampled outcomes
      */
     void ThtsCNode::get_pretty_print_string_helper(stringstream& ss, int depth, int num_tabs) const {
         // Print out this nodes info
-        // for (int i=0; i<num_tabs; i++) ss << "|\t";
         ss << "C(vl=" << get_pretty_print_val() << ",#v=" << num_visits << ")[";
 
         // print out child trees recursively

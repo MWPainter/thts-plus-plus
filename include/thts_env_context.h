@@ -18,6 +18,11 @@ namespace thts {
 
         public:
             /**
+             * Mark destructor virtual in case class is inherited from
+             */
+            virtual ~ThtsEnvContext() = default;
+
+            /**
              * Gets a value from this context for a given key string.
              * 
              * Args:

@@ -350,7 +350,7 @@ namespace thts {
     bool _DNode::has_child_node(shared_ptr<const _A> action) const {
         return ThtsDNode::has_child_node_itfc(static_pointer_cast<const Action>(action));
     }
-    
+
     shared_ptr<_CNode> _DNode::get_child_node(shared_ptr<const _A> action) const {
         shared_ptr<const Action> act_itfc = static_pointer_cast<const Action>(action);
         shared_ptr<ThtsCNode> new_child = ThtsDNode::get_child_node_itfc(act_itfc);

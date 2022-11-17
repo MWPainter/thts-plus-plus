@@ -7,18 +7,21 @@ BINDIR = bin
 SOURCES = $(wildcard src/*.cpp)
 SOURCES += $(wildcard src/algorithms/*.cpp)
 OBJECTS = $(patsubst src/%.cpp, $(BINDIR)/%.o, $(SOURCES))
-#OBJECTS += $(patsubst src/algorithms/%.cpp, $(BINDIR)/algorithms/%.o, $(SOURCES))
 TESTS = $(wildcard test/*.cpp)
 TESTS += $(wildcard test/algorithms/*.cpp)
 TEST_OBJECTS = $(patsubst test/%.cpp, $(BINDIR)/test/%.o, $(TESTS))
-#TEST_OBJECTS += $(patsubst test/algorithms/%.cpp, $(BINDIR)/test/algorithms/%.o, $(TESTS))
 
-INCLUDES= -Iinclude/ -Isrc/ -Iexternal/ -I.
+GTEST = external/googletest/build/lib/libgtest_main.a
+
+INCLUDES = -Iinclude/ -Isrc/ -Iexternal/ -I.
+TEST_INCLUDES = -Iexternal/googletest/build/include
 
 CPPFLAGS = $(INCLUDES) -Wall -std=c++17
+TEST_CPPFLAGS = 
 CPPFLAGS_DEBUG = -g
 
 LDFLAGS =
+TEST_LDFLAGS = -Lexternal/googletest/build/lib -lgtest -lgtest_main -lgmock
 
 TARGET_THTS = thts
 TARGET_THTS_TEST = thts-test
@@ -46,8 +49,11 @@ $(BINDIR)/test/%.o : test/%.cpp bin-exists
 $(TARGET_THTS): $(OBJECTS)
 
 # Build test program
+$(TARGET_THTS_TEST): INCLUDES += $(TEST_INCLUDES)
+$(TARGET_THTS_TEST): CPPFLAGS += $(TEST_CPPFLAGS)
+$(TARGET_THTS_TEST): LDFLAGS += $(TEST_LDFLAGS)
 $(TARGET_THTS_TEST): $(OBJECTS) $(TEST_OBJECTS)
-	$(CXX) $(CPPFLAGS) $(LDFLAGS) -o $@ $^
+	$(CXX) $(CPPFLAGS) $(LDFLAGS) -o $@ $^ $(GTEST)
 
 # Add a debug tests target. Adds -g to flags for debug info, and then just runs tests target
 $(TARGET_THTS_TEST_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
@@ -60,4 +66,4 @@ clean:
 
 
 
-.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST)
+.PHONY: clean bin-exists $(TARGET_THTS)

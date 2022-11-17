@@ -10,6 +10,9 @@
 namespace thts::helper {
     using namespace std;
 
+    // Static epsilon for 
+    static double EPS = 1e-12;
+
     /**
      * Adapted from boost: https://www.boost.org/doc/libs/1_55_0/doc/html/hash/reference.html#boost.hash_combine
      */
@@ -43,6 +46,15 @@ namespace thts::helper {
 
     /**
      * Sampling from distribution
+     * 
+     * Implementation includes useful (probabilistic) error checking on distributions (which should only occur when 
+     * normalised=true):
+     * - Firstly, if probability masses reach a sum of 1.0 or greater too quickly then we throw an exception. Consider 
+     *      if a distribution {s1: 1.0, s2: 0.5, s3: 0.5} is passed in. This exception will often catch these cases, 
+     *      but can also be extremely unlikely to be thrown (when we would want it to be) in edge cases: consider the
+     *      distribution {s1: 0.99999, s2: 0.00001, s3: 0.5}. 
+     * - Secondly, if we get to the end of the routine without returning a sampled object, then the probability masses 
+     *      must have summed to less than 1.0. This exception thrown with probability (1.0-sum_weights).
      */
     template <typename T>
     T sample_from_distribution(unordered_map<T,double>& distribution, ThtsManager& thts_manager, bool normalised) {
@@ -54,16 +66,25 @@ namespace thts::helper {
             }
         }
 
+        int i = 0;
+        int distr_size = distribution.size();
         double rand_val = thts_manager.get_rand_uniform();
-        double running_sum = 0.0;
+        double running_prob_mass = 0.0;
+
         for (pair<T,double> pr : distribution) {
-            running_sum += pr.second / sum_weights;
-            if (rand_val < running_sum) {
+            bool too_much_mass = running_prob_mass > sum_weights + EPS;
+            bool complete_mass_too_early = running_prob_mass >= sum_weights && i < distr_size;
+            if (too_much_mass || complete_mass_too_early) {
+                throw "Probability masses sum to greater than 1.0, have you forgotten to set normalised=false?"
+            }
+
+            running_prob_mass += pr.second / sum_weights;
+            if (rand_val < running_prob_mass) {
                 return pr.first;
             }
         }
 
-        throw "Error in sampling if get here. Did you mean to set normalised=false in sampling from distribution?";
+        throw "Probability masses sum to less than 1.0, have you forgotten to set normalised=false?";
     }
 
 

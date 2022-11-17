@@ -78,7 +78,7 @@ namespace thts {
                 std::shared_ptr<const ThtsDNode> parent=nullptr);
 
             /**
-             * Default destructor is sufficient. But need to declare it virtual.
+             * Mark destructor as virtual for subclassing.
              */
             virtual ~ThtsCNode() = default;
 
@@ -142,40 +142,28 @@ namespace thts {
              *          - otherwise creates the child node, and inserts it into the children map and transposition table
              * 
              * Args:
-             *      observation: The observation to create a child node for 
+             *      observation: The observation object leading to the child node
+             *      next_state: The next state to construct the child node with
              * 
              * Returns:
              *      A pointer to the created child node
              */
             virtual std::shared_ptr<ThtsDNode> create_child_node_itfc(
-                std::shared_ptr<const Observation> observation) final;
+                std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state) final;
 
         protected:
             /**
              * Helper for constructing a child node. Should create and instance and return a pointer to it.
              * 
              * Args:
-             *      observation: The observation to create a child node for 
+             *      observation: The observation object leading to the child node
+             *      next_state: The next state to construct the child node with
              * 
              * Returns:
              *      A pointer to a newly created child node on the heap
              */
             virtual std::shared_ptr<ThtsDNode> create_child_node_helper_itfc(
-                std::shared_ptr<const Observation> observation) const = 0;
-
-            /**
-             * Computes the next state given the current state (stored in this object) and an observation. 
-             * 
-             * For fully observable cases, this should just involve casting the observation object
-             * 
-             * Args:
-             *      observation: The observation we want to use to compute a successor state
-             * 
-             * Returns:
-             *      A successor state (corresponding to the state for children[observation])
-             */
-            virtual std::shared_ptr<const State> compute_next_state_from_observation_itfc(
-                std::shared_ptr<const Observation> observation) const = 0;
+                std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state) const = 0;
 
             /**
              * Helper for pretty printing. Should return some string representing the current 'value' of this node.

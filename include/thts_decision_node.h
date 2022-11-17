@@ -74,7 +74,7 @@ namespace thts {
                 std::shared_ptr<const ThtsCNode> parent=nullptr); 
 
             /**
-             * Default destructor is sufficient. But need to declare it virtual.
+             * Mark destructor as virtual for subclassing.
              */
             virtual ~ThtsDNode() = default;
 

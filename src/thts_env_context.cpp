@@ -9,7 +9,7 @@ namespace thts {
      * Just try to access the private context map. If there is an error in the access, we want it to be thrown anyway.
      */
     double ThtsEnvContext::get_value_for_key(const string& key) {
-        return context[key];
+        return context.at(key);
     }
 
     /**

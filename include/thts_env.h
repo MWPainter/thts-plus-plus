@@ -27,25 +27,35 @@ namespace thts {
      *          like an MDP, we would probably want Observation's to be the successor states (which would require 
      *          Observation == State subtypes)
      * 
-     * Attributes:
-     *      env_id: A sting id for the environment.
+     * Member variables:
+     *      _is_fully_observable: 
+     *          A boolean representing if the environment is fully observable or not. If true, then it should be safe 
+     *          to assume that the default implementations of 'get_observation_distribution_itfc' and 
+     *          'sample_observation_distribution_itfc' are used (the ones that just cast the state object into an 
+     *          observation object)
      */
     class ThtsEnv {
-
         protected:
-            std::string env_id;
+            bool _is_fully_observable;
 
         public:
             /**
-             * Default destructor is sufficient. But need to declare it virtual.
+             * Constructor
+             */
+            ThtsEnv(bool is_fully_observable);
+
+            /**
+             * Mark destructor virtual in case class is inherited from
              */
             virtual ~ThtsEnv() = default;
 
             /**
+             * Getter for checking if environment is fully observable or not
+             */
+            bool is_fully_observable();
+
+            /**
              * Returns the initial state for the environment.
-             * 
-             * Args:
-             *      None
              * 
              * Returns:
              *      Initial state for this environment instance
@@ -76,10 +86,10 @@ namespace thts {
                 std::shared_ptr<const State> state) const = 0;
 
             /**
-             * Returns a distribution over observations from a state action pair.
+             * Returns a distribution over successor states from a state action pair.
              * 
-             * Given a state and action returns a distribution of possible observations. The probability distribution 
-             * is returned in the form of a map, where the keys are of the Observation type, and the values are 
+             * Given a state and action returns a distribution of possible successor states. The probability 
+             * distribution is returned in the form of a map, where the keys are of the State type, and the values are 
              * doubles, which sum to one.
              * 
              * Args:
@@ -87,15 +97,15 @@ namespace thts {
              *      action: The action to get a transition distribution for
              * 
              * Returns:
-             *      Returns a distribution over observation from taking 'action' in state 'state'.
+             *      Returns a successor state distribution from taking 'action' in state 'state'.
              */
-            virtual std::shared_ptr<ObservationDistr> get_transition_distribution_itfc(
+            virtual std::shared_ptr<StateDistr> get_transition_distribution_itfc(
                 std::shared_ptr<const State> state, std::shared_ptr<const Action> action) const = 0;
 
             /**
-             * Samples an observation when taking an action from a state.
+             * Samples an successor state when taking an action from a state.
              * 
-             * Given a state, action pair, samples a possible observation that can arrise.
+             * Given a state, action pair, samples a possible successor state that can arrise.
              * 
              * Args:
              *      state: The state to sample an observation from
@@ -103,12 +113,51 @@ namespace thts {
              *      thts_manager: A pointer to the thts_manager to access the random number sampling interface
              * 
              * Returns:
-             *      Returns an observation sampled from taking 'action' from 'state'
+             *      Returns an successor state sampled from taking 'action' from 'state'
              */
-            virtual std::shared_ptr<const Observation> sample_transition_distribution_itfc(
+            virtual std::shared_ptr<const State> sample_transition_distribution_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
                 std::shared_ptr<ThtsManager> thts_manager) const = 0;
+
+            /**
+             * Returns a distribution over observations from a (next) state, action pair.
+             * 
+             * Given a state and action returns a distribution of possible observations. The probability 
+             * distribution is returned in the form of a map, where the keys are of the Observation type, and the 
+             * values are doubles, which sum to one.
+             * 
+             * A default implementation is provided for full observable environments, where observation == next state.
+             * 
+             * Args:
+             *      action: The action to get an observation distribution for
+             *      next_state: The state (arriving in)  to get an observation distribution from
+             * 
+             * Returns:
+             *      Returns a distribution over observations from taking 'action' in state 'state'.
+             */
+            virtual std::shared_ptr<ObservationDistr> get_observation_distribution_itfc(
+                std::shared_ptr<const Action> action, std::shared_ptr<const State> next_state) const;
+
+            /**
+             * Samples an observation when arriving in a (next) state after taking an action.
+             * 
+             * Given a state-action pair, samples a possible sobservation.
+             * 
+             * A default implementation is provided for full observable environments, where observation == next state.
+             * 
+             * Args:
+             *      action: The action taken to sample an observation for
+             *      next_state: The state (arriving in)  to sample an observation for
+             *      thts_manager: A pointer to the thts_manager to access the random number sampling interface
+             * 
+             * Returns:
+             *      Returns an observation sampled from taking 'action' that arived in 'next_state'
+             */
+            virtual std::shared_ptr<const Observation> sample_observation_distribution_itfc(
+                std::shared_ptr<const Action> action, 
+                std::shared_ptr<const State> next_state, 
+                std::shared_ptr<ThtsManager> thts_manager) const;
             
             /**
              * Returns the reward for a given state, action, observation tuple.
@@ -145,6 +194,6 @@ namespace thts {
              *      A ThtsEnvContext object, that will be passed to the Thts functions for a single trial, used to 
              *      provide some context or space for caching.
              */
-            virtual ThtsEnvContext sample_context_itfc(std::shared_ptr<const State> state) const;
+            virtual std::shared_ptr<ThtsEnvContext> sample_context_itfc(std::shared_ptr<const State> state) const;
     };
 }
