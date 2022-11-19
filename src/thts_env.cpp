@@ -1,5 +1,7 @@
 #include "thts_env.h"
 
+#include "helper_templates.h"
+
 using namespace std;
 
 namespace thts {
@@ -40,6 +42,7 @@ namespace thts {
         shared_ptr<ThtsManager> thts_manager) const 
     {
         shared_ptr<ObservationDistr> distr = make_shared<ObservationDistr>();
+        return helper::sample_from_distribution(*distr, *thts_manager);
     }
 
     /**

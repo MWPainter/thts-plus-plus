@@ -113,10 +113,8 @@ namespace thts {
     shared_ptr<UctDNode> UctCNode::create_child_node(shared_ptr<const State> observation) 
     {
         shared_ptr<const Observation> obsv_itfc = static_pointer_cast<const Observation>(observation);
-        shared_ptr<const State> next_state_itfc = static_pointer_cast<const State>(observation);
-        shared_ptr<ThtsDNode> new_child = ThtsCNode::create_child_node_itfc(obsv_itfc, next_state_itfc);
+        shared_ptr<ThtsDNode> new_child = ThtsCNode::create_child_node_itfc(obsv_itfc);
         return static_pointer_cast<UctDNode>(new_child);
-
     }
 
     bool UctCNode::has_child_node(std::shared_ptr<const State> observation) const {

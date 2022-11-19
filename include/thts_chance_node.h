@@ -149,7 +149,7 @@ namespace thts {
              *      A pointer to the created child node
              */
             virtual std::shared_ptr<ThtsDNode> create_child_node_itfc(
-                std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state) final;
+                std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state=nullptr) final;
 
         protected:
             /**
@@ -163,7 +163,8 @@ namespace thts {
              *      A pointer to a newly created child node on the heap
              */
             virtual std::shared_ptr<ThtsDNode> create_child_node_helper_itfc(
-                std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state) const = 0;
+                std::shared_ptr<const Observation> observation, 
+                std::shared_ptr<const State> next_state=nullptr) const = 0;
 
             /**
              * Helper for pretty printing. Should return some string representing the current 'value' of this node.
@@ -174,7 +175,6 @@ namespace thts {
             virtual std::string get_pretty_print_val() const = 0;
 
         public:
-
             /**
              * Returns if this node is planning for a two player game.
              * 

@@ -40,6 +40,7 @@ namespace thts::helper {
             best_keys.push_back(key);
         }
 
+        if (best_keys.size() == 1) return best_keys[0];
         int indx = thts_manager.get_rand_int(0,best_keys.size());
         return best_keys[indx];
     }
@@ -65,20 +66,25 @@ namespace thts::helper {
                 sum_weights += pr.second;
             }
         }
-
+        
         int i = 0;
         int distr_size = distribution.size();
         double rand_val = thts_manager.get_rand_uniform();
         double running_prob_mass = 0.0;
 
         for (pair<T,double> pr : distribution) {
+            // update mass considered
+            running_prob_mass += pr.second / sum_weights;
+
+            // error checking
+            i++;
             bool too_much_mass = running_prob_mass > sum_weights + EPS;
             bool complete_mass_too_early = running_prob_mass >= sum_weights && i < distr_size;
             if (too_much_mass || complete_mass_too_early) {
-                throw "Probability masses sum to greater than 1.0, have you forgotten to set normalised=false?"
+                throw "Probability masses sum to greater than 1.0, have you forgotten to set normalised=false?";
             }
-
-            running_prob_mass += pr.second / sum_weights;
+            
+            // return if its time
             if (rand_val < running_prob_mass) {
                 return pr.first;
             }

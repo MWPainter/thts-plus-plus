@@ -169,7 +169,7 @@ namespace thts {
              * Returns:
              *      A pointer to a new child chance node
              */
-            std::shared_ptr<UctDNode> create_child_node(std::shared_ptr<const State> Observation);
+            std::shared_ptr<UctDNode> create_child_node(std::shared_ptr<const State> observation);
 
             /**
              * If this node has a child object corresponding to 'observation'.
@@ -215,9 +215,9 @@ namespace thts {
                 ThtsEnvContext& ctx);
 
             virtual std::shared_ptr<ThtsDNode> create_child_node_helper_itfc(
-                std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state) const;
+                std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state=nullptr) const;
             // virtual std::shared_ptr<ThtsDNode> create_child_node_itfc(
-            //    std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state) final;
+            //    std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state=nullptr) final;
                 
 
 
