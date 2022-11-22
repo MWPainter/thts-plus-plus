@@ -1,8 +1,18 @@
-# Externals from other branches
+# Externals from branches
 external/KataGo
+external/eigen
+
+# External files from branches
+external/kata1*
 
 # Outputs
 thts-test
+
+# Outputs from branches
+go-test
+
+# Mac files
+external/.DS_Store
 
 # Prerequisites
 *.d
