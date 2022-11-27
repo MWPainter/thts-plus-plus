@@ -32,7 +32,8 @@ using ::testing::StrEq;
 TEST(ThtsNode_CreateChild, test_normal_usage)
 {   
     // Mock manager
-    shared_ptr<MockThtsManager> mock_manager_ptr = make_shared<MockThtsManager>();
+    shared_ptr<ThtsEnv> thts_env = static_pointer_cast<ThtsEnv>(make_shared<TestThtsEnv>(2));
+    shared_ptr<MockThtsManager> mock_manager_ptr = make_shared<MockThtsManager>(thts_env);
     MockThtsManager& mock_manager = *mock_manager_ptr;
     shared_ptr<ThtsManager> manager_ptr = static_pointer_cast<ThtsManager>(mock_manager_ptr);
     EXPECT_CALL(mock_manager, get_rand_int)
@@ -45,10 +46,8 @@ TEST(ThtsNode_CreateChild, test_normal_usage)
     int mock_decision_timestep = 21;
 
     //Make env and root node
-    shared_ptr<ThtsEnv> thts_env = static_pointer_cast<ThtsEnv>(make_shared<TestThtsEnv>(2));
     shared_ptr<TestThtsDNode> root_node = make_shared<TestThtsDNode>(
         manager_ptr,
-        thts_env,
         thts_env->get_initial_state_itfc(),
         mock_decision_depth,
         mock_decision_timestep);
@@ -139,7 +138,8 @@ TEST(ThtsNode_CreateChild, test_normal_usage)
 TEST(ThtsNode_CreateChild, test_transposition_table)
 {   
     // Mock manager
-    shared_ptr<MockThtsManager> mock_manager_ptr = make_shared<MockThtsManager>();
+    shared_ptr<ThtsEnv> thts_env = static_pointer_cast<ThtsEnv>(make_shared<TestThtsEnv>(2));
+    shared_ptr<MockThtsManager> mock_manager_ptr = make_shared<MockThtsManager>(thts_env);
     MockThtsManager& mock_manager = *mock_manager_ptr;
     mock_manager.use_transposition_table = true;
     shared_ptr<ThtsManager> manager_ptr = static_pointer_cast<ThtsManager>(mock_manager_ptr);
@@ -153,10 +153,8 @@ TEST(ThtsNode_CreateChild, test_transposition_table)
     int mock_decision_timestep = 21;
 
     //Make env and root node
-    shared_ptr<ThtsEnv> thts_env = static_pointer_cast<ThtsEnv>(make_shared<TestThtsEnv>(2));
     shared_ptr<TestThtsDNode> root_node = make_shared<TestThtsDNode>(
         manager_ptr,
-        thts_env,
         thts_env->get_initial_state_itfc(),
         mock_decision_depth,
         mock_decision_timestep);
@@ -267,7 +265,8 @@ TEST(ThtsNode_PrettyPrint, test_no_transposition)
         "],";
 
     // Mock manager
-    shared_ptr<MockThtsManager> mock_manager_ptr = make_shared<MockThtsManager>();
+    shared_ptr<ThtsEnv> thts_env = static_pointer_cast<ThtsEnv>(make_shared<TestThtsEnv>(2));
+    shared_ptr<MockThtsManager> mock_manager_ptr = make_shared<MockThtsManager>(thts_env);
     MockThtsManager& mock_manager = *mock_manager_ptr;
     shared_ptr<ThtsManager> manager_ptr = static_pointer_cast<ThtsManager>(mock_manager_ptr);
     EXPECT_CALL(mock_manager, get_rand_int)
@@ -280,10 +279,8 @@ TEST(ThtsNode_PrettyPrint, test_no_transposition)
     int mock_decision_timestep = 21;
 
     //Make env and root node
-    shared_ptr<ThtsEnv> thts_env = static_pointer_cast<ThtsEnv>(make_shared<TestThtsEnv>(2));
     shared_ptr<TestThtsDNode> root_node = make_shared<TestThtsDNode>(
         manager_ptr,
-        thts_env,
         thts_env->get_initial_state_itfc(),
         mock_decision_depth,
         mock_decision_timestep);
@@ -363,7 +360,8 @@ TEST(ThtsNode_PrettyPrint, test_transposition_table)
         "],";
 
     // Mock manager
-    shared_ptr<MockThtsManager> mock_manager_ptr = make_shared<MockThtsManager>();
+    shared_ptr<ThtsEnv> thts_env = static_pointer_cast<ThtsEnv>(make_shared<TestThtsEnv>(2));
+    shared_ptr<MockThtsManager> mock_manager_ptr = make_shared<MockThtsManager>(thts_env);
     MockThtsManager& mock_manager = *mock_manager_ptr;
     mock_manager.use_transposition_table = true;
     shared_ptr<ThtsManager> manager_ptr = static_pointer_cast<ThtsManager>(mock_manager_ptr);
@@ -377,10 +375,8 @@ TEST(ThtsNode_PrettyPrint, test_transposition_table)
     int mock_decision_timestep = 21;
 
     //Make env and root node
-    shared_ptr<ThtsEnv> thts_env = static_pointer_cast<ThtsEnv>(make_shared<TestThtsEnv>(2));
     shared_ptr<TestThtsDNode> root_node = make_shared<TestThtsDNode>(
         manager_ptr,
-        thts_env,
         thts_env->get_initial_state_itfc(),
         mock_decision_depth,
         mock_decision_timestep);

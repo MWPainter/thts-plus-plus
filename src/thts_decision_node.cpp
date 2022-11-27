@@ -16,19 +16,61 @@ namespace thts {
      */
     ThtsDNode::ThtsDNode(
         shared_ptr<ThtsManager> thts_manager,
-        shared_ptr<ThtsEnv> thts_env,
         shared_ptr<const State> state,
         int decision_depth,
         int decision_timestep,
         shared_ptr<const ThtsCNode> parent) :
+            node_lock(),
             thts_manager(thts_manager),
-            thts_env(thts_env),
             state(state),
             decision_depth(decision_depth),
             decision_timestep(decision_timestep),
             parent(parent),
-            num_visits(0)
+            num_visits(0),
+            heuristic_value(thts_manager->heuristic_fn == nullptr ? 0.0 : thts_manager->heuristic_fn(state))
     {
+    }
+
+    /**
+     * Aquires the lock for this node.
+     */
+    void ThtsDNode::lock() 
+    { 
+        node_lock.lock(); 
+    }
+
+    /**
+     * Releases the lock for this node.
+     */
+    void ThtsDNode::unlock() 
+    { 
+        node_lock.unlock(); 
+    }
+
+    /**
+     * Gets a reference to the lock for this node (so can use in a lock_guard for example)
+     */
+    std::mutex& ThtsDNode::get_lock() 
+    { 
+        return node_lock; 
+    }
+
+    /**
+     * Helper function to lock all children nodes.
+     */
+    void ThtsDNode::lock_all_children() const {
+        for (auto action_child_pair : children) {
+            action_child_pair.second->lock();
+        }
+    }
+
+    /**
+     * Helper function to unlock all children nodes.
+     */
+    void ThtsDNode::unlock_all_children() const {
+        for (auto action_child_pair : children) {
+            action_child_pair.second->unlock();
+        }
     }
 
     /**
@@ -42,7 +84,7 @@ namespace thts {
      * This node is a leaf node iff the state corresponds to a sink state
      */
     bool ThtsDNode::is_leaf() const {
-        return thts_env->is_sink_state_itfc(state);
+        return thts_manager->thts_env->is_sink_state_itfc(state);
     }
 
     /**

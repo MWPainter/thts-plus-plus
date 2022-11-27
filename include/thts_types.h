@@ -153,7 +153,7 @@ namespace thts {
      * First used in thts_decision_node.h and thts_chance_node.h
      * N.B. The & here is to get address as we want function pointers
      */  
-    double _DummyHeuristicFn(std::shared_ptr<const State> s, std::shared_ptr<const Action> a);
+    double _DummyHeuristicFn(std::shared_ptr<const State> s);
     typedef decltype(&_DummyHeuristicFn) HeuristicFnPtr;
 
     /**
@@ -161,7 +161,8 @@ namespace thts {
      * First used in thts_decision_node.h and thts_chance_node.h
      * N.B. The & here is to get address as we want function pointers
      */
-    std::unordered_map<std::shared_ptr<const Action>,double> _DummyPriorFn(std::shared_ptr<const State> s);
+    typedef std::unordered_map<std::shared_ptr<const Action>,double> ActionPrior;
+    ActionPrior _DummyPriorFn(std::shared_ptr<const State> s);
     typedef decltype(&_DummyPriorFn) PriorFnPtr; 
 
 
@@ -213,8 +214,8 @@ namespace std {
         size_t operator()(const shared_ptr<const Observation>&) const;
     };
     
-    inline bool operator==(const Observation& lhs, const Observation& rhs);
-    inline bool operator==(const shared_ptr<const Observation>& lhs, const shared_ptr<const Observation>& rhs);
+    bool operator==(const Observation& lhs, const Observation& rhs);
+    bool operator==(const shared_ptr<const thts::Observation>& lhs, const shared_ptr<const thts::Observation>& rhs);
 
     template <> 
     struct equal_to<Observation> {
@@ -242,8 +243,8 @@ namespace std {
         size_t operator()(const shared_ptr<const State>&) const;
     };
     
-    inline bool operator==(const State& lhs, const State& rhs);
-    inline bool operator==(const shared_ptr<const State>& lhs, const shared_ptr<const State>& rhs);
+    bool operator==(const State& lhs, const State& rhs);
+    bool operator==(const shared_ptr<const State>& lhs, const shared_ptr<const State>& rhs);
 
     template <> 
     struct equal_to<State> {
@@ -271,8 +272,8 @@ namespace std {
         size_t operator()(const shared_ptr<const Action>&) const;
     };
     
-    inline bool operator==(const Action& lhs, const Action& rhs);
-    inline bool operator==(const shared_ptr<const Action>& lhs, const shared_ptr<const Action>& rhs);
+    bool operator==(const Action& lhs, const Action& rhs);
+    bool operator==(const shared_ptr<const Action>& lhs, const shared_ptr<const Action>& rhs);
 
     template <> struct equal_to<Action> {
         bool operator()(const Action&, const Action&) const;

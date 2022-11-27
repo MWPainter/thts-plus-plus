@@ -4,7 +4,6 @@
 #include "algorithms/uct_manager.h"
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
-#include "thts_env.h"
 #include "thts_env_context.h"
 #include "thts_manager.h"
 
@@ -62,7 +61,6 @@ namespace thts {
              */
             UctCNode(
                 std::shared_ptr<UctManager> thts_manager,
-                std::shared_ptr<ThtsEnv> thts_env,
                 std::shared_ptr<const State> state,
                 std::shared_ptr<const Action> action,
                 int decision_depth,
@@ -125,7 +123,7 @@ namespace thts {
              * Returns:
              *      A pointer to a new _DNode object
              */
-            std::shared_ptr<UctDNode> create_child_node_helper(std::shared_ptr<const State> observation) const; 
+            virtual std::shared_ptr<UctDNode> create_child_node_helper(std::shared_ptr<const State> observation) const; 
 
             /**
              * Returns a string representation of the value of this node currently. Used for pretty printing.
@@ -169,7 +167,7 @@ namespace thts {
              * Returns:
              *      A pointer to a new child chance node
              */
-            std::shared_ptr<UctDNode> create_child_node(std::shared_ptr<const State> observation);
+            virtual std::shared_ptr<UctDNode> create_child_node(std::shared_ptr<const State> observation);
 
             /**
              * If this node has a child object corresponding to 'observation'.
@@ -180,7 +178,7 @@ namespace thts {
              * Returns:
              *      true if we have a child corresponding to 'observation'
              */
-            bool has_child_node(std::shared_ptr<const State> observation) const;
+            virtual bool has_child_node(std::shared_ptr<const State> observation) const;
 
             /**
              * Retrieves a child node from the children map.
@@ -193,7 +191,7 @@ namespace thts {
              * Returns:
              *      A pointer to the child node corresponding to 'observation'
              */
-            std::shared_ptr<UctDNode> get_child_node(std::shared_ptr<const State> observation) const;
+            virtual std::shared_ptr<UctDNode> get_child_node(std::shared_ptr<const State> observation) const;
 
 
 

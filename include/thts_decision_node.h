@@ -5,16 +5,22 @@
 #include "thts_manager.h"
 
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace thts {
     // forward declare
     class ThtsCNode;
+    class ThtsPool;
 
     // CNodeMap type is lengthy, so typedef
     typedef std::unordered_map<std::shared_ptr<const Action>,std::shared_ptr<ThtsCNode>> CNodeChildMap;
+    
+    // Children lock guard type is lengthy, so typedef
+    typedef std::vector<std::lock_guard<std::mutex>> ChildrenLockGuard;
 
     /**
      * An abstract base class for Decision Node.
@@ -23,12 +29,11 @@ namespace thts {
      * a transposition table implementation and pretty print functions for debugging.
      * 
      * Member variables:
+     *      node_lock: A mutex that is used to protect this entire node.
      *      thts_manager: 
      *          A ThtsManager object that stores the 'global' information about how the Thts algorithm should operate,
      *          so that an implementation can provide multiple modes of operation. Additionally stores the 
      *          transposition tables
-     *      thts_env:
-     *          A ThtsEnv object that provides the dynamics of the environment being planned in
      *      state:
      *          The state associated with this node, which we want to make a decision for (what is the best action)
      *      decision_depth:
@@ -43,14 +48,22 @@ namespace thts {
      *          A pointer to this nodes parent node. nullptr if this node is the root node
      *      children:
      *          A map from Action objects to child ThtsCNode objects
+     *      heuristic_value:
+     *          The heuristic value of this decision node
+    //  *      prior:
+    //  *          The action prior for this decision node, which is a mapping from actions to values from prior knowledge.
+    //  *          This would usually be either a prior policy (probabilities we should pick each action) or a prior 
+    //  *          estimate of the Q-values from taking each action.
      */
     class ThtsDNode : public std::enable_shared_from_this<ThtsDNode> {
         // Allow ThtsCNode access to private members
         friend ThtsCNode;
+        friend ThtsPool;
 
         protected:
+            std::mutex node_lock;
+
             std::shared_ptr<ThtsManager> thts_manager;
-            std::shared_ptr<ThtsEnv> thts_env;
             std::shared_ptr<const State> state;
             int decision_depth;
             int decision_timestep;
@@ -58,6 +71,8 @@ namespace thts {
 
             int num_visits;
             CNodeChildMap children;
+
+            double heuristic_value;
 
         public: 
             /**
@@ -67,7 +82,6 @@ namespace thts {
              */
             ThtsDNode(
                 std::shared_ptr<ThtsManager> thts_manager,
-                std::shared_ptr<ThtsEnv> thts_env,
                 std::shared_ptr<const State> state,
                 int decision_depth,
                 int decision_timestep,
@@ -77,6 +91,31 @@ namespace thts {
              * Mark destructor as virtual for subclassing.
              */
             virtual ~ThtsDNode() = default;
+
+            /**
+             * Aquires the lock for this node.
+             */
+            void lock();
+
+            /**
+             * Releases the lock for this node.
+             */
+            void unlock();
+
+            /**
+             * Gets a reference to the lock for this node (so can use in a lock_guard for example)
+             */
+            std::mutex& get_lock();
+
+            /**
+             * Helper function to lock all children nodes.
+             */
+            void lock_all_children() const;
+
+            /**
+             * Helper function to unlock all children nodes.
+             */
+            void unlock_all_children() const;
 
             /**
              * Thts visit function.
@@ -219,10 +258,12 @@ namespace thts {
             /**
              * Helper function to get number of children this node currently has.
              * 
+             * Virtual so it can be mocked in tests.
+             * 
              * Returns:
              *      Number of children in 'children' map
              */
-            int get_num_children() const;
+            virtual int get_num_children() const;
 
             /**
              * Helper function to check if node has a child for the given action
@@ -238,13 +279,15 @@ namespace thts {
             /**
              * Returns a pointer to a child of this node.
              * 
+             * Virtual so it can be mocked in tests.
+             * 
              * Args:
              *      action: The action that we want the corresponding child node for.
              * 
              * Returns:
              *      A pointer to the child chance node.
              */
-            std::shared_ptr<ThtsCNode> get_child_node_itfc(std::shared_ptr<const Action> action) const;
+            virtual std::shared_ptr<ThtsCNode> get_child_node_itfc(std::shared_ptr<const Action> action) const;
 
             /**
              * Pretty prints the tree to a string.

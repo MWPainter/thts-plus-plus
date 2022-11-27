@@ -18,24 +18,23 @@ namespace thts {
      */
     UctDNode::UctDNode(
         shared_ptr<UctManager> thts_manager,
-        shared_ptr<ThtsEnv> thts_env,
         shared_ptr<const State> state,
         int decision_depth,
         int decision_timestep,
         shared_ptr<const UctCNode> parent) :
             ThtsDNode(
                 static_pointer_cast<ThtsManager>(thts_manager),
-                thts_env,
                 state,
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const ThtsCNode>(parent)),
-            actions(thts_env->get_valid_actions_itfc(state)),
-            avg_return(0.0) 
+            actions(thts_manager->thts_env->get_valid_actions_itfc(state)),
+            avg_return(0.0),
+            policy_prior() 
     {   
         if (thts_manager->heuristic_fn != nullptr) {
             num_visits = thts_manager->heuristic_psuedo_trials;
-            avg_return = thts_manager->heuristic_fn(state, nullptr);
+            avg_return = heuristic_value;
         }
 
         if (thts_manager->prior_fn != nullptr) {
@@ -48,7 +47,7 @@ namespace thts {
      * 
      * Code more readable with 'has_prior()' rather than checking against a nullptr.
      */
-    inline bool UctDNode::has_prior() const {
+    bool UctDNode::has_prior() const {
         shared_ptr<UctManager> manager = static_pointer_cast<UctManager>(thts_manager);
         return manager->prior_fn != nullptr;
     }
@@ -86,12 +85,18 @@ namespace thts {
      * If we are playing a 2 player game, then we assume at opponent nodes that the policy prior is computed to 
      * minimise the value, so we use the value of form (where opp_coeff is -1 or 1):
      *      opp_coeff * q_value + prior(action) * bias * ucb_term
+     * 
+     * TODO: Consider fine grained locking if want to optimise. Probably don't need bias and values to be held super 
+     *      consistent throughout function.
      */
     void UctDNode::fill_ucb_values(unordered_map<shared_ptr<const Action>,double>& ucb_values, ThtsEnvContext& ctx) const {
         shared_ptr<UctManager> manager = static_pointer_cast<UctManager>(thts_manager);
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
 
-        // Compute adaptive bias
+        // Lock all children
+        lock_all_children();
+
+        // Compute adaptive bias if using
         double bias = manager->bias; 
         if (bias == UctManager::USE_AUTO_BIAS) {
             bias = UctManager::AUTO_BIAS_MIN_BIAS;
@@ -118,7 +123,10 @@ namespace thts {
             }
 
             ucb_values[action] = action_ucb_value;
-        }        
+        }  
+
+        // unlock all children
+        unlock_all_children();      
     }
 
     /**
@@ -258,7 +266,6 @@ namespace thts {
     shared_ptr<UctCNode> UctDNode::create_child_node_helper(shared_ptr<const Action> action) const {
         return make_shared<UctCNode>(
             static_pointer_cast<UctManager>(thts_manager), 
-            thts_env, 
             state, 
             action, 
             decision_depth, 

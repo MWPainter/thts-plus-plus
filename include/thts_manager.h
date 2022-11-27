@@ -1,17 +1,24 @@
 #pragma once
 
 #include "helper.h"
+#include "thts_env.h"
 #include "thts_types.h"
 
 #include <cstdlib>
+#include <limits>
 #include <memory>
+#include <mutex>
 #include <ostream>
 #include <random>
 #include <tuple>
 #include <unordered_map>
+#include <vector>
 
 
 namespace thts {
+    // Forward declare
+    class ThtsEnv;
+    
     /**
      * ThtsManager is an object used to manage all the things that need to be 'global' space within Thts.
      * 
@@ -39,8 +46,15 @@ namespace thts {
      *          Specifies if we are planning for a two player game
      * 
      * Member variables:
+     *      thts_env:
+     *          A ThtsEnv object that provides the dynamics of the environment being planned in
      *      dmap:
      *          A transposition table for decision nodes
+     *      dmap_mutexes:
+     *          A vector of mutexes to use for protection around the dmap. Accessing 'dmap[dnode_id]', should be 
+     *          protected by the 'dmap_mutexes[hash(dnode_id) % dmap_mutexes.size()]'.
+     *      max_depth:
+     *          The maximum depth that we want to allow our thts to search to.
      *      mcts_mode:
      *          If running in mcts_mode (see options above)
      *      use_transposition_table:
@@ -75,11 +89,15 @@ namespace thts {
             std::uniform_real_distribution<double> real_distr;
 
         public:
-            DNodeTable dmap;
+            std::shared_ptr<ThtsEnv> thts_env;
 
-            bool mcts_mode = true;
-            bool use_transposition_table = false;
-            bool is_two_player_game = false;
+            DNodeTable dmap;
+            std::vector<std::mutex> dmap_mutexes;
+
+            int max_depth;
+            bool mcts_mode;
+            bool use_transposition_table;
+            bool is_two_player_game;
 
             HeuristicFnPtr heuristic_fn;
             PriorFnPtr prior_fn;
@@ -91,16 +109,23 @@ namespace thts {
              * seed is set to 0, then we use a std::random_device object to generate a random seed.
              */            
             ThtsManager(
-                bool mcts_mode=true, 
-                bool use_transposition_table=false, 
-                bool is_two_player_game=false,
+                std::shared_ptr<ThtsEnv> thts_env,
+                int max_depth=std::numeric_limits<int>::max(),
                 HeuristicFnPtr heuristic_fn=helper::zero_heuristic_fn,
                 PriorFnPtr prior_fn=nullptr,
+                bool mcts_mode=true, 
+                bool is_two_player_game=false,
+                bool use_transposition_table=false, 
+                int num_transposition_table_mutexes=1,
                 int seed=60415) :
                     int_gen(seed),
                     real_gen(seed),
                     int_distr(0,RAND_MAX),
                     real_distr(0.0,1.0),
+                    thts_env(thts_env),
+                    dmap(),
+                    dmap_mutexes(num_transposition_table_mutexes),
+                    max_depth(max_depth),
                     mcts_mode(mcts_mode), 
                     use_transposition_table(use_transposition_table), 
                     is_two_player_game(is_two_player_game),

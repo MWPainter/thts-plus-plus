@@ -1,10 +1,10 @@
 #pragma once
 
 #include "thts_decision_node.h"
-#include "thts_env.h"
 #include "thts_manager.h"
 
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -23,12 +23,11 @@ namespace thts {
      * a transposition table implementation and pretty print functions for debugging.
      * 
      * Member variables:
+     *      node_lock: A mutex that is used to protect this entire node.
      *      thts_manager: 
      *          A ThtsManager object that stores the 'global' information about how the Thts algorithm should operate,
      *          so that an implementation can provide multiple modes of operation. Additionally stores the 
      *          transposition tables
-     *      thts_env:
-     *          A ThtsEnv object that provides the dynamics of the environment being planned in
      *      state:
      *          The state associated with this node
      *      action:
@@ -51,8 +50,9 @@ namespace thts {
         friend ThtsDNode;
 
         protected:
+            std::mutex node_lock;
+
             std::shared_ptr<ThtsManager> thts_manager;
-            std::shared_ptr<ThtsEnv> thts_env;
             std::shared_ptr<const State> state;
             std::shared_ptr<const Action> action;
             int decision_depth;
@@ -70,7 +70,6 @@ namespace thts {
              */
             ThtsCNode(
                 std::shared_ptr<ThtsManager> thts_manager,
-                std::shared_ptr<ThtsEnv> thts_env,
                 std::shared_ptr<const State> state,
                 std::shared_ptr<const Action> action,
                 int decision_depth,
@@ -81,6 +80,21 @@ namespace thts {
              * Mark destructor as virtual for subclassing.
              */
             virtual ~ThtsCNode() = default;
+
+            /**
+             * Aquires the lock for this node.
+             */
+            void lock();
+
+            /**
+             * Releases the lock for this node.
+             */
+            void unlock();
+
+            /**
+             * Gets a reference to the lock for this node (so can use in a lock_guard for example)
+             */
+            std::mutex& get_lock();
 
             /**
              * Thts visit function.
@@ -196,10 +210,12 @@ namespace thts {
             /**
              * Helper function to get number of children this node currently has.
              * 
+             * Virtual so can be mocked in tests.
+             * 
              * Returns:
              *      Number of children in 'children' map
              */
-            int get_num_children() const;
+            virtual int get_num_children() const;
 
             /**
              * Helper function to check if node has a child for the given observation
@@ -215,13 +231,16 @@ namespace thts {
             /**
              * Returns a pointer to a child of this node.
              * 
+             * Virtual so can be mocked in tests.
+             * 
              * Args:
              *      observation: The observation that we want the corresponding child node for.
              * 
              * Returns:
              *      A pointer to the child decision node.
              */
-            std::shared_ptr<ThtsDNode> get_child_node_itfc(std::shared_ptr<const Observation> observation) const;
+            virtual std::shared_ptr<ThtsDNode> get_child_node_itfc(
+                std::shared_ptr<const Observation> observation) const;
 
             /**
              * Pretty prints the tree to a string.

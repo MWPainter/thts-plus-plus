@@ -2,11 +2,13 @@
 
 #include "helper_templates.h"
 #include "thts_manager.h"
+#include "thts_types.h"
 
+#include <cstddef>
+#include <functional>
+#include <mutex>
 #include <tuple>
 #include <utility>
-
-#include <iostream>
 
 using namespace std;
 using namespace thts;
@@ -18,14 +20,13 @@ namespace thts {
      */
     ThtsCNode::ThtsCNode(
         shared_ptr<ThtsManager> thts_manager,
-        shared_ptr<ThtsEnv> thts_env,
         shared_ptr<const State> state,
         shared_ptr<const Action> action,
         int decision_depth,
         int decision_timestep,
         shared_ptr<const ThtsDNode> parent) :
+            node_lock(),
             thts_manager(thts_manager),
-            thts_env(thts_env),
             state(state),
             action(action),
             decision_depth(decision_depth),
@@ -33,6 +34,30 @@ namespace thts {
             parent(parent),
             num_visits(0)
     {
+    }
+
+    /**
+     * Aquires the lock for this node.
+     */
+    void ThtsCNode::lock() 
+    { 
+        node_lock.lock(); 
+    }
+
+    /**
+     * Releases the lock for this node.
+     */
+    void ThtsCNode::unlock() 
+    { 
+        node_lock.unlock(); 
+        }
+
+    /**
+     * Gets a reference to the lock for this node (so can use in a lock_guard for example)
+     */
+    std::mutex& ThtsCNode::get_lock() 
+    { 
+        return node_lock; 
     }
 
     /**
@@ -50,6 +75,9 @@ namespace thts {
      * If not using a transposition table, we call the helper and put the child in our children map. 
      * If using a transposition table, we first check the transposition table to try get it from there. If it's not in 
      * the table, we make the child and insert it in children and the transposition table.
+     * 
+     * Additionally, we protect accessing 'dmap[dnode_id]' with the mutex 'thts_manager->dmap_mutexes[mutex_indx]' 
+     * where 'mutex_indx = hash(dnode_id) % thts_manager->dmap_mutexes.size()', by locking it using a lock_guard.
      */
     shared_ptr<ThtsDNode> ThtsCNode::create_child_node_itfc(
         shared_ptr<const Observation> observation, shared_ptr<const State> next_state) 
@@ -64,6 +92,15 @@ namespace thts {
 
         DNodeTable& dmap = thts_manager->dmap;
         DNodeIdTuple dnode_id = make_tuple(decision_timestep, observation);
+
+        int mutex_indx = 0;
+        if (thts_manager->dmap_mutexes.size() > 1) {
+            size_t tpl_hash = hash<DNodeIdTuple>()(dnode_id);
+            mutex_indx = tpl_hash % thts_manager->dmap_mutexes.size();
+        }
+
+        lock_guard<mutex> lg(thts_manager->dmap_mutexes[mutex_indx]);
+
         auto iter = dmap.find(dnode_id);
         if (iter != dmap.end()) {
             shared_ptr<ThtsDNode> child_node = dmap[dnode_id];

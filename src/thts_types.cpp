@@ -224,11 +224,11 @@ namespace std {
     /**
      * Implementation of std::equal_to<Observation>, calling the equals function.
      */
-    inline bool operator==(const Observation& lhs, const Observation& rhs) {
+    bool operator==(const Observation& lhs, const Observation& rhs) {
         return lhs.equals_itfc(rhs);
     }
 
-    inline bool operator==(const shared_ptr<const Observation>& lhs, const shared_ptr<const Observation>& rhs) {
+    bool operator==(const shared_ptr<const Observation>& lhs, const shared_ptr<const Observation>& rhs) {
         return lhs->equals_itfc(*rhs);
     }
 
@@ -268,11 +268,11 @@ namespace std {
     /**
      * Implementation of std::equal_to<State>, calling the equals function.
      */
-    inline bool operator==(const State& lhs, const State& rhs) {
+    bool operator==(const State& lhs, const State& rhs) {
         return lhs.equals_itfc(rhs);
     }
 
-    inline bool operator==(const shared_ptr<const State>& lhs, const shared_ptr<const State>& rhs) {
+    bool operator==(const shared_ptr<const State>& lhs, const shared_ptr<const State>& rhs) {
         return lhs->equals_itfc(*rhs);
     }
 
@@ -313,11 +313,11 @@ namespace std {
     /**
      * Implementation of std::equal_to<Action>, calling the equals function.
      */
-    inline bool operator==(const Action& lhs, const Action& rhs) {
+    bool operator==(const Action& lhs, const Action& rhs) {
         return lhs.equals_itfc(rhs);
     }
 
-    inline bool operator==(const shared_ptr<const Action>& lhs, const shared_ptr<const Action>& rhs) {
+    bool operator==(const shared_ptr<const Action>& lhs, const shared_ptr<const Action>& rhs) {
         return lhs->equals_itfc(*rhs);
     }
 

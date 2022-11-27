@@ -4,7 +4,6 @@
 #include "algorithms/uct_manager.h"
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
-#include "thts_env.h"
 #include "thts_env_context.h"
 #include "thts_manager.h"
 
@@ -36,7 +35,7 @@ namespace thts {
         protected:
             std::shared_ptr<ActionVector> actions;
             double avg_return;
-            std::unordered_map<std::shared_ptr<const Action>,double> policy_prior;
+            ActionPrior policy_prior;
 
             /**
              * Returns if we have a valid 'policy_prior' to use.
@@ -47,7 +46,7 @@ namespace thts {
              * Returns:
              *      if 'policy_prior' is valid and can be used
              */
-            inline bool has_prior() const;
+            bool has_prior() const;
 
             /**
              * Computes the ucb term for a single child for use in selecting actions.
@@ -84,7 +83,7 @@ namespace thts {
              * Returns:
              *      The selected action
              */
-            virtual std::shared_ptr<const Action> select_action_ucb(ThtsEnvContext& ctx);
+            std::shared_ptr<const Action> select_action_ucb(ThtsEnvContext& ctx);
 
             /**
              * An implementation thts 'select_action' function: that selects a uniformly random action. 
@@ -129,7 +128,6 @@ namespace thts {
              */
             UctDNode(
                 std::shared_ptr<UctManager> thts_manager,
-                std::shared_ptr<ThtsEnv> thts_env,
                 std::shared_ptr<const State> state,
                 int decision_depth,
                 int decision_timestep,
@@ -214,7 +212,7 @@ namespace thts {
              * Returns:
              *      A pointer to a new UctCNode object
              */
-            std::shared_ptr<UctCNode> create_child_node_helper(std::shared_ptr<const Action> action) const;
+            virtual std::shared_ptr<UctCNode> create_child_node_helper(std::shared_ptr<const Action> action) const;
 
             /**
              * Returns a string representation of the value of this node currently. Used for pretty printing.
@@ -269,7 +267,7 @@ namespace thts {
              * Returns:
              *      true if we have a child corresponding to 'action'
              */
-            bool has_child_node(std::shared_ptr<const Action> action) const;
+            virtual bool has_child_node(std::shared_ptr<const Action> action) const;
 
             /**
              * Retrieves a child node from the children map.
@@ -282,7 +280,7 @@ namespace thts {
              * Returns:
              *      A pointer to the child node corresponding to 'action'
              */
-            std::shared_ptr<UctCNode> get_child_node(std::shared_ptr<const Action> action) const;
+            virtual std::shared_ptr<UctCNode> get_child_node(std::shared_ptr<const Action> action) const;
 
 
 

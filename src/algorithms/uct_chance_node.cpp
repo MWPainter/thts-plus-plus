@@ -10,7 +10,6 @@ namespace thts {
      */
     UctCNode::UctCNode(
         shared_ptr<UctManager> thts_manager,
-        shared_ptr<ThtsEnv> thts_env,
         shared_ptr<const State> state,
         shared_ptr<const Action> action,
         int decision_depth,
@@ -18,19 +17,14 @@ namespace thts {
         shared_ptr<const UctDNode> parent) :
             ThtsCNode(
                 static_pointer_cast<ThtsManager>(thts_manager),
-                thts_env,
                 state,
                 action,
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const ThtsDNode>(parent)),
-            next_state_distr(thts_env->get_transition_distribution_itfc(state,action)),
+            next_state_distr(thts_manager->thts_env->get_transition_distribution_itfc(state,action)),
             avg_return(0.0)
     {  
-        if (thts_manager->use_heuristic_at_chance_nodes && thts_manager->heuristic_fn != nullptr) {
-            num_visits = thts_manager->heuristic_psuedo_trials;
-            avg_return = thts_manager->heuristic_fn(state, action);
-        }
     }
 
     /**
@@ -42,8 +36,6 @@ namespace thts {
 
     /**
      * Implementation of sample_observation, that uses the sample from distribution helper function.
-     * 
-     * thts_env->sample_observation
      */
     shared_ptr<const State> UctCNode::sample_observation_random() {
         shared_ptr<const State> sampled_state = helper::sample_from_distribution(*next_state_distr, *thts_manager);
@@ -88,7 +80,6 @@ namespace thts {
         shared_ptr<const State> next_state = static_pointer_cast<const State>(observation);
         return make_shared<UctDNode>(
             static_pointer_cast<UctManager>(thts_manager), 
-            thts_env, 
             next_state,
             decision_depth+1, 
             decision_timestep+1, 
