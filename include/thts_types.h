@@ -162,7 +162,7 @@ namespace thts {
      * N.B. The & here is to get address as we want function pointers
      */
     typedef std::unordered_map<std::shared_ptr<const Action>,double> ActionPrior;
-    ActionPrior _DummyPriorFn(std::shared_ptr<const State> s);
+    std::shared_ptr<ActionPrior> _DummyPriorFn(std::shared_ptr<const State> s);
     typedef decltype(&_DummyPriorFn) PriorFnPtr; 
 
 

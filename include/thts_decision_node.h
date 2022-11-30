@@ -18,9 +18,6 @@ namespace thts {
 
     // CNodeMap type is lengthy, so typedef
     typedef std::unordered_map<std::shared_ptr<const Action>,std::shared_ptr<ThtsCNode>> CNodeChildMap;
-    
-    // Children lock guard type is lengthy, so typedef
-    typedef std::vector<std::lock_guard<std::mutex>> ChildrenLockGuard;
 
     /**
      * An abstract base class for Decision Node.
@@ -250,10 +247,12 @@ namespace thts {
              * 
              * If not a two player game, this will always return false.
              * 
+             * Virtual so it can be mocked in tests.
+             * 
              * Returns:
              *      If this node is planning as the opponent in a two player game
              */
-            bool is_opponent() const;
+            virtual bool is_opponent() const;
 
             /**
              * Helper function to get number of children this node currently has.

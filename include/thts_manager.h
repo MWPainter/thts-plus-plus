@@ -8,10 +8,7 @@
 #include <limits>
 #include <memory>
 #include <mutex>
-#include <ostream>
 #include <random>
-#include <tuple>
-#include <unordered_map>
 #include <vector>
 
 
@@ -69,6 +66,8 @@ namespace thts {
      *      prior_fn_ptr:
      *          A pointer to the prior (Q-value) function, that returns a map from actions to prior value estimates
      * Private member variables:
+     *      rng_lock:
+     *          A mutex to protect random number generation function calls.
      *      rd:
      *          A 'random_device' which is the computers source of (psuedo) random numbers
      *      real_gen:   
@@ -82,6 +81,7 @@ namespace thts {
      */
     class ThtsManager {
         private:
+            std::mutex rng_lock;
             std::random_device rd;
             std::mt19937 int_gen;
             std::mt19937 real_gen;
@@ -118,6 +118,7 @@ namespace thts {
                 bool use_transposition_table=false, 
                 int num_transposition_table_mutexes=1,
                 int seed=60415) :
+                    rng_lock(),
                     int_gen(seed),
                     real_gen(seed),
                     int_distr(0,RAND_MAX),
@@ -148,6 +149,7 @@ namespace thts {
              * N.B. Marked virtual so that these functions can be mocked easily.
              */
             virtual int get_rand_int(int min_included, int max_excluded) {
+                std::lock_guard<std::mutex> lg(rng_lock);
                 int len = int_distr(int_gen) % (max_excluded - min_included);
                 return min_included + len;
             };
@@ -157,6 +159,7 @@ namespace thts {
              * N.B. Marked virtual so that these functions can be mocked easily.
              */
             virtual double get_rand_uniform() {
+                std::lock_guard<std::mutex> lg(rng_lock);
                 return real_distr(real_gen);
             };
     };

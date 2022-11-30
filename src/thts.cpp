@@ -22,20 +22,26 @@ namespace thts {
      *      (subtle note: becausse workers hold work_left_lock when they call notify_all, the thread running this 
      *          constructor will not be able to grab the lock until it waits on the work_left_cv)
      */
-    ThtsPool::ThtsPool(shared_ptr<ThtsManager> thts_manager, shared_ptr<ThtsDNode> root_node, int num_threads) :
-        workers(num_threads),
-        work_left_cv(),
-        work_left_lock(),
-        logging_lock(),
-        thread_pool_alive(true),
-        num_threads(num_threads),
-        num_trials(0),
-        start_time(std::chrono::system_clock::now()),
-        max_run_time(0.0),
-        trials_remaining(0),
-        num_threads_working(num_threads),
-        thts_manager(thts_manager),
-        root_node(root_node)
+    ThtsPool::ThtsPool(
+        shared_ptr<ThtsManager> thts_manager, 
+        shared_ptr<ThtsDNode> root_node, 
+        int num_threads, 
+        shared_ptr<ThtsLogger> logger) :
+            workers(num_threads),
+            work_left_cv(),
+            work_left_lock(),
+            logging_lock(),
+            thread_pool_alive(true),
+            num_threads(num_threads),
+            num_trials(0),
+            start_time(std::chrono::system_clock::now()),
+            max_run_time(0.0),
+            trials_remaining(0),
+            num_threads_working(num_threads),
+            trials_completed(0),
+            logger(logger),
+            thts_manager(thts_manager),
+            root_node(root_node)
     {
         if (thts_manager == nullptr || root_node == nullptr) {
             throw "Cannot make ThtsPool without a thts manager, or root node";
@@ -219,6 +225,11 @@ namespace thts {
      * 
      * Selection phase uses visit and selection functions to fill 'nodes_to_backup' and 'rewards', passed by ref.
      * Backup phase calls backup on 'nodes_to_backup' passing them rewards from 'rewards'.
+     * 
+     * If logging, grabs logging lock, checks if it is time to log and calls 'log' if it is, making sure to grab the 
+     * lock for the root node as 'log' doesn't do that but needs to access the root node. When all trials are completed
+     * (trials_completed == num_trials), then call 'update_prior_runtime' for logger as it should be called after all 
+     * trials are finished.
      */
     void ThtsPool::run_thts_trial(int trials_remaining) {
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>> nodes_to_backup;
@@ -227,6 +238,20 @@ namespace thts {
         shared_ptr<ThtsEnvContext> context = thts_manager->thts_env->sample_context_itfc(root_node->state);
         run_selection_phase(nodes_to_backup, rewards, *context);
         run_backup_phase(nodes_to_backup, rewards, *context);
+
+        if (logger != nullptr) {
+            lock_guard<mutex> logging_lg(logging_lock);
+            trials_completed++;
+
+            if (logger->should_log(trials_completed)) {
+                lock_guard<mutex> root_node_lg(root_node->get_lock());
+                logger->log(root_node);
+            }
+
+            if (trials_completed == num_trials) {
+                logger->update_prior_runtime();
+            }
+        }
     }
 
     /**
@@ -283,12 +308,15 @@ namespace thts {
     /**
      * Instructs the ThtsPool to start running trials
      * 
-     * This function performs the following steps:
+     * This function performs the following steps (ignoring logging):
      * - grabs the work_left_lock
      * - initialises variables used by 'work_left' function, to indicate how many trials/how long to run thts for
      * - unlocks work_left_lock (join re-aquires the work_left_lock)
      * - signals worker threads via work_left_cv to start working
      * - if blocking, calls join to wait 
+     * 
+     * For logging we call the function that needs to be called at the start of a 'run_trials' call, so the logger 
+     * knows the start time. And if the logger is empty, it adds an origin point/entry.
      * 
      * Args:
      *      max_trials: The maximum number of trials to run
@@ -296,6 +324,14 @@ namespace thts {
      *      blocking: If this call is blocking, and waits for the trials to be completed
      */
     void ThtsPool::run_trials(int max_trials, double max_time, bool blocking) {
+        if (logger != nullptr) {
+            lock_guard<mutex> lg(logging_lock);
+            if (logger->size() == 0) {
+                logger->add_origin_entry();
+            }
+            logger->reset_start_time();
+        }
+
         work_left_lock.lock();
         num_trials = max_trials;
         trials_remaining = max_trials;

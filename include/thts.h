@@ -2,6 +2,7 @@
 
 #include "thts_decision_node.h"
 #include "thts_env_context.h"
+#include "thts_logger.h"
 #include "thts_manager.h"
 
 #include <chrono>
@@ -35,6 +36,7 @@ namespace thts {
      *      max_run_time: The maximum duration we allow thts to run for)not including finishing off the current trials).
      *      trials_remaining: The number of trials the workers pool needs to run to have completed 'num_trials' trials.
      *      num_threads_working: The number of threads currently working
+     *      trials_completed: The number of trials completed for 
      *      thts_manager: The ThtsManager to use in the thts planning routine
      *      root_node: The ThtsDNode root node that currently want to plan for
      */
@@ -60,6 +62,8 @@ namespace thts {
             int num_threads_working;
 
             // protected by logging_lock - variables to do with logging
+            int trials_completed;
+            std::shared_ptr<ThtsLogger> logger;
 
             // Manager and root node specifying the flavour of thts to run (the problem and algorithm)
             std::shared_ptr<ThtsManager> thts_manager;
@@ -80,7 +84,8 @@ namespace thts {
             ThtsPool(
                 std::shared_ptr<ThtsManager> thts_manager=nullptr, 
                 std::shared_ptr<ThtsDNode> root_node=nullptr, 
-                int num_threads=1);
+                int num_threads=1,
+                std::shared_ptr<ThtsLogger> logger=nullptr);
 
             /**
              * Destructor. Required to allow the thread pool to exit gracefully.
@@ -95,19 +100,58 @@ namespace thts {
             virtual bool work_left();
 
         protected:
-            // Add thts running functions here
-            // AND ADD DOCSTRINGS
-        // Make a comment that doesn't lock cur_node, and assumes can call 'is_leaf' without any concurrency problems/race conditions.
-        virtual bool should_continue_selection_phase(
-            std::shared_ptr<ThtsDNode> cur_node, bool new_decision_node_created_this_trial);
-        void run_selection_phase(
-            std::vector<std::pair<std::shared_ptr<ThtsDNode>,std::shared_ptr<ThtsCNode>>>& nodes_to_backup, 
-            std::vector<double>& rewards, 
-            ThtsEnvContext& context);
-        void run_backup_phase(
-            std::vector<std::pair<std::shared_ptr<ThtsDNode>,std::shared_ptr<ThtsCNode>>>& nodes_to_backup, 
-            std::vector<double>& rewards, 
-            ThtsEnvContext& context);
+            /**
+             * Checks if a worker should continue their selection phase or if it is time to end.
+             * 
+             * Selection phase ends when a leaf node (in the thts_env) or max depth is hit, or when running in mcts_mode, 
+             * once any new nodes have been added.
+             * 
+             * Args:
+             *      cur_node: The most recent node reached in the selection phase
+             *      new_decision_node_created_this_trial: If a new decision node has been created this trial
+             * 
+             * Returns:
+             *      If the selection phase should be ended.
+             */
+            virtual bool should_continue_selection_phase(
+                std::shared_ptr<ThtsDNode> cur_node, bool new_decision_node_created_this_trial);
+
+            /**
+             * Runs the selection phase of a trial, called by worker threads.
+             * 
+             * Args:
+             *      nodes_to_backup: 
+             *          A list to be filled with pairs of (ThtsDNode, ThtsCNode), that should have 'backup' called on them in the 
+             *          backup phase
+             *      rewards:
+             *          A list to be filled with rewards obtained during this selection phase (including the heuristic 
+             *          value of a frontier node (which is not visited))
+             *      context:
+             *          The ThtsContext for this trial
+             * 
+             * Returns:
+             *      Nothing, 'nodes_to_backup' and 'rewards' are filled by this function as 'return_values'.
+             */
+            void run_selection_phase(
+                std::vector<std::pair<std::shared_ptr<ThtsDNode>,std::shared_ptr<ThtsCNode>>>& nodes_to_backup, 
+                std::vector<double>& rewards, 
+                ThtsEnvContext& context);
+
+            /**
+             * Runs the backup phase of a trial, called by worker threads.
+             * 
+             * Args:
+             *      nodes_to_backup: 
+             *          A list of pairs of (ThtsDNode, ThtsCNode), to call backup on (created by selection phase)
+             *      rewards:
+             *          A list of rewards obtained during the selection phase that may be used by backups
+             *      context:
+             *          The ThtsContext for this trial
+             */
+            void run_backup_phase(
+                std::vector<std::pair<std::shared_ptr<ThtsDNode>,std::shared_ptr<ThtsCNode>>>& nodes_to_backup, 
+                std::vector<double>& rewards, 
+                ThtsEnvContext& context);
 
             /**
              * Performs a single thts trial. Called by worker_fn.
