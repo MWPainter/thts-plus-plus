@@ -57,7 +57,7 @@ $(TARGET_THTS_TEST): $(OBJECTS) $(TEST_OBJECTS)
 
 # Add a debug tests target. Adds -g to flags for debug info, and then just runs tests target
 $(TARGET_THTS_TEST_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
-$(TARGET_THTS_TEST_DEBUG): $(TARGET_THTS_TESTS)
+$(TARGET_THTS_TEST_DEBUG): $(TARGET_THTS_TEST)
 
 # Clean up compiled files
 clean:
