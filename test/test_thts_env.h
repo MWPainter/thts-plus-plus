@@ -63,14 +63,16 @@ namespace thts_test{
                 int x = state->state.first;
                 if (x > 0) {
                     valid_actions->push_back(make_shared<const StringAction>("left"));
-                } else if (x < grid_size) {
+                } 
+                if (x < grid_size) {
                     valid_actions->push_back(make_shared<const StringAction>("right"));
                 }
 
                 int y = state->state.second;
                 if (y > 0) {
                     valid_actions->push_back(make_shared<const StringAction>("up"));
-                } else if (y < grid_size) {
+                } 
+                if (y < grid_size) {
                     valid_actions->push_back(make_shared<const StringAction>("down"));
                 }
 

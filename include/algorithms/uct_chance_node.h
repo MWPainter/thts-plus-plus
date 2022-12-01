@@ -21,6 +21,7 @@ namespace thts {
      * 
      * Member variables:
      *      next_state_distr: A cached StateDistribution, representing the distribution over possible next states
+     *      num_backups: The number of times backup has been called at this node
      *      avg_return: The average return from this node
      */
     class UctCNode : public ThtsCNode {
@@ -32,6 +33,7 @@ namespace thts {
          */
         protected:
             std::shared_ptr<StateDistr> next_state_distr;
+            int num_backups;
             double avg_return;
 
             /**

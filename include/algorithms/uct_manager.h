@@ -3,9 +3,37 @@
 #include "thts_manager.h"
 
 #include <cstdlib>
+#include <limits>
 #include <random>
 
 namespace thts {
+    /**
+     * Args object so that params can be set in a more named args way
+     */
+    struct UctManagerArgs : public ThtsManagerArgs {
+        static constexpr double USE_AUTO_BIAS = -1.0;
+        static constexpr double AUTO_BIAS_MIN_BIAS = 0.001;
+
+        static constexpr double bias_default=USE_AUTO_BIAS;
+        static const int heuristic_psuedo_trials_default=0;
+        static constexpr double epsilon_exploration_default=0.0;
+        static const bool recommend_most_visited_default=false;
+
+        double bias;
+        int heuristic_psuedo_trials;
+        double epsilon_exploration;
+        bool recommend_most_visited;
+
+        UctManagerArgs(std::shared_ptr<ThtsEnv> thts_env) :
+            ThtsManagerArgs(thts_env),
+            bias(bias_default),
+            heuristic_psuedo_trials(heuristic_psuedo_trials_default),
+            epsilon_exploration(epsilon_exploration_default),
+            recommend_most_visited(recommend_most_visited_default) {}
+
+        virtual ~UctManagerArgs() = default;
+    };
+
     /**
      * A specific instance of ThtsManager for UCT algorithms.
      * 
@@ -42,22 +70,27 @@ namespace thts {
 
             double bias;
             int heuristic_psuedo_trials;
-            bool use_heuristic_at_chance_nodes;
             double epsilon_exploration;
             bool recommend_most_visited;
 
+            UctManager(UctManagerArgs& args) :
+                ThtsManager(args),
+                bias(args.bias),
+                heuristic_psuedo_trials(args.heuristic_psuedo_trials),
+                epsilon_exploration(args.epsilon_exploration),
+                recommend_most_visited(args.recommend_most_visited) {};
+
             UctManager(
                 std::shared_ptr<ThtsEnv> thts_env,
-                int max_depth,
+                int max_depth=std::numeric_limits<int>::max(),
                 double bias=USE_AUTO_BIAS,
+                int heuristic_psuedo_trials=0,
                 HeuristicFnPtr heuristic_fn=helper::zero_heuristic_fn,
                 PriorFnPtr prior_fn=nullptr,
                 bool mcts_mode=true, 
                 bool use_transposition_table=false, 
                 int num_transposition_table_mutexes=1,
                 bool is_two_player_game=false,
-                int heuristic_psuedo_trials=0,
-                bool use_heuristic_at_chance_nodes=false,
                 double epsilon_exploration=0.0,
                 bool recommend_most_visited=false,
                 int seed=60415) :
@@ -73,7 +106,6 @@ namespace thts {
                         seed),
                     bias(bias),
                     heuristic_psuedo_trials(heuristic_psuedo_trials),
-                    use_heuristic_at_chance_nodes(use_heuristic_at_chance_nodes),
                     epsilon_exploration(epsilon_exploration),
                     recommend_most_visited(recommend_most_visited) {};
     };

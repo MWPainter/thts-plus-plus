@@ -188,7 +188,7 @@ namespace thts {
                     os << "\n";
                 }
 
-                os << std::ostream::flush;
+                os.flush();
             }
     };
 }

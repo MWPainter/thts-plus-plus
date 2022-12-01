@@ -64,7 +64,7 @@ namespace thts {
             std::shared_ptr<const State> state;
             int decision_depth;
             int decision_timestep;
-            std::shared_ptr<const ThtsCNode> parent;
+            std::weak_ptr<const ThtsCNode> parent;
 
             int num_visits;
             CNodeChildMap children;

@@ -22,6 +22,7 @@ namespace thts {
      * 
      * Member variables:
      *      actions: A cached list of actions
+     *      num_backups: The number of times backup has been called at this node
      *      avg_return: The average return from this node
      *      policy_prior: A map from actions to probabilities representing a policy prior (over action/child nodes)
      */
@@ -34,8 +35,9 @@ namespace thts {
          */
         protected:
             std::shared_ptr<ActionVector> actions;
+            int num_backups;
             double avg_return;
-            ActionPrior policy_prior;
+            std::shared_ptr<ActionPrior> policy_prior;
 
             /**
              * Returns if we have a valid 'policy_prior' to use.
@@ -43,10 +45,12 @@ namespace thts {
              * If we have a prior over the child nodes, we may want to use that. However checking 
              * 'thts_manager->prior_fn != nullptr' isn't very readible, so we provide this function.
              * 
+             * Virtual so can be mocked in testing.
+             * 
              * Returns:
              *      if 'policy_prior' is valid and can be used
              */
-            bool has_prior() const;
+            virtual bool has_prior() const;
 
             /**
              * Computes the ucb term for a single child for use in selecting actions.
@@ -63,6 +67,8 @@ namespace thts {
             /**
              * Helper function for 'select_action_ucb' that computes the ucb values
              * 
+             * Virtual so can be mocked in testing.
+             * 
              * Args:
              *      ucb_values: An unordered map to be filled with ucb values by this function 
              *      ctx: The thts context given to a select aciton call
@@ -70,12 +76,14 @@ namespace thts {
              * Returns:
              *      A map from actions to their corresponding ucb values
              */
-            void fill_ucb_values(
+            virtual void fill_ucb_values(
                 std::unordered_map<std::shared_ptr<const Action>,double>& ucb_values, ThtsEnvContext& ctx) const;
 
             /**
              * Implementation of thts 'select_action' function: that selects actions according to a hybrid 
              * implementation of the ucb and pucb algorithms.
+             * 
+             * Virtual so can be mocked in testing.
              * 
              * Args:
              *      ctx: The thts context given to a select aciton call
@@ -83,15 +91,17 @@ namespace thts {
              * Returns:
              *      The selected action
              */
-            std::shared_ptr<const Action> select_action_ucb(ThtsEnvContext& ctx);
+            virtual std::shared_ptr<const Action> select_action_ucb(ThtsEnvContext& ctx);
 
             /**
              * An implementation thts 'select_action' function: that selects a uniformly random action. 
              * 
+             * Virtual so can be mocked in testing.
+             * 
              * Returns:
              *      The selected action
              */
-            std::shared_ptr<const Action> select_action_random();
+            virtual std::shared_ptr<const Action> select_action_random();
 
             /**
              * Recommends the action corresponding to the child with the best avg_return.

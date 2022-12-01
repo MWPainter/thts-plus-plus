@@ -15,6 +15,43 @@
 namespace thts {
     // Forward declare
     class ThtsEnv;
+
+    /**
+     * Args object so that params can be set in a more named args way
+     */
+    struct ThtsManagerArgs {
+        static const int max_depth_default = std::numeric_limits<int>::max();
+        // static const HeuristicFnPtr heuristic_fn_default = helper::zero_heuristic_fn;
+        // static const PriorFnPtr prior_fn_default = nullptr;
+        static const bool mcts_mode_default = true;
+        static const bool is_two_player_game_default = false;
+        static const bool use_transposition_table_default = false;
+        static const int num_transposition_table_mutexes_default = 1;
+        static const int seed_default = 60415;
+        
+        std::shared_ptr<ThtsEnv> thts_env;
+        int max_depth;
+        HeuristicFnPtr heuristic_fn;
+        PriorFnPtr prior_fn;
+        bool mcts_mode;
+        bool is_two_player_game;
+        bool use_transposition_table;
+        int num_transposition_table_mutexes;
+        int seed;
+
+        ThtsManagerArgs(std::shared_ptr<ThtsEnv> thts_env) :
+            thts_env(thts_env),
+            max_depth(max_depth_default),
+            heuristic_fn(helper::zero_heuristic_fn),
+            prior_fn(nullptr),
+            mcts_mode(mcts_mode_default),
+            is_two_player_game(is_two_player_game_default),
+            use_transposition_table(use_transposition_table_default),
+            num_transposition_table_mutexes(num_transposition_table_mutexes_default),
+            seed(seed_default) {}
+
+        virtual ~ThtsManagerArgs() = default;
+    };
     
     /**
      * ThtsManager is an object used to manage all the things that need to be 'global' space within Thts.
@@ -88,6 +125,11 @@ namespace thts {
             std::uniform_int_distribution<int> int_distr;
             std::uniform_real_distribution<double> real_distr;
 
+            void init_random_seed() {
+                int_gen = std::mt19937(rd());
+                real_gen = std::mt19937(rd());
+            }
+
         public:
             std::shared_ptr<ThtsEnv> thts_env;
 
@@ -107,17 +149,36 @@ namespace thts {
              * 
              * Seed is used to set the seed for cstdlib's rand(), and for the uniform random number generator. If the 
              * seed is set to 0, then we use a std::random_device object to generate a random seed.
-             */            
+             */    
+            ThtsManager(ThtsManagerArgs& args) : 
+                rng_lock(),
+                int_gen(args.seed),
+                real_gen(args.seed),
+                int_distr(0,RAND_MAX),
+                real_distr(0.0,1.0),
+                thts_env(args.thts_env),
+                dmap(),
+                dmap_mutexes(args.num_transposition_table_mutexes),
+                max_depth(args.max_depth),
+                mcts_mode(args.mcts_mode), 
+                use_transposition_table(args.use_transposition_table), 
+                is_two_player_game(args.is_two_player_game),
+                heuristic_fn(args.heuristic_fn),
+                prior_fn(args.prior_fn)
+            {
+                if (args.seed == 0) init_random_seed();
+            }
+
             ThtsManager(
                 std::shared_ptr<ThtsEnv> thts_env,
-                int max_depth=std::numeric_limits<int>::max(),
+                int max_depth=ThtsManagerArgs::max_depth_default,
                 HeuristicFnPtr heuristic_fn=helper::zero_heuristic_fn,
                 PriorFnPtr prior_fn=nullptr,
-                bool mcts_mode=true, 
-                bool is_two_player_game=false,
-                bool use_transposition_table=false, 
-                int num_transposition_table_mutexes=1,
-                int seed=60415) :
+                bool mcts_mode=ThtsManagerArgs::mcts_mode_default, 
+                bool is_two_player_game=ThtsManagerArgs::is_two_player_game_default,
+                bool use_transposition_table=ThtsManagerArgs::use_transposition_table_default, 
+                int num_transposition_table_mutexes=ThtsManagerArgs::num_transposition_table_mutexes_default,
+                int seed=ThtsManagerArgs::seed_default) :
                     rng_lock(),
                     int_gen(seed),
                     real_gen(seed),
@@ -133,10 +194,7 @@ namespace thts {
                     heuristic_fn(heuristic_fn),
                     prior_fn(prior_fn)
             {
-                if (seed == 0) {
-                    int_gen = std::mt19937(rd());
-                    real_gen = std::mt19937(rd());
-                }
+                if (seed == 0) init_random_seed();
             };
 
             /**

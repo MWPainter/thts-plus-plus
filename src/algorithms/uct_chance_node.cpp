@@ -23,6 +23,7 @@ namespace thts {
                 decision_timestep,
                 static_pointer_cast<const ThtsDNode>(parent)),
             next_state_distr(thts_manager->thts_env->get_transition_distribution_itfc(state,action)),
+            num_backups(0),
             avg_return(0.0)
     {  
     }
@@ -56,7 +57,8 @@ namespace thts {
      * Computes running average.
      */
     void UctCNode::backup_average_return(const double trial_return_after_node) {
-        avg_return += (trial_return_after_node - avg_return) / (double) num_visits;
+        num_backups++;
+        avg_return += (trial_return_after_node - avg_return) / (double) num_backups;
     }
 
     /**

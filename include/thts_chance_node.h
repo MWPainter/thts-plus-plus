@@ -57,7 +57,7 @@ namespace thts {
             std::shared_ptr<const Action> action;
             int decision_depth;
             int decision_timestep;
-            std::shared_ptr<const ThtsDNode> parent;
+            std::weak_ptr<const ThtsDNode> parent;
 
             int num_visits;
             DNodeChildMap children;

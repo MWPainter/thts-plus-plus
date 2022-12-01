@@ -29,11 +29,13 @@ namespace thts {
                 decision_timestep,
                 static_pointer_cast<const ThtsCNode>(parent)),
             actions(thts_manager->thts_env->get_valid_actions_itfc(state)),
+            num_backups(0),
             avg_return(0.0),
             policy_prior() 
     {   
         if (thts_manager->heuristic_fn != nullptr) {
             num_visits = thts_manager->heuristic_psuedo_trials;
+            num_backups = thts_manager->heuristic_psuedo_trials;
             avg_return = heuristic_value;
         }
 
@@ -111,12 +113,12 @@ namespace thts {
         for (shared_ptr<const Action> action : *actions) {
             double action_ucb_value = 0.0;
 
-            if (has_prior()) {
-                action_ucb_value += opp_coeff * policy_prior.at(action);
-            }
-            action_ucb_value *= bias;
             int child_visits = (has_child_node(action)) ? get_child_node(action)->num_visits : 0;
-            action_ucb_value *= compute_ucb_term(num_visits, child_visits);
+            action_ucb_value += compute_ucb_term(num_visits, child_visits);
+            action_ucb_value *= bias;
+            if (has_prior()) {
+                action_ucb_value *= policy_prior->at(action);
+            }
             
             if (has_child_node(action)) {
                 action_ucb_value += opp_coeff * get_child_node(action)->avg_return;
@@ -157,7 +159,13 @@ namespace thts {
         // Compute ucb values and return action with max value
         unordered_map<shared_ptr<const Action>,double> ucb_values;
         fill_ucb_values(ucb_values, ctx);
-        return helper::get_max_key_break_ties_randomly(ucb_values, *thts_manager);
+        shared_ptr<const Action> result_action = helper::get_max_key_break_ties_randomly(ucb_values, *thts_manager);
+
+        // Remember to create the child node if it doesnt exist!
+        if (!has_child_node(result_action)) {
+            create_child_node(result_action);
+        }
+        return result_action;
     }
 
     /**
@@ -236,7 +244,8 @@ namespace thts {
      * Computes running average.
      */
     void UctDNode::backup_average_return(const double trial_return_after_node) {
-        avg_return += (trial_return_after_node - avg_return) / (double) num_visits;
+        num_backups++;
+        avg_return += (trial_return_after_node - avg_return) / (double) num_backups;
     }
 
     /**
