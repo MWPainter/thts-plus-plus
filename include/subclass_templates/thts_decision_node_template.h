@@ -13,6 +13,10 @@
  *      _O -> YourObservationClass
  * 
  * Finally, complete all of the TODO comments inline.
+ * 
+ * Note that much of the boilerplate code can be deleted if you don't actually use it. I think the only strictly 
+ * necessary functions are 'create_child_node_helper' and 'create_child_node_helper_itfc'. See Puct implementation for 
+ * an example of being able to delete much of the code and rely on subclass code.
  */
 
 /**
@@ -74,7 +78,6 @@ namespace thts {
              */
             _DNode(
                 std::shared_ptr<_Manager> thts_manager,
-                std::shared_ptr<_Env> thts_env,
                 std::shared_ptr<const _S> state,
                 int decision_depth,
                 int decision_timestep,
@@ -191,7 +194,7 @@ namespace thts {
              * Returns:
              *      A pointer to a new child chance node
              */
-            virtual std::shared_ptr<_CNode> create_child_node(std::shared_ptr<const _A> action);
+            std::shared_ptr<_CNode> create_child_node(std::shared_ptr<const _A> action);
 
             /**
              * If this node has a child object corresponding to 'action'.
@@ -286,14 +289,12 @@ using namespace std;
 namespace thts {
     _DNode::_DNode(
         shared_ptr<_Manager> thts_manager,
-        shared_ptr<_Env> thts_env,
         shared_ptr<const _S> state,
         int decision_depth,
         int decision_timestep,
         shared_ptr<const _CNode> parent) :
             ThtsDNode(
                 static_pointer_cast<ThtsManager>(thts_manager),
-                static_pointer_cast<ThtsEnv>(thts_env),
                 static_pointer_cast<const State>(state),
                 decision_depth,
                 decision_timestep,
@@ -323,7 +324,6 @@ namespace thts {
     shared_ptr<_CNode> _DNode::create_child_node_helper(shared_ptr<const _A> action) const {
         return make_shared<_CNode>(
             thts_manager, 
-            thts_env, 
             state, 
             action, 
             decision_depth, 

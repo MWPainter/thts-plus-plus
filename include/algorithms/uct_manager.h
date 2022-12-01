@@ -82,18 +82,18 @@ namespace thts {
 
             UctManager(
                 std::shared_ptr<ThtsEnv> thts_env,
-                int max_depth=std::numeric_limits<int>::max(),
-                double bias=USE_AUTO_BIAS,
-                int heuristic_psuedo_trials=0,
+                int max_depth=UctManagerArgs::max_depth_default,
+                double bias=UctManagerArgs::bias_default,
+                int heuristic_psuedo_trials=UctManagerArgs::heuristic_psuedo_trials_default,
                 HeuristicFnPtr heuristic_fn=helper::zero_heuristic_fn,
                 PriorFnPtr prior_fn=nullptr,
-                bool mcts_mode=true, 
-                bool use_transposition_table=false, 
-                int num_transposition_table_mutexes=1,
-                bool is_two_player_game=false,
-                double epsilon_exploration=0.0,
-                bool recommend_most_visited=false,
-                int seed=60415) :
+                bool mcts_mode=UctManagerArgs::mcts_mode_default, 
+                bool use_transposition_table=UctManagerArgs::use_transposition_table_default, 
+                int num_transposition_table_mutexes=UctManagerArgs::num_transposition_table_mutexes_default,
+                bool is_two_player_game=UctManagerArgs::is_two_player_game_default,
+                double epsilon_exploration=UctManagerArgs::epsilon_exploration_default,
+                bool recommend_most_visited=UctManagerArgs::recommend_most_visited_default,
+                int seed=UctManagerArgs::seed_default) :
                     ThtsManager(
                         thts_env,
                         max_depth,

@@ -222,7 +222,7 @@ namespace thts {
              * Returns:
              *      A pointer to a new UctCNode object
              */
-            virtual std::shared_ptr<UctCNode> create_child_node_helper(std::shared_ptr<const Action> action) const;
+            std::shared_ptr<UctCNode> create_child_node_helper(std::shared_ptr<const Action> action) const;
 
             /**
              * Returns a string representation of the value of this node currently. Used for pretty printing.
@@ -266,7 +266,7 @@ namespace thts {
              * Returns:
              *      A pointer to a new child chance node
              */
-            virtual std::shared_ptr<UctCNode> create_child_node(std::shared_ptr<const Action> action);
+            std::shared_ptr<UctCNode> create_child_node(std::shared_ptr<const Action> action);
 
             /**
              * If this node has a child object corresponding to 'action'.
@@ -277,7 +277,7 @@ namespace thts {
              * Returns:
              *      true if we have a child corresponding to 'action'
              */
-            virtual bool has_child_node(std::shared_ptr<const Action> action) const;
+            bool has_child_node(std::shared_ptr<const Action> action) const;
 
             /**
              * Retrieves a child node from the children map.
@@ -290,7 +290,7 @@ namespace thts {
              * Returns:
              *      A pointer to the child node corresponding to 'action'
              */
-            virtual std::shared_ptr<UctCNode> get_child_node(std::shared_ptr<const Action> action) const;
+            std::shared_ptr<UctCNode> get_child_node(std::shared_ptr<const Action> action) const;
 
 
 

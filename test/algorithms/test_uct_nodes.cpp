@@ -615,7 +615,7 @@ void run_uct_integration_test(int env_size, int num_threads, int num_trials, dou
 
     cout << "UCT with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0){
-        cout << "and looks like:\n";
+        cout << " and looks like:\n";
         cout << root_node->get_pretty_print_string(print_tree_depth) << endl;
     } else {
         cout << endl;

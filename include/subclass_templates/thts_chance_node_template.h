@@ -14,8 +14,9 @@
  * 
  * Finally, complete all of the TODO comments inline.
  * 
- * TODO: delete any <<<POMDP -> POMDP>>> or <<<MDP -> MDP>>> sections depending on if need to implement a partially 
- * observable interface.
+ * Note that much of the boilerplate code can be deleted if you don't actually use it. I think the only strictly 
+ * necessary functions are 'create_child_node_helper' and 'create_child_node_helper_itfc'. See Puct implementation for 
+ * an example of being able to delete much of the code and rely on subclass code.
  */
 
 /**
@@ -79,7 +80,6 @@ namespace thts {
              */
             _CNode(
                 std::shared_ptr<_Manager> thts_manager,
-                std::shared_ptr<_Env> thts_env,
                 std::shared_ptr<const _S> state,
                 std::shared_ptr<const _A> action,
                 int decision_depth,
@@ -281,7 +281,6 @@ using namespace std;
 namespace thts {
     _CNode::_CNode(
         shared_ptr<_Manager> thts_manager,
-        shared_ptr<_Env> thts_env,
         shared_ptr<const _S> state,
         shared_ptr<const _A> action,
         int decision_depth,
@@ -289,7 +288,6 @@ namespace thts {
         shared_ptr<const _DNode> parent) :
             ThtsCNode(
                 static_pointer_cast<ThtsManager>(thts_manager),
-                static_pointer_cast<ThtsEnv>(thts_env),
                 static_pointer_cast<const State>(state),
                 static_pointer_cast<const Action>(action),
                 decision_depth,
@@ -323,7 +321,6 @@ namespace thts {
         shared_ptr<const _S> mdp_next_state = static_pointer_cast<const _S>(observation);
         return make_shared<_DNode>(
             thts_manager, 
-            thts_env, 
             mdp_next_state,
             decision_depth+1, 
             decision_timestep+1, 
