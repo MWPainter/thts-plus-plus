@@ -5,6 +5,7 @@
 #include <functional> 
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 using namespace std;
 using namespace thts;
@@ -17,45 +18,45 @@ namespace thts {
      * Implementation of (null) Observation 
      */
     size_t Observation::hash() const {
-        throw "Trying to use default implementation of Observation::hash";
+        throw runtime_error("Trying to use default implementation of Observation::hash");
     }
     
     bool Observation::equals_itfc(const Observation& other) const {
-        throw "Trying to use default implementation of Observation::equals_itfc";
+        throw runtime_error("Trying to use default implementation of Observation::equals_itfc");
     }
     
     string Observation::get_pretty_print_string() const {
-        throw "Trying to use default implementation of Observation::get_pretty_print_string";
+        throw runtime_error("Trying to use default implementation of Observation::get_pretty_print_string");
     }
 
     /**
      * Implementation of (null) State 
      */
     size_t State::hash() const {
-        throw "Trying to use default implementation of State::hash";
+        throw runtime_error("Trying to use default implementation of State::hash");
     }
     
     bool State::equals_itfc(const Observation& other) const {
-        throw "Trying to use default implementation of State::equals_itfc";
+        throw runtime_error("Trying to use default implementation of State::equals_itfc");
     }
     
     string State::get_pretty_print_string() const {
-        throw "Trying to use default implementation of State::get_pretty_print_string";
+        throw runtime_error("Trying to use default implementation of State::get_pretty_print_string");
     }
 
     /**
      * Implementation of (null) Action 
      */
     size_t Action::hash() const {
-        throw "Trying to use default implementation of Action::hash";
+        throw runtime_error("Trying to use default implementation of Action::hash");
     }
     
     bool Action::equals_itfc(const Action& other) const {
-        throw "Trying to use default implementation of Action::equals_itfc";
+        throw runtime_error("Trying to use default implementation of Action::equals_itfc");
     }
     
     string Action::get_pretty_print_string() const {
-        throw "Trying to use default implementation of Action::get_pretty_print_string";
+        throw runtime_error("Trying to use default implementation of Action::get_pretty_print_string");
     }
 
     /**

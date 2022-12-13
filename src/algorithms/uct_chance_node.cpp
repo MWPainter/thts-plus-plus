@@ -22,9 +22,9 @@ namespace thts {
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const ThtsDNode>(parent)),
-            next_state_distr(thts_manager->thts_env->get_transition_distribution_itfc(state,action)),
             num_backups(0),
-            avg_return(0.0)
+            avg_return(0.0),
+            next_state_distr(thts_manager->thts_env->get_transition_distribution_itfc(state,action))
     {  
     }
 
@@ -32,7 +32,7 @@ namespace thts {
      * Visit just needs to increment num_visits.
      */
     void UctCNode::visit(ThtsEnvContext& ctx) {
-        num_visits += 1;
+        ThtsCNode::visit_itfc(ctx);
     }
 
     /**

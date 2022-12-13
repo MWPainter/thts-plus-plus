@@ -127,7 +127,7 @@ namespace thts_test{
             double get_reward(
                 shared_ptr<const IntPairState> state, 
                 shared_ptr<const StringAction> action, 
-                shared_ptr<const IntPairState> Observation=nullptr) const 
+                shared_ptr<const IntPairState> observation=nullptr) const 
             {
                 return -1.0;
             }

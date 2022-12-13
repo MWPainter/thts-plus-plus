@@ -97,6 +97,16 @@ namespace thts {
             std::mutex& get_lock();
 
             /**
+             * Helper function to lock all children nodes.
+             */
+            void lock_all_children() const;
+
+            /**
+             * Helper function to unlock all children nodes.
+             */
+            void unlock_all_children() const;
+
+            /**
              * Thts visit function.
              * 
              * Called everytime the thts routine selects this node.

@@ -23,9 +23,6 @@ using namespace thts_test;
 // actions (for 'EXPECT_CALL')
 using ::testing::Return;
 
-// matchers (for 'EXPECT_CALL')
-
-#include <iostream>
 
 /**
  * Test when we call 'fill_ucb_values' without a prior. Note that this should never be called when 
@@ -636,4 +633,10 @@ TEST(Uct_IntegrationTest, easy_grid_world_stochastic) {
 
 TEST(Uct_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
     run_uct_integration_test(2,4,10000,0.1,1);
+}
+
+
+// TODO: Add test that check for #trials == #nodes in mcts mode
+TEST(Uct_IntegrationTest, mcts_mode) {
+    FAIL();
 }

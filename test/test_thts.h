@@ -132,7 +132,7 @@ namespace thts_test {
                 int decision_timestep) :
                     TestThtsDNode(thts_manager,state,decision_depth,decision_timestep) {}
 
-            MOCK_METHOD(bool, is_leaf, (), (const, override));
+            MOCK_METHOD(bool, is_sink, (), (const, override));
             MOCK_METHOD(void, visit_itfc, (ThtsEnvContext&), (override));
             MOCK_METHOD(shared_ptr<const Action>, select_action_itfc, (ThtsEnvContext&), (override));
             MOCK_METHOD(

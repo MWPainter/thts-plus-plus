@@ -3,6 +3,7 @@
 #include "helper_templates.h"
 #include "thts_manager.h"
 
+#include <stdexcept>
 #include <tuple>
 #include <utility>
 
@@ -81,10 +82,17 @@ namespace thts {
     }
 
     /**
-     * This node is a leaf node iff the state corresponds to a sink state
+     * This node is a sink node iff the state corresponds to a sink state
+     */
+    bool ThtsDNode::is_sink() const {
+        return thts_manager->thts_env->is_sink_state_itfc(state);
+    }
+
+    /**
+     * This node is a leaf node iff (it is a sink node or it is at the maximum decision depth)
      */
     bool ThtsDNode::is_leaf() const {
-        return thts_manager->thts_env->is_sink_state_itfc(state);
+        return is_sink() || decision_depth >= thts_manager->max_depth;
     }
 
     /**
@@ -207,7 +215,7 @@ namespace thts {
      * TODO: implement, and remove throwing exception
      */
     shared_ptr<ThtsDNode> ThtsDNode::load(string& filename) {
-        throw 0;
+        throw runtime_error("Load function not implemented");
     }
 
     /**
@@ -215,6 +223,6 @@ namespace thts {
      * TODO: implement, and remove throwing exception
      */
     bool ThtsDNode::save(string& filename) const {
-        throw 0;
+        throw runtime_error("Save function not implemented");
     }
 }

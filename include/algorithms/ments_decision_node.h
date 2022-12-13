@@ -1,9 +1,12 @@
 #pragma once
 
-#include "algorithms/uct_chance_node.h"
-#include "algorithms/uct_manager.h"
+#include "algorithms/ments_chance_node.h"
+#include "algorithms/ments_manager.h"
+#include "thts_types.h"
+
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
+#include "thts_env.h"
 #include "thts_env_context.h"
 #include "thts_manager.h"
 
@@ -13,29 +16,39 @@
 #include <unordered_map>
 
 namespace thts {
-
-    // forward declare corresponding UctCNode class
-    class UctCNode;
+    // forward declare corresponding MentsCNode class
+    class MentsCNode;
 
     /**
-     * Implementation of UCT (decision nodes) in Thts schema. 
+     * An implementation of MENTS in the Thts schema
+     * 
+     * Our implemntation matches the paper https://proceedings.neurips.cc/paper/2019/file/7ffb4e0ece07869880d51662a2234143-Paper.pdf
+     * mostly, with one difference (described below) and some additional functionality (described in 
+     * ments_manager.h).
+     * 
+     * The difference is as follows:
+     *  In the MENTS paper, a factor lambda = epsilon * num_actions / log(num_visits + 1), is used to reweight 
+     *  between a uniform distribution and an boltzmann (energy based) policy. This lambda is the probability of 
+     *  uniformly selecting an action, rather than using the boltzmann policy. To make the epsilon parameter 
+     *  independent of the number of actions, we just remove the num_actions factor, to get:
+     *      lambda = epsilon / log(num_visits + 1)
      * 
      * Member variables:
-     *      actions: A cached list of actions
-     *      num_backups: The number of times backup has been called at this node
-     *      avg_return: The average return from this node
-     *      policy_prior: A map from actions to probabilities representing a policy prior (over action/child nodes)
+     *      soft_value: The soft value at this node
+     *      num_backups: The number of times this node has been backed up
+     *      actions: A list of valid actions that can be used at this node
+     *      policy_prior: A prior policy for this state (if we have one)
      */
-    class UctDNode : public ThtsDNode {
-        // Allow UctCNode access to private members
-        friend UctCNode;
+    class MentsDNode : public ThtsDNode {
+        // Allow MentsCNode access to private members
+        friend MentsCNode;
 
         /**
-         * Core UctDNode implementation.
+         * Core MentsDNode implementation.
          */
         protected:
             int num_backups;
-            double avg_return;
+            double soft_value;
             std::shared_ptr<ActionVector> actions;
             std::shared_ptr<ActionPrior> policy_prior;
 
@@ -45,103 +58,130 @@ namespace thts {
              * If we have a prior over the child nodes, we may want to use that. However checking 
              * 'thts_manager->prior_fn != nullptr' isn't very readible, so we provide this function.
              * 
-             * Virtual so can be mocked in testing.
-             * 
              * Returns:
              *      if 'policy_prior' is valid and can be used
              */
-            virtual bool has_prior() const;
+            bool has_prior() const;
 
             /**
-             * Computes the ucb term for a single child for use in selecting actions.
+             * Helper to get the temperature that should be used.
+             * 
+             * The primary purpose of making this a function is so that it can be overriden in subclasses.
+             */
+            virtual double get_temp() const;
+
+            /**
+             * Helper to get the q-value of an action. Taking into account for if we are acting as an opponent.
+             * 
+             * If we are acting as an opponent, the values of children are generally negated to represent that. In this
+             * library it's standard to store values with respect to the first player, so if this node is acting for an
+             * opponent, then values in computations should be negated to reflect the opposing objective.
+             * 
+             * If no child node exists, this will return the value according to the default_q_value, or according to 
+             * the policy_prior if it exists (discussed in more detail in ments_decision_node.cpp and ments_manager.h).
+             * 
+             * Assumes that we already hold the lock for the corresponding child node if it exists.
              * 
              * Args:
-             *      num_visits: The number of visits to this node
-             *      child_visits: The number of time the child node has been visited
-             * 
-             * Returns:
-             *      The confidence interval term for a ucb value
+             *      action: 
+             *          The action to get the corresponding q value for
+             *      opponent_coeff: 
+             *          A value of -1.0 or 1.0 for if we are acting as the opponent in a two player game or not 
+             *          respectively
              */
-            virtual double compute_ucb_term(int num_visits, int child_visits) const;
+            virtual double get_soft_q_value(std::shared_ptr<const Action> action, double opponent_coeff) const;
 
             /**
-             * Helper function for 'select_action_ucb' that computes the ucb values
+             * Computes the weights for each action.
              * 
-             * Virtual so can be mocked in testing.
+             * (This excludes any probability mass from epsilon exploration).
+             * 
+             * Assumes that we already hold locks for all of the children.
              * 
              * Args:
-             *      ucb_values: An unordered map to be filled with ucb values by this function 
-             *      ctx: The thts context given to a select aciton call
-             * 
-             * Returns:
-             *      A map from actions to their corresponding ucb values
+             *      action_weights: 
+             *          An ActionDistr to be filled with values of the form exp(q_value/temp - C), where C is equal to
+             *          max(q_value/temp)
+             *      sun_action_weights:
+             *          A double reference to be filled with the sum of all the weights in 'action_weights'
+             *      normalisation_term:
+             *          A double reference to be filled with the value of C from 'action_weights' description.
+             *      context:
+             *          A thts env context
              */
-            virtual void fill_ucb_values(
-                std::unordered_map<std::shared_ptr<const Action>,double>& ucb_values, ThtsEnvContext& ctx) const;
+            virtual void compute_action_weights(
+                ActionDistr& action_weights, 
+                double& sum_action_weights, 
+                double& normalisation_term, 
+                ThtsEnvContext& context) const;
 
             /**
-             * Implementation of thts 'select_action' function: that selects actions according to a hybrid 
-             * implementation of the ucb and pucb algorithms.
+             * Computes the action distribution for each action. (Including probability mass from epsilon exploration).
              * 
-             * Virtual so can be mocked in testing.
+             * Is thread safe, and will lock children before trying to access them.
              * 
              * Args:
-             *      ctx: The thts context given to a select aciton call
-             * 
-             * Returns:
-             *      The selected action
+             *      action_distr:
+             *          An ActionDistr to be filled with a normalised probability distribution to select actions with
+             *      context:
+             *          A thts env context
              */
-            virtual std::shared_ptr<const Action> select_action_ucb(ThtsEnvContext& ctx);
+            void compute_action_distribution(
+                ActionDistr& action_distr, 
+                ThtsEnvContext& context) const;
 
             /**
-             * An implementation thts 'select_action' function: that selects a uniformly random action. 
-             * 
-             * Virtual so can be mocked in testing.
-             * 
-             * Returns:
-             *      The selected action
-             */
-            virtual std::shared_ptr<const Action> select_action_random();
-
-            /**
-             * Recommends the action corresponding to the child with the best avg_return.
-             * 
-             * Returns:
-             *      An action recomendation for the state corresponding to this node
-             */
-            std::shared_ptr<const Action> recommend_action_best_empirical() const;
-
-            /**
-             * Recommends the action corresponding to the most visited child node.
-             * 
-             * Returns:
-             *      An action recomendation for the state corresponding to this node
-             */
-            std::shared_ptr<const Action> recommend_action_most_visited() const;
-
-            /**
-             * Performs an 'avg_return' backup, i.e. it encorporates a new value into the current average.
+             * Implements select_action for ments
              * 
              * Args:
-             *      trial_return_after_node: The cumulative return achieved after this node, for the current trial
+             *      ctx: A thts env context
+             * 
+             * Returns:
+             *      The action selected.
              */
-            void backup_average_return(const double trial_return_after_node);
+            std::shared_ptr<const Action> select_action_ments(ThtsEnvContext& ctx);
+
+            /**
+             * Implements recommend_action for ments.
+             * 
+             * Selects the maximum soft value from nodes. If the value of 'recommend_visit_threshold' is positive, then 
+             * we choose only from nodes that have been visited at least 'recommend_visit_threshold' number of times,
+             * unless no nodes have been visited that many times.
+             * 
+             * Returns:
+             *      The recommended action.
+             */
+            std::shared_ptr<const Action> recommend_action_best_soft_value() const;
+
+            /**
+             * Implements a soft backup for ments.
+             * 
+             * Is thread safe, and will lock children before trying to access them.
+             * 
+             * I.e. V(s) = temp * log(sum(exp(Q(s,a)/temp)))
+             * 
+             * Args:
+             *      ctx: A thts env context
+             */
+            void backup_soft(ThtsEnvContext& ctx);
+
+
 
 
 
         /**
          * Core ThtsDNode implementation functions.
          */
-        public: 
+        public:  
             /**
              * Constructor
              */
-            UctDNode(
-                std::shared_ptr<UctManager> thts_manager,
+            MentsDNode(
+                std::shared_ptr<MentsManager> thts_manager,
                 std::shared_ptr<const State> state,
                 int decision_depth,
                 int decision_timestep,
-                std::shared_ptr<const UctCNode> parent=nullptr); 
+                std::shared_ptr<const MentsCNode> parent=nullptr); 
             
             /**
              * Implements the thts visit function for the node
@@ -175,8 +215,6 @@ namespace thts {
             
             /**
              * Implements the thts backup function for the node
-             * 
-             * Args:
              * 
              * Args:
              *      trial_rewards_before_node: 
@@ -221,15 +259,15 @@ namespace thts {
              *      action: An action to create a child node for
              * 
              * Returns:
-             *      A pointer to a new UctCNode object
+             *      A pointer to a new MentsCNode object
              */
-            std::shared_ptr<UctCNode> create_child_node_helper(std::shared_ptr<const Action> action) const;
+            std::shared_ptr<MentsCNode> create_child_node_helper(std::shared_ptr<const Action> action) const;
 
             /**
              * Returns a string representation of the value of this node currently. Used for pretty printing.
              * 
              * Returns:
-             *      A string of 'avg_return'
+             *      A string representing the value of this node
              */
             virtual std::string get_pretty_print_val() const;
         
@@ -247,7 +285,7 @@ namespace thts {
             /**
              * Mark destructor as virtual.
              */
-            virtual ~UctDNode() = default;
+            virtual ~MentsDNode() = default;
 
             /**
              * Creates a child node, handles the internal management of the creation and returns a pointer to it.
@@ -267,7 +305,7 @@ namespace thts {
              * Returns:
              *      A pointer to a new child chance node
              */
-            std::shared_ptr<UctCNode> create_child_node(std::shared_ptr<const Action> action);
+            std::shared_ptr<MentsCNode> create_child_node(std::shared_ptr<const Action> action);
 
             /**
              * If this node has a child object corresponding to 'action'.
@@ -291,8 +329,7 @@ namespace thts {
              * Returns:
              *      A pointer to the child node corresponding to 'action'
              */
-            std::shared_ptr<UctCNode> get_child_node(std::shared_ptr<const Action> action) const;
-
+            std::shared_ptr<MentsCNode> get_child_node(std::shared_ptr<const Action> action) const;
 
 
 
@@ -314,7 +351,8 @@ namespace thts {
                 const double trial_cumulative_return,
                 ThtsEnvContext& ctx);
 
-            virtual std::shared_ptr<ThtsCNode> create_child_node_helper_itfc(std::shared_ptr<const Action> action) const;
+            virtual std::shared_ptr<ThtsCNode> create_child_node_helper_itfc(
+                std::shared_ptr<const Action> action) const;
             // virtual std::shared_ptr<ThtsCNode> create_child_node_itfc(std::shared_ptr<const Action> action) final;
 
 
@@ -330,7 +368,7 @@ namespace thts {
         //     int get_num_children() const;
 
         //     bool has_child_node_itfc(std::shared_ptr<const Action> action) const;
-        //     std::shared_ptr<ThtsCNode> get_child_node_itfc(std::shared_ptr<const Action> action);
+        //     std::shared_ptr<ThtsCNode> get_child_node_itfc(std::shared_ptr<const Action> action) const;
 
         //     std::string get_pretty_print_string(int depth) const;
 

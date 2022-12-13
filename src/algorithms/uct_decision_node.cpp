@@ -28,9 +28,9 @@ namespace thts {
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const ThtsCNode>(parent)),
-            actions(thts_manager->thts_env->get_valid_actions_itfc(state)),
             num_backups(0),
             avg_return(0.0),
+            actions(thts_manager->thts_env->get_valid_actions_itfc(state)),
             policy_prior() 
     {   
         if (thts_manager->heuristic_fn != nullptr) {
@@ -50,8 +50,8 @@ namespace thts {
      * Code more readable with 'has_prior()' rather than checking against a nullptr.
      */
     bool UctDNode::has_prior() const {
-        shared_ptr<UctManager> manager = static_pointer_cast<UctManager>(thts_manager);
-        return manager->prior_fn != nullptr;
+        UctManager& manager = *static_pointer_cast<UctManager>(thts_manager);
+        return manager.prior_fn != nullptr;
     }
 
     /**
@@ -262,10 +262,10 @@ namespace thts {
     }
 
     /**
-     * Checking if this node is a leaf can be implemented faster than by calling the thts_env function to see if sink 
+     * Checking if this node is a sink can be implemented faster than by calling the thts_env function to see if sink 
      * state.
      */
-    bool UctDNode::is_leaf() const {
+    bool UctDNode::is_sink() const {
         return actions->size() == 0;
     }
     

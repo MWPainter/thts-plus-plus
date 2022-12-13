@@ -175,14 +175,26 @@ namespace thts {
                 ThtsEnvContext& ctx) = 0;
 
             /**
-             * Returns if the node is a leaf node (with respect to the environment, NOT the tree).
+             * Returns if the node is a sink node in the environment.
              * 
-             * Use to decide if this a 'true' leaf of the tree (it has no possible nodes that can be expanded).
+             * Used to decide if this node is (and always will be) a leaf of the tree (it has no possible nodes that 
+             * can be expanded).
              * 
              * Returns:
-             *      If this node corresponds to a 'leaf state' in the environment
+             *      If this node corresponds to a 'sink state' in the environment
              */
-            virtual bool is_leaf() const;
+            virtual bool is_sink() const;
+
+            /**
+             * Returns if the node is a leaf node.
+             * 
+             * A node can be a leaf in one of two ways. Firstly if it is a sink state in the environment, or, secondly 
+             * if it is at the maximum decision depth for the tree search.
+             * 
+             * Returns:
+             *      If this node is a leaf node for the tree search. 
+             */
+            bool is_leaf() const;
 
             /**
              * Creates a child node and inserts it in the unordered_map 'children'.

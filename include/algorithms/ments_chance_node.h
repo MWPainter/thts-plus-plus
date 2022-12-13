@@ -1,9 +1,12 @@
 #pragma once
 
-#include "algorithms/uct_decision_node.h"
-#include "algorithms/uct_manager.h"
+#include "algorithms/ments_decision_node.h"
+#include "algorithms/ments_manager.h"
+#include "thts_types.h"
+
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
+#include "thts_env.h"
 #include "thts_env_context.h"
 #include "thts_manager.h"
 
@@ -13,27 +16,32 @@
 #include <unordered_map>
 
 namespace thts {
-    // forward declare corresponding UctDNode class
-    class UctDNode;
+    // forward declare corresponding MentsDNode class
+    class MentsDNode;
     
     /**
-     * Implementation of UCT (chance nodes) in Thts schema. 
+     * Implementation of Ments chance nodes in the Thts schema. (Just randomly samples outcomes).
+     * 
+     * Note that the cached reward implies that this implementation can only be used with R(s,a) style rewards, 
+     * and not with R(s,a,s') style rewards.
      * 
      * Member variables:
+     *      soft_value: The soft value at this node
+     *      num_backups: The number of times this node has been backed up
+     *      local_reward: A cached value of the environments reward R(state,action), for this nodes state, action pair.
      *      next_state_distr: A cached StateDistribution, representing the distribution over possible next states
-     *      num_backups: The number of times backup has been called at this node
-     *      avg_return: The average return from this node
      */
-    class UctCNode : public ThtsCNode {
-        // Allow UctDNode access to private members
-        friend UctDNode;
+    class MentsCNode : public ThtsCNode {
+        // Allow ThtsDNode access to private members
+        friend MentsDNode;
 
         /**
-         * Core UctCNode implementation.
+         * Core MentsCNode implementation.
          */
         protected:
             int num_backups;
-            double avg_return;
+            double soft_value;
+            double local_reward;
             std::shared_ptr<StateDistr> next_state_distr;
 
             /**
@@ -45,29 +53,28 @@ namespace thts {
             std::shared_ptr<const State> sample_observation_random();
 
             /**
-             * Performs an 'avg_return' backup, i.e. it encorporates a new value into the current average.
+             * Implements a soft backup for ments. (Average of child nodes values + immediate reward R(s,a))
              * 
-             * Args:
-             *      trial_return_after_node: The cumulative return achieved after this node, for the current trial
+             * I.e. Q(s,a) = R(s,a) + sum_{s'} [N(s')V(s') / N(s,a)]
              */
-            void backup_average_return(const double trial_return_after_node);
+            void backup_soft();
 
 
 
         /**
-         * Core ThtsCNode implementation functions. Implement in .cpp and add any docstrings.
+         * Core ThtsCNode implementation functions.
          */
         public: 
             /**
              * Constructor
              */
-            UctCNode(
-                std::shared_ptr<UctManager> thts_manager,
+            MentsCNode(
+                std::shared_ptr<MentsManager> thts_manager,
                 std::shared_ptr<const State> state,
                 std::shared_ptr<const Action> action,
                 int decision_depth,
                 int decision_timestep,
-                std::shared_ptr<const UctDNode> parent=nullptr);
+                std::shared_ptr<const MentsDNode> parent=nullptr);
 
             /**
              * Implements the thts visit function for the node
@@ -120,12 +127,14 @@ namespace thts {
              * interacting with the transposition table.
              * 
              * Args:
-             *      observation: The observation (next state) object leading to the child node
+             *      observation: The observation object leading to the child node
+             *      next_state: The next state to construct the child node with
              * 
              * Returns:
-             *      A pointer to a new UctDNode object
+             *      A pointer to a new MentsDNode object
              */
-            std::shared_ptr<UctDNode> create_child_node_helper(std::shared_ptr<const State> observation) const; 
+            std::shared_ptr<MentsDNode> create_child_node_helper(
+                std::shared_ptr<const State> observation, std::shared_ptr<const State> next_state=nullptr) const;
 
             /**
              * Returns a string representation of the value of this node currently. Used for pretty printing.
@@ -149,7 +158,7 @@ namespace thts {
             /**
              * Mark destructor as virtual.
              */
-            virtual ~UctCNode() = default;
+            virtual ~MentsCNode() = default;
 
             /**
              * Creates a child node, handles the internal management of the creation and returns a pointer to it.
@@ -164,12 +173,14 @@ namespace thts {
              *      inserts it appropriately into children (and the transposition table if relevant).
              * 
              * Args:
-             *      observation: The observation (next state) object leading to the child node
+             *      observation: The observation object leading to the child node
+             *      next_state: The next state to construct the child node with
              * 
              * Returns:
              *      A pointer to a new child chance node
              */
-            std::shared_ptr<UctDNode> create_child_node(std::shared_ptr<const State> observation);
+            std::shared_ptr<MentsDNode> create_child_node(
+                std::shared_ptr<const State> observation, std::shared_ptr<const State> next_state=nullptr);
 
             /**
              * If this node has a child object corresponding to 'observation'.
@@ -193,7 +204,7 @@ namespace thts {
              * Returns:
              *      A pointer to the child node corresponding to 'observation'
              */
-            std::shared_ptr<UctDNode> get_child_node(std::shared_ptr<const State> observation) const;
+            std::shared_ptr<MentsDNode> get_child_node(std::shared_ptr<const State> observation) const;
 
 
 

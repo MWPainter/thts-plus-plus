@@ -174,9 +174,10 @@ namespace thts {
     typedef std::vector<std::shared_ptr<const StringAction>> StringActionVector;
 
     /**
-     * Also commonly want a distribution over observations/states, and the type is also verbose.
+     * Also commonly want a distribution over states/actions/observations, and the types are verbose.
      */
     typedef std::unordered_map<std::shared_ptr<const State>,double> StateDistr;
+    typedef std::unordered_map<std::shared_ptr<const Action>,double> ActionDistr;
     typedef std::unordered_map<std::shared_ptr<const Observation>,double> ObservationDistr;
     typedef std::unordered_map<std::shared_ptr<const IntPairState>,double> IntPairStateDistr;
 

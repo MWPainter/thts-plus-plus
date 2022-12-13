@@ -7,7 +7,6 @@
  *      _CNode -> YourCNodeClass
  *      _Manager -> YourThtsManagerClass (often ThtsManager should be sufficient)
  *      _Context -> YourThtsEnvContextClass (often ThtsEnvContext should be sufficient)
- *      _Env -> YourEnvClass
  *      _S -> YourStateClass
  *      _A -> YourActionClass
  *      _O -> YourObservationClass
@@ -45,7 +44,6 @@ namespace thts {
     class _O;
     class _Manager;
     class _Context;
-    class _Env;
 
     // forward declare corresponding _CNode class
     class _CNode;
@@ -250,6 +248,7 @@ namespace thts {
          * Implemented in thts_decision_node.{h,cpp}
          */
         // public:
+        //     bool is_sink() const;
         //     bool is_leaf() const;
         //     bool is_root_node() const;
         //     bool is_two_player_game() const;

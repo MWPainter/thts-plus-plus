@@ -80,7 +80,8 @@ namespace thts {
         shared_ptr<ThtsDNode> cur_node, bool new_decision_node_created_this_trial) 
     {
         if (cur_node->is_leaf()) return false;
-        if (cur_node->decision_depth >= thts_manager->max_depth) return false;
+        // if (cur_node->is_sink()) return false;
+        // if (cur_node->decision_depth >= thts_manager->max_depth) return false;
         if (thts_manager->mcts_mode && new_decision_node_created_this_trial) return false;
         return true;
     }
@@ -141,8 +142,9 @@ namespace thts {
             cur_node = decision_node;
         }
 
-        // add heuristic value to list of rewards at end
+        // visit the final node and add heuristic value to list of rewards at end
         cur_node->lock();
+        cur_node->visit_itfc(context);
         rewards.push_back(cur_node->heuristic_value);
         cur_node->unlock();
     }

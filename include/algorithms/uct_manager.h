@@ -2,10 +2,6 @@
 
 #include "thts_manager.h"
 
-#include <cstdlib>
-#include <limits>
-#include <random>
-
 namespace thts {
     /**
      * Args object so that params can be set in a more named args way
@@ -65,8 +61,8 @@ namespace thts {
      */
     class UctManager : public ThtsManager {
         public:
-            static constexpr double USE_AUTO_BIAS = -1.0;
-            static constexpr double AUTO_BIAS_MIN_BIAS = 0.001;
+            static constexpr double USE_AUTO_BIAS = UctManagerArgs::USE_AUTO_BIAS;
+            static constexpr double AUTO_BIAS_MIN_BIAS = UctManagerArgs::AUTO_BIAS_MIN_BIAS;
 
             double bias;
             int heuristic_psuedo_trials;

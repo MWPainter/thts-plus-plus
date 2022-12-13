@@ -39,25 +39,40 @@ namespace thts {
     /**
      * Aquires the lock for this node.
      */
-    void ThtsCNode::lock() 
-    { 
+    void ThtsCNode::lock() { 
         node_lock.lock(); 
     }
 
     /**
      * Releases the lock for this node.
      */
-    void ThtsCNode::unlock() 
-    { 
+    void ThtsCNode::unlock() { 
         node_lock.unlock(); 
-        }
+    }
 
     /**
      * Gets a reference to the lock for this node (so can use in a lock_guard for example)
      */
-    std::mutex& ThtsCNode::get_lock() 
-    { 
+    std::mutex& ThtsCNode::get_lock() { 
         return node_lock; 
+    }
+
+    /**
+     * Helper function to lock all children nodes.
+     */
+    void ThtsCNode::lock_all_children() const {
+        for (auto action_child_pair : children) {
+            action_child_pair.second->lock();
+        }
+    }
+
+    /**
+     * Helper function to unlock all children nodes.
+     */
+    void ThtsCNode::unlock_all_children() const {
+        for (auto action_child_pair : children) {
+            action_child_pair.second->unlock();
+        }
     }
 
     /**

@@ -5,6 +5,7 @@
 #include <functional>
 #include <limits>
 #include <sstream>
+#include <stdexcept>
 
 
 namespace thts::helper {
@@ -27,7 +28,7 @@ namespace thts::helper {
      */
     template <typename T, typename NumericT>
     T get_max_key_break_ties_randomly(unordered_map<T,NumericT>& map, ThtsManager& thts_manager) {
-        NumericT best_val = std::numeric_limits<NumericT>::lowest();
+        NumericT best_val = numeric_limits<NumericT>::lowest();
         vector<T> best_keys;
         for (pair<const T,NumericT> pr : map) {
             NumericT val = pr.second;
@@ -81,7 +82,8 @@ namespace thts::helper {
             bool too_much_mass = running_prob_mass > sum_weights + EPS;
             bool complete_mass_too_early = running_prob_mass >= sum_weights && i < distr_size;
             if (too_much_mass || complete_mass_too_early) {
-                throw "Probability masses sum to greater than 1.0, have you forgotten to set normalised=false?";
+                throw runtime_error("Probability masses sum to greater than 1.0, have you forgotten to set "
+                    "normalised=false?");
             }
             
             // return if its time
@@ -90,7 +92,11 @@ namespace thts::helper {
             }
         }
 
-        throw "Probability masses sum to less than 1.0, have you forgotten to set normalised=false?";
+        stringstream error_msg_ss;
+        error_msg_ss << "Probability masses sum to less than 1.0, have you forgotten to set normalised=false? "
+            << "Distribution was: "
+            << unordered_map_pretty_print_string(distribution);
+        throw runtime_error(error_msg_ss.str());
     }
 
 
