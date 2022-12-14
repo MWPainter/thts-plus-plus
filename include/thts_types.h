@@ -172,6 +172,7 @@ namespace thts {
      */
     typedef std::vector<std::shared_ptr<const Action>> ActionVector;
     typedef std::vector<std::shared_ptr<const StringAction>> StringActionVector;
+    typedef std::vector<std::shared_ptr<const IntAction>> IntActionVector;
 
     /**
      * Also commonly want a distribution over states/actions/observations, and the types are verbose.

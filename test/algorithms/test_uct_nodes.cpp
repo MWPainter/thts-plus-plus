@@ -640,3 +640,32 @@ TEST(Uct_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
 TEST(Uct_IntegrationTest, mcts_mode) {
     FAIL();
 }
+
+
+
+/**
+ * Also run full whack on a simple game to check that the opponent logic all works
+ */
+void run_uct_game_integration_test(int env_size, int num_trials, int print_tree_depth=0, int decision_timestep=0) {
+    shared_ptr<ThtsEnv> game_env = make_shared<TestThtsGameEnv>(env_size);
+    shared_ptr<UctManager> manager = make_shared<UctManager>(game_env, env_size*4);
+    manager->mcts_mode = false;
+    manager->is_two_player_game = true;
+    shared_ptr<UctDNode> root_node = make_shared<UctDNode>(
+        manager, game_env->get_initial_state_itfc(), 0, decision_timestep);
+    ThtsPool uct_pool(manager, root_node, 1);
+    uct_pool.run_trials(num_trials);
+
+    if (print_tree_depth > 0){
+        cout << "UCT with starting decision_timestep of " << decision_timestep << " looks like:\n";
+        cout << root_node->get_pretty_print_string(print_tree_depth) << endl;
+    }
+}
+
+TEST(Uct_IntegrationTest, two_player_game_env) {
+    run_uct_game_integration_test(3, 10000, 4, 0);
+}
+
+TEST(Uct_IntegrationTest, two_player_game_env_starting_as_opponent) {
+    run_uct_game_integration_test(3, 10000, 4, 1);
+}

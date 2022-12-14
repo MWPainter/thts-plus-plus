@@ -78,3 +78,32 @@ TEST(Puct_IntegrationTest, easy_grid_world_stochastic) {
 TEST(Puct_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
     run_puct_integration_test(2,4,10000,0.1,1);
 }
+
+
+
+/**
+ * Also run full whack on a simple game to check that the opponent logic all works
+ */
+void run_puct_game_integration_test(int env_size, int num_trials, int print_tree_depth=0, int decision_timestep=0) {
+    shared_ptr<ThtsEnv> game_env = make_shared<TestThtsGameEnv>(env_size);
+    shared_ptr<PuctManager> manager = make_shared<PuctManager>(game_env, env_size*4);
+    manager->mcts_mode = false;
+    manager->is_two_player_game = true;
+    shared_ptr<PuctDNode> root_node = make_shared<PuctDNode>(
+        manager, game_env->get_initial_state_itfc(), 0, decision_timestep);
+    ThtsPool uct_pool(manager, root_node, 1);
+    uct_pool.run_trials(num_trials);
+
+    if (print_tree_depth > 0){
+        cout << "PUCT with starting decision_timestep of " << decision_timestep << " looks like:\n";
+        cout << root_node->get_pretty_print_string(print_tree_depth) << endl;
+    }
+}
+
+TEST(Puct_IntegrationTest, two_player_game_env) {
+    run_puct_game_integration_test(3, 10000, 4, 0);
+}
+
+TEST(Puct_IntegrationTest, two_player_game_env_starting_as_opponent) {
+    run_puct_game_integration_test(3, 10000, 4, 1);
+}
