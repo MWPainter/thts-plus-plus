@@ -32,7 +32,7 @@ namespace thts {
      *      next_state_distr: A cached StateDistribution, representing the distribution over possible next states
      */
     class MentsCNode : public ThtsCNode {
-        // Allow ThtsDNode access to private members
+        // Allow MentsDNode access to private members
         friend MentsDNode;
 
         /**
@@ -110,7 +110,7 @@ namespace thts {
              *      trial_cumulative_return:
              *          Sum of rewards in both of the 'trial_rewards_after_node' and 'trial_rewards_before_node' lists
              */
-            void backup(
+            virtual void backup(
                 const std::vector<double>& trial_rewards_before_node, 
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 

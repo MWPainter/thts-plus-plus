@@ -189,7 +189,7 @@ namespace thts {
              * Args:
              *      ctx: A context provided to all thts functions throughout a trial to pass intermediate/transient info
              */
-            void visit(ThtsEnvContext& ctx);
+            virtual void visit(ThtsEnvContext& ctx);
             
             /**
              * Implements the thts select_action function for the node
@@ -211,7 +211,7 @@ namespace thts {
              * Returns:
              *      The recommended action
              */
-            std::shared_ptr<const Action> recommend_action(ThtsEnvContext& ctx) const;
+            virtual std::shared_ptr<const Action> recommend_action(ThtsEnvContext& ctx) const;
             
             /**
              * Implements the thts backup function for the node
@@ -228,7 +228,7 @@ namespace thts {
              *      trial_cumulative_return:
              *          Sum of rewards in both of the 'trial_rewards_after_node' and 'trial_rewards_before_node' lists
              */
-            void backup(
+            virtual void backup(
                 const std::vector<double>& trial_rewards_before_node, 
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 

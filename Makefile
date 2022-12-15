@@ -6,6 +6,7 @@ BINDIR = bin
 
 SOURCES = $(wildcard src/*.cpp)
 SOURCES += $(wildcard src/algorithms/*.cpp)
+SOURCES += $(wildcard src/algorithms/common/*.cpp)
 OBJECTS = $(patsubst src/%.cpp, $(BINDIR)/%.o, $(SOURCES))
 TESTS = $(wildcard test/*.cpp)
 TESTS += $(wildcard test/algorithms/*.cpp)
@@ -35,7 +36,7 @@ all: $(TARGET_THTS_TEST)
 # Rule to make sure all build directories exist
 bin-exists:
 	@mkdir -p $(BINDIR)/test/algorithms
-	@mkdir -p $(BINDIR)/algorithms
+	@mkdir -p $(BINDIR)/algorithms/common
 
 # compiling source files
 $(BINDIR)/%.o : src/%.cpp bin-exists

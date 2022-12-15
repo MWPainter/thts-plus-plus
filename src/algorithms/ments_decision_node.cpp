@@ -7,9 +7,6 @@
 
 using namespace std; 
 
-#include <iostream>
-#include <sstream>
-
 namespace thts {
     MentsDNode::MentsDNode(
         shared_ptr<MentsManager> thts_manager,
@@ -19,7 +16,7 @@ namespace thts {
         shared_ptr<const MentsCNode> parent) :
             ThtsDNode(
                 static_pointer_cast<ThtsManager>(thts_manager),
-                static_pointer_cast<const State>(state),
+                state,
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const ThtsCNode>(parent)),
@@ -27,14 +24,14 @@ namespace thts {
             soft_value(0.0),
             actions(thts_manager->thts_env->get_valid_actions_itfc(state)),
             policy_prior()
-        {
-            if (thts_manager->heuristic_fn != nullptr) {
-                soft_value = thts_manager->heuristic_fn(state);
-            }
-            if (thts_manager->prior_fn != nullptr) {
-                policy_prior = thts_manager->prior_fn(state);
-            }
+    {
+        if (thts_manager->heuristic_fn != nullptr) {
+            soft_value = thts_manager->heuristic_fn(state);
         }
+        if (thts_manager->prior_fn != nullptr) {
+            policy_prior = thts_manager->prior_fn(state);
+        }
+    }
     
     /**
      * Helper function for checking if we have a prior or not. 
@@ -130,15 +127,6 @@ namespace thts {
             double action_weight = exp((soft_q_value/temp) - normalisation_term);
             action_weights[action] = action_weight;
             sum_action_weights += action_weight;
-            if (isnan(action_weight)) {
-                stringstream ss;
-                ss << "DNODE" << "\n";
-                ss << "qval: " << soft_q_value << ", tmp: " << temp << ", norm: " << normalisation_term 
-                    << ", oppcf: " << opp_coeff << "\n";
-                ss << "has_child: " << has_child_node(action) << ", prior: " << has_prior() << "\n\n";
-                cout << ss.str();
-                cout.flush();
-            }
         }
     }
 
@@ -218,7 +206,7 @@ namespace thts {
 
         for (shared_ptr<const Action> action : *actions) {
             double q_value = get_soft_q_value(action, opp_coeff);
-            if (has_child_node(action) && get_child_node(action)->num_visits > manager.recommend_visit_threshold) {
+            if (has_child_node(action) && get_child_node(action)->num_visits >= manager.recommend_visit_threshold) {
                 soft_values_thresholded[action] = q_value;
             } else {
                 soft_values[action] = q_value;

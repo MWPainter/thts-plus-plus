@@ -10,7 +10,6 @@
 // includes
 #include "test/test_thts_env.h"
 #include "thts.h"
-#include "thts_env_context.h"
 
 #include <iostream>
 #include <unordered_map>
