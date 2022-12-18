@@ -16,6 +16,7 @@ namespace thts {
 
     // forward declare corresponding UctCNode class
     class UctCNode;
+    class UctLogger;
 
     /**
      * Implementation of UCT (decision nodes) in Thts schema. 
@@ -27,8 +28,9 @@ namespace thts {
      *      policy_prior: A map from actions to probabilities representing a policy prior (over action/child nodes)
      */
     class UctDNode : public ThtsDNode {
-        // Allow UctCNode access to private members
+        // Allow UctCNode and UctLogger access to private members
         friend UctCNode;
+        friend UctLogger;
 
         /**
          * Core UctDNode implementation.

@@ -14,6 +14,7 @@
 namespace thts {
     // forward declare
     class ThtsCNode;
+    class ThtsLogger;
     class ThtsPool;
 
     // CNodeMap type is lengthy, so typedef
@@ -53,8 +54,9 @@ namespace thts {
     //  *          estimate of the Q-values from taking each action.
      */
     class ThtsDNode : public std::enable_shared_from_this<ThtsDNode> {
-        // Allow ThtsCNode access to private members
+        // Allow ThtsCNode, Logger and Pool access to private members
         friend ThtsCNode;
+        friend ThtsLogger;
         friend ThtsPool;
 
         protected:

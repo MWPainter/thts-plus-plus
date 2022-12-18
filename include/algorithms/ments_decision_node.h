@@ -18,6 +18,7 @@
 namespace thts {
     // forward declare corresponding MentsCNode class
     class MentsCNode;
+    class MentsLogger;
 
     /**
      * An implementation of MENTS in the Thts schema
@@ -40,8 +41,9 @@ namespace thts {
      *      policy_prior: A prior policy for this state (if we have one)
      */
     class MentsDNode : public ThtsDNode {
-        // Allow MentsCNode access to private members
+        // Allow MentsCNode and MentsLogger access to private members
         friend MentsCNode;
+        friend MentsLogger;
 
         /**
          * Core MentsDNode implementation.
