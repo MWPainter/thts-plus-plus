@@ -222,18 +222,20 @@ namespace thts_test{
      * 
      * Member variables:
      *      game_len: Length of the game
+     *      consistent_actions: If we want the actions to always be "1","-1". (So we can test Rents)
      */
     class TestThtsGameEnv : public ThtsEnv {
 
         private:
             int game_len;
+            bool consistent_actions;
 
         /**
          * Node implementation
          */
         public:
-            TestThtsGameEnv(int game_len) : 
-                ThtsEnv(true), game_len(game_len) {}
+            TestThtsGameEnv(int game_len, bool consistent_actions=false) : 
+                ThtsEnv(true), game_len(game_len), consistent_actions(consistent_actions) {}
 
             virtual ~TestThtsGameEnv() = default;
 
@@ -248,6 +250,7 @@ namespace thts_test{
             shared_ptr<IntActionVector> get_valid_actions(shared_ptr<const IntPairState> state) const {
                 int game_step = state->state.first;
                 int rew = 1 << (game_len - 1 - game_step);
+                if (consistent_actions) rew = 1;
 
                 shared_ptr<IntActionVector> valid_actions = make_shared<IntActionVector>();
                 if (!is_sink_state(state)) {
@@ -276,6 +279,7 @@ namespace thts_test{
                 int last_game_step = state->state.first;
                 int cumulative_score = state->state.second;
                 int step_score = action->action;
+                if (consistent_actions) step_score *= 1 << (game_len - 1 - last_game_step);
                 return make_shared<const IntPairState>(last_game_step+1, cumulative_score+step_score);
             }
 
@@ -291,6 +295,7 @@ namespace thts_test{
 
                 int cumulative_score = state->state.second;
                 int step_score = action->action;
+                if (consistent_actions) step_score *= 1 << (game_len - 1 - game_step);
                 return cumulative_score + step_score;
 
             }

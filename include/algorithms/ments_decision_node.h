@@ -200,7 +200,7 @@ namespace thts {
              * Returns:
              *      The selected action
              */
-            std::shared_ptr<const Action> select_action(ThtsEnvContext& ctx);
+            virtual std::shared_ptr<const Action> select_action(ThtsEnvContext& ctx);
             
             /**
              * Implements the thts recommend_action function for the node

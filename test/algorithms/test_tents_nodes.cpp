@@ -1,11 +1,11 @@
-#include "test/algorithms/test_dents_nodes.h"
+#include "test/algorithms/test_tents_nodes.h"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
 // testing
-#include "algorithms/dents_chance_node.h"
-#include "algorithms/dents_decision_node.h"
-#include "algorithms/dents_manager.h"
+#include "algorithms/tents_chance_node.h"
+#include "algorithms/tents_decision_node.h"
+#include "algorithms/ments_manager.h"
 
 // includes
 #include "test/test_thts_env.h"
@@ -27,7 +27,7 @@ using ::testing::Return;
 /**
  * Reminder to eventually write unit tests
  */
-TEST(Dents_UnitTests, reminder_to_do_at_some_point) {
+TEST(Tents_UnitTests, reminder_to_do_at_some_point) {
     FAIL();
 }
 
@@ -38,16 +38,16 @@ TEST(Dents_UnitTests, reminder_to_do_at_some_point) {
  * 
  * Prints some fun things out for if we want to read
  */
-void run_dents_integration_test(
+void run_tents_integration_test(
     int env_size, int num_threads, int num_trials, double stay_prob=0.0, int print_tree_depth=0, double temp=1.0) 
 {
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
 
     shared_ptr<ThtsEnv> grid_env = make_shared<TestThtsEnv>(env_size, stay_prob);
-    shared_ptr<DentsManager> manager = make_shared<DentsManager>(grid_env, env_size*4);
+    shared_ptr<MentsManager> manager = make_shared<MentsManager>(grid_env, env_size*4);
     manager->mcts_mode = false;
     manager->temp = temp;
-    shared_ptr<DentsDNode> root_node = make_shared<DentsDNode>(manager, grid_env->get_initial_state_itfc(), 0, 0);
+    shared_ptr<TentsDNode> root_node = make_shared<TentsDNode>(manager, grid_env->get_initial_state_itfc(), 0, 0);
     ThtsPool uct_pool(manager, root_node, num_threads);
     uct_pool.run_trials(num_trials);
 
@@ -57,7 +57,7 @@ void run_dents_integration_test(
 
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
-    cout << "DENTS with " << num_threads << " threads (took " << dur.count() << ")";
+    cout << "TENTS with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0){
         cout << " and looks like:\n";
         cout << root_node->get_pretty_print_string(print_tree_depth) << endl;
@@ -66,20 +66,20 @@ void run_dents_integration_test(
     }
 }
 
-TEST(Dents_IntegrationTest, easy_grid_world) {
-    run_dents_integration_test(1,1,10000,0.0,2);
+TEST(Tents_IntegrationTest, easy_grid_world) {
+    run_tents_integration_test(1,1,10000,0.0,2);
 }
 
-TEST(Dents_IntegrationTest, easy_grid_world_multithreaded) {
-    run_dents_integration_test(2,4,10000,0.0,1,0.5);
+TEST(Tents_IntegrationTest, easy_grid_world_multithreaded) {
+    run_tents_integration_test(2,4,10000,0.0,1);
 }
 
-TEST(Dents_IntegrationTest, easy_grid_world_stochastic) {
-    run_dents_integration_test(1,1,10000,0.1,2);
+TEST(Tents_IntegrationTest, easy_grid_world_stochastic) {
+    run_tents_integration_test(1,1,10000,0.1,2);
 }
 
-TEST(Dents_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
-    run_dents_integration_test(2,4,10000,0.1,1,0.5);
+TEST(Tents_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
+    run_tents_integration_test(2,4,10000,0.1,1);
 }
 
 
@@ -87,26 +87,26 @@ TEST(Dents_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
 /**
  * Also run full whack on a simple game to check that the opponent logic all works
  */
-void run_dents_game_integration_test(int env_size, int num_trials, int print_tree_depth=0, int decision_timestep=0) {
+void run_tents_game_integration_test(int env_size, int num_trials, int print_tree_depth=0, int decision_timestep=0) {
     shared_ptr<ThtsEnv> game_env = make_shared<TestThtsGameEnv>(env_size);
-    shared_ptr<DentsManager> manager = make_shared<DentsManager>(game_env, env_size*4);
+    shared_ptr<MentsManager> manager = make_shared<MentsManager>(game_env, env_size*4);
     manager->mcts_mode = false;
     manager->is_two_player_game = true;
-    shared_ptr<DentsDNode> root_node = make_shared<DentsDNode>(
+    shared_ptr<TentsDNode> root_node = make_shared<TentsDNode>(
         manager, game_env->get_initial_state_itfc(), 0, decision_timestep);
     ThtsPool uct_pool(manager, root_node, 1);
     uct_pool.run_trials(num_trials);
 
     if (print_tree_depth > 0){
-        cout << "DENTS with starting decision_timestep of " << decision_timestep << " looks like:\n";
+        cout << "TENTS with starting decision_timestep of " << decision_timestep << " looks like:\n";
         cout << root_node->get_pretty_print_string(print_tree_depth) << endl;
     }
 }
 
-TEST(Dents_IntegrationTest, two_player_game_env) {
-    run_dents_game_integration_test(3, 10000, 4, 0);
+TEST(Tents_IntegrationTest, two_player_game_env) {
+    run_tents_game_integration_test(3, 10000, 4, 0);
 }
 
-TEST(Dents_IntegrationTest, two_player_game_env_starting_as_opponent) {
-    run_dents_game_integration_test(3, 10000, 4, 1);
+TEST(Tents_IntegrationTest, two_player_game_env_starting_as_opponent) {
+    run_tents_game_integration_test(3, 10000, 4, 1);
 }

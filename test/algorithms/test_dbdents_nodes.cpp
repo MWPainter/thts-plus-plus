@@ -98,7 +98,7 @@ void run_dbdents_game_integration_test(int env_size, int num_trials, int print_t
     uct_pool.run_trials(num_trials);
 
     if (print_tree_depth > 0){
-        cout << "DB-MENTS with starting decision_timestep of " << decision_timestep << " looks like:\n";
+        cout << "DB-DENTS with starting decision_timestep of " << decision_timestep << " looks like:\n";
         cout << root_node->get_pretty_print_string(print_tree_depth) << endl;
     }
 }

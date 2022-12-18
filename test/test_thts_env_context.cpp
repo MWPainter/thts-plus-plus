@@ -19,16 +19,16 @@ using namespace thts;
 TEST(EnvContext_CheckIsMapWithoutDefaults, test_normal_use) 
 {
     ThtsEnvContext context;
-    context.put_value("Hello,", 1.0);
-    context.put_value("World!", 2.5);
-    EXPECT_EQ(context.get_value_for_key("Hello,"), 1.0);
-    EXPECT_EQ(context.get_value_for_key("World!"), 2.5);
+    context.put_value("Hello,", make_shared<double>(1.0));
+    context.put_value("World!", make_shared<double>(2.5));
+    EXPECT_EQ(context.get_value<double>("Hello,"), 1.0);
+    EXPECT_EQ(context.get_value<double>("World!"), 2.5);
 }
 
 TEST(EnvContext_CheckIsMapWithoutDefaults, test_missing_key) 
 {
     ThtsEnvContext context;
-    context.put_value("Hello,", 1.0);
-    context.put_value("World!", 2.5);
-    EXPECT_ANY_THROW(context.get_value_for_key("NotInContext"));
+    context.put_value("Hello,", make_shared<double>(1.0));
+    context.put_value("World!", make_shared<double>(2.5));
+    EXPECT_ANY_THROW(context.get_value_raw("NotInContext"));
 }
