@@ -58,11 +58,15 @@ namespace thts {
         chrono::duration<double> cur_runtime = chrono::system_clock::now() - start_time;
         return prior_runtime + cur_runtime;
     }
+
+    void ThtsLogger::trial_completed() {
+        trials_completed++;
+    }
     
-    bool ThtsLogger::should_log(int num_trials) {
+    bool ThtsLogger::should_log() {
         bool result = false;
-        if (num_trials >= last_log_num_trials + trials_delta) {
-            last_log_num_trials = num_trials;
+        if (trials_completed >= last_log_num_trials + trials_delta) {
+            last_log_num_trials = trials_completed;
             result = true;
         }
         if (get_current_total_runtime() >= next_log_runtime_threshold) {

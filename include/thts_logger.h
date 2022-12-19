@@ -50,6 +50,7 @@ namespace thts {
      *      entries: A vector of LoggerEntry objects, each representing a datatype
      *      prior_runtime: The amount of runtime logger from previous calls to ThtsPool run_trials
      *      start_time: The time at the start of the last run_trials call in ThtsPool
+     *      trials_completed: The number of trials completed (number of times 'trial_completed' called)
      *      trials_delta: 
      *          Indicates 'log' should be called every 'trials_delta' completed trials.
      *      last_log_num_trials:
@@ -66,6 +67,7 @@ namespace thts {
             std::chrono::duration<double> prior_runtime;
             std::chrono::time_point<std::chrono::system_clock> start_time;
 
+            int trials_completed;
             int trials_delta;
             int last_log_num_trials;
             std::chrono::duration<double> runtime_delta;
@@ -110,18 +112,22 @@ namespace thts {
             std::chrono::duration<double> get_current_total_runtime();
 
             /**
+             * Call when a trial is completed to increment trials completed.
+            */
+           void trial_completed();
+
+            /**
              * Checks if it is time to call log
              * 
              * Note that if the deltas are at their default values, the rhs of the comparisons will always be a max 
              * value and the checks will never pass
              * 
-             * Args:
-             *      num_trials: The number of trials run in the current 'run_trials' call to ThtsPool
+             * Uses the current time and current value of 'trials_completed' to determine if it is time to log.
              * 
              * Returns:
              *      If 'log' should be called for this current trial
              */
-            bool should_log(int num_trials);
+            bool should_log();
 
             /**
              * Adds an logger entry based off the current 

@@ -244,8 +244,9 @@ namespace thts {
         if (logger != nullptr) {
             lock_guard<mutex> logging_lg(logging_lock);
             trials_completed++;
+            logger->trial_completed();
 
-            if (logger->should_log(trials_completed)) {
+            if (logger->should_log()) {
                 lock_guard<mutex> root_node_lg(root_node->get_lock());
                 logger->log(root_node);
             }

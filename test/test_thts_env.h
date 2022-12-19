@@ -112,10 +112,10 @@ namespace thts_test{
             shared_ptr<const IntPairState> sample_transition_distribution(
                 shared_ptr<const IntPairState> state, 
                 shared_ptr<const StringAction> action, 
-                shared_ptr<ThtsManager> manager) const 
+                RandManager& rand_manager) const 
             {
                 if (stay_prob > 0.0) {
-                    double sample = manager->get_rand_uniform();
+                    double sample = rand_manager.get_rand_uniform();
                     if (sample < stay_prob) {
                         return state;
                     }
@@ -174,13 +174,12 @@ namespace thts_test{
             }
 
             virtual shared_ptr<const State> sample_transition_distribution_itfc(
-                shared_ptr<const State> state, shared_ptr<const Action> action, shared_ptr<ThtsManager> manager) const 
+                shared_ptr<const State> state, shared_ptr<const Action> action, RandManager& rand_manager) const 
             {
                 shared_ptr<const IntPairState> state_itfc = static_pointer_cast<const IntPairState>(state);
                 shared_ptr<const StringAction> action_itfc = static_pointer_cast<const StringAction>(action);
-                shared_ptr<ThtsManager> manager_itfc = static_pointer_cast<ThtsManager>(manager);
                 shared_ptr<const IntPairState> next_state = sample_transition_distribution(
-                    state_itfc, action_itfc, manager_itfc);
+                    state_itfc, action_itfc, rand_manager);
                 return static_pointer_cast<const State>(next_state);
             }
 
@@ -193,9 +192,9 @@ namespace thts_test{
             virtual std::shared_ptr<const Observation> sample_observation_distribution_itfc(
                 std::shared_ptr<const Action> action, 
                 std::shared_ptr<const State> next_state, 
-                std::shared_ptr<ThtsManager> thts_manager) const 
+                RandManager& rand_manager) const 
             {
-                return thts::ThtsEnv::sample_observation_distribution_itfc(action, next_state, thts_manager);
+                return thts::ThtsEnv::sample_observation_distribution_itfc(action, next_state, rand_manager);
             }
 
             virtual double get_reward_itfc(
@@ -273,14 +272,21 @@ namespace thts_test{
 
             shared_ptr<const IntPairState> sample_transition_distribution(
                 shared_ptr<const IntPairState> state, 
-                shared_ptr<const IntAction> action, 
-                shared_ptr<ThtsManager> manager=nullptr) const 
+                shared_ptr<const IntAction> action) const 
             {
                 int last_game_step = state->state.first;
                 int cumulative_score = state->state.second;
                 int step_score = action->action;
                 if (consistent_actions) step_score *= 1 << (game_len - 1 - last_game_step);
                 return make_shared<const IntPairState>(last_game_step+1, cumulative_score+step_score);
+            }
+
+            shared_ptr<const IntPairState> sample_transition_distribution(
+                shared_ptr<const IntPairState> state, 
+                shared_ptr<const IntAction> action, 
+                RandManager& rand_manager) const 
+            {
+                return sample_transition_distribution(state, action);
             }
 
             double get_reward(
@@ -342,13 +348,12 @@ namespace thts_test{
             }
 
             virtual shared_ptr<const State> sample_transition_distribution_itfc(
-                shared_ptr<const State> state, shared_ptr<const Action> action, shared_ptr<ThtsManager> manager) const 
+                shared_ptr<const State> state, shared_ptr<const Action> action, RandManager& rand_manager) const 
             {
                 shared_ptr<const IntPairState> state_itfc = static_pointer_cast<const IntPairState>(state);
                 shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);
-                shared_ptr<ThtsManager> manager_itfc = static_pointer_cast<ThtsManager>(manager);
                 shared_ptr<const IntPairState> next_state = sample_transition_distribution(
-                    state_itfc, action_itfc, manager_itfc);
+                    state_itfc, action_itfc, rand_manager);
                 return static_pointer_cast<const State>(next_state);
             }
 
@@ -361,9 +366,9 @@ namespace thts_test{
             virtual std::shared_ptr<const Observation> sample_observation_distribution_itfc(
                 std::shared_ptr<const Action> action, 
                 std::shared_ptr<const State> next_state, 
-                std::shared_ptr<ThtsManager> thts_manager) const 
+                RandManager& rand_manager) const 
             {
-                return thts::ThtsEnv::sample_observation_distribution_itfc(action, next_state, thts_manager);
+                return thts::ThtsEnv::sample_observation_distribution_itfc(action, next_state, rand_manager);
             }
 
             virtual double get_reward_itfc(

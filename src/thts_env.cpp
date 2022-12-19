@@ -39,10 +39,10 @@ namespace thts {
     shared_ptr<const Observation> ThtsEnv::sample_observation_distribution_itfc(
         shared_ptr<const Action> action, 
         shared_ptr<const State> next_state, 
-        shared_ptr<ThtsManager> thts_manager) const 
+        RandManager& rand_manager) const 
     {
-        shared_ptr<ObservationDistr> distr = make_shared<ObservationDistr>();
-        return helper::sample_from_distribution(*distr, *thts_manager);
+        shared_ptr<ObservationDistr> distr = get_observation_distribution_itfc(action, next_state);
+        return helper::sample_from_distribution(*distr, rand_manager);
     }
 
     /**

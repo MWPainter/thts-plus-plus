@@ -11,7 +11,7 @@
 
 namespace thts {
     // Forward declare
-    class ThtsManager;
+    class RandManager;
     
     /**
          * An abstract class for representing an environment.
@@ -113,7 +113,7 @@ namespace thts {
              * Args:
              *      state: The state to sample an observation from
              *      action: The action taken to sample an observation for
-             *      thts_manager: A pointer to the thts_manager to access the random number sampling interface
+             *      rand_manager: A pointer to a RandManager to access the random number sampling interface
              * 
              * Returns:
              *      Returns an successor state sampled from taking 'action' from 'state'
@@ -121,7 +121,7 @@ namespace thts {
             virtual std::shared_ptr<const State> sample_transition_distribution_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
-                std::shared_ptr<ThtsManager> thts_manager) const = 0;
+                RandManager& rand_manager) const = 0;
 
             /**
              * Returns a distribution over observations from a (next) state, action pair.
@@ -152,7 +152,7 @@ namespace thts {
              * Args:
              *      action: The action taken to sample an observation for
              *      next_state: The state (arriving in)  to sample an observation for
-             *      thts_manager: A pointer to the thts_manager to access the random number sampling interface
+             *      rand_manager: A pointer to a RandManager to access the random number sampling interface
              * 
              * Returns:
              *      Returns an observation sampled from taking 'action' that arived in 'next_state'
@@ -160,7 +160,7 @@ namespace thts {
             virtual std::shared_ptr<const Observation> sample_observation_distribution_itfc(
                 std::shared_ptr<const Action> action, 
                 std::shared_ptr<const State> next_state, 
-                std::shared_ptr<ThtsManager> thts_manager) const;
+                RandManager& rand_manager) const;
             
             /**
              * Returns the reward for a given state, action, observation tuple.

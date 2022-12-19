@@ -27,7 +27,7 @@ namespace thts::helper {
      * Select max value with randomly breaking ties
      */
     template <typename T, typename NumericT>
-    T get_max_key_break_ties_randomly(unordered_map<T,NumericT>& map, ThtsManager& thts_manager) {
+    T get_max_key_break_ties_randomly(unordered_map<T,NumericT>& map, RandManager& rand_manager) {
         NumericT best_val = numeric_limits<NumericT>::lowest();
         vector<T> best_keys;
         for (pair<const T,NumericT> pr : map) {
@@ -42,7 +42,7 @@ namespace thts::helper {
         }
 
         if (best_keys.size() == 1) return best_keys[0];
-        int indx = thts_manager.get_rand_int(0,best_keys.size());
+        int indx = rand_manager.get_rand_int(0,best_keys.size());
         return best_keys[indx];
     }
 
@@ -59,7 +59,7 @@ namespace thts::helper {
      *      must have summed to less than 1.0. This exception thrown with probability (1.0-sum_weights).
      */
     template <typename T>
-    T sample_from_distribution(unordered_map<T,double>& distribution, ThtsManager& thts_manager, bool normalised) {
+    T sample_from_distribution(unordered_map<T,double>& distribution, RandManager& rand_manager, bool normalised) {
         double sum_weights = 1.0;
         if (!normalised) {
             sum_weights = 0.0;
@@ -70,7 +70,7 @@ namespace thts::helper {
         
         int i = 0;
         int distr_size = distribution.size();
-        double rand_val = thts_manager.get_rand_uniform();
+        double rand_val = rand_manager.get_rand_uniform();
         double running_prob_mass = 0.0;
 
         for (pair<T,double> pr : distribution) {

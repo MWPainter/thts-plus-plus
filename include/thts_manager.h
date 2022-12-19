@@ -52,6 +52,70 @@ namespace thts {
 
         virtual ~ThtsManagerArgs() = default;
     };
+
+    /**
+     * Rand Manager. A manager for random number generation.
+     * 
+     * Todo: Move docstring to cover this properly.
+     * 
+     * Member variables:
+     *      rng_lock:
+     *          A mutex to protect random number generation function calls.
+     *      rd:
+     *          A 'random_device' which is the computers source of (psuedo) random numbers
+     *      real_gen:   
+     *          A 'mersenne_twister_engine' used to seed the uniform [0,1) random number generation
+     *      real_distr: 
+     *          A random number generator for real numbers in the range [0,1)
+     *      int_gen:   
+     *          A 'mersenne_twister_engine' used to seed the uniform [0,1) random number generation
+     *      int_distr: 
+     *          A random number generator for integer numbers in the range [0,RAND_MAX)
+    */
+   class RandManager { 
+        private:
+            std::mutex rng_lock;
+            std::random_device rd;
+            std::mt19937 int_gen;
+            std::mt19937 real_gen;
+            std::uniform_int_distribution<int> int_distr;
+            std::uniform_real_distribution<double> real_distr;
+
+            void init_random_seed() {
+                int_gen = std::mt19937(rd());
+                real_gen = std::mt19937(rd());
+            }
+        
+        public:
+            RandManager(int seed=ThtsManagerArgs::seed_default) :
+                rng_lock(),
+                int_gen(seed),
+                real_gen(seed),
+                int_distr(0,RAND_MAX),
+                real_distr(0.0,1.0) 
+            {
+                if (seed == 0) init_random_seed();
+            }
+
+            /**
+             * Returns a uniform random integer in the range [min_included, max_excluded).
+             * N.B. Marked virtual so that these functions can be mocked easily.
+             */
+            virtual int get_rand_int(int min_included, int max_excluded) {
+                std::lock_guard<std::mutex> lg(rng_lock);
+                int len = int_distr(int_gen) % (max_excluded - min_included);
+                return min_included + len;
+            };
+            
+            /**
+             * Returns a uniform random number in the range [0,1).
+             * N.B. Marked virtual so that these functions can be mocked easily.
+             */
+            virtual double get_rand_uniform() {
+                std::lock_guard<std::mutex> lg(rng_lock);
+                return real_distr(real_gen);
+            };
+   };
     
     /**
      * ThtsManager is an object used to manage all the things that need to be 'global' space within Thts.
@@ -102,34 +166,8 @@ namespace thts {
      *          A pointer to the heuristic function
      *      prior_fn_ptr:
      *          A pointer to the prior (Q-value) function, that returns a map from actions to prior value estimates
-     * Private member variables:
-     *      rng_lock:
-     *          A mutex to protect random number generation function calls.
-     *      rd:
-     *          A 'random_device' which is the computers source of (psuedo) random numbers
-     *      real_gen:   
-     *          A 'mersenne_twister_engine' used to seed the uniform [0,1) random number generation
-     *      real_distr: 
-     *          A random number generator for real numbers in the range [0,1)
-     *      int_gen:   
-     *          A 'mersenne_twister_engine' used to seed the uniform [0,1) random number generation
-     *      int_distr: 
-     *          A random number generator for integer numbers in the range [0,RAND_MAX)
      */
-    class ThtsManager {
-        private:
-            std::mutex rng_lock;
-            std::random_device rd;
-            std::mt19937 int_gen;
-            std::mt19937 real_gen;
-            std::uniform_int_distribution<int> int_distr;
-            std::uniform_real_distribution<double> real_distr;
-
-            void init_random_seed() {
-                int_gen = std::mt19937(rd());
-                real_gen = std::mt19937(rd());
-            }
-
+    class ThtsManager : public RandManager {
         public:
             std::shared_ptr<ThtsEnv> thts_env;
 
@@ -151,11 +189,7 @@ namespace thts {
              * seed is set to 0, then we use a std::random_device object to generate a random seed.
              */    
             ThtsManager(ThtsManagerArgs& args) : 
-                rng_lock(),
-                int_gen(args.seed),
-                real_gen(args.seed),
-                int_distr(0,RAND_MAX),
-                real_distr(0.0,1.0),
+                RandManager(args.seed),
                 thts_env(args.thts_env),
                 dmap(),
                 dmap_mutexes(args.num_transposition_table_mutexes),
@@ -166,7 +200,6 @@ namespace thts {
                 heuristic_fn(args.heuristic_fn),
                 prior_fn(args.prior_fn)
             {
-                if (args.seed == 0) init_random_seed();
             }
 
             ThtsManager(
@@ -179,11 +212,7 @@ namespace thts {
                 bool use_transposition_table=ThtsManagerArgs::use_transposition_table_default, 
                 int num_transposition_table_mutexes=ThtsManagerArgs::num_transposition_table_mutexes_default,
                 int seed=ThtsManagerArgs::seed_default) :
-                    rng_lock(),
-                    int_gen(seed),
-                    real_gen(seed),
-                    int_distr(0,RAND_MAX),
-                    real_distr(0.0,1.0),
+                    RandManager(seed),
                     thts_env(thts_env),
                     dmap(),
                     dmap_mutexes(num_transposition_table_mutexes),
@@ -194,31 +223,11 @@ namespace thts {
                     heuristic_fn(heuristic_fn),
                     prior_fn(prior_fn)
             {
-                if (seed == 0) init_random_seed();
             };
 
             /**
              * Any classes intended to be inherited from should make destructor virtual
              */
             virtual ~ThtsManager() = default;
-
-            /**
-             * Returns a uniform random integer in the range [min_included, max_excluded).
-             * N.B. Marked virtual so that these functions can be mocked easily.
-             */
-            virtual int get_rand_int(int min_included, int max_excluded) {
-                std::lock_guard<std::mutex> lg(rng_lock);
-                int len = int_distr(int_gen) % (max_excluded - min_included);
-                return min_included + len;
-            };
-            
-            /**
-             * Returns a uniform random number in the range [0,1).
-             * N.B. Marked virtual so that these functions can be mocked easily.
-             */
-            virtual double get_rand_uniform() {
-                std::lock_guard<std::mutex> lg(rng_lock);
-                return real_distr(real_gen);
-            };
     };
 }

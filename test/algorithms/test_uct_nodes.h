@@ -37,7 +37,7 @@ namespace thts_test {
             MOCK_METHOD(
                 shared_ptr<const State>, 
                 sample_transition_distribution_itfc, 
-                (shared_ptr<const State>,shared_ptr<const Action>,shared_ptr<ThtsManager> ), 
+                (shared_ptr<const State>,shared_ptr<const Action>,RandManager&), 
                 (const,override));
             MOCK_METHOD(
                 shared_ptr<ObservationDistr>, 
@@ -47,7 +47,7 @@ namespace thts_test {
             MOCK_METHOD(
                 shared_ptr<const Observation>, 
                 sample_observation_distribution_itfc, 
-                (shared_ptr<const Action>,shared_ptr<const State>,shared_ptr<ThtsManager> ), 
+                (shared_ptr<const Action>,shared_ptr<const State>,RandManager&), 
                 (const,override));
             MOCK_METHOD(
                 double, 

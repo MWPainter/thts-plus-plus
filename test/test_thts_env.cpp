@@ -78,7 +78,7 @@ TEST(Env_MdpImplementation, test_interaction_as_expected)
     EXPECT_FALSE(env.is_sink_state(init_state));
 
     // Move right
-    shared_ptr<const IntPairState> r_state = env.sample_transition_distribution(init_state, r_act, manager_ptr);
+    shared_ptr<const IntPairState> r_state = env.sample_transition_distribution(init_state, r_act, *manager_ptr);
     EXPECT_EQ(r_state->state.first, 1);
     EXPECT_EQ(r_state->state.second, 0);
 
@@ -97,7 +97,7 @@ TEST(Env_MdpImplementation, test_interaction_as_expected)
     EXPECT_FALSE(env.is_sink_state(r_state));
 
     // Move down
-    shared_ptr<const IntPairState> rd_state = env.sample_transition_distribution(r_state, d_act, manager_ptr);
+    shared_ptr<const IntPairState> rd_state = env.sample_transition_distribution(r_state, d_act, *manager_ptr);
     EXPECT_EQ(rd_state->state.first, 1);
     EXPECT_EQ(rd_state->state.second, 1);
 
@@ -115,7 +115,7 @@ TEST(Env_MdpImplementation, test_interaction_as_expected)
 
 
     // Also try move down from init state
-    shared_ptr<const IntPairState> d_state = env.sample_transition_distribution(init_state, d_act, manager_ptr);
+    shared_ptr<const IntPairState> d_state = env.sample_transition_distribution(init_state, d_act, *manager_ptr);
     EXPECT_EQ(d_state->state.first, 0);
     EXPECT_EQ(d_state->state.second, 1);
 
@@ -176,7 +176,7 @@ TEST(Env_MdpImplementation, test_interface_interaction_as_expected)
 
     // Move right
     shared_ptr<const State> r_state_itfc = env.sample_transition_distribution_itfc(
-        init_state_itfc, r_act_itfc, manager_ptr);
+        init_state_itfc, r_act_itfc, *manager_ptr);
     shared_ptr<const IntPairState> r_state = static_pointer_cast<const IntPairState>(r_state_itfc);
     EXPECT_EQ(r_state->state.first, 1);
     EXPECT_EQ(r_state->state.second, 0);
@@ -198,7 +198,7 @@ TEST(Env_MdpImplementation, test_interface_interaction_as_expected)
 
     // Move down
     shared_ptr<const State> rd_state_itfc = env.sample_transition_distribution_itfc(
-        r_state_itfc, d_act_itfc, manager_ptr);
+        r_state_itfc, d_act_itfc, *manager_ptr);
     shared_ptr<const IntPairState> rd_state = static_pointer_cast<const IntPairState>(rd_state_itfc);
     EXPECT_EQ(rd_state->state.first, 1);
     EXPECT_EQ(rd_state->state.second, 1);
@@ -219,7 +219,7 @@ TEST(Env_MdpImplementation, test_interface_interaction_as_expected)
 
     // Also try move down from init state
     shared_ptr<const State> d_state_itfc = env.sample_transition_distribution_itfc(
-        init_state_itfc, d_act_itfc, manager_ptr);
+        init_state_itfc, d_act_itfc, *manager_ptr);
     shared_ptr<const IntPairState> d_state = static_pointer_cast<const IntPairState>(d_state_itfc);
     EXPECT_EQ(d_state->state.first, 0);
     EXPECT_EQ(d_state->state.second, 1);

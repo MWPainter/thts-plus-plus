@@ -28,21 +28,21 @@ namespace thts::helper {
      * 
      * Args:
      *      map: The map of values to select the maximum from
-     *      thts_manager: 
-     *          An instance of ThtsManager, so we can use our 'get_random_int' wrapper around random number generation 
+     *      rand_manager: 
+     *          An instance of RandManager, so we can use our 'get_random_int' wrapper around random number generation 
      * 
      * Returns:
      *      The key corresponding to the maximum value, breaking ties randomly
      */
     template <typename T, typename NumericT>
-    T get_max_key_break_ties_randomly(std::unordered_map<T,NumericT>& map, ThtsManager& thts_manager);
+    T get_max_key_break_ties_randomly(std::unordered_map<T,NumericT>& map, RandManager& rand_manager);
 
     /**
      * Helper function to sample from a discrete distribution
      * 
      * Args:
      *      distribution: A mapping from the support (discrete categories) to their weights
-     *      thts_manager: An instance of ThtsManager, so we can use our wrappers around random number generation
+     *      rand_manager: An instance of RandManager, so we can use our wrappers around random number generation
      *      normalised: true iff the weights sum to 1.0
      * 
      * Returns:
@@ -50,7 +50,7 @@ namespace thts::helper {
      */
     template <typename T>
     T sample_from_distribution(
-        std::unordered_map<T,double>& distribution, ThtsManager& thts_manager, bool normalised=true);
+        std::unordered_map<T,double>& distribution, RandManager& rand_manager, bool normalised=true);
 
     /**
      * Helper function for printing vector types to strings. Assumes that the type T can be fed into an ostream.
