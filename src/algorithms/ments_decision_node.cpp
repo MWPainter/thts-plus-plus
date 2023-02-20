@@ -5,7 +5,13 @@
 #include <cmath>
 #include <limits>
 
+
+#include <iostream>
 using namespace std; 
+    
+// Epsilon to be used as a minimum prob, if lower than this just set to zero
+static double EPS = 1e-16;
+static double MIN_LOG_WEIGHT = -325.0;
 
 namespace thts {
     MentsDNode::MentsDNode(
@@ -23,13 +29,33 @@ namespace thts {
             num_backups(0),
             soft_value(0.0),
             actions(thts_manager->thts_env->get_valid_actions_itfc(state)),
-            policy_prior()
+            policy_prior(),
+            use_prior_shift(false),
+            prior_shift(0.0)
     {
         if (thts_manager->heuristic_fn != nullptr) {
-            soft_value = thts_manager->heuristic_fn(state);
+            soft_value = heuristic_value;
         }
+
         if (thts_manager->prior_fn != nullptr) {
-            policy_prior = thts_manager->prior_fn(state);
+            policy_prior = thts_manager->prior_fn(state, thts_manager->thts_env);
+
+            if (thts_manager->use_prior_shift) {
+                double mean_log_weight = 0.0;
+                double i = 1.0;
+                for (pair<shared_ptr<const Action>,double> pr : *policy_prior) {
+                    double weight = pr.second;
+                    double log_weight = MIN_LOG_WEIGHT;
+                    if (weight > 0.0) {
+                        log_weight = log(weight);
+                    }
+                    mean_log_weight *= (i-1.0) / i;
+                    mean_log_weight += log_weight / i;
+                }
+
+                use_prior_shift = true;
+                prior_shift = -mean_log_weight;
+            }
         }
     }
     
@@ -65,6 +91,9 @@ namespace thts {
 
     /**
      * Gets the q_value to use for a child
+     * 
+     * Handle numerical instability for the prior_prob=0 case
+     * log
      */
     double MentsDNode::get_soft_q_value(std::shared_ptr<const Action> action, double opp_coeff) const {
         if (has_child_node(action)) {
@@ -74,7 +103,12 @@ namespace thts {
 
         if (has_prior()) {
             MentsManager& manager = (MentsManager&) *thts_manager;
-            return (log(policy_prior->at(action)) + manager.prior_policy_boost);
+            double weight = policy_prior->at(action);
+            if (weight <= 0.0) {
+                // double log_weight = MIN_LOG_WEIGHT; // < log(numeeric_limits<double>::min())
+                return MIN_LOG_WEIGHT + prior_shift + manager.prior_policy_boost;
+            }
+            return (log(weight) + prior_shift + manager.prior_policy_boost);
         } 
 
         MentsManager& manager = (MentsManager&) *thts_manager;
@@ -155,7 +189,9 @@ namespace thts {
 
         // compute lambda
         MentsManager& manager = (MentsManager&) *thts_manager;
-        double lambda = manager.epsilon / log(num_visits+1);
+        double epsilon = manager.epsilon;
+        if (is_root_node()) epsilon += manager.root_node_extra_epsilon;
+        double lambda = epsilon / log(num_visits+1);
         if (lambda > manager.max_explore_prob) {
             lambda = manager.max_explore_prob;
         }
@@ -163,9 +199,24 @@ namespace thts {
         // normalise and interpolate masses with uniform masses
         double num_actions = actions->size();
         double uniform_distr_mass = 1.0 / num_actions;
+        vector<shared_ptr<const Action>> near_zero_prob_actions;
         for (shared_ptr<const Action> action : *actions) {
             action_distr[action] *= (1.0 - lambda) / sum_weights;
+            if (manager.prior_policy_search_weight > 0.0) {
+                double lambda_tilde = manager.prior_policy_search_weight;
+                if (num_visits >= 2) lambda_tilde /= log(num_visits+1);
+                action_distr[action] *= (1.0 - lambda_tilde);
+                action_distr[action] += (1.0 - lambda) * lambda_tilde * policy_prior->at(action);
+            }
             action_distr[action] += lambda * uniform_distr_mass;
+            if (action_distr[action] < EPS) {
+                near_zero_prob_actions.push_back(action);
+            }
+        }
+
+        // Remove close to zero probabilities (never going to sample + leads to numerical ick later)
+        for (shared_ptr<const Action> action : near_zero_prob_actions) {
+            action_distr.erase(action);
         }
     }
 

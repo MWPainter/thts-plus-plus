@@ -14,6 +14,8 @@ using namespace thts;
 namespace thts {
     /**
      * Constructor mostly uses initialisation list. 
+     * 
+     * Nuance use of heuristic value is to enforce nodes for sink states to have a value of zero
      */
     ThtsDNode::ThtsDNode(
         shared_ptr<ThtsManager> thts_manager,
@@ -28,8 +30,11 @@ namespace thts {
             decision_timestep(decision_timestep),
             parent(parent),
             num_visits(0),
-            heuristic_value(thts_manager->heuristic_fn == nullptr ? 0.0 : thts_manager->heuristic_fn(state))
+            heuristic_value(0.0)
     {
+        if (thts_manager->heuristic_fn != nullptr && !thts_manager->thts_env->is_sink_state_itfc(state)) {
+            heuristic_value = thts_manager->heuristic_fn(state, thts_manager->thts_env);
+        }
     }
 
     /**
@@ -136,6 +141,13 @@ namespace thts {
     bool ThtsDNode::is_opponent() const {
         if (!is_two_player_game()) return false;
         return (decision_timestep & 1) == 1;
+    }
+
+    /**
+     * Gets the number of times that the node has been visited
+    */
+    int ThtsDNode::get_num_visits() const {
+        return num_visits;
     }
 
     /**

@@ -20,6 +20,7 @@
 namespace thts {
     // forward declare corresponding DBMentsCNode class
     class DBMentsCNode;
+    class DBMentsLogger;
 
     /**
      * An implementation of DB-MENTS in the Thts schema
@@ -29,6 +30,7 @@ namespace thts {
     class DBMentsDNode : public MentsDNode, public DPDNode {
         // Allow DBMentsCNode access to private members
         friend DBMentsCNode;
+        friend DBMentsLogger;
 
         protected: 
 
@@ -55,6 +57,8 @@ namespace thts {
             
             /**
              * Uses the DPDNode to recommend an action according to the DP values.
+             * 
+             * Recommends a random action if this node has zero children.
              */
             virtual std::shared_ptr<const Action> recommend_action(ThtsEnvContext& ctx) const;
             

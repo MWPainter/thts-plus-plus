@@ -269,6 +269,14 @@ namespace thts {
             virtual bool is_opponent() const;
 
             /**
+             * Gets the number of times that the node has been visited.
+             * 
+             * Returns:
+             *      The number of times this node has been visited.
+            */
+            int get_num_visits() const;  
+
+            /**
              * Helper function to get number of children this node currently has.
              * 
              * Virtual so it can be mocked in tests.

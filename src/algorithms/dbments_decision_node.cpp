@@ -15,7 +15,7 @@ namespace thts {
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const MentsCNode>(parent)),
-            DPDNode(*thts_manager)
+            DPDNode(*thts_manager, heuristic_value)
     {
     }
 
@@ -31,6 +31,11 @@ namespace thts {
      * Calls the dpdnode implementation of recommend action
      */
     shared_ptr<const Action> DBMentsDNode::recommend_action(ThtsEnvContext& ctx) const {
+        if (children.size() == 0u) {
+            int index = ThtsDNode::thts_manager->get_rand_int(0, actions->size());
+            return actions->at(index);
+        }
+
         MentsManager& manager = (MentsManager&) *ThtsDNode::thts_manager;
         return recommend_action_best_dp_value<DBMentsCNode>(
             children, manager.recommend_visit_threshold, is_opponent());

@@ -34,7 +34,8 @@ namespace thts {
             /**
              * Constructor 
              */
-            DPDNode(ThtsManager& thts_manager) : num_backups(0), dp_value(0.0), thts_manager(thts_manager) {};
+            DPDNode(ThtsManager& thts_manager, double dp_value=0.0) : 
+                num_backups(1), dp_value(dp_value), thts_manager(thts_manager) {};
 
             /**
              * Destructor
@@ -54,7 +55,9 @@ namespace thts {
             /**
              * Returns an action recommendation from this node.
              * 
-             * Assumes all children are locked.
+             * Assumes all children are locked. 
+             * 
+             * And assumes that children is not empty.
              * 
              * Args:
              *      children: The children map for this node

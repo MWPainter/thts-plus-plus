@@ -16,7 +16,7 @@
 #include <unordered_map>
 
 namespace thts {
-    // forward declare corresponding DBDntsCNode class
+    // forward declare corresponding DBDentsCNode class
     class DBDentsCNode;
 
     /**

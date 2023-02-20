@@ -19,7 +19,7 @@ namespace thts {
      *      num_backups: The number of backups completed at root node (trials completed)
      *      soft_value: The ments soft value at the root node
      */
-    struct MentsLoggerEntry : LoggerEntry {
+    struct MentsLoggerEntry : public LoggerEntry {
         int num_backups;
         double soft_value;
 
@@ -47,11 +47,11 @@ namespace thts {
     };
 
     /**
-     * Implementation of logger for UCT algorithms
+     * Implementation of logger for Ments algorithms
      * 
      * Just needs to override the origin entry and log functions.
      */
-    class MentsLogger : ThtsLogger {
+    class MentsLogger : public ThtsLogger {
         public:
             MentsLogger();
 

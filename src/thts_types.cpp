@@ -105,7 +105,7 @@ namespace thts {
     }
 
     /**
-     * Implementation of virtual equals_itfc function for IntState
+     * Implementation of virtual equals_itfc function for IntPairState
      */
     bool IntPairState::equals_itfc(const Observation& other) const {
         try {
@@ -130,6 +130,47 @@ namespace thts {
     string IntPairState::get_pretty_print_string() const {
         stringstream ss;
         ss << "(" << state.first << "," << state.second << ")";
+        return ss.str();
+    }
+    
+    /**
+     * Implementation of virtual hash function for Int3TupleState
+     */
+    size_t Int3TupleState::hash() const {
+        size_t cur_hash = 0;
+        cur_hash = helper::hash_combine(cur_hash,get<0>(state));
+        cur_hash = helper::hash_combine(cur_hash,get<1>(state));
+        return helper::hash_combine(cur_hash,get<2>(state));
+    }
+
+    /**
+     * Implementation of virtual equals_itfc function for Int3TupleState
+     */
+    bool Int3TupleState::equals_itfc(const Observation& other) const {
+        try {
+            const Int3TupleState& oth = dynamic_cast<const Int3TupleState&>(other);
+            return equals(oth);
+        }
+        catch (const bad_cast&) {
+            return false;
+        }
+    }
+
+    /**
+     * Implementation of virtual equals function for Int3TupleState
+     */
+    bool Int3TupleState::equals(const Int3TupleState& other) const {
+        return (get<0>(state) == get<0>(other.state)
+            && get<1>(state) == get<1>(other.state)
+            && get<2>(state) == get<2>(other.state));
+    }
+
+    /**
+     * Implementation of virtual equals function for Int3TupleState
+     */
+    string Int3TupleState::get_pretty_print_string() const {
+        stringstream ss;
+        ss << "(" << get<0>(state) << "," << get<1>(state) << "," << get<2>(state) << ")";
         return ss.str();
     }
 
@@ -368,6 +409,16 @@ namespace std {
         return os;
     }
 
+    ostream& operator<<(ostream& os, const Int3TupleState& state) {
+        os << state.get_pretty_print_string();
+        return os;
+    }
+    
+    ostream& operator<<(ostream& os, const shared_ptr<const Int3TupleState>& state) {
+        os << state->get_pretty_print_string();
+        return os;
+    }
+
     ostream& operator<<(ostream& os, const IntAction& action) {
         os << action.get_pretty_print_string();
         return os;
@@ -415,6 +466,11 @@ namespace std {
     }
 
     ostream& operator<<(ostream& os, const IntPairStateDistr& distr) {
+        os << helper::unordered_map_pretty_print_string(distr);
+        return os;
+    }
+
+    ostream& operator<<(ostream& os, const Int3TupleStateDistr& distr) {
         os << helper::unordered_map_pretty_print_string(distr);
         return os;
     }

@@ -7,9 +7,14 @@ external/kata1*
 
 # Outputs
 thts-test
+# Results outputs
+plots
+results
 
 # Outputs from branches
 go-test
+goooo
+thts-run-toy-env
 
 # Mac files
 external/.DS_Store

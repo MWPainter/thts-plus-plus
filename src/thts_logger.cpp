@@ -89,6 +89,7 @@ namespace thts {
 
     void ThtsLogger::write_to_ostream(ostream& os) {
         if (entries.size() == 0) return;
+        
         LoggerEntry& first_entry = entries[0];
         first_entry.write_header_to_ostream(os);
         os << "\n";

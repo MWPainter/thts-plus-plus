@@ -73,7 +73,7 @@ namespace thts {
      *          A random number generator for integer numbers in the range [0,RAND_MAX)
     */
    class RandManager { 
-        private:
+        protected:
             std::mutex rng_lock;
             std::random_device rd;
             std::mt19937 int_gen;

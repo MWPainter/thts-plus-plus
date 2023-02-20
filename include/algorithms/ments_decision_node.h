@@ -39,6 +39,8 @@ namespace thts {
      *      num_backups: The number of times this node has been backed up
      *      actions: A list of valid actions that can be used at this node
      *      policy_prior: A prior policy for this state (if we have one)
+     *      use_prior_shift:
+     *      prior_shift
      */
     class MentsDNode : public ThtsDNode {
         // Allow MentsCNode and MentsLogger access to private members
@@ -53,6 +55,8 @@ namespace thts {
             double soft_value;
             std::shared_ptr<ActionVector> actions;
             std::shared_ptr<ActionPrior> policy_prior;
+            bool use_prior_shift;
+            double prior_shift;
 
             /**
              * Returns if we have a valid 'policy_prior' to use.

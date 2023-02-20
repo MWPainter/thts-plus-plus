@@ -79,7 +79,7 @@ TEST(Uct_Ucb, compute_ucb_values_no_prior) {
  * Test when we call 'fill_ucb_values' with a prior. Note that this can be called when 
  * children.size() != actions.size(), so we make sure to cover this case.
  */
-shared_ptr<ActionPrior> mock_prior_fn(shared_ptr<const State> state) {
+shared_ptr<ActionPrior> mock_prior_fn(shared_ptr<const State> state, shared_ptr<ThtsEnv> env=nullptr) {
     shared_ptr<ActionVector> actions = make_shared<ActionVector>(3);
     ActionVector& a = *actions;
     a[0] = make_shared<IntAction>(0);
@@ -637,7 +637,7 @@ TEST(Uct_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
 
 
 // TODO: Add test that check for #trials == #nodes in mcts mode
-TEST(Uct_IntegrationTest, mcts_mode) {
+TEST(Uct_IntegrationTest, mcts_mode_todo) {
     FAIL();
 }
 

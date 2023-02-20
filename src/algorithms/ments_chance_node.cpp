@@ -74,7 +74,7 @@ namespace thts {
      */
     void MentsCNode::backup_soft() {
         soft_value = 0.0;
-        double sum_child_backups = 0;
+        double sum_child_backups = 0.0;
         lock_all_children();
         for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
             MentsDNode& child = (MentsDNode&) *pr.second;

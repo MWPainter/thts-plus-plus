@@ -7,6 +7,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include <iostream>
+
 
 namespace thts::helper {
     using namespace std;
@@ -82,8 +84,11 @@ namespace thts::helper {
             bool too_much_mass = running_prob_mass > sum_weights + EPS;
             bool complete_mass_too_early = running_prob_mass >= sum_weights && i < distr_size;
             if (too_much_mass || complete_mass_too_early) {
-                throw runtime_error("Probability masses sum to greater than 1.0, have you forgotten to set "
-                    "normalised=false?");
+                stringstream error_msg_ss;
+                error_msg_ss 
+                    << "Probability masses sum to greater than 1.0, have you forgotten to set normalised=false? "
+                    << "Distribution was: "<< unordered_map_pretty_print_string(distribution);
+                throw runtime_error(error_msg_ss.str());
             }
             
             // return if its time
@@ -96,6 +101,11 @@ namespace thts::helper {
         error_msg_ss << "Probability masses sum to less than 1.0, have you forgotten to set normalised=false? "
             << "Distribution was: "
             << unordered_map_pretty_print_string(distribution);
+        double sum = 0.0;
+        for (pair<T,double> pr : distribution) { 
+            sum += pr.second;
+        }
+        cout << sum << endl;
         throw runtime_error(error_msg_ss.str());
     }
 

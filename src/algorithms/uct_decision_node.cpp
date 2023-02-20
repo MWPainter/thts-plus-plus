@@ -40,7 +40,7 @@ namespace thts {
         }
 
         if (thts_manager->prior_fn != nullptr) {
-            policy_prior = thts_manager->prior_fn(state);
+            policy_prior = thts_manager->prior_fn(state, thts_manager->thts_env);
         }
     }
     
@@ -208,6 +208,12 @@ namespace thts {
         for (shared_ptr<const Action> action : *actions) {
             if (!has_child_node(action)) continue;
             action_values[action] = opp_coeff * get_child_node(action)->avg_return;
+        }
+
+        // If no children, best we can do is select a random action to recommend
+        if (action_values.size() == 0u) {
+            int index = thts_manager->get_rand_int(0, actions->size());
+            return actions->at(index);
         }
 
         return helper::get_max_key_break_ties_randomly(action_values, *thts_manager);

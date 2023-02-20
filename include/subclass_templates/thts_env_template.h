@@ -38,8 +38,9 @@ namespace thts{
     class _A;
     class _O;
 
-    // TODO: delete these if not novel State/Observation classes
+    // TODO: delete these if not novel State/Action/Observation classes
     typedef std::unordered_map<std::shared_ptr<const _S>,double> _SDistr;
+    typedef std::vector<std::shared_ptr<const _A>> _AVector;
     typedef std::unordered_map<std::shared_ptr<const _O>,double> _ODistr;
 
     /** 
@@ -101,8 +102,7 @@ namespace thts{
              * Returns:
              *      Returns a list of actions available from 'state'
              */
-            std::shared_ptr<std::vector<std::shared_ptr<const _A>>> get_valid_actions(
-                std::shared_ptr<const _S> state) const;
+            std::shared_ptr<_AVector> get_valid_actions(std::shared_ptr<const _S> state) const;
 
             /**
              * Returns a distribution over successor states from a state action pair.
@@ -288,7 +288,7 @@ namespace thts {
         return false;
     }
 
-    shared_ptr<vector<shared_ptr<const _A>>> _Env::get_valid_actions(shared_ptr<const _S> state) const {
+    shared_ptr<_AVector> _Env::get_valid_actions(shared_ptr<const _S> state) const {
         return nullptr;
     }
 
@@ -307,7 +307,7 @@ namespace thts {
     double _Env::get_reward(
         shared_ptr<const _S> state, 
         shared_ptr<const _A> action, 
-        shared_ptr<const _O> observation=nullptr) const 
+        shared_ptr<const _O> observation) const 
     {
         return 0.0;
     }
@@ -441,7 +441,7 @@ namespace thts {
     double _Env::get_reward_itfc(
         shared_ptr<const State> state, 
         shared_ptr<const Action> action, 
-        shared_ptr<const Observation> observation=nullptr) const
+        shared_ptr<const Observation> observation) const
     {
         shared_ptr<const _S> state_itfc = static_pointer_cast<const _S>(state);
         shared_ptr<const _A> action_itfc = static_pointer_cast<const _A>(action);

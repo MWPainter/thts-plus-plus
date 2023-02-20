@@ -2,6 +2,8 @@
 
 #include "helper_templates.h"
 
+#include <stdexcept>
+
 using namespace std;
 
 namespace thts {
@@ -25,22 +27,30 @@ namespace thts {
     shared_ptr<ObservationDistr> ThtsEnv::get_observation_distribution_itfc(
         shared_ptr<const Action> action, shared_ptr<const State> next_state) const 
     {
-        shared_ptr<ObservationDistr> distr = make_shared<ObservationDistr>();
-        shared_ptr<const Observation> obsv = static_pointer_cast<const Observation>(next_state);
-        distr->insert_or_assign(obsv, 1.0);
-        return distr;
+        if (_is_fully_observable) {
+            shared_ptr<ObservationDistr> distr = make_shared<ObservationDistr>();
+            shared_ptr<const Observation> obsv = static_pointer_cast<const Observation>(next_state);
+            distr->insert_or_assign(obsv, 1.0);
+            return distr;
+        }
+        throw runtime_error("Attempting to use non-existant default get_observation_distribution for POMDP envs");
     }
 
     /**
      * Default implmentation of 'sample_observation_distribution_itfc'.
      * 
      * Just casts the next_state into an observation object, and returns it.
+     * 
+     * If not fully observable, samples.
      */
     shared_ptr<const Observation> ThtsEnv::sample_observation_distribution_itfc(
         shared_ptr<const Action> action, 
         shared_ptr<const State> next_state, 
         RandManager& rand_manager) const 
     {
+        if (_is_fully_observable) {
+            return static_pointer_cast<const Observation>(next_state);
+        }
         shared_ptr<ObservationDistr> distr = get_observation_distribution_itfc(action, next_state);
         return helper::sample_from_distribution(*distr, rand_manager);
     }

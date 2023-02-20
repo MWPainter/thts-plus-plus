@@ -26,7 +26,6 @@ namespace thts {
         double opp_coeff = is_opponent ? -1.0 : 1.0;
         unordered_map<shared_ptr<const Action>, double> dp_values_thresholded;
         unordered_map<shared_ptr<const Action>, double> dp_values;
-
         for (pair<shared_ptr<const Action>,shared_ptr<DPCNode>> pr : children) {
             shared_ptr<const Action> action = pr.first;
             DPCNode& child = *pr.second;
@@ -52,6 +51,11 @@ namespace thts {
      * if statement means it passes with opp_coeff==1, when its max so far, and with opp_coeff==-1, when its min so far.
      * Also note that we want opp_coeff * dp_value == -inf after initialisation, so we set dp_value initially to 
      * opp_coeff * -inf.
+     * 
+     * Continue when child number of backups == 0. Consider if using costs, then all returns negative, but value of 
+     * chance node initialised to 0. In cuncurrent settings, we may erroneously backup a zero. Alternatively, we may 
+     * accidentally erase heuristic values that we wanted to use in concurrent settings (which is why this line was 
+     * added originally).
      */
     void DPDNode::backup_dp_impl(DPCNodeChildMap& children, bool is_opponent) {
         double opp_coeff = is_opponent ? -1.0 : 1.0;
@@ -59,6 +63,7 @@ namespace thts {
 
         for (pair<shared_ptr<const Action>,shared_ptr<DPCNode>> pr : children) {
             DPCNode& child = *pr.second;
+            if (child.num_backups == 0) continue;
             if (opp_coeff * child.dp_value > opp_coeff * dp_value) {
                 dp_value = child.dp_value;
             }

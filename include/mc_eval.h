@@ -72,7 +72,7 @@ namespace thts {
     class MCEvaluator {
         protected:
             std::shared_ptr<ThtsEnv> thts_env;
-            std::shared_ptr<EvalPolicy> policy;
+            EvalPolicy& policy;
             int max_trial_length;
             std::vector<double> sampled_returns;
             RandManager& rand_manager;
@@ -84,8 +84,8 @@ namespace thts {
 
         public:
             MCEvaluator(
-                std::shared_ptr<ThtsEnv> thts_Env,
-                std::shared_ptr<EvalPolicy> eval_policy,
+                std::shared_ptr<ThtsEnv> thts_env,
+                EvalPolicy& eval_policy,
                 int max_trial_length,
                 RandManager& rand_manager);
 

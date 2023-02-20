@@ -58,7 +58,7 @@ namespace thts {
 */
 namespace thts {
     MCEvaluator::MCEvaluator(
-        shared_ptr<ThtsEnv> thts_env, shared_ptr<EvalPolicy> policy, int max_trial_length, RandManager& rand_manager) :
+        shared_ptr<ThtsEnv> thts_env, EvalPolicy& policy, int max_trial_length, RandManager& rand_manager) :
             thts_env(thts_env), 
             policy(policy), 
             max_trial_length(max_trial_length), 
@@ -70,7 +70,7 @@ namespace thts {
     */
     void MCEvaluator::run_rollout() {
         // Reset
-        policy->reset();
+        policy.reset();
 
         // Bookkeeping
         int num_actions_taken = 0;
@@ -80,7 +80,7 @@ namespace thts {
 
         // Run trial
         while (num_actions_taken < max_trial_length && !thts_env->is_sink_state_itfc(state)) {
-            shared_ptr<const Action> action = policy->get_action(state, context);
+            shared_ptr<const Action> action = policy.get_action(state, context);
             shared_ptr<const State> next_state = thts_env->sample_transition_distribution_itfc(
                 state, action, rand_manager);
             shared_ptr<const Observation> obsv = thts_env->sample_observation_distribution_itfc(
@@ -88,7 +88,7 @@ namespace thts {
             
             sample_return += thts_env->get_reward_itfc(state, action, obsv);
 
-            policy->update_step(action, obsv);
+            policy.update_step(action, obsv);
             state = next_state;
         }
 

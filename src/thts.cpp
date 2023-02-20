@@ -71,6 +71,22 @@ namespace thts {
     }
 
     /**
+     * Setter for root node, so thread pool can be reused
+    */
+    void ThtsPool::set_new_env(
+        shared_ptr<ThtsManager> new_thts_manager, 
+        shared_ptr<ThtsDNode> new_root_node,
+        shared_ptr<ThtsLogger> new_logger) 
+    {
+        if (work_left()) {
+            throw runtime_error("Tried to change root node in thts pool while it was working.");
+        }
+        thts_manager = new_thts_manager;
+        root_node = new_root_node;
+        logger = new_logger;
+    }
+
+    /**
      * Trial should be ended when we reach a leaf node for the search (that is, it is a leaf in the thts_env, or, it is 
      * at the maximum depth).
      * 

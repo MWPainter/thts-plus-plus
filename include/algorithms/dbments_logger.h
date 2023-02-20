@@ -1,7 +1,7 @@
 #pragma once
 
-#include "algorithms/uct_decision_node.h"
-#include "thts_logger.h"
+#include "algorithms/dbments_decision_node.h"
+#include "algorithms/ments_logger.h"
 
 #include <chrono>
 #include <limits>
@@ -11,23 +11,24 @@
 
 namespace thts {
     /**
-     * Uct logger point
+     * DBMents logger point
      * 
      * Member variables:
      *      runtime: The total runtime for this datapoint
      *      num_trials: The number of times the root node has been visited (trials started)
      *      num_backups: The number of backups completed at root node (trials completed)
-     *      avg_return: Average return at the root node for uct
+     *      soft_value: The ments soft value at the root node
+     *      dp_value: The dp value at the root node
      */
-    struct UctLoggerEntry : public LoggerEntry {
-        int num_backups;
-        double avg_return;
+    struct DBMentsLoggerEntry : public MentsLoggerEntry {
+        double dp_value;
 
         // Construcor
-        UctLoggerEntry(std::chrono::duration<double> runtime, int num_trials, int num_backups, double avg_return);
+        DBMentsLoggerEntry(
+            std::chrono::duration<double> runtime, int num_trials, int num_backups, double soft_value, double dp_value);
 
         // Virtual destructor
-        virtual ~UctLoggerEntry() = default;
+        virtual ~DBMentsLoggerEntry() = default;
 
         /**
          * Writes a header for an ostream, so we would know what the entries correspond to in a csv
@@ -47,15 +48,15 @@ namespace thts {
     };
 
     /**
-     * Implementation of logger for UCT algorithms
+     * Implementation of logger for DBMents algorithms
      * 
      * Just needs to override the origin entry and log functions.
      */
-    class UctLogger : public ThtsLogger {
+    class DBMentsLogger : public MentsLogger {
         public:
-            UctLogger();
+            DBMentsLogger();
 
-            virtual ~UctLogger() = default;
+            virtual ~DBMentsLogger() = default;
 
             /**
              * Adds an entry to 'entries' that represents an origin point

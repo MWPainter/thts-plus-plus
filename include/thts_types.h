@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -22,6 +23,8 @@
  */
 
 namespace thts {
+    // Forward declare thts env
+    class ThtsEnv;
 
     /**
      * A abstract base type to use for Observations.
@@ -114,6 +117,22 @@ namespace thts {
             virtual std::string get_pretty_print_string() const;
     };
 
+    /**
+     * An implementaton of state containing a 3 tuple of integers as the state.
+     */
+    class Int3TupleState : public State {
+        public:
+            std::tuple<int,int,int> state;
+
+            Int3TupleState(std::tuple<int,int,int> tpl) : state(tpl) {}
+            Int3TupleState(int first, int second, int third) : state(std::make_tuple(first,second,third)) {}
+            virtual ~Int3TupleState() = default;
+            virtual std::size_t hash() const;
+            bool equals(const Int3TupleState& other) const;
+            virtual bool equals_itfc(const Observation& other) const;
+            virtual std::string get_pretty_print_string() const;
+    };
+
 
 
     /**
@@ -153,7 +172,7 @@ namespace thts {
      * First used in thts_decision_node.h and thts_chance_node.h
      * N.B. The & here is to get address as we want function pointers
      */  
-    double _DummyHeuristicFn(std::shared_ptr<const State> s);
+    double _DummyHeuristicFn(std::shared_ptr<const State> s, std::shared_ptr<ThtsEnv> env);
     typedef decltype(&_DummyHeuristicFn) HeuristicFnPtr;
 
     /**
@@ -162,7 +181,7 @@ namespace thts {
      * N.B. The & here is to get address as we want function pointers
      */
     typedef std::unordered_map<std::shared_ptr<const Action>,double> ActionPrior;
-    std::shared_ptr<ActionPrior> _DummyPriorFn(std::shared_ptr<const State> s);
+    std::shared_ptr<ActionPrior> _DummyPriorFn(std::shared_ptr<const State> s, std::shared_ptr<ThtsEnv> env);
     typedef decltype(&_DummyPriorFn) PriorFnPtr; 
 
 
@@ -180,7 +199,9 @@ namespace thts {
     typedef std::unordered_map<std::shared_ptr<const State>,double> StateDistr;
     typedef std::unordered_map<std::shared_ptr<const Action>,double> ActionDistr;
     typedef std::unordered_map<std::shared_ptr<const Observation>,double> ObservationDistr;
+    typedef std::unordered_map<std::shared_ptr<const IntState>,double> IntStateDistr;
     typedef std::unordered_map<std::shared_ptr<const IntPairState>,double> IntPairStateDistr;
+    typedef std::unordered_map<std::shared_ptr<const Int3TupleState>,double> Int3TupleStateDistr;
 
 
 
@@ -295,6 +316,8 @@ namespace std {
     ostream& operator<<(ostream& os, const shared_ptr<const IntState>& state);
     ostream& operator<<(ostream& os, const IntPairState& state);
     ostream& operator<<(ostream& os, const shared_ptr<const IntPairState>& state);
+    ostream& operator<<(ostream& os, const Int3TupleState& state);
+    ostream& operator<<(ostream& os, const shared_ptr<const Int3TupleState>& state);
     ostream& operator<<(ostream& os, const IntAction& action);
     ostream& operator<<(ostream& os, const shared_ptr<const IntAction>& action);
     ostream& operator<<(ostream& os, const StringAction& action);
@@ -308,6 +331,7 @@ namespace std {
     ostream& operator<<(ostream& os, const StateDistr& distr);
     ostream& operator<<(ostream& os, const ObservationDistr& distr);
     ostream& operator<<(ostream& os, const IntPairStateDistr& distr);
+    ostream& operator<<(ostream& os, const Int3TupleStateDistr& distr);
 
     /**
      * Hash, equality and stream functions for DNodeIdTuple

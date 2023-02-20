@@ -7,7 +7,7 @@
 #include <memory>
 
 namespace thts {
-    // forward declare corresponding UctCNode class
+    // forward declare corresponding PuctCNode class
     class PuctCNode;
 
     /**

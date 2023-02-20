@@ -29,7 +29,8 @@ using ::testing::ElementsAre;
 TEST(ThtsPool_ErrorChecking, check_no_root_node_throws_exception) {
     shared_ptr<ThtsEnv> dummy_env = make_shared<TestThtsEnv>(2);
     shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_env);
-    shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,nullptr,0,0);
+    shared_ptr<const IntPairState> dummy_init_state = ((TestThtsEnv&) *dummy_env).get_initial_state();
+    shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,dummy_init_state,0,0);
 
     EXPECT_ANY_THROW(ThtsPool(nullptr, nullptr));
     EXPECT_ANY_THROW(ThtsPool(dummy_manager, nullptr));
@@ -43,7 +44,8 @@ TEST(ThtsPool_ErrorChecking, check_no_root_node_throws_exception) {
 TEST(ThtsPool_TestThreadPool, construct_and_destruct_sound) {
     shared_ptr<ThtsEnv> dummy_env = make_shared<TestThtsEnv>(2);
     shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_env);
-    shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,nullptr,0,0);
+    shared_ptr<const IntPairState> dummy_init_state = ((TestThtsEnv&) *dummy_env).get_initial_state();
+    shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,dummy_init_state,0,0);
     int num_threads = 4;
 
     MockThtsPool_PoolTesting* mock_pool = new MockThtsPool_PoolTesting(dummy_manager, dummy_root_node, num_threads);
@@ -57,7 +59,8 @@ TEST(ThtsPool_TestThreadPool, construct_and_destruct_sound) {
 TEST(ThtsPool_TestThreadPool, check_work_left_function) {
     shared_ptr<ThtsEnv> dummy_env = make_shared<TestThtsEnv>(2);
     shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_env);
-    shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,nullptr,0,0);
+    shared_ptr<const IntPairState> dummy_init_state = ((TestThtsEnv&) *dummy_env).get_initial_state();
+    shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,dummy_init_state,0,0);
 
     MockThtsPool_PoolTesting mock_pool(dummy_manager, dummy_root_node);
     EXPECT_CALL(mock_pool, run_thts_trial)
@@ -106,7 +109,8 @@ TEST(ThtsPool_TestThreadPool, test_run_trials) {
 
     shared_ptr<ThtsEnv> dummy_env = make_shared<TestThtsEnv>(2);
     shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_env);
-    shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,nullptr,0,0);
+    shared_ptr<const IntPairState> dummy_init_state = ((TestThtsEnv&) *dummy_env).get_initial_state();
+    shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,dummy_init_state,0,0);
     int num_threads = 4;
 
     MockThtsPool_PoolTesting mock_pool(dummy_manager, dummy_root_node, num_threads);
@@ -127,7 +131,8 @@ TEST(ThtsPool_TestThreadPool, test_run_trials_non_blocking) {
 
     shared_ptr<ThtsEnv> dummy_env = make_shared<TestThtsEnv>(2);
     shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_env);
-    shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,nullptr,0,0);
+    shared_ptr<const IntPairState> dummy_init_state = ((TestThtsEnv&) *dummy_env).get_initial_state();
+    shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,dummy_init_state,0,0);
     int num_threads = 2;
 
     MockThtsPool_DurationTrialPoolTesting mock_pool(run_trial_duration_ms, dummy_manager, dummy_root_node, num_threads);
@@ -161,7 +166,8 @@ TEST(ThtsPool_TestThreadPool, test_trials_run_concurrently) {
 
     shared_ptr<ThtsEnv> dummy_env = make_shared<TestThtsEnv>(2);
     shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_env);
-    shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,nullptr,0,0);
+    shared_ptr<const IntPairState> dummy_init_state = ((TestThtsEnv&) *dummy_env).get_initial_state();
+    shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,dummy_init_state,0,0);
     int num_threads = 2;
 
     MockThtsPool_DurationTrialPoolTesting mock_pool(run_trial_duration_ms, dummy_manager, dummy_root_node, num_threads);
@@ -185,35 +191,37 @@ TEST(ThtsPool_TestRunTrial, test_should_continue_selection_phase) {
     int dummy_max_depth = 100;
     shared_ptr<ThtsEnv> dummy_env = make_shared<TestThtsEnv>(2);
     shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_env, dummy_max_depth);
-    shared_ptr<MockThtsDNode> mock_node = make_shared<MockThtsDNode>(dummy_manager,nullptr,0,0);
+    shared_ptr<const IntPairState> dummy_init_state = ((TestThtsEnv&) *dummy_env).get_initial_state();
+    shared_ptr<MockThtsDNode> mock_node = make_shared<MockThtsDNode>(dummy_manager,dummy_init_state,0,0);
     shared_ptr<ThtsDNode> dummy_root_node = static_pointer_cast<ThtsDNode>(mock_node);
 
     int num_threads = 0;
     PublicThtsPool thts_pool(dummy_manager, dummy_root_node, num_threads);
 
     // mcts mode, is leaf
-    shared_ptr<MockThtsDNode> mock_search_node = make_shared<MockThtsDNode>(dummy_manager,nullptr,dummy_max_depth-10,0);
+    shared_ptr<MockThtsDNode> mock_search_node = make_shared<MockThtsDNode>(
+        dummy_manager,dummy_init_state,dummy_max_depth-10,0);
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(true));
     EXPECT_FALSE(thts_pool.should_continue_selection_phase(mock_search_node, false));
 
     // mcts mode, max decision depth
-    mock_search_node = make_shared<MockThtsDNode>(dummy_manager,nullptr,dummy_max_depth,0);
+    mock_search_node = make_shared<MockThtsDNode>(dummy_manager,dummy_init_state,dummy_max_depth,0);
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(false));
     EXPECT_FALSE(thts_pool.should_continue_selection_phase(mock_search_node, false));
 
     // mcts mode, new node made
-    mock_search_node = make_shared<MockThtsDNode>(dummy_manager,nullptr,dummy_max_depth-10,0);
+    mock_search_node = make_shared<MockThtsDNode>(dummy_manager,dummy_init_state,dummy_max_depth-10,0);
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(false));
     EXPECT_FALSE(thts_pool.should_continue_selection_phase(mock_search_node, true));
 
     // mcts mode, new node made
-    mock_search_node = make_shared<MockThtsDNode>(dummy_manager,nullptr,dummy_max_depth-10,0);
+    mock_search_node = make_shared<MockThtsDNode>(dummy_manager,dummy_init_state,dummy_max_depth-10,0);
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(false));
@@ -221,28 +229,28 @@ TEST(ThtsPool_TestRunTrial, test_should_continue_selection_phase) {
 
     // uct mode, is leaf
     dummy_manager->mcts_mode = false;
-    mock_search_node = make_shared<MockThtsDNode>(dummy_manager,nullptr,dummy_max_depth-10,0);
+    mock_search_node = make_shared<MockThtsDNode>(dummy_manager,dummy_init_state,dummy_max_depth-10,0);
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(true));
     EXPECT_FALSE(thts_pool.should_continue_selection_phase(mock_search_node, false));
 
     // uct mode, max decision depth
-    mock_search_node = make_shared<MockThtsDNode>(dummy_manager,nullptr,dummy_max_depth,0);
+    mock_search_node = make_shared<MockThtsDNode>(dummy_manager,dummy_init_state,dummy_max_depth,0);
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(false));
     EXPECT_FALSE(thts_pool.should_continue_selection_phase(mock_search_node, false));
 
     // uct mode, new node made
-    mock_search_node = make_shared<MockThtsDNode>(dummy_manager,nullptr,dummy_max_depth-10,0);
+    mock_search_node = make_shared<MockThtsDNode>(dummy_manager,dummy_init_state,dummy_max_depth-10,0);
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(false));
     EXPECT_TRUE(thts_pool.should_continue_selection_phase(mock_search_node, true));
 
     // uct mode, new node made
-    mock_search_node = make_shared<MockThtsDNode>(dummy_manager,nullptr,dummy_max_depth-10,0);
+    mock_search_node = make_shared<MockThtsDNode>(dummy_manager,dummy_init_state,dummy_max_depth-10,0);
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(false));
@@ -259,7 +267,8 @@ TEST(ThtsPool_TestRunTrial, test_selection_phase) {
     shared_ptr<ThtsEnv> env_ptr = static_pointer_cast<ThtsEnv>(mock_env_ptr);
     shared_ptr<ThtsManager> manager_ptr = make_shared<ThtsManager>(env_ptr);
     // ThtsManager& manager = *manager_ptr;
-    shared_ptr<MockThtsDNode> mock_root_node_ptr = make_shared<MockThtsDNode>(manager_ptr,nullptr,0,0);
+    shared_ptr<const IntPairState> mock_init_state = mock_env.get_initial_state();
+    shared_ptr<MockThtsDNode> mock_root_node_ptr = make_shared<MockThtsDNode>(manager_ptr,mock_init_state,0,0);
     // MockThtsDNode& mock_root_node = *mock_root_node_ptr;
     shared_ptr<ThtsDNode> root_node_ptr = static_pointer_cast<ThtsDNode>(mock_root_node_ptr);
 
@@ -268,15 +277,15 @@ TEST(ThtsPool_TestRunTrial, test_selection_phase) {
 
     // Make a sequence of nodes we will pass through in the trial
     shared_ptr<MockThtsDNode> dnode0 = mock_root_node_ptr;
-    shared_ptr<MockThtsCNode> cnode0 = make_shared<MockThtsCNode>(manager_ptr,nullptr,nullptr,0,0);
-    shared_ptr<MockThtsDNode> dnode1 = make_shared<MockThtsDNode>(manager_ptr,nullptr,0,0);
-    shared_ptr<MockThtsCNode> cnode1 = make_shared<MockThtsCNode>(manager_ptr,nullptr,nullptr,0,0);
-    shared_ptr<MockThtsDNode> dnode2 = make_shared<MockThtsDNode>(manager_ptr,nullptr,0,0);
-    shared_ptr<MockThtsCNode> cnode2 = make_shared<MockThtsCNode>(manager_ptr,nullptr,nullptr,0,0);
-    shared_ptr<MockThtsDNode> dnode3 = make_shared<MockThtsDNode>(manager_ptr,nullptr,0,0);
-    shared_ptr<MockThtsCNode> cnode3 = make_shared<MockThtsCNode>(manager_ptr,nullptr,nullptr,0,0);
-    shared_ptr<MockThtsDNode> dnode4 = make_shared<MockThtsDNode>(manager_ptr,nullptr,0,0);
-    shared_ptr<MockThtsCNode> cnode4 = make_shared<MockThtsCNode>(manager_ptr,nullptr,nullptr,0,0);
+    shared_ptr<MockThtsCNode> cnode0 = make_shared<MockThtsCNode>(manager_ptr,mock_init_state,nullptr,0,0);
+    shared_ptr<MockThtsDNode> dnode1 = make_shared<MockThtsDNode>(manager_ptr,mock_init_state,0,0);
+    shared_ptr<MockThtsCNode> cnode1 = make_shared<MockThtsCNode>(manager_ptr,mock_init_state,nullptr,0,0);
+    shared_ptr<MockThtsDNode> dnode2 = make_shared<MockThtsDNode>(manager_ptr,mock_init_state,0,0);
+    shared_ptr<MockThtsCNode> cnode2 = make_shared<MockThtsCNode>(manager_ptr,mock_init_state,nullptr,0,0);
+    shared_ptr<MockThtsDNode> dnode3 = make_shared<MockThtsDNode>(manager_ptr,mock_init_state,0,0);
+    shared_ptr<MockThtsCNode> cnode3 = make_shared<MockThtsCNode>(manager_ptr,mock_init_state,nullptr,0,0);
+    shared_ptr<MockThtsDNode> dnode4 = make_shared<MockThtsDNode>(manager_ptr,mock_init_state,0,0);
+    shared_ptr<MockThtsCNode> cnode4 = make_shared<MockThtsCNode>(manager_ptr,mock_init_state,nullptr,0,0);
 
     shared_ptr<ThtsDNode> dnode0_itfc = static_pointer_cast<ThtsDNode>(dnode0);
     shared_ptr<ThtsCNode> cnode0_itfc = static_pointer_cast<ThtsCNode>(cnode0);
@@ -468,11 +477,12 @@ TEST(ThtsPool_TestRunTrial, test_selection_phase) {
 TEST(ThtsPool_TestRunTrial, test_backup_phase) {
     // Make mocks
     shared_ptr<MockTestThtsEnv> mock_env_ptr = make_shared<MockTestThtsEnv>(2);
-    // MockTestThtsEnv& mock_env = *mock_env_ptr;
+    MockTestThtsEnv& mock_env = *mock_env_ptr;
     shared_ptr<ThtsEnv> env_ptr = static_pointer_cast<ThtsEnv>(mock_env_ptr);
     shared_ptr<ThtsManager> manager_ptr = make_shared<ThtsManager>(env_ptr);
     // ThtsManager& manager = *manager_ptr;
-    shared_ptr<MockThtsDNode> mock_root_node_ptr = make_shared<MockThtsDNode>(manager_ptr,nullptr,0,0);
+    shared_ptr<const IntPairState> mock_init_state = mock_env.get_initial_state();
+    shared_ptr<MockThtsDNode> mock_root_node_ptr = make_shared<MockThtsDNode>(manager_ptr,mock_init_state,0,0);
     // MockThtsDNode& mock_root_node = *mock_root_node_ptr;
     shared_ptr<ThtsDNode> root_node_ptr = static_pointer_cast<ThtsDNode>(mock_root_node_ptr);
 
@@ -481,15 +491,15 @@ TEST(ThtsPool_TestRunTrial, test_backup_phase) {
 
     // Make a sequence of nodes we will pass through in the trial
     shared_ptr<MockThtsDNode> dnode0 = mock_root_node_ptr;
-    shared_ptr<MockThtsCNode> cnode0 = make_shared<MockThtsCNode>(manager_ptr,nullptr,nullptr,0,0);
-    shared_ptr<MockThtsDNode> dnode1 = make_shared<MockThtsDNode>(manager_ptr,nullptr,0,0);
-    shared_ptr<MockThtsCNode> cnode1 = make_shared<MockThtsCNode>(manager_ptr,nullptr,nullptr,0,0);
-    shared_ptr<MockThtsDNode> dnode2 = make_shared<MockThtsDNode>(manager_ptr,nullptr,0,0);
-    shared_ptr<MockThtsCNode> cnode2 = make_shared<MockThtsCNode>(manager_ptr,nullptr,nullptr,0,0);
-    shared_ptr<MockThtsDNode> dnode3 = make_shared<MockThtsDNode>(manager_ptr,nullptr,0,0);
-    shared_ptr<MockThtsCNode> cnode3 = make_shared<MockThtsCNode>(manager_ptr,nullptr,nullptr,0,0);
-    shared_ptr<MockThtsDNode> dnode4 = make_shared<MockThtsDNode>(manager_ptr,nullptr,0,0);
-    shared_ptr<MockThtsCNode> cnode4 = make_shared<MockThtsCNode>(manager_ptr,nullptr,nullptr,0,0);
+    shared_ptr<MockThtsCNode> cnode0 = make_shared<MockThtsCNode>(manager_ptr,mock_init_state,nullptr,0,0);
+    shared_ptr<MockThtsDNode> dnode1 = make_shared<MockThtsDNode>(manager_ptr,mock_init_state,0,0);
+    shared_ptr<MockThtsCNode> cnode1 = make_shared<MockThtsCNode>(manager_ptr,mock_init_state,nullptr,0,0);
+    shared_ptr<MockThtsDNode> dnode2 = make_shared<MockThtsDNode>(manager_ptr,mock_init_state,0,0);
+    shared_ptr<MockThtsCNode> cnode2 = make_shared<MockThtsCNode>(manager_ptr,mock_init_state,nullptr,0,0);
+    shared_ptr<MockThtsDNode> dnode3 = make_shared<MockThtsDNode>(manager_ptr,mock_init_state,0,0);
+    shared_ptr<MockThtsCNode> cnode3 = make_shared<MockThtsCNode>(manager_ptr,mock_init_state,nullptr,0,0);
+    shared_ptr<MockThtsDNode> dnode4 = make_shared<MockThtsDNode>(manager_ptr,mock_init_state,0,0);
+    shared_ptr<MockThtsCNode> cnode4 = make_shared<MockThtsCNode>(manager_ptr,mock_init_state,nullptr,0,0);
 
     shared_ptr<ThtsDNode> dnode0_itfc = static_pointer_cast<ThtsDNode>(dnode0);
     shared_ptr<ThtsCNode> cnode0_itfc = static_pointer_cast<ThtsCNode>(cnode0);

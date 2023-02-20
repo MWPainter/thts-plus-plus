@@ -10,25 +10,34 @@ namespace thts {
         static constexpr double temp_default=1.0;
         static constexpr double default_q_value_default=0.0;
         static constexpr double epsilon_default=0.5;
-        static constexpr double max_explore_prob_default=0.5;
+        static constexpr double root_node_extra_epsilon_default=0.0;
+        static constexpr double max_explore_prob_default=1.0;
         static const int recommend_visit_threshold_default=0;
         static constexpr double prior_policy_boost_default=0.0;
+        static constexpr double prior_policy_search_weight_default=0.0;
+        static const bool use_prior_shift_default=false;
 
         double temp;
         double default_q_value;
         double epsilon;
+        double root_node_extra_epsilon;
         double max_explore_prob;
         int recommend_visit_threshold;
         double prior_policy_boost;
+        double prior_policy_search_weight;
+        bool use_prior_shift;
 
         MentsManagerArgs(std::shared_ptr<ThtsEnv> thts_env) :
             ThtsManagerArgs(thts_env),
             temp(temp_default),
             default_q_value(default_q_value_default),
             epsilon(epsilon_default),
+            root_node_extra_epsilon(root_node_extra_epsilon_default),
             max_explore_prob(max_explore_prob_default),
             recommend_visit_threshold(recommend_visit_threshold_default),
-            prior_policy_boost(prior_policy_boost_default) {}
+            prior_policy_boost(prior_policy_boost_default),
+            prior_policy_search_weight(prior_policy_search_weight_default),
+            use_prior_shift(use_prior_shift_default) {}
 
         virtual ~MentsManagerArgs() = default;
     };
@@ -56,6 +65,7 @@ namespace thts {
      *      epsilon:
      *          The epsilon exploration parameters from MENTS. I.e. MENTS will uniformly randomly sample an action with 
      *          probability 'epsilon_exploration / log(num_visits+1)' (assuming its a valid probability!).
+     *      root_node_extra_epsilon:
      *      max_explore_prob:
      *          In MENTS action selection an action is uniformly randomly sampled with probability 
      *          'epsilon_exploration / log(num_visits+1)'. This value provides a maximum probability of uniformly 
@@ -68,22 +78,33 @@ namespace thts {
      *          'log(pi(a|s)) + prior_policy_boost'. This doesn't change the distribution when there are zero children 
      *          at a decision node, but when a decision node has children, it will change the relative weight of 
      *          actions that do and dont have a child node created.
+     *      prior_policy_search_weight:
+     *      use_prior_shift:
+     *          
      */
     class MentsManager : public ThtsManager {
         public:
             double temp;
             double default_q_value;
             double epsilon;
+            double root_node_extra_epsilon;
             double max_explore_prob;
             int recommend_visit_threshold;
             double prior_policy_boost;
+            double prior_policy_search_weight;
+            bool use_prior_shift;
 
             MentsManager(MentsManagerArgs& args) :
                 ThtsManager(args),
                 temp(args.temp),
                 default_q_value(args.default_q_value),
                 epsilon(args.epsilon),
-                recommend_visit_threshold(args.recommend_visit_threshold) {};
+                root_node_extra_epsilon(args.root_node_extra_epsilon),
+                max_explore_prob(args.max_explore_prob),
+                recommend_visit_threshold(args.recommend_visit_threshold),
+                prior_policy_boost(args.prior_policy_boost),
+                prior_policy_search_weight(args.prior_policy_search_weight),
+                use_prior_shift(args.use_prior_shift) {};
 
             MentsManager(
                 std::shared_ptr<ThtsEnv> thts_env,
@@ -91,13 +112,16 @@ namespace thts {
                 double temp=MentsManagerArgs::temp_default,
                 double default_q_value=MentsManagerArgs::default_q_value_default,
                 HeuristicFnPtr heuristic_fn=nullptr,
+                bool use_prior_shift=MentsManagerArgs::use_prior_shift_default,
                 double prior_policy_boost=MentsManagerArgs::prior_policy_boost_default,
+                double prior_policy_search_weight=MentsManagerArgs::prior_policy_search_weight_default,
                 PriorFnPtr prior_fn=nullptr,
                 bool mcts_mode=MentsManagerArgs::mcts_mode_default, 
                 bool is_two_player_game=MentsManagerArgs::is_two_player_game_default,
                 bool use_transposition_table=MentsManagerArgs::use_transposition_table_default, 
                 int num_transposition_table_mutexes=MentsManagerArgs::num_transposition_table_mutexes_default,
                 double epsilon=MentsManagerArgs::epsilon_default,
+                double root_node_extra_epsilon=MentsManagerArgs::root_node_extra_epsilon_default,
                 double max_explore_prob=MentsManagerArgs::max_explore_prob_default,
                 bool recommend_visit_threshold=MentsManagerArgs::recommend_visit_threshold_default,
                 int seed=MentsManagerArgs::seed_default) :
@@ -114,8 +138,11 @@ namespace thts {
                     temp(temp),
                     default_q_value(default_q_value),
                     epsilon(epsilon),
+                    root_node_extra_epsilon(root_node_extra_epsilon),
                     max_explore_prob(max_explore_prob),
                     recommend_visit_threshold(recommend_visit_threshold),
-                    prior_policy_boost(prior_policy_boost) {};
+                    prior_policy_boost(prior_policy_boost),
+                    prior_policy_search_weight(prior_policy_search_weight),
+                    use_prior_shift(use_prior_shift) {};
     };
 }

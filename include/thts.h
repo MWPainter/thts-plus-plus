@@ -93,6 +93,14 @@ namespace thts {
             virtual ~ThtsPool();
 
             /**
+             * Setter for new search environment, so thread pool can be reused
+            */
+            void set_new_env(
+                std::shared_ptr<ThtsManager> new_thts_manager, 
+                std::shared_ptr<ThtsDNode> new_root_node,
+                std::shared_ptr<ThtsLogger> new_logger=nullptr);
+
+            /**
              * Returns a boolean for if the workers need to do more work to complete a 'run_trials' call.
              * 
              * Calls to this function should be protected using work_left_lock.
@@ -192,4 +200,3 @@ namespace thts {
                 bool blocking=true);            
     };
 }
-
