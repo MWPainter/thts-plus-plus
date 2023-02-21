@@ -1,3 +1,9 @@
+# Python module build files
+python/__pycache__
+python/build
+python/dist
+python/thts.egg-info
+
 # Externals from branches
 external/KataGo
 external/eigen
