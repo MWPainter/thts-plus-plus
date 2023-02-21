@@ -4,6 +4,7 @@
 #include <Python.h>
 
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <iostream>
 #include <thread>
@@ -49,29 +50,11 @@ static PyObject* spam_check_system(PyObject* self, PyObject* args) {
 
 static void run_py_fn(PyObject* fn, std::mutex* lock) {
     std::cout << "in thread, about to call py function" << std::endl;
-    lock->lock();
-    std::cout << lock << std::endl;
-    // PyGILState_STATE gstate;
-    // gstate = PyGILState_Ensure();
-    std::cout << "got past" << std::endl;
+    std::lock_guard lg(lock);
     PyObject* _unused_1 = PyObject_CallObject(fn, NULL);
-    // PyGILState_Release(gstate);
-    lock->unlock();
 }
 
 static PyObject* test_py_parallel(PyObject* self, PyObject* args) {
-    // Py_Initialize();
-    // std::cout << PyEval_ThreadsInitialized() << std::endl;
-    // if (!PyEval_ThreadsInitialized()) PyEval_InitThreads();
-    // std::cout << PyEval_ThreadsInitialized() << std::endl;
-    // Py_Initialize();
-    // std::cout << PyEval_ThreadsInitialized() << std::endl;
-    // PyEval_InitThreads();
-    // std::cout << PyEval_ThreadsInitialized() << std::endl;
-    // PyGILState_STATE gstate;
-    // gstate = PyGILState_Ensure();
-    // std::cout << gstate << std::endl;
-
     PyObject* foo_fn;
     PyObject* bar_fn;
 
@@ -90,21 +73,36 @@ static PyObject* test_py_parallel(PyObject* self, PyObject* args) {
     Py_INCREF(bar_fn);
 
     std::cout << "about to run threads" << std::endl;
-    // PyGILState_Release(gstate);
-    std::mutex l;
-    std::thread foo_thread(run_py_fn, foo_fn, &l);
-    std::thread bar_thread(run_py_fn, bar_fn, &l);
-    foo_thread.join();
-    bar_thread.join();
-    // gstate = PyGILState_Ensure();
+
+    bool multiprocess = true;
+
+    if (multiprocess) {
+        std::mutex l;
+        pid_t pid = fork();
+        if (pid > 0) {
+            run_py_fn(bar_fn, &l);
+        } else {
+            run_py_fn(foo_fn, &l);
+            // exit child thread
+            std::cout << "exiting child thread, hopefully it cleans up nicely *shrugs*" << std::endl;
+            exit(0);
+        }
+    }
+
+    if (!multiprocess) {
+        std::mutex l;
+        std::thread foo_thread(run_py_fn, foo_fn, &l);
+        std::thread bar_thread(run_py_fn, bar_fn, &l);
+        foo_thread.join();
+        bar_thread.join();
+    }
+
     std::cout << "finished run threads" << std::endl;
 
     Py_DECREF(foo_fn);
     Py_DECREF(bar_fn);
 
     Py_INCREF(Py_None);
-    // Py_Finalize();
-    // PyGILState_Release(gstate);
     return Py_None;
 }
 
