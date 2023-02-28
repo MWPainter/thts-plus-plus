@@ -7,7 +7,7 @@ thts_module = Extension('thts',
                     # include_dirs = ['/usr/local/include'],
                     # libraries = ['tcl83'],
                     # library_dirs = ['/usr/local/lib'],
-                    sources = ['test.cpp'])#,'uct.cpp'])
+                    sources = ['thts.cpp'])#,'uct.cpp'])
 
 setup (name = 'thts',
        version = '0.1',
