@@ -2,15 +2,21 @@ CXX = g++
 
 
 
-BINDIR = bin
+#####
+# Defining targets, sources and flags
+#####
+
+SRC_DIR = src
+TEST_DIR = test
+BIN_DIR = bin
 
 SOURCES = $(wildcard src/*.cpp)
 SOURCES += $(wildcard src/algorithms/*.cpp)
 SOURCES += $(wildcard src/algorithms/common/*.cpp)
-OBJECTS = $(patsubst src/%.cpp, $(BINDIR)/%.o, $(SOURCES))
-TESTS = $(wildcard test/*.cpp)
-TESTS += $(wildcard test/algorithms/*.cpp)
-TEST_OBJECTS = $(patsubst test/%.cpp, $(BINDIR)/test/%.o, $(TESTS))
+OBJECTS = $(patsubst src/%.cpp, bin/src/%.o, $(SOURCES))
+TEST_SOURCES = $(wildcard test/*.cpp)
+TEST_SOURCES += $(wildcard test/algorithms/*.cpp)
+TEST_OBJECTS = $(patsubst test/%.cpp, bin/test/%.o, $(TEST_SOURCES))
 
 GTEST = external/googletest/build/lib/libgtest_main.a
 
@@ -30,23 +36,47 @@ TARGET_THTS_TEST_DEBUG = thts-test-debug
 
 
 
+#####
+# Default target
+#####
+
 # Default, build everything
 all: $(TARGET_THTS_TEST)
 
-# Rule to make sure all build directories exist
-bin-exists:
-	@mkdir -p $(BINDIR)/test/algorithms
-	@mkdir -p $(BINDIR)/algorithms/common
 
-# compiling source files
-$(BINDIR)/%.o : src/%.cpp bin-exists
+
+#####
+# (Custom) Rules to build object files
+# Adapted from: https://stackoverflow.com/questions/41568508/makefile-compile-multiple-c-file-at-once/41924169#41924169
+# N.B. A rule of the form "some_dir/%.o: bin/some_dir/%.cpp" for some reason makes make recompile all files everytime
+#####
+
+# Required to enable use of $$
+.SECONDEXPANSION:
+
+## General rule formula for building object files 
+## N.B. $(@D) gets the directory of the file
+#$(OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
+#	@mkdir -p $(@D)
+#	$(CXX) $(CPPFLAGS) -c -o $@ $<
+
+# Build object files rule
+$(OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
+	@mkdir -p $(@D)
 	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
-# compiling test source files
-$(BINDIR)/test/%.o : test/%.cpp bin-exists
+# Build test object files rule
+$(TEST_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
+	@mkdir -p $(@D)
 	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
-# Compiling 'thts' just builds objects for now
+
+
+#####
+# Targets
+#####
+
+# Compiling 'thts' just builds objects for now (to be used as prereq basically)
 $(TARGET_THTS): $(OBJECTS)
 
 # Build test program
@@ -54,17 +84,27 @@ $(TARGET_THTS_TEST): INCLUDES += $(TEST_INCLUDES)
 $(TARGET_THTS_TEST): CPPFLAGS += $(TEST_CPPFLAGS)
 $(TARGET_THTS_TEST): LDFLAGS += $(TEST_LDFLAGS)
 $(TARGET_THTS_TEST): $(OBJECTS) $(TEST_OBJECTS)
+	echo $(TEST_OBJECTS)
 	$(CXX) $(CPPFLAGS) -o $@ $^ $(GTEST) $(LDFLAGS)
 
 # Add a debug tests target. Adds -g to flags for debug info, and then just runs tests target
 $(TARGET_THTS_TEST_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
 $(TARGET_THTS_TEST_DEBUG): $(TARGET_THTS_TEST)
 
+
+
+#####
+# Clean
+#####
+
 # Clean up compiled files
 clean:
-	@rm -rf $(BINDIR) > /dev/null 2> /dev/null
+	@rm -rf $(BIN_DIR) > /dev/null 2> /dev/null
 	@rm $(TARGET_THTS_TEST) > /dev/null 2> /dev/null
 
 
 
-.PHONY: clean bin-exists $(TARGET_THTS)
+#####
+# Phony targets, so make knows when a target isn't producing a corresponding output file of same name
+#####
+.PHONY: clean $(TARGET_THTS)
