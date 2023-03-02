@@ -1,4 +1,4 @@
-CXX = g++-12
+CXX = g++
 
 
 
@@ -54,7 +54,7 @@ $(TARGET_THTS_TEST): INCLUDES += $(TEST_INCLUDES)
 $(TARGET_THTS_TEST): CPPFLAGS += $(TEST_CPPFLAGS)
 $(TARGET_THTS_TEST): LDFLAGS += $(TEST_LDFLAGS)
 $(TARGET_THTS_TEST): $(OBJECTS) $(TEST_OBJECTS)
-	$(CXX) $(CPPFLAGS) $(LDFLAGS) -o $@ $^ $(GTEST)
+	$(CXX) $(CPPFLAGS) -o $@ $^ $(GTEST) $(LDFLAGS)
 
 # Add a debug tests target. Adds -g to flags for debug info, and then just runs tests target
 $(TARGET_THTS_TEST_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
