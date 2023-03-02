@@ -30,15 +30,22 @@ namespace thts {
     /**
      * Calls the dpdnode implementation of recommend action
      */
-    shared_ptr<const Action> DBMentsDNode::recommend_action(ThtsEnvContext& ctx) const {
+    shared_ptr<const Action> DBMentsDNode::recommend_action_best_dp_value(ThtsEnvContext& ctx) const {
         if (children.size() == 0u) {
             int index = ThtsDNode::thts_manager->get_rand_int(0, actions->size());
             return actions->at(index);
         }
 
         MentsManager& manager = (MentsManager&) *ThtsDNode::thts_manager;
-        return recommend_action_best_dp_value<DBMentsCNode>(
+        return DPDNode::recommend_action_best_dp_value<DBMentsCNode>(
             children, manager.recommend_visit_threshold, is_opponent());
+    }
+
+    /**
+     * Implements recommend action to call best dp value
+    */
+    shared_ptr<const Action> DBMentsDNode::recommend_action(ThtsEnvContext& ctx) const {
+        return recommend_action_best_dp_value(ctx);
     }
 
     /**

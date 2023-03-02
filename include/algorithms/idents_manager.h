@@ -7,38 +7,37 @@ namespace thts {
      * Args object so that params can be set in a more named args way
      */
     struct IDentsManagerArgs : public DentsManagerArgs {
-        static constexpr double compute_temp_default=1.0;
+        static constexpr double search_temp_default=1.0;
 
-        double compute_temp;
+        double search_temp;
 
         IDentsManagerArgs(std::shared_ptr<ThtsEnv> thts_env) :
             DentsManagerArgs(thts_env),
-            compute_temp(compute_temp_default) {}
+            search_temp(search_temp_default) {}
 
         virtual ~IDentsManagerArgs() = default;
     };
 
     /**
-     * A specific instance of ThtsManager for DENTS algorithms.
+     * A specific instance of ThtsManager for I(mproved)DENTS algorithms.
      * 
      * Member variables:
-     *      min_temp:
-     *          The minimum temperature to possibly use
+     *      search_temp: The temperature to use locally for searching
      */
     class IDentsManager : public DentsManager {
         public:
-            double compute_temp;
+            double search_temp;
 
             IDentsManager(IDentsManagerArgs& args) :
                 DentsManager(args),
-                compute_temp(args.compute_temp) {};
+                search_temp(args.search_temp) {};
 
             IDentsManager(
                 std::shared_ptr<ThtsEnv> thts_env,
                 int max_depth=IDentsManagerArgs::max_depth_default,
                 double temp=IDentsManagerArgs::temp_default,
                 double min_temp=IDentsManagerArgs::min_temp_default,
-                double compute_temp=IDentsManagerArgs::compute_temp_default,
+                double search_temp=IDentsManagerArgs::search_temp_default,
                 double default_q_value=IDentsManagerArgs::default_q_value_default,
                 HeuristicFnPtr heuristic_fn=nullptr,
                 bool use_prior_shift=IDentsManagerArgs::use_prior_shift_default,
@@ -74,6 +73,6 @@ namespace thts {
                         max_explore_prob,
                         recommend_visit_threshold,
                         seed), 
-                    compute_temp(compute_temp) {};
+                    search_temp(search_temp) {};
     };
 }

@@ -60,6 +60,17 @@ namespace thts {
              * 
              * Recommends a random action if this node has zero children.
              */
+            virtual std::shared_ptr<const Action> recommend_action_best_dp_value(ThtsEnvContext& ctx) const;
+            
+            /**
+             * Implements the thts recommend_action function for the node
+             * 
+             * Args:
+             *      ctx: A context for if a recommendation also requires a context
+             * 
+             * Returns:
+             *      The recommended action
+             */
             virtual std::shared_ptr<const Action> recommend_action(ThtsEnvContext& ctx) const;
             
             /**
