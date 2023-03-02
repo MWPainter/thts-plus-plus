@@ -223,16 +223,10 @@ namespace thts {
              * Implements the thts backup function for the node
              * 
              * Args:
-             *      trial_rewards_before_node: 
-             *          A list of rewards recieved (at each timestep) on the trial prior to reaching this node.
-             *      trial_rewards_after_node:
-             *          A list of rewards recieved (at each timestep) on the trial after reaching this node. This list 
-             *          includes the reward from R(state,action) that would have been recieved from taking an action 
-             *          from this node.
-             *      trial_cumulative_return_after_node:
-             *          Sum of rewards in the 'trial_rewards_after_node' list
-             *      trial_cumulative_return:
-             *          Sum of rewards in both of the 'trial_rewards_after_node' and 'trial_rewards_before_node' lists
+             *      trial_rewards_before_node:  unused
+             *      trial_rewards_after_node: unused
+             *      trial_cumulative_return_after_node: unused
+             *      trial_cumulative_return: unused
              */
             virtual void backup(
                 const std::vector<double>& trial_rewards_before_node, 

@@ -2,6 +2,9 @@
 external/KataGo
 external/eigen
 
+# Folders in other branches
+python
+
 # External files from branches
 external/kata1*
 
@@ -17,6 +20,7 @@ goooo
 thts-run-toy-env
 
 # Mac files
+.DS_Store
 external/.DS_Store
 
 # Prerequisites

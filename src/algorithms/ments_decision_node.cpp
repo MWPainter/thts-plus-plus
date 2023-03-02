@@ -182,9 +182,9 @@ namespace thts {
     {  
         // compute boltzmann weights
         double sum_weights;
-        double normalisation_term;
+        double _normalisation_term;
         lock_all_children();
-        compute_action_weights(action_distr, sum_weights, normalisation_term, context);
+        compute_action_weights(action_distr, sum_weights, _normalisation_term, context);
         unlock_all_children();
 
         // compute lambda

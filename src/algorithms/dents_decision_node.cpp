@@ -25,7 +25,7 @@ namespace thts {
      */
     double DentsDNode::get_temp() const {
         DentsManager& manager = (DentsManager&) *thts_manager;
-        return get_decayed_temp(manager.temp, num_visits, manager.min_temp);
+        return compute_decayed_temp(manager.temp, num_visits, manager.min_temp);
     }
 
     /**
