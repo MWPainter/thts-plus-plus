@@ -43,6 +43,17 @@ class ThtsEnv:
             The initial state of the environment.
         """
         pass
+
+    def is_sink_state(self, state):
+        """
+        Returns if 'state' is a sink state
+
+        Args:
+            state: A valid state for the ThtsEnv object.
+        Returns:
+            Boolean for if 'state' is a sink state
+        """
+        pass
     
     def get_valid_actions(self, state):
         """
@@ -53,7 +64,7 @@ class ThtsEnv:
         Returns:
             A list of valid actions that can be taken from 'state'.
         """
-        pass
+        
 
     def get_transition_distribution(self, state, action):
         """

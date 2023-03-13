@@ -1,14 +1,17 @@
 """
 A script to test using the python thtsenv
 """
+import numpy as np
+
+from thts_env import ThtsEnv
 
 
-class GridEnv:
-    def __init__(self):
+class GridEnv(ThtsEnv):
+    def __init__(self, grid_size=4, move_prob=1.0):
         """
         Constructor.
         """
-        pass
+        self.grid_size = grid_size
     
     def _setup_for_fork(
         self, 
@@ -40,7 +43,18 @@ class GridEnv:
         Returns:
             The initial state of the environment.
         """
-        pass
+        return (0,0)
+
+    def is_sink_state(self, state):
+        """
+        Returns if 'state' is a sink state
+
+        Args:
+            state: A valid state for the ThtsEnv object.
+        Returns:
+            Boolean for if 'state' is a sink state
+        """
+        return state[0] == self.grid_size-1 and state[1] == self.grid_size-1
     
     def get_valid_actions(self, state):
         """
@@ -51,7 +65,23 @@ class GridEnv:
         Returns:
             A list of valid actions that can be taken from 'state'.
         """
-        pass
+        if self.is_sink_state(state):
+            return []
+        return ["L", "R", "U", "D"]   
+
+    def _next_state(self, state, action):
+        next_state = (state[0], state[1])
+        if action == "L" and state[0] > 0:
+            next_state[0] -= 1
+        elif action == "R" and state[0] < self.grid_size-1:
+            next_state[0] += 1
+        if action == "U" and state[1] > 0:
+            next_state[1] -= 1
+        elif action == "D" and state[1] < self.grid_size-1:
+            next_state[1] += 1
+        return next_state
+
+
 
     def get_transition_distribution(self, state, action):
         """
@@ -63,7 +93,12 @@ class GridEnv:
         Returns:
             A dictionary mapping from state objects to their probability of being the next state.
         """
-        pass
+        possible_next_state = self._next_state(state)
+        distr = {possible_next_state: self.move_prob}
+        if self.move_prob < 1.0:
+            distr[state] = 1.0 - self.move_prob
+        return distr
+        
 
     def sample_transition_distribution(self, state, action):
         """
@@ -76,7 +111,11 @@ class GridEnv:
             The next state from taking 'action' from 'state'. This should be equivalent to sampling from the 
             distribution returned from 'get_transition_distribution'.
         """
-        pass
+        p = np.random.random()
+        if p <= self.move_prob:
+            return self._next_state(state,action)
+        return state
+
 
     def get_observation_distribution(self, state, action):
         """
@@ -88,7 +127,7 @@ class GridEnv:
         Returns:
             A dictionary mapping from observation objects to their probability of being observed.
         """
-        pass
+        return self.get_transition_distribution(state,action)
 
     def sample_observation_distribution(self, state, action):
         """
@@ -101,7 +140,7 @@ class GridEnv:
             An observation from taking 'action' from 'state'. This should be equivalent to sampling from the 
             distribution returned from 'get_observation_distribution'.
         """
-        pass
+        return self.sample_transition_distribution(state,action)
 
     def get_reward(self, state, action, observation=None):
         """
@@ -114,7 +153,7 @@ class GridEnv:
         Returns:
             Returns the value of the reward R(s,a).
         """
-        pass
+        return -1
 
     def heuristic_fn(self, state):
         """
@@ -122,7 +161,7 @@ class GridEnv:
 
         *TODO* More docstring
         """
-        pass
+        return 0
 
     def prior_policy(self, state):
         """
@@ -130,15 +169,7 @@ class GridEnv:
 
         *TODO* More docstring
         """
-        pass
-
-    def sample_context(self, state):
-        """
-        Sample a context
-
-        *TODO* More docstring
-        """
-        return {}
+        return None
 
 
 
