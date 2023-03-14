@@ -19,7 +19,8 @@ go-test
 goooo
 thts-run-toy-env
 
-# Mac files
+# Hidden files
+.vscode
 .DS_Store
 external/.DS_Store
 

@@ -1,9 +1,0 @@
-{
-    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
-    "cmake.configureOnOpen": false,
-    "files.associations": {
-        "iosfwd": "cpp",
-        "sstream": "cpp",
-        "ostream": "cpp"
-    }
-}
