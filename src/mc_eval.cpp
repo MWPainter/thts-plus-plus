@@ -1,6 +1,7 @@
 #include "mc_eval.h"
 
 #include <cmath>
+#include <thread>
 
 using namespace std;
 
@@ -8,8 +9,15 @@ using namespace std;
  * Eval policy implementation
 */
 namespace thts {
-    EvalPolicy::EvalPolicy(shared_ptr<ThtsDNode> root_node, shared_ptr<ThtsEnv> thts_env, RandManager& rand_manager) :
-        root_node(root_node), cur_node(root_node), thts_env(thts_env), rand_manager(rand_manager) {}
+    EvalPolicy::EvalPolicy(
+        shared_ptr<const ThtsDNode> root_node, shared_ptr<const ThtsEnv> thts_env, RandManager& rand_manager) :
+            root_node(root_node), cur_node(root_node), thts_env(thts_env), rand_manager(rand_manager) {}
+
+    EvalPolicy::EvalPolicy(const EvalPolicy& policy) :
+        root_node(policy.root_node), 
+        cur_node(policy.root_node), 
+        thts_env(policy.thts_env), 
+        rand_manager(policy.rand_manager) {}
     
     /**
      * Resets cur_node back to root node.
@@ -58,7 +66,10 @@ namespace thts {
 */
 namespace thts {
     MCEvaluator::MCEvaluator(
-        shared_ptr<ThtsEnv> thts_env, EvalPolicy& policy, int max_trial_length, RandManager& rand_manager) :
+        shared_ptr<const ThtsEnv> thts_env, 
+        EvalPolicy& policy, 
+        int max_trial_length, 
+        RandManager& rand_manager) :
             thts_env(thts_env), 
             policy(policy), 
             max_trial_length(max_trial_length), 
@@ -68,9 +79,9 @@ namespace thts {
     /**
      * Runs a single rollout and stores the result in 'sampled_returns'.
     */
-    void MCEvaluator::run_rollout() {
+    void MCEvaluator::run_rollout(EvalPolicy& thread_policy) {
         // Reset
-        policy.reset();
+        thread_policy.reset();
 
         // Bookkeeping
         int num_actions_taken = 0;
@@ -80,7 +91,7 @@ namespace thts {
 
         // Run trial
         while (num_actions_taken < max_trial_length && !thts_env->is_sink_state_itfc(state)) {
-            shared_ptr<const Action> action = policy.get_action(state, context);
+            shared_ptr<const Action> action = thread_policy.get_action(state, context);
             shared_ptr<const State> next_state = thts_env->sample_transition_distribution_itfc(
                 state, action, rand_manager);
             shared_ptr<const Observation> obsv = thts_env->sample_observation_distribution_itfc(
@@ -88,21 +99,51 @@ namespace thts {
             
             sample_return += thts_env->get_reward_itfc(state, action, obsv);
 
-            policy.update_step(action, obsv);
+            thread_policy.update_step(action, obsv);
             state = next_state;
         }
 
         // store
+        lock_guard lg(lock);
         sampled_returns.push_back(sample_return);
     }
     
     /**
-     * Run 'num_rollout' many rollouts to gather stats.
+     * Called as a thread. Runs this threads portion of 'total_rollouts' many rollouts. To make coding simple as we 
+     * know exactly how many rollouts to perform ahead of time in this case, this thread will just be allocated all of 
+     * the rollouts numbered == thread_id mod num_threads.
     */
-    void MCEvaluator::run_rollouts(int num_rollouts) {
-        for (int i=0; i < num_rollouts; i++) {
-            run_rollout();
+    void MCEvaluator::thread_run_rollouts(
+        int total_rollouts, int thread_id, int num_threads, unique_ptr<EvalPolicy> thread_policy) 
+    {
+        for (int i=thread_id; i < total_rollouts; i+=num_threads) {
+            run_rollout(*thread_policy);
         }
+    }
+
+    /**
+     * Runs 'num_rollouts' using 'num_threads'. Just sets each thread up, starts it running and then waits for them. 
+     * Note that a pointer to a copy constructed policy is passed to each thread for it to use. (So each thread can 
+     * assume that it has it's own thread_policy, copied from 'policy')
+    */
+    void MCEvaluator::run_rollouts(int num_rollouts, int num_threads) {
+        // spawn
+        vector<thread> threads;
+        for (int i=0; i<num_threads; i++) {
+            threads.push_back(thread(
+                &MCEvaluator::thread_run_rollouts, 
+                this, 
+                num_rollouts, 
+                i, 
+                num_threads, 
+                make_unique<EvalPolicy>(policy)));
+        }
+
+        // wait
+        for (int i=0; i<num_threads; i++) {
+            threads[i].join();
+        }
+
     }
 
     /**

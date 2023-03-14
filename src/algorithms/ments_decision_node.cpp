@@ -11,7 +11,10 @@ using namespace std;
     
 // Epsilon to be used as a minimum prob, if lower than this just set to zero
 static double EPS = 1e-16;
-static double MIN_LOG_WEIGHT = -325.0;
+static double LOG_MIN_ARG = 1e-32;
+static double LOG_MAX_ARG = 1e32;
+static double MIN_LOG_WEIGHT = -32.0;
+static double MAX_LOG_WEIGHT = 32.0;
 
 namespace thts {
     MentsDNode::MentsDNode(
@@ -46,7 +49,9 @@ namespace thts {
                 for (pair<shared_ptr<const Action>,double> pr : *policy_prior) {
                     double weight = pr.second;
                     double log_weight = MIN_LOG_WEIGHT;
-                    if (weight > 0.0) {
+                    if (weight >= LOG_MAX_ARG) {
+                        log_weight = MAX_LOG_WEIGHT;
+                    } else if (weight > LOG_MIN_ARG) {
                         log_weight = log(weight);
                     }
                     mean_log_weight *= (i-1.0) / i;
@@ -104,11 +109,13 @@ namespace thts {
         if (has_prior()) {
             MentsManager& manager = (MentsManager&) *thts_manager;
             double weight = policy_prior->at(action);
-            if (weight <= 0.0) {
-                // double log_weight = MIN_LOG_WEIGHT; // < log(numeeric_limits<double>::min())
-                return MIN_LOG_WEIGHT + prior_shift + manager.prior_policy_boost;
+            double log_weight = MIN_LOG_WEIGHT;
+            if (weight >= LOG_MAX_ARG) {
+                log_weight = MAX_LOG_WEIGHT;
+            } else if (weight > LOG_MIN_ARG) {
+                log_weight = log(weight);
             }
-            return (log(weight) + prior_shift + manager.prior_policy_boost);
+            return (log_weight + prior_shift + manager.prior_policy_boost);
         } 
 
         MentsManager& manager = (MentsManager&) *thts_manager;
