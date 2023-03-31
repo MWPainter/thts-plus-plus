@@ -23,6 +23,7 @@ goooo
 thts-run-toy-env
 
 # Mac files
+.DS_Store
 external/.DS_Store
 
 # Prerequisites
