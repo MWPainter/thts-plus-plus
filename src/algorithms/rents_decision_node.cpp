@@ -8,6 +8,8 @@
 
 using namespace std; 
 
+static double EPS = 1e-16;
+
 namespace thts {
     RentsDNode::RentsDNode(
         shared_ptr<MentsManager> thts_manager,
@@ -103,6 +105,15 @@ namespace thts {
             action_weight *= get_parent_action_prob(parent_distr, action);
             action_weights[action] = action_weight;
             sum_action_weights += action_weight;
+        }
+        
+        // If all action weights extremely small, then just make it uniform random, for numerical stability
+        if (sum_action_weights < EPS) {
+            double uniform_weight = 1.0 / actions->size();
+            for (shared_ptr<const Action> action : *actions) {
+                action_weights[action] = uniform_weight;
+            }
+            sum_action_weights = 1.0;
         }
     }
 

@@ -8,6 +8,9 @@ python/thts.egg-info
 external/KataGo
 external/eigen
 
+# Folders in other branches
+python
+
 # External files from branches
 external/kata1*
 
@@ -22,7 +25,8 @@ go-test
 goooo
 thts-run-toy-env
 
-# Mac files
+# Hidden files
+.vscode
 .DS_Store
 external/.DS_Store
 
