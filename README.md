@@ -44,3 +44,4 @@ cmake -G "MSYS Makefiles" .. -DCMAKE_INSTALL_PREFIX=.
 2. Add documentation
     1. Code design (seperate markdown), basically where to find things, and the core building blocks, diagrams?
     2. Using the library (cp some integration test), and point at bits of code that it uses
+3. Fix and finish unit tests
