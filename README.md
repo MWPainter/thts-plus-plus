@@ -10,7 +10,8 @@ Run the following in a bash shell starting from the root directory of this repos
 ```
 git submodule init
 git submodule update
-
+```
+```
 cd external/googletest
 mkdir build
 cd build
@@ -24,13 +25,11 @@ If compiling with a compiler that isn't invoked using the standard `g++` program
 cmake .. -DCMAKE_INSTALL_PREFIX=. -DCMAKE_C_COMPILER=<your_c_compiler> -DCMAKE_CXX_COMPILER=<your_cxx_compiler>
 ```
 
-Running on windows tested with `msys2` using the `Mingw64` environment, setup using the following `pacman` commands:
+Running on windows tested with `msys2` using the `Mingw64` environment, setup using the following `pacman` commands. If using windows, then the `cmake` command above needs to be changed to the following as well:
 ```
 pacman -S --needed base-devel mingw-w64-x86_64-toolchain
 pacman -S mingw-w64-x86_64-make
 ```
-
-If using windows, then the `cmake` command needs to be changed to the following:
 ```
 cmake -G "MSYS Makefiles" .. -DCMAKE_INSTALL_PREFIX=.
 ```
