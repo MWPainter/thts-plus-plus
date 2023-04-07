@@ -1,12 +1,12 @@
 # thts-plus-plus
-THTS Implementation in C++ with Python bindings
+THTS Implementation in C++, with Python bindings (eventually).
 
 
 
 
 
 ## Installing gtest
-Run the following in a bash shell starting from 
+Run the following in a bash shell starting from the root directory of this repository:
 ```
 git submodule init
 git submodule update
@@ -19,7 +19,7 @@ make
 make install
 ```
 
-If compiling with a compiler that isn't invoked using the standard `g++` program (e.g. using gcc instead of clang on OSX), then `Makefile` will need to be updated, and the cmake command 
+If compiling with a compiler that isn't invoked using the standard `g++` program (e.g. using gcc instead of clang on OSX), then `Makefile` will need to be updated, and the `cmake` command above needs to be changed to: 
 ```
 cmake .. -DCMAKE_INSTALL_PREFIX=. -DCMAKE_C_COMPILER=<your_c_compiler> -DCMAKE_CXX_COMPILER=<your_cxx_compiler>
 ```
