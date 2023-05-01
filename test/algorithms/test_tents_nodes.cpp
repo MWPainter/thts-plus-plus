@@ -3,9 +3,9 @@
 #include "gmock/gmock.h"
 
 // testing
-#include "algorithms/tents_chance_node.h"
-#include "algorithms/tents_decision_node.h"
-#include "algorithms/ments_manager.h"
+#include "algorithms/ments/tents/tents_chance_node.h"
+#include "algorithms/ments/tents/tents_decision_node.h"
+#include "algorithms/ments/ments_manager.h"
 
 // includes
 #include "test/test_thts_env.h"
@@ -17,7 +17,7 @@
 
 using namespace std;
 using namespace thts;
-using namespace thts_test;
+using namespace thts::test;
 
 // actions (for 'EXPECT_CALL')
 using ::testing::Return;
@@ -44,9 +44,12 @@ void run_tents_integration_test(
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
 
     shared_ptr<ThtsEnv> grid_env = make_shared<TestThtsEnv>(env_size, stay_prob);
-    shared_ptr<MentsManager> manager = make_shared<MentsManager>(grid_env, env_size*4);
-    manager->mcts_mode = false;
-    manager->temp = temp;
+    MentsManagerArgs manager_args(grid_env);
+    manager_args.seed = 60415;
+    manager_args.max_depth = env_size * 4;
+    manager_args.mcts_mode = false;
+    manager_args.temp = temp;
+    shared_ptr<MentsManager> manager = make_shared<MentsManager>(manager_args);
     shared_ptr<TentsDNode> root_node = make_shared<TentsDNode>(manager, grid_env->get_initial_state_itfc(), 0, 0);
     ThtsPool uct_pool(manager, root_node, num_threads);
     uct_pool.run_trials(num_trials);
@@ -89,9 +92,13 @@ TEST(Tents_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
  */
 void run_tents_game_integration_test(int env_size, int num_trials, int print_tree_depth=0, int decision_timestep=0) {
     shared_ptr<ThtsEnv> game_env = make_shared<TestThtsGameEnv>(env_size);
-    shared_ptr<MentsManager> manager = make_shared<MentsManager>(game_env, env_size*4);
-    manager->mcts_mode = false;
-    manager->is_two_player_game = true;
+    MentsManagerArgs manager_args(game_env);
+    manager_args.seed = 60415;
+    manager_args.max_depth = env_size * 4;
+    manager_args.mcts_mode = false;
+    manager_args.is_two_player_game = true;
+    manager_args.temp = 1.0;
+    shared_ptr<MentsManager> manager = make_shared<MentsManager>(manager_args);
     shared_ptr<TentsDNode> root_node = make_shared<TentsDNode>(
         manager, game_env->get_initial_state_itfc(), 0, decision_timestep);
     ThtsPool uct_pool(manager, root_node, 1);

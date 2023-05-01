@@ -27,7 +27,8 @@ namespace thts {
      * a transposition table implementation and pretty print functions for debugging.
      * 
      * Member variables:
-     *      node_lock: A mutex that is used to protect this entire node.
+     *      node_lock: 
+     *          A mutex that is used to protect this entire node.
      *      thts_manager: 
      *          A ThtsManager object that stores the 'global' information about how the Thts algorithm should operate,
      *          so that an implementation can provide multiple modes of operation. Additionally stores the 
@@ -48,10 +49,6 @@ namespace thts {
      *          A map from Action objects to child ThtsCNode objects
      *      heuristic_value:
      *          The heuristic value of this decision node
-    //  *      prior:
-    //  *          The action prior for this decision node, which is a mapping from actions to values from prior knowledge.
-    //  *          This would usually be either a prior policy (probabilities we should pick each action) or a prior 
-    //  *          estimate of the Q-values from taking each action.
      */
     class ThtsDNode : public std::enable_shared_from_this<ThtsDNode> {
         // Allow ThtsCNode, Logger and Pool access to private members

@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-namespace thts_test{
+namespace thts::test{
     using namespace std;
     using namespace thts;
 

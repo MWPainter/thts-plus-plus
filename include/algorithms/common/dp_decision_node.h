@@ -18,9 +18,10 @@ namespace thts {
      * An implementation of dynamic programming backups for nodes to use.
      * 
      * Member variables:
-     *      num_backups: The number of backups this node has performed (== "number of visits" with respect to dp backup)
-     *      dp_value: The dynamic programming value at this node
-     *      thts_manager: A reference to the ultimate thts manager (reference is ok as node has a pointer anyway)
+     *      num_backups: 
+     *          The number of backups this node has performed (== "number of visits" with respect to dp backup)
+     *      dp_value: 
+     *          The dynamic programming value at this node
      */
     class DPDNode {
         // Alloow DPCNode access to private members
@@ -29,13 +30,11 @@ namespace thts {
         protected:
             int num_backups;
             double dp_value;
-            ThtsManager& thts_manager;
 
             /**
              * Constructor 
              */
-            DPDNode(ThtsManager& thts_manager, double dp_value=0.0) : 
-                num_backups(1), dp_value(dp_value), thts_manager(thts_manager) {};
+            DPDNode(double dp_value=0.0) : num_backups(1), dp_value(dp_value) {};
 
             /**
              * Destructor
@@ -61,6 +60,7 @@ namespace thts {
              * 
              * Args:
              *      children: The children map for this node
+             *      rand_manager: Manager for RNG for breaking ties
              *      visit_threshold: 
              *          A threshold value of visits to recommend a child node (if no child has met the threshold then 
              *          we still recommend the highest value ignoring any thresholding).
@@ -70,7 +70,7 @@ namespace thts {
              *      An action recommendation from this node.
              */
             std::shared_ptr<const Action> recommend_action_best_dp_value_impl(
-                DPCNodeChildMap& children, int visit_threshold, bool is_opponent) const;
+                DPCNodeChildMap& children, RandManager& rand_manager, int visit_threshold, bool is_opponent) const;
 
             /**
              * Performs a dynamic programming backup.
@@ -120,6 +120,7 @@ namespace thts {
              * 
              * Args:
              *      children: The children map for a ThtsDNode (that are ultimately of type T)
+             *      rand_manager: Manager for RNG for breaking ties
              *      visit_threshold: 
              *          A threshold value of visits to recommend a child node (if no child has met the threshold then 
              *          we still recommend the highest value ignoring any thresholding).
@@ -130,12 +131,15 @@ namespace thts {
              */
             template <typename T>
             std::shared_ptr<const Action> recommend_action_best_dp_value(
-                const CNodeChildMap& children, int visit_threshold=0, bool is_opponent=false) const 
+                const CNodeChildMap& children, 
+                RandManager& rand_manager, 
+                int visit_threshold=0, 
+                bool is_opponent=false) const 
             {
                 std::shared_ptr<DPCNodeChildMap> dp_children = convert_child_map<T>(children);
                 for (auto pr : children) pr.second->lock();
                 std::shared_ptr<const Action> action = recommend_action_best_dp_value_impl(
-                    *dp_children, visit_threshold, is_opponent);
+                    *dp_children, rand_manager, visit_threshold, is_opponent);
                 for (auto pr : children) pr.second->unlock();
                 return action;
             }

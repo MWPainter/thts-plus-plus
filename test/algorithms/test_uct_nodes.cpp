@@ -3,9 +3,9 @@
 #include "gmock/gmock.h"
 
 // testing
-#include "algorithms/uct_chance_node.h"
-#include "algorithms/uct_decision_node.h"
-#include "algorithms/uct_manager.h"
+#include "algorithms/uct/uct_chance_node.h"
+#include "algorithms/uct/uct_decision_node.h"
+#include "algorithms/uct/uct_manager.h"
 
 // includes
 #include "test/test_thts_env.h"
@@ -18,7 +18,7 @@
 
 using namespace std;
 using namespace thts;
-using namespace thts_test;
+using namespace thts::test;
 
 // actions (for 'EXPECT_CALL')
 using ::testing::Return;
@@ -492,56 +492,12 @@ TEST(Uct_SelectAction, epsilon_exploration) {
 
 
 /**
- * Test that recommend action returns the empirical best by default
- */
-TEST(Uct_RecommendAction, empirical_best) {
-    shared_ptr<MockThtsEnv_ForUct> mock_env = make_shared<MockThtsEnv_ForUct>();
-    shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
-    shared_ptr<ThtsEnvContext> dummy_context = mock_env->sample_context_itfc(nullptr);
-
-    // Mock random number generation
-    EXPECT_CALL(*uct_manager, get_rand_int)
-        .Times(0);
-    
-    // Actions
-    shared_ptr<ActionVector> actions = make_shared<ActionVector>(3);
-    ActionVector& a = *actions;
-    a[0] = make_shared<IntAction>(0);
-    a[1] = make_shared<IntAction>(1);
-    a[2] = make_shared<IntAction>(2);
-
-    // Make mock env give actions to Uct D Node when make it
-    EXPECT_CALL(*mock_env, get_valid_actions_itfc)
-        .Times(1)
-        .WillOnce(Return(actions));
-
-    // Children (a2 most visited, a1 best value)
-    CNodeChildMap children;
-    children[a[0]] = make_shared<SettableUctCNode>(uct_manager, 100.0, 555);
-    children[a[1]] = make_shared<SettableUctCNode>(uct_manager, 456.5, 111);
-    children[a[2]] = make_shared<SettableUctCNode>(uct_manager, -99.0, 999);
-
-    // Uct D Node
-    shared_ptr<MockUctDNode_SelectActionMock> uct_d_node = make_shared<MockUctDNode_SelectActionMock>(uct_manager);
-    EXPECT_CALL(*uct_d_node, fill_ucb_values)
-        .Times(0);
-    EXPECT_CALL(*uct_d_node, has_prior)
-        .Times(0);
-    // uct_d_node->set_actions(actions);
-    uct_d_node->set_children(children);
-
-    // Expect to recommend a[1]
-    EXPECT_EQ(uct_d_node->recommend_action(*dummy_context), a[1]);
-}
-
-/**
- * Test that recommend action returns the most visited when UctManager option is set
+ * Test that recommend action returns the most visited by default
  * (Only difference to the above test is the line 'uct_manager->recommend_most_visited = true;')
  */
 TEST(Uct_RecommendAction, most_visited) {
     shared_ptr<MockThtsEnv_ForUct> mock_env = make_shared<MockThtsEnv_ForUct>();
     shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
-    uct_manager->recommend_most_visited = true;
     shared_ptr<ThtsEnvContext> dummy_context = mock_env->sample_context_itfc(nullptr);
 
     // Mock random number generation
@@ -579,6 +535,50 @@ TEST(Uct_RecommendAction, most_visited) {
     EXPECT_EQ(uct_d_node->recommend_action(*dummy_context), a[2]);
 }
 
+/**
+ * Test that recommend action returns the empirical best when 'recommend_most_visited' option turned off
+ */
+TEST(Uct_RecommendAction, empirical_best) {
+    shared_ptr<MockThtsEnv_ForUct> mock_env = make_shared<MockThtsEnv_ForUct>();
+    shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
+    uct_manager->recommend_most_visited = false;
+    shared_ptr<ThtsEnvContext> dummy_context = mock_env->sample_context_itfc(nullptr);
+
+    // Mock random number generation
+    EXPECT_CALL(*uct_manager, get_rand_int)
+        .Times(0);
+    
+    // Actions
+    shared_ptr<ActionVector> actions = make_shared<ActionVector>(3);
+    ActionVector& a = *actions;
+    a[0] = make_shared<IntAction>(0);
+    a[1] = make_shared<IntAction>(1);
+    a[2] = make_shared<IntAction>(2);
+
+    // Make mock env give actions to Uct D Node when make it
+    EXPECT_CALL(*mock_env, get_valid_actions_itfc)
+        .Times(1)
+        .WillOnce(Return(actions));
+
+    // Children (a2 most visited, a1 best value)
+    CNodeChildMap children;
+    children[a[0]] = make_shared<SettableUctCNode>(uct_manager, 100.0, 555);
+    children[a[1]] = make_shared<SettableUctCNode>(uct_manager, 456.5, 111);
+    children[a[2]] = make_shared<SettableUctCNode>(uct_manager, -99.0, 999);
+
+    // Uct D Node
+    shared_ptr<MockUctDNode_SelectActionMock> uct_d_node = make_shared<MockUctDNode_SelectActionMock>(uct_manager);
+    EXPECT_CALL(*uct_d_node, fill_ucb_values)
+        .Times(0);
+    EXPECT_CALL(*uct_d_node, has_prior)
+        .Times(0);
+    // uct_d_node->set_actions(actions);
+    uct_d_node->set_children(children);
+
+    // Expect to recommend a[1]
+    EXPECT_EQ(uct_d_node->recommend_action(*dummy_context), a[1]);
+}
+
 
 
 // Dummy test :)
@@ -598,8 +598,11 @@ void run_uct_integration_test(int env_size, int num_threads, int num_trials, dou
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
 
     shared_ptr<ThtsEnv> grid_env = make_shared<TestThtsEnv>(env_size, stay_prob);
-    shared_ptr<UctManager> manager = make_shared<UctManager>(grid_env, env_size*4);
-    manager->mcts_mode = false;
+    UctManagerArgs manager_args(grid_env);
+    manager_args.seed = 60415;
+    manager_args.max_depth = env_size * 4;
+    manager_args.mcts_mode = false;
+    shared_ptr<UctManager> manager = make_shared<UctManager>(manager_args);
     shared_ptr<UctDNode> root_node = make_shared<UctDNode>(manager, grid_env->get_initial_state_itfc(), 0, 0);
     ThtsPool uct_pool(manager, root_node, num_threads);
     uct_pool.run_trials(num_trials);
@@ -648,9 +651,12 @@ TEST(Uct_IntegrationTest, mcts_mode_todo) {
  */
 void run_uct_game_integration_test(int env_size, int num_trials, int print_tree_depth=0, int decision_timestep=0) {
     shared_ptr<ThtsEnv> game_env = make_shared<TestThtsGameEnv>(env_size);
-    shared_ptr<UctManager> manager = make_shared<UctManager>(game_env, env_size*4);
-    manager->mcts_mode = false;
-    manager->is_two_player_game = true;
+    UctManagerArgs manager_args(game_env);
+    manager_args.seed = 60415;
+    manager_args.max_depth = env_size * 4;
+    manager_args.mcts_mode = false;
+    manager_args.is_two_player_game = true;
+    shared_ptr<UctManager> manager = make_shared<UctManager>(manager_args);
     shared_ptr<UctDNode> root_node = make_shared<UctDNode>(
         manager, game_env->get_initial_state_itfc(), 0, decision_timestep);
     ThtsPool uct_pool(manager, root_node, 1);

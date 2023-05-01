@@ -509,7 +509,11 @@ namespace std {
      * Override output stream << operator for DNodeTable.
      */
     ostream& operator<<(ostream& os, const DNodeTable& tbl) {
-        os << helper::unordered_map_pretty_print_string(tbl);
+        unordered_map<DNodeIdTuple,shared_ptr<ThtsDNode>> shared_tbl_for_print;
+        for (auto pr : tbl) {
+            shared_tbl_for_print.insert_or_assign(pr.first, shared_ptr<ThtsDNode>(pr.second));
+        }
+        os << helper::unordered_map_pretty_print_string(shared_tbl_for_print);
         return os;
     }
 }

@@ -15,13 +15,14 @@ namespace thts {
     void DPDNode::visit_dp(bool is_leaf) {
         if (is_leaf) num_backups++;
     }
+
     /**
      * Builds a map of actions to q-values for actions that do and do not meet the 'recommend_visit_threshold'. 
      * And then recommends the max from the thresholded map, and from the unthresholded map if the thresholded one is 
      * empty.
      */
     shared_ptr<const Action> DPDNode::recommend_action_best_dp_value_impl(
-        DPCNodeChildMap& children, int visit_threshold, bool is_opponent) const 
+        DPCNodeChildMap& children, RandManager& rand_manager, int visit_threshold, bool is_opponent) const 
     {
         double opp_coeff = is_opponent ? -1.0 : 1.0;
         unordered_map<shared_ptr<const Action>, double> dp_values_thresholded;
@@ -37,9 +38,9 @@ namespace thts {
         }
 
         if (dp_values_thresholded.size() > 0) {
-            return helper::get_max_key_break_ties_randomly(dp_values_thresholded, thts_manager);
+            return helper::get_max_key_break_ties_randomly(dp_values_thresholded, rand_manager);
         }
-        return helper::get_max_key_break_ties_randomly(dp_values, thts_manager);
+        return helper::get_max_key_break_ties_randomly(dp_values, rand_manager);
     }
     
     /**

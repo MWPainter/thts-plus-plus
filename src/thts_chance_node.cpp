@@ -118,7 +118,7 @@ namespace thts {
 
         auto iter = dmap.find(dnode_id);
         if (iter != dmap.end()) {
-            shared_ptr<ThtsDNode> child_node = dmap[dnode_id];
+            shared_ptr<ThtsDNode> child_node = shared_ptr<ThtsDNode>(dmap[dnode_id]);
             children[observation] = child_node;
             return child_node;
         }

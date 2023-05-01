@@ -18,9 +18,10 @@ namespace thts {
      * An implementation of dynamic programming backups for nodes to use.
      * 
      * Member variables:
-     *      num_backups: The number of backups this node has performed (== "number of visits" with respect to dp backup)
-     *      dp_value: The dynamic programming value at this node
-     *      thts_manager: A reference to the ultimate thts manager (reference is ok as node has a pointer anyway)
+     *      num_backups: 
+     *          The number of backups this node has performed (== "number of visits" with respect to dp backup)
+     *      dp_value: 
+     *          The dynamic programming value at this node
      */
     class DPCNode {
         // Alloow DPDNode access to private members
@@ -29,12 +30,11 @@ namespace thts {
         protected:
             int num_backups;
             double dp_value;
-            ThtsManager& thts_manager;
 
             /**
              * Constructor 
              */
-            DPCNode(ThtsManager& thts_manager) : num_backups(0), dp_value(0.0), thts_manager(thts_manager) {};
+            DPCNode() : num_backups(0), dp_value(0.0){};
 
             /**
              * Destructor

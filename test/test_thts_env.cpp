@@ -12,7 +12,7 @@
 
 using namespace std;
 using namespace thts;
-using namespace thts_test;
+using namespace thts::test;
 
 // actions (for 'EXPECT_CALL')
 using ::testing::Return;
@@ -245,7 +245,7 @@ TEST(Env_MdpImplementation, test_interface_interaction_as_expected)
  * state, and everything seems in order. Also they all pass when using the _itfc versions, which is what the 
  * thts routine will use... so leaving until later.
  */
-TEST(Env_MdpImplementation, test_get_transition_distribution)
+TEST(Env_MdpImplementation, todo__test_get_transition_distribution__todo_fix_thts_type_subclasses_being_used_in_dicts)
 {
     shared_ptr<const StringAction> l_act = make_shared<const StringAction>("left");
     shared_ptr<const StringAction> r_act = make_shared<const StringAction>("right");

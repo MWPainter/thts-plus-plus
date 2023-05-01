@@ -23,7 +23,8 @@ namespace thts {
      * a transposition table implementation and pretty print functions for debugging.
      * 
      * Member variables:
-     *      node_lock: A mutex that is used to protect this entire node.
+     *      node_lock: 
+     *          A mutex that is used to protect this entire node.
      *      thts_manager: 
      *          A ThtsManager object that stores the 'global' information about how the Thts algorithm should operate,
      *          so that an implementation can provide multiple modes of operation. Additionally stores the 

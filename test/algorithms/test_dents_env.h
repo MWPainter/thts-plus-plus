@@ -15,12 +15,15 @@
 
 #include <iostream>
 
-namespace thts_test{
+namespace thts::test{
     using namespace std;
     using namespace thts;
 
 
     /** 
+     * N.B. This was for testing and older version of dents. In this updated implementation the old algorithm is 
+     * equivalent to MENTS with a temperature decay function set.
+     * 
      * A ThtsEnv to test Dents ability to identify and start sampling an optimal path.
      * 
      * There are two paths, the 'gud' path, and the 'bad' path. On the bad path, a reward of 'bad_reward' is recieved 

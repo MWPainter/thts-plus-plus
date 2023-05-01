@@ -13,6 +13,12 @@ BIN_DIR = bin
 SOURCES = $(wildcard src/*.cpp)
 SOURCES += $(wildcard src/algorithms/*.cpp)
 SOURCES += $(wildcard src/algorithms/common/*.cpp)
+SOURCES += $(wildcard src/algorithms/est/*.cpp)
+SOURCES += $(wildcard src/algorithms/ments/*.cpp)
+SOURCES += $(wildcard src/algorithms/ments/dents/*.cpp)
+SOURCES += $(wildcard src/algorithms/ments/rents/*.cpp)
+SOURCES += $(wildcard src/algorithms/ments/tents/*.cpp)
+SOURCES += $(wildcard src/algorithms/uct/*.cpp)
 OBJECTS = $(patsubst src/%.cpp, bin/src/%.o, $(SOURCES))
 TEST_SOURCES = $(wildcard test/*.cpp)
 TEST_SOURCES += $(wildcard test/algorithms/*.cpp)
@@ -27,7 +33,7 @@ CPPFLAGS = $(INCLUDES) -Wall -std=c++17
 TEST_CPPFLAGS = 
 CPPFLAGS_DEBUG = -g
 
-LDFLAGS =
+LDFLAGS = -lpthread
 TEST_LDFLAGS = -Lexternal/googletest/build/lib -lgtest -lgtest_main -lgmock
 
 TARGET_THTS = thts
@@ -98,10 +104,12 @@ $(TARGET_THTS_TEST_DEBUG): $(TARGET_THTS_TEST)
 #####
 
 # Clean up compiled files
+# "[X] && Y || Z" is bash for if X then Y else Z 
+# [ -e <filename> ] checks if filename exists
+# : is a no-op 
 clean:
 	@rm -rf $(BIN_DIR) > /dev/null 2> /dev/null
-	@rm $(TARGET_THTS_TEST) > /dev/null 2> /dev/null
-
+	@[ -f $(TARGET_THTS_TEST) ] && @rm $(TARGET_THTS_TEST) > /dev/null 2> /dev/null || :
 
 
 #####

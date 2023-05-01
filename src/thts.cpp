@@ -44,7 +44,7 @@ namespace thts {
             root_node(root_node)
     {
         if (thts_manager == nullptr || root_node == nullptr) {
-            throw "Cannot make ThtsPool without a thts manager, or root node";
+            throw runtime_error("Cannot make ThtsPool without a thts manager, or root node");
         }
         for (int i=0; i<num_threads; i++) {
             workers[i] = thread(&ThtsPool::worker_fn, this);

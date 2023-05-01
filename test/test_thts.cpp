@@ -12,7 +12,7 @@
 using namespace std;
 using namespace std::chrono_literals;
 using namespace thts;
-using namespace thts_test;
+using namespace thts::test;
 
 // actions (for 'EXPECT_CALL')
 using ::testing::Return;
@@ -28,7 +28,7 @@ using ::testing::ElementsAre;
  */
 TEST(ThtsPool_ErrorChecking, check_no_root_node_throws_exception) {
     shared_ptr<ThtsEnv> dummy_env = make_shared<TestThtsEnv>(2);
-    shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_env);
+    shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(ThtsManagerArgs(dummy_env));
     shared_ptr<const IntPairState> dummy_init_state = ((TestThtsEnv&) *dummy_env).get_initial_state();
     shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,dummy_init_state,0,0);
 
@@ -43,7 +43,7 @@ TEST(ThtsPool_ErrorChecking, check_no_root_node_throws_exception) {
  */
 TEST(ThtsPool_TestThreadPool, construct_and_destruct_sound) {
     shared_ptr<ThtsEnv> dummy_env = make_shared<TestThtsEnv>(2);
-    shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_env);
+    shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(ThtsManagerArgs(dummy_env));
     shared_ptr<const IntPairState> dummy_init_state = ((TestThtsEnv&) *dummy_env).get_initial_state();
     shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,dummy_init_state,0,0);
     int num_threads = 4;
@@ -58,7 +58,7 @@ TEST(ThtsPool_TestThreadPool, construct_and_destruct_sound) {
  */
 TEST(ThtsPool_TestThreadPool, check_work_left_function) {
     shared_ptr<ThtsEnv> dummy_env = make_shared<TestThtsEnv>(2);
-    shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_env);
+    shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(ThtsManagerArgs(dummy_env));
     shared_ptr<const IntPairState> dummy_init_state = ((TestThtsEnv&) *dummy_env).get_initial_state();
     shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,dummy_init_state,0,0);
 
@@ -108,7 +108,8 @@ TEST(ThtsPool_TestThreadPool, test_run_trials) {
     int num_trials = 100;
 
     shared_ptr<ThtsEnv> dummy_env = make_shared<TestThtsEnv>(2);
-    shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_env);
+    ThtsManagerArgs manager_args(dummy_env);
+    shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(manager_args);
     shared_ptr<const IntPairState> dummy_init_state = ((TestThtsEnv&) *dummy_env).get_initial_state();
     shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,dummy_init_state,0,0);
     int num_threads = 4;
@@ -130,7 +131,8 @@ TEST(ThtsPool_TestThreadPool, test_run_trials_non_blocking) {
     int run_trial_duration_ms = 100;
 
     shared_ptr<ThtsEnv> dummy_env = make_shared<TestThtsEnv>(2);
-    shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_env);
+    ThtsManagerArgs manager_args(dummy_env);
+    shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(manager_args);
     shared_ptr<const IntPairState> dummy_init_state = ((TestThtsEnv&) *dummy_env).get_initial_state();
     shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,dummy_init_state,0,0);
     int num_threads = 2;
@@ -165,7 +167,8 @@ TEST(ThtsPool_TestThreadPool, test_trials_run_concurrently) {
     int run_trial_duration_ms = 100;
 
     shared_ptr<ThtsEnv> dummy_env = make_shared<TestThtsEnv>(2);
-    shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_env);
+    ThtsManagerArgs manager_args(dummy_env);
+    shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(manager_args);
     shared_ptr<const IntPairState> dummy_init_state = ((TestThtsEnv&) *dummy_env).get_initial_state();
     shared_ptr<ThtsDNode> dummy_root_node = make_shared<TestThtsDNode>(dummy_manager,dummy_init_state,0,0);
     int num_threads = 2;
@@ -190,7 +193,9 @@ TEST(ThtsPool_TestRunTrial, test_should_continue_selection_phase) {
     // Make a pool so can run function, don't actually need any workers anyway
     int dummy_max_depth = 100;
     shared_ptr<ThtsEnv> dummy_env = make_shared<TestThtsEnv>(2);
-    shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_env, dummy_max_depth);
+    ThtsManagerArgs manager_args(dummy_env);
+    manager_args.max_depth=dummy_max_depth;
+    shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(manager_args);
     shared_ptr<const IntPairState> dummy_init_state = ((TestThtsEnv&) *dummy_env).get_initial_state();
     shared_ptr<MockThtsDNode> mock_node = make_shared<MockThtsDNode>(dummy_manager,dummy_init_state,0,0);
     shared_ptr<ThtsDNode> dummy_root_node = static_pointer_cast<ThtsDNode>(mock_node);
@@ -265,7 +270,8 @@ TEST(ThtsPool_TestRunTrial, test_selection_phase) {
     shared_ptr<MockTestThtsEnv> mock_env_ptr = make_shared<MockTestThtsEnv>(2);
     MockTestThtsEnv& mock_env = *mock_env_ptr;
     shared_ptr<ThtsEnv> env_ptr = static_pointer_cast<ThtsEnv>(mock_env_ptr);
-    shared_ptr<ThtsManager> manager_ptr = make_shared<ThtsManager>(env_ptr);
+    ThtsManagerArgs manager_arg(env_ptr);
+    shared_ptr<ThtsManager> manager_ptr = make_shared<ThtsManager>(manager_arg);
     // ThtsManager& manager = *manager_ptr;
     shared_ptr<const IntPairState> mock_init_state = mock_env.get_initial_state();
     shared_ptr<MockThtsDNode> mock_root_node_ptr = make_shared<MockThtsDNode>(manager_ptr,mock_init_state,0,0);
@@ -479,7 +485,8 @@ TEST(ThtsPool_TestRunTrial, test_backup_phase) {
     shared_ptr<MockTestThtsEnv> mock_env_ptr = make_shared<MockTestThtsEnv>(2);
     MockTestThtsEnv& mock_env = *mock_env_ptr;
     shared_ptr<ThtsEnv> env_ptr = static_pointer_cast<ThtsEnv>(mock_env_ptr);
-    shared_ptr<ThtsManager> manager_ptr = make_shared<ThtsManager>(env_ptr);
+    ThtsManagerArgs manager_args(env_ptr);
+    shared_ptr<ThtsManager> manager_ptr = make_shared<ThtsManager>(manager_args);
     // ThtsManager& manager = *manager_ptr;
     shared_ptr<const IntPairState> mock_init_state = mock_env.get_initial_state();
     shared_ptr<MockThtsDNode> mock_root_node_ptr = make_shared<MockThtsDNode>(manager_ptr,mock_init_state,0,0);

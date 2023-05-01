@@ -24,10 +24,14 @@ namespace thts {
      * N.B. Currently only works for fully observable environments.
      * 
      * Member variables:
-     *      root_node: The root node of the thts tree to use
-     *      cur_node: The current decision node to use to make recommendations in the policy (iff null, use uniform)
-     *      thts_env: The environment for when random actions need to be sampled
-     *      rand_manager: Manager for rng
+     *      root_node: 
+     *          The root node of the thts tree to use
+     *      cur_node: 
+     *          The current decision node to use to make recommendations in the policy (iff null, use uniform)
+     *      thts_env: 
+     *          The environment for when random actions need to be sampled
+     *      rand_manager: 
+     *          Manager for rng
     */
     class EvalPolicy {
         friend MCEvaluator;
@@ -75,12 +79,18 @@ namespace thts {
      * we're going to make an MCEvaluator, call run rollouts, and then throw it away).
      * 
      * Member variables:
-     *      thts_env: The env that we want to evaluate in
-     *      policy: The policy to evaluate
-     *      max_trial_length: The maximum trial length to use in MC evaluations
-     *      sampled_returns: A list of sampled returns 
-     *      rand_manager: Manager for rng
-     *      lock: A lock to protect access to class variables (i.e. sampled_returns in 'run_rollout')
+     *      thts_env: 
+     *          The env that we want to evaluate in
+     *      policy: 
+     *          The policy to evaluate
+     *      max_trial_length: 
+     *          The maximum trial length to use in MC evaluations
+     *      sampled_returns: 
+     *          A list of sampled returns 
+     *      rand_manager: 
+     *          Manager for rng
+     *      lock: 
+     *          A lock to protect access to class variables (i.e. sampled_returns in 'run_rollout')
     */
     class MCEvaluator {
         protected:

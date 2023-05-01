@@ -4,13 +4,14 @@
 
 #include "thts_manager.h"
 
-namespace thts_test {
+namespace thts::test {
     /**
      * Mock ThtsManager. Used to spoof random number generation so fixed for testing.
      */
     class MockThtsManager : public thts::ThtsManager {
         public:
-            MockThtsManager(std::shared_ptr<thts::ThtsEnv> thts_env=nullptr) : thts::ThtsManager(thts_env) {};
+            MockThtsManager(std::shared_ptr<thts::ThtsEnv> thts_env=nullptr) : 
+                thts::ThtsManager(thts::ThtsManagerArgs(thts_env)) {};
 
             MOCK_METHOD(int, get_rand_int, (int min_included, int max_excluded), (override));
             MOCK_METHOD(double, get_rand_uniform, (), (override));

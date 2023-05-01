@@ -18,7 +18,7 @@
 
 using namespace std;
 using namespace thts;
-using namespace thts_test;
+using namespace thts::test;
 
 // matchers (for assertations)
 using ::testing::StrEq;

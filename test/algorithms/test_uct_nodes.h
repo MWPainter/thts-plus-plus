@@ -2,16 +2,16 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-#include "algorithms/uct_chance_node.h"
-#include "algorithms/uct_decision_node.h"
-#include "algorithms/uct_manager.h"
+#include "algorithms/uct/uct_chance_node.h"
+#include "algorithms/uct/uct_decision_node.h"
+#include "algorithms/uct/uct_manager.h"
 #include "thts_env.h"
 #include "thts_types.h"
 
 #include <memory>
 
 
-namespace thts_test {
+namespace thts::test {
     using namespace std;
     using namespace thts;
 

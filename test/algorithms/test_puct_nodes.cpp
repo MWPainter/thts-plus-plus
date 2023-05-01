@@ -3,9 +3,9 @@
 #include "gmock/gmock.h"
 
 // testing
-#include "algorithms/puct_chance_node.h"
-#include "algorithms/puct_decision_node.h"
-#include "algorithms/puct_manager.h"
+#include "algorithms/uct/puct_chance_node.h"
+#include "algorithms/uct/puct_decision_node.h"
+#include "algorithms/uct/puct_manager.h"
 
 // includes
 #include "test/test_thts_env.h"
@@ -17,7 +17,7 @@
 
 using namespace std;
 using namespace thts;
-using namespace thts_test;
+using namespace thts::test;
 
 // actions (for 'EXPECT_CALL')
 using ::testing::Return;
@@ -41,8 +41,11 @@ void run_puct_integration_test(int env_size, int num_threads, int num_trials, do
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
 
     shared_ptr<ThtsEnv> grid_env = make_shared<TestThtsEnv>(env_size, stay_prob);
-    shared_ptr<PuctManager> manager = make_shared<PuctManager>(grid_env, env_size*4);
-    manager->mcts_mode = false;
+    PuctManagerArgs manager_args(grid_env);
+    manager_args.seed = 60415;
+    manager_args.max_depth = env_size * 4;
+    manager_args.mcts_mode = false;
+    shared_ptr<PuctManager> manager = make_shared<PuctManager>(manager_args);
     shared_ptr<PuctDNode> root_node = make_shared<PuctDNode>(manager, grid_env->get_initial_state_itfc(), 0, 0);
     ThtsPool uct_pool(manager, root_node, num_threads);
     uct_pool.run_trials(num_trials);
@@ -85,9 +88,12 @@ TEST(Puct_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
  */
 void run_puct_game_integration_test(int env_size, int num_trials, int print_tree_depth=0, int decision_timestep=0) {
     shared_ptr<ThtsEnv> game_env = make_shared<TestThtsGameEnv>(env_size);
-    shared_ptr<PuctManager> manager = make_shared<PuctManager>(game_env, env_size*4);
-    manager->mcts_mode = false;
-    manager->is_two_player_game = true;
+    PuctManagerArgs manager_args(game_env);
+    manager_args.seed = 60415;
+    manager_args.max_depth = env_size * 4;
+    manager_args.mcts_mode = false;
+    manager_args.is_two_player_game = true;
+    shared_ptr<PuctManager> manager = make_shared<PuctManager>(manager_args);
     shared_ptr<PuctDNode> root_node = make_shared<PuctDNode>(
         manager, game_env->get_initial_state_itfc(), 0, decision_timestep);
     ThtsPool uct_pool(manager, root_node, 1);

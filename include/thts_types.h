@@ -212,9 +212,13 @@ namespace thts {
     /**
      * Typedef for dnode id tuples, for readability.
      * First used transposition table implementation, in thts_manager.h, thts_decision_node.h and thts_chance_node.h
+     * 
+     * The DNodeTable has a weak_ptr. If it were shared then ThtsManager would have shared_ptr's to ThtsDNode's, and 
+     * ThtsDNode's have a shared_ptr to the same ThtsManager. The circular dependency leads to reference counting not 
+     * working and hence memory leaks when using the transposition table otherwise.
      */
     typedef std::tuple<int,std::shared_ptr<const Observation>> DNodeIdTuple;
-    typedef std::unordered_map<DNodeIdTuple,std::shared_ptr<ThtsDNode>> DNodeTable;
+    typedef std::unordered_map<DNodeIdTuple,std::weak_ptr<ThtsDNode>> DNodeTable;
 }
 
 /**

@@ -25,7 +25,7 @@ namespace thts {
      * yet. Hence it's necessary to include the line "if (child.num_backups == 0) continue;" to avoid a division by 
      * zero causing NaNs.
      */
-    void DPCNode::backup_dp_impl(DPDNodeChildMap& children, double local_reward, bool is_opponent=false) {
+    void DPCNode::backup_dp_impl(DPDNodeChildMap& children, double local_reward, bool is_opponent) {
         dp_value = 0.0;
         double sum_child_backups = 0;
         for (pair<shared_ptr<const Observation>,shared_ptr<DPDNode>> pr : children) {

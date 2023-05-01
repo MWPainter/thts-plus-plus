@@ -25,20 +25,34 @@ namespace thts {
      * All functions are marked as virtual so that they can be mocked for unit testing.
      * 
      * Member variables:
-     *      workers: A vector of threads (thread pool) that run the worker_fn routine.
-     *      work_left_cv: A condition variable used to coordinate when workers are working.
-     *      work_left_lock: A mutex for 'work_left_lock', protecting variables used to decide when there is work.
-     *      logging_lock: A mutex protecting any logging performed by thts.
-     *      thread_pool_alive: A boolean stating if the workers thread pool is running. Set to false at destruction.
-     *      num_threads: The number of threads used in the workers thread pool.
-     *      num_trials: The number of trials the pool is currently trying to run in total.
-     *      start_time: The start time of a 'run_trials' call.
-     *      max_run_time: The maximum duration we allow thts to run for)not including finishing off the current trials).
-     *      trials_remaining: The number of trials the workers pool needs to run to have completed 'num_trials' trials.
-     *      num_threads_working: The number of threads currently working
-     *      trials_completed: The number of trials completed for 
-     *      thts_manager: The ThtsManager to use in the thts planning routine
-     *      root_node: The ThtsDNode root node that currently want to plan for
+     *      workers: 
+     *          A vector of threads (thread pool) that run the worker_fn routine.
+     *      work_left_cv: 
+     *          A condition variable used to coordinate when workers are working.
+     *      work_left_lock: 
+     *          A mutex for 'work_left_lock', protecting variables used to decide when there is work.
+     *      logging_lock: 
+     *          A mutex protecting any logging performed by thts.
+     *      thread_pool_alive: 
+     *          A boolean stating if the workers thread pool is running. Set to false at destruction.
+     *      num_threads: 
+     *          The number of threads used in the workers thread pool.
+     *      num_trials: 
+     *          The number of trials the pool is currently trying to run in total.
+     *      start_time: 
+     *          The start time of a 'run_trials' call.
+     *      max_run_time: 
+     *          The maximum duration we allow thts to run for)not including finishing off the current trials).
+     *      trials_remaining: 
+     *          The number of trials the workers pool needs to run to have completed 'num_trials' trials.
+     *      num_threads_working: 
+     *          The number of threads currently working
+     *      trials_completed: 
+     *          The number of trials completed for 
+     *      thts_manager: 
+     *          The ThtsManager to use in the thts planning routine
+     *      root_node: 
+     *          The ThtsDNode root node that currently want to plan for
      */
     class ThtsPool {
         protected:   

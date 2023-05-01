@@ -14,29 +14,29 @@ namespace thts {
     class RandManager;
     
     /**
-         * An abstract class for representing an environment.
-         * 
-         * Defines a set of functions that should be general enough to handle a range of environments for planning, like 
-         * MDPs and POMDPs. 
-         * 
-         * Additionally, any subclasses that wish to plan using a transposition table should implement the std::hash and 
-         * std::equal_to functions. 
-         * 
-         * Uses the State, Action and Observation objects from thts_types.h, as base types for the following:
-         *      State: Objects representing the current state of the world
-         *      Action: Objects representing the actions that an agent can take
-         *      Observation: 
-         *          Objects representing the outcomes that can occur from taking actions in the environment. For something 
-         *          like an MDP, we would probably want Observation's to be the successor states (which would require 
-         *          Observation == State subtypes)
-         * 
-         * Member variables:
-         *      _is_fully_observable: 
-         *          A boolean representing if the environment is fully observable or not. If true, then it should be safe 
-         *          to assume that the default implementations of 'get_observation_distribution_itfc' and 
-         *          'sample_observation_distribution_itfc' are used (the ones that just cast the state object into an 
-         *          observation object)
-         */
+     * An abstract class for representing an environment.
+     * 
+     * Defines a set of functions that should be general enough to handle a range of environments for planning, like 
+     * MDPs and POMDPs. 
+     * 
+     * Additionally, any subclasses that wish to plan using a transposition table should implement the std::hash and 
+     * std::equal_to functions. 
+     * 
+     * Uses the State, Action and Observation objects from thts_types.h, as base types for the following:
+     *      State: Objects representing the current state of the world
+     *      Action: Objects representing the actions that an agent can take
+     *      Observation: 
+     *          Objects representing the outcomes that can occur from taking actions in the environment. For something 
+     *          like an MDP, we would probably want Observation's to be the successor states (which would require 
+     *          Observation == State subtypes)
+     * 
+     * Member variables:
+     *      _is_fully_observable: 
+     *          A boolean representing if the environment is fully observable or not. If true, then it should be safe 
+     *          to assume that the default implementations of 'get_observation_distribution_itfc' and 
+     *          'sample_observation_distribution_itfc' are used (the ones that just cast the state object into an 
+     *          observation object)
+     */
     class ThtsEnv {
         protected:
             bool _is_fully_observable;

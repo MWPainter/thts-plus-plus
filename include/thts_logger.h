@@ -9,12 +9,15 @@
 #include <vector>
 
 namespace thts {
+
     /**
      * Base class for entries in logger
      * 
      * Member variables:
-     *      runtime: The total runtime for this datapoint
-     *      num_trials: The number of times the root node has been visited (trials started)
+     *      runtime: 
+     *          The total runtime for this datapoint
+     *      num_trials: 
+     *          The number of times the root node has been visited (trials started)
      */
     struct LoggerEntry {
         std::chrono::duration<double> runtime;
@@ -47,10 +50,14 @@ namespace thts {
      * Abstract logger class
      * 
      * Member variables:
-     *      entries: A vector of LoggerEntry objects, each representing a datatype
-     *      prior_runtime: The amount of runtime logger from previous calls to ThtsPool run_trials
-     *      start_time: The time at the start of the last run_trials call in ThtsPool
-     *      trials_completed: The number of trials completed (number of times 'trial_completed' called)
+     *      entries: 
+     *          A vector of LoggerEntry objects, each representing a datatype
+     *      prior_runtime: 
+     *          The amount of runtime logger from previous calls to ThtsPool run_trials
+     *      start_time: 
+     *          The time at the start of the last run_trials call in ThtsPool
+     *      trials_completed: 
+     *          The number of trials completed (number of times 'trial_completed' called)
      *      trials_delta: 
      *          Indicates 'log' should be called every 'trials_delta' completed trials.
      *      last_log_num_trials:

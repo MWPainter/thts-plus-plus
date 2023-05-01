@@ -2,12 +2,12 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-#include "algorithms/rents_chance_node.h"
-#include "algorithms/rents_decision_node.h"
-#include "algorithms/ments_manager.h"
+#include "algorithms/ments/rents/rents_chance_node.h"
+#include "algorithms/ments/rents/rents_decision_node.h"
+#include "algorithms/ments/ments_manager.h"
 
 
-namespace thts_test {
+namespace thts::test {
     using namespace std;
     using namespace thts;
 }

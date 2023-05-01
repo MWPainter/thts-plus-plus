@@ -18,6 +18,13 @@ namespace thts {
 
     /**
      * Args object so that params can be set in a more named args way
+     * 
+     * Member variables (that are different to RandManager/ThtsManager):
+     *      num_transposition_table_mutexes:
+     *          Specifies the size of 'dmap_mutexes' in ThtsManager
+     *      seed:
+     *          An integer seed to use for random number generation. Default of zero uses a 'random device' to generate 
+     *          a seed 
      */
     struct ThtsManagerArgs {
         static const int max_depth_default = std::numeric_limits<int>::max();
@@ -27,16 +34,19 @@ namespace thts {
         static const bool is_two_player_game_default = false;
         static const bool use_transposition_table_default = false;
         static const int num_transposition_table_mutexes_default = 1;
-        static const int seed_default = 60415;
+        static const int seed_default = 0;
         
         std::shared_ptr<ThtsEnv> thts_env;
         int max_depth;
         HeuristicFnPtr heuristic_fn;
         PriorFnPtr prior_fn;
+
         bool mcts_mode;
         bool is_two_player_game;
         bool use_transposition_table;
+
         int num_transposition_table_mutexes;
+
         int seed;
 
         ThtsManagerArgs(std::shared_ptr<ThtsEnv> thts_env) :
@@ -56,23 +66,23 @@ namespace thts {
     /**
      * Rand Manager. A manager for random number generation.
      * 
-     * Todo: Move docstring to cover this properly.
+     * This class manages any random number generation needed, and is used as a base class for algorithm managers.
      * 
      * Member variables:
      *      rng_lock:
      *          A mutex to protect random number generation function calls.
      *      rd:
      *          A 'random_device' which is the computers source of (psuedo) random numbers
-     *      real_gen:   
-     *          A 'mersenne_twister_engine' used to seed the uniform [0,1) random number generation
-     *      real_distr: 
-     *          A random number generator for real numbers in the range [0,1)
      *      int_gen:   
+     *          A 'mersenne_twister_engine' used to seed the uniform [0,1) random number generation
+     *      real_gen:   
      *          A 'mersenne_twister_engine' used to seed the uniform [0,1) random number generation
      *      int_distr: 
      *          A random number generator for integer numbers in the range [0,RAND_MAX)
-    */
-   class RandManager { 
+     *      real_distr: 
+     *          A random number generator for real numbers in the range [0,1)
+     */
+    class RandManager { 
         protected:
             std::mutex rng_lock;
             std::random_device rd;
@@ -87,7 +97,7 @@ namespace thts {
             }
         
         public:
-            RandManager(int seed=ThtsManagerArgs::seed_default) :
+            RandManager(const int seed=ThtsManagerArgs::seed_default) :
                 rng_lock(),
                 int_gen(seed),
                 real_gen(seed),
@@ -115,7 +125,7 @@ namespace thts {
                 std::lock_guard<std::mutex> lg(rng_lock);
                 return real_distr(real_gen);
             };
-   };
+    };
     
     /**
      * ThtsManager is an object used to manage all the things that need to be 'global' space within Thts.
@@ -131,8 +141,6 @@ namespace thts {
      * 
      * Options:
      *      mcts_mode:
-     *          If mcts_mode is true, then only one node is added per trial (and initialised using the heuristic function). 
-     *          If mcts_mode is false, then trials are run to completion (until max depth or a sink state is reached).
      *      transposition_table:
      *          Specifies if a transposition table is to be used. Nodes are stored in a table upon creation, keyed by 
      *          (depth, Observation) tuples. When creating a new node, we first look if it exists in the table 
@@ -143,44 +151,52 @@ namespace thts {
      *      is_two_player_game:
      *          Specifies if we are planning for a two player game
      * 
-     * Member variables:
+     * Member variables (environment):
      *      thts_env:
-     *          A ThtsEnv object that provides the dynamics of the environment being planned in
+     *          A ThtsEnv object that provides the dynamics of the environment to plan in
+     *      max_depth:
+     *          The maximum depth that we want to allow our thts to search to.
+     *      heuristic_fn:
+     *          A pointer to the heuristic function to use. Defaults to return a constant zero value.
+     *      prior_fn:
+     *          A pointer to the prior function, that returns a map representing a policy. Defaults to nullptr to 
+     *          indicate no prior. Prior may be able to be unormalised depending on the algorithm being used.
+     * Member variables (options):
+     *      mcts_mode:
+     *          If mcts_mode is true, then only one node is added per trial (and initialised using the heuristic 
+     *          function). If mcts_mode is false, then trials are run to completion (until max depth or a sink state is 
+     *          reached).
+     *      use_transposition_table:
+     *          Specifies if a transposition table is to be used. Nodes are stored in a table upon creation, keyed by 
+     *          (depth, Observation) tuples. When creating a new node, we first look if it exists in the table 
+     *          already, and if it does we return that instead. This requires State and Action objects to have 
+     *          std::hash and std::equal_to definitions. NOTE: should only use transposition_table if the 
+     *          (depth,Observation) tuples have a one to one correspondance with decision nodes, otherwise this may 
+     *          cause bugs.
+     *      is_two_player_game:
+     *          If we are planning for a two player game, rather than a reward maximisation environment
+     * Member variables (transposition table):
      *      dmap:
-     *          A transposition table for decision nodes
+     *          A transposition table for decision nodes. Note that a transposition table for chance nodes is 
+     *          unnecessary, as an chance nodes that are transpositions, will be children of decision nodes that are 
+     *          transpositions.
      *      dmap_mutexes:
      *          A vector of mutexes to use for protection around the dmap. Accessing 'dmap[dnode_id]', should be 
      *          protected by the 'dmap_mutexes[hash(dnode_id) % dmap_mutexes.size()]'.
-     *      max_depth:
-     *          The maximum depth that we want to allow our thts to search to.
-     *      mcts_mode:
-     *          If running in mcts_mode (see options above)
-     *      use_transposition_table:
-     *          If using the transposition tables (i.e. dmap and cmap)
-     *      is_two_player_game:
-     *          If we are planning for a two player game, rather than a reward maximisation environment
-     *      heuristic_psuedo_trials:    
-     *          The number of 'psuedo trials' to weight the heuristic_fn by. Typically an thts implementation would set 
-     *          the number of visits in the node to 
-     *      heuristic_fn_ptr:
-     *          A pointer to the heuristic function
-     *      prior_fn_ptr:
-     *          A pointer to the prior (Q-value) function, that returns a map from actions to prior value estimates
      */
     class ThtsManager : public RandManager {
         public:
             std::shared_ptr<ThtsEnv> thts_env;
-
-            DNodeTable dmap;
-            std::vector<std::mutex> dmap_mutexes;
-
             int max_depth;
+            HeuristicFnPtr heuristic_fn;
+            PriorFnPtr prior_fn;
+
             bool mcts_mode;
             bool use_transposition_table;
             bool is_two_player_game;
 
-            HeuristicFnPtr heuristic_fn;
-            PriorFnPtr prior_fn;
+            DNodeTable dmap;
+            std::vector<std::mutex> dmap_mutexes;
 
             /**
              * Constructor. Initialises values directly other than random number generation.
@@ -188,42 +204,19 @@ namespace thts {
              * Seed is used to set the seed for cstdlib's rand(), and for the uniform random number generator. If the 
              * seed is set to 0, then we use a std::random_device object to generate a random seed.
              */    
-            ThtsManager(ThtsManagerArgs& args) : 
+            ThtsManager(const ThtsManagerArgs& args) : 
                 RandManager(args.seed),
                 thts_env(args.thts_env),
-                dmap(),
-                dmap_mutexes(args.num_transposition_table_mutexes),
                 max_depth(args.max_depth),
+                heuristic_fn(args.heuristic_fn),
+                prior_fn(args.prior_fn),
                 mcts_mode(args.mcts_mode), 
                 use_transposition_table(args.use_transposition_table), 
                 is_two_player_game(args.is_two_player_game),
-                heuristic_fn(args.heuristic_fn),
-                prior_fn(args.prior_fn)
+                dmap(),
+                dmap_mutexes(args.num_transposition_table_mutexes)
             {
             }
-
-            ThtsManager(
-                std::shared_ptr<ThtsEnv> thts_env,
-                int max_depth=ThtsManagerArgs::max_depth_default,
-                HeuristicFnPtr heuristic_fn=helper::zero_heuristic_fn,
-                PriorFnPtr prior_fn=nullptr,
-                bool mcts_mode=ThtsManagerArgs::mcts_mode_default, 
-                bool is_two_player_game=ThtsManagerArgs::is_two_player_game_default,
-                bool use_transposition_table=ThtsManagerArgs::use_transposition_table_default, 
-                int num_transposition_table_mutexes=ThtsManagerArgs::num_transposition_table_mutexes_default,
-                int seed=ThtsManagerArgs::seed_default) :
-                    RandManager(seed),
-                    thts_env(thts_env),
-                    dmap(),
-                    dmap_mutexes(num_transposition_table_mutexes),
-                    max_depth(max_depth),
-                    mcts_mode(mcts_mode), 
-                    use_transposition_table(use_transposition_table), 
-                    is_two_player_game(is_two_player_game),
-                    heuristic_fn(heuristic_fn),
-                    prior_fn(prior_fn)
-            {
-            };
 
             /**
              * Any classes intended to be inherited from should make destructor virtual
