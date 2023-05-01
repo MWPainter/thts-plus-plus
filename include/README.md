@@ -34,6 +34,12 @@ A trial consists of the following steps:
 Note that some of the options provided in `ThtsManager` may alter how a trial is run slightly, but the above is how a 
 trial will run with default options selected.
 
+If you're thinking what are these context things, do I need that? Then the answer is probably no you don't, and you can just ignore them. Some example uses for it however are:
+- sampling a state at the start of a trial when planning in partially observable environments with belief states
+- sampling a scalarisation to use for a trial when planning in a multi-objective environment
+- passing data from parent nodes to child nodes to avoid deadlock
+    - An example of this is contained in the Rents implementation. To construct the action distribution it needs the distribution from the parent decision node. If we were to try access it directly, with multithreading, we should lock that parent node. However, this would create a cycle in the locking dependencies, which can lead to deadlock. Hence, in this implementation the context is used to pass down the action distribution from parent nodes (which may be slightly outdated, but is still better than deadlocking).
+
 
 
 ## algorithms/
@@ -86,7 +92,21 @@ smart pointer to that node.
 In the templated subclass in `templates/thts_decision_node_template.h` there are four functions related to creating 
 child nodes. The ones that should be called to create a child node are `create_child_node` or `create_child_node_itfc`. 
 The functions are called in the following order: `create_child_node` -> `create_child_node_itfc` -> 
-`create_child_node_helper_itfc` -> `create_child_node_helper`. The purpose of each
+`create_child_node_helper_itfc` -> `create_child_node_helper`. 
+
+The purpose of each function are as follows:
+- `create_child_node`
+    - Use: creates a child node, returning the specific type of the class.
+    - Implementation: boilerplate code that calls `create_child_node_itfc`
+- `create_child_node_itfc`
+    - Use: creates a child node, handles any transposition table logic, returns a pointer to the next `ThtsDNode` or `ThtsCNode`
+    - Implementation: marked final in the `ThtsDNode` and `ThtsCNode` classes
+- `create_child_node_helper_itfc`
+    - Use: helper function for `create_child_node_itfc` to call to call the (appropriate) constructor for a node 
+    - Implementation: marked virtual, so that for example a `UctDNode` can be made in an override. In templates this has a boilerplate implementation that calls `create_child_node_helper`. 
+- `create_child_node_helper`
+    - Use: The typed version of `create_child_node_helper_itfc` for you to construct a child node
+    - Implementation: should construct a child node and return a shared_ptr to it. This function is marked const to ensure that we don't accidentally try to add the child to children dictionary (unordered_map).
 
 ## thts_env_context.h
 
