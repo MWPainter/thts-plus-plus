@@ -24,9 +24,9 @@ Contains MENTS and it's derivative algorithms:
 3. DB-MENTS
 
 And contains the directories:
-3. ments/dents/
-1. ments/rents/ 
-2. ments/tents/
+1. ments/dents/
+2. ments/rents/ 
+3. ments/tents/
 
 ## ments/dents/
 
