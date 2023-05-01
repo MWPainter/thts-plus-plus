@@ -5,11 +5,13 @@ each header there should be docstrings describing the use of each class/function
 return value descriptions. 
 
 If details on the implementation of a function are needed, there are often (but not always) function level docstrings 
-describing the implementation in the `.cc` files in the `src` directory.
+describing the implementation in the `.cpp` files in the `src` directory.
 
 Some notes on specific wordings used in this code:
-sink state
-: The word *sink* is used to refer to a final state in the 
+sink (state)
+: The word *sink* is used to refer to a final state in the environment
+leaf (node)
+: The word *leaf* generally refers to any node in a tree that will always have zero children (for any reason, such as hitting the maximum search depth)
 
 
 
@@ -52,6 +54,8 @@ This directory contains implementations of specific THTS algorithms. Each implem
 This directory contains templates for subclassing the `ThtsDNode`, `ThtsCNode`, and `ThtsManager` classes. Each 
 contains boilerplate code which can be filled out by using `ctrl-f` to find and replace typenames.
 
+In general the templates define functions corresponding to the functions called in the general THTS schema (see THTS overview). There are boilerplate functions that will convert any `XXX_itfc()` calls into `XXX()` calls, where `XXX` is a placeholder for the functions that need to be implemented. 
+
 One of the main uses of these templates is to use custom `State` and `Action` types, and use boilerplate code to 
 implement the `XXX_itfc` functions (i.e. the interface versions of the functions).
 
@@ -82,7 +86,7 @@ provides additional utility functions.
 ## thts_decision_node.h
 
 Defines the base chance node type `ThtsDNode`. Defines the THTS interface that subclasses need to implement, and 
-provides additional utility functions. Most of these should be 
+provides additional utility functions. Most of these should be fairly straightforward, and generally follows what is outlined in the THTS overview section.
 
 One nuance is the create child functions. The `create_child_node_itfc` is the interface that should be used to create 
 a child node. as it handles the logic to maintain the map of `children` nodes, and handles any logic with respect to 
