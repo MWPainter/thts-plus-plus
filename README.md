@@ -1,5 +1,5 @@
 # thts-plus-plus
-THTS Implementation in C++, with Python bindings (eventually).
+THTS Implementation in C++, with Python bindings (eventually). By default, running `make` will just compile unit tests to an executable called `thts-test`, if you run this some tests will fail but they should all contain `todo` in their names, as they are mostly placeholder tests.
 
 
 
