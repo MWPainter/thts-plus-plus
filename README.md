@@ -68,6 +68,8 @@ The initial implementation of this library, including the following:
     - DENTS
     - DB-MENTS
     - EST
+- Additionally, `ThtsManager` objects provide a lot of parameters in these algorithms to be customised
+    - Including customisations that aren't necessarily strictly defined by the original algorithms, such as having an epsilon exploration component to UCT, and being able to decay the temperature parameter used in MENTS. None of these additional components are used by default.
 
 ### Todos
 
