@@ -115,4 +115,4 @@ clean:
 #####
 # Phony targets, so make knows when a target isn't producing a corresponding output file of same name
 #####
-.PHONY: clean $(TARGET_THTS)
+.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST_DEBUG)
