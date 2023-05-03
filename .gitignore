@@ -1,28 +1,34 @@
-# Externals from branches
-external/KataGo
-external/eigen
-
-# Folders in other branches
-python
-
-# External files from branches
-external/kata1*
-
 # Outputs
 thts-test
-# Results outputs
-plots
-results
-
-# Outputs from branches
-go-test
-goooo
-thts-run-toy-env
 
 # Hidden files
 .vscode
 .DS_Store
 external/.DS_Store
+
+# Folders in other branches want to ignore
+python
+
+# Hidden files
+.vscode
+.DS_Store
+external/.DS_Store
+
+# Externals (from other branches)
+external/KataGo
+external/eigen
+
+# External files (other branches)
+external/kata1*
+
+# Results output folders (other branches)
+plots
+results
+
+# Outputs (other branches)
+go-test
+goooo
+thts-run-toy-env
 
 # Prerequisites
 *.d
