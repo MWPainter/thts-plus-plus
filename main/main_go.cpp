@@ -18,6 +18,7 @@ static const std::string EXPR_ID_DBMENTS_HPS = "004_dbments_hps";
 static const std::string EXPR_ID_DENTS_HPS = "005_dents_hps";
 static const std::string EXPR_ID_RENTS_HPS = "006_rents_hps";
 static const std::string EXPR_ID_TENTS_HPS = "007_tents_hps";
+static const std::string EXPR_ID_KATA_RECOMMEND_TEST = "008_test_kata_recommend";
 
 static const std::string EXPR_ID_RAND = "100_random_9x9";
 static const std::string EXPR_ID_RR = "101_round_robin_9x9";
@@ -65,7 +66,7 @@ int main(int argc, char* argv[]) {
         thts::run_go_games(
             expr_id,            // expr id
             ALG_ID_MENTS,            // black
-            ALG_ID_RENTS,             // white
+            ALG_ID_KATA,             // white
             9,                  // board size
             10,                 // num games
             6.5,                // komi
@@ -352,6 +353,38 @@ int main(int argc, char* argv[]) {
             alg_params,
             PARAM_BIAS_OR_SEARCH_TEMP,          // hps key, black
             PARAM_BIAS_OR_SEARCH_TEMP_OPP);     // hps key, white
+    }
+
+    // 008
+    // Test kata returns
+    if (expr_id == EXPR_ID_KATA_RECOMMEND_TEST) {
+        double emp_recommender = stod(argv[2]);
+
+        shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 10.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 10.0);    
+
+        if (emp_recommender == 0.0) {
+            alg_params->insert_or_assign(PARAM_KATA_RECOMMEND_AVG_RETURN, 1.0);
+        } else { 
+            alg_params->insert_or_assign(PARAM_KATA_RECOMMEND_AVG_RETURN_OPP, 1.0);
+        }
+
+        thts::run_go_games(
+            expr_id,            // expr id
+            ALG_ID_KATA,              // black
+            ALG_ID_KATA,              // white
+            9,                  // board size
+            25,                 // num games
+            6.5,                // komi
+            true,
+            15.0,               // time per move
+            128,                 // num threads
+            false,              // not really hps, but still self vs self
+            alg_params,
+            (emp_recommender != 0.0) ? "" : PARAM_KATA_RECOMMEND_AVG_RETURN,
+            (emp_recommender == 0.0) ? "" : PARAM_KATA_RECOMMEND_AVG_RETURN_OPP);        
+        return 0;
     }
 
     // 100

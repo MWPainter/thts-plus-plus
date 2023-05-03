@@ -24,6 +24,9 @@ static const std::string PARAM_DECAY_TEMP_USE_SIGMOID_OPP = "use_sigmoid_opp";
 static const std::string PARAM_USE_AVG_RETURN = "use_avg_return";
 static const std::string PARAM_USE_AVG_RETURN_OPP = "use_avg_return_opp";
 
+static const std::string PARAM_KATA_RECOMMEND_AVG_RETURN = "kata_recommend_avg_return";
+static const std::string PARAM_KATA_RECOMMEND_AVG_RETURN_OPP = "kata_recommend_avg_return_opp";
+
 static const std::string ALG_ID_KATA = "kata";
 static const std::string ALG_ID_UCT = "uct";
 static const std::string ALG_ID_PUCT = "puct";

@@ -291,9 +291,15 @@ namespace thts {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP)) {
                         manager_args.bias = alg_params->at(PARAM_BIAS_OR_SEARCH_TEMP);
                     }
+                    if (contains_key(alg_params, PARAM_KATA_RECOMMEND_AVG_RETURN)) {
+                        manager_args.recommend_most_visited = false;
+                    }
                 } else {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP_OPP)) {
                         manager_args.bias = alg_params->at(PARAM_BIAS_OR_SEARCH_TEMP_OPP);
+                    }
+                    if (contains_key(alg_params, PARAM_KATA_RECOMMEND_AVG_RETURN_OPP)) {
+                        manager_args.recommend_most_visited = false;
                     }
                 }
             }
