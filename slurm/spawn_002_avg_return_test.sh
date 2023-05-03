@@ -6,7 +6,7 @@ agent_ids=("ments" "db-ments" "dents" "est" "rents")
 
 for AGENT_ONE_ID in ${katas[@]}
 do
-    for AGENT_TWO_ID in ${temps[@]}
+    for AGENT_TWO_ID in ${agent_ids[@]}
     do
         OUTDIR=slurm_output/${EXPR_ID}
         mkdir -p $OUTDIR
