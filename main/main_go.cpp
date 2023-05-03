@@ -12,7 +12,7 @@ using namespace std;
 
 static const std::string EXPR_ID_DEBUG = "000_debug";
 static const std::string EXPR_ID_KOMI = "001_komi_9x9";
-static const std::string EXPR_ID_EMPIRICAL = "002_empirical";
+static const std::string EXPR_ID_AVG_RETURN = "002_avg_return_test";
 static const std::string EXPR_ID_MENTS_HPS = "003_ments_hps";
 static const std::string EXPR_ID_DBMENTS_HPS = "004_dbments_hps";
 static const std::string EXPR_ID_DENTS_HPS = "005_dents_hps";
@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
 
     // 002
     // Test empirical 
-    if (expr_id == EXPR_ID_EMPIRICAL) {
+    if (expr_id == EXPR_ID_AVG_RETURN) {
         double emp_player = stod(argv[2]);
         string alg_id(argv[3]);
 

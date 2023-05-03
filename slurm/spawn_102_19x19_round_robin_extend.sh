@@ -1,8 +1,8 @@
 # variables 
-EXPR_ID="002_9x9_round_robin"
+EXPR_ID="102_round_robin_19x19"
 
 agent_ids_new=("rents" "tents")
-agent_ids_old=("kata" "ments" "db-ments" "dents" "db-dents")
+agent_ids_old=("kata" "ments" "db-ments" "dents" "est")
 
 for AGENT_ONE_ID in ${agent_ids_new[@]}
 do

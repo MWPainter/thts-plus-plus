@@ -1,7 +1,7 @@
 # variables 
-EXPR_ID="002_9x9_round_robin"
+EXPR_ID="101_round_robin_9x9"
 
-agent_ids=("kata" "ments" "db-ments" "dents" "db-dents")
+agent_ids=("kata" "ments" "db-ments" "dents" "est")
 
 for AGENT_ONE_ID in ${agent_ids[@]}
 do

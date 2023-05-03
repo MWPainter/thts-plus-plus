@@ -1,5 +1,5 @@
 # variables 
-EXPR_ID="002_9x9_round_robin"
+EXPR_ID="102_round_robin_19x19"
 AGENT_ONE_ID="kata"
 AGENT_TWO_ID="ments"
 
