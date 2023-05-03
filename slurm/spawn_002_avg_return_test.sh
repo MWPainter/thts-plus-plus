@@ -2,7 +2,7 @@
 EXPR_ID="002_avg_return_test"
 
 katas=("0.0" "1.0")
-agent_ids=("kata" "ments" "db-ments" "dents" "est" "rents" "tents")
+agent_ids=("ments" "db-ments" "dents" "est" "rents")
 
 for AGENT_ONE_ID in ${katas[@]}
 do

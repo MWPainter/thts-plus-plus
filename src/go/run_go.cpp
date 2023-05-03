@@ -398,6 +398,10 @@ namespace thts {
                     if (contains_key(alg_params, PARAM_PRIOR_COEFF)) {
                         manager_args.prior_policy_search_weight = alg_params->at(PARAM_PRIOR_COEFF);
                     }
+                    if (contains_key(alg_params, PARAM_USE_AVG_RETURN) && algo_id_for_this_move != ALG_ID_TENTS) {
+                        manager_args.use_avg_return = true;
+                        manager_args.temp_decay_fn = decayed_temp_inv_log;
+                    }
                 } else {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP_OPP)) {
                         manager_args.temp = alg_params->at(PARAM_BIAS_OR_SEARCH_TEMP_OPP);
@@ -410,6 +414,10 @@ namespace thts {
                     }
                     if (contains_key(alg_params, PARAM_PRIOR_COEFF_OPP)) {
                         manager_args.prior_policy_search_weight = alg_params->at(PARAM_PRIOR_COEFF_OPP);
+                    }
+                    if (contains_key(alg_params, PARAM_USE_AVG_RETURN_OPP) && algo_id_for_this_move != ALG_ID_TENTS) {
+                        manager_args.use_avg_return = true;
+                        manager_args.temp_decay_fn = decayed_temp_inv_log;
                     }
                 }
             }

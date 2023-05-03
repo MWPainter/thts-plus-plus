@@ -49,6 +49,12 @@ namespace thts {
             double local_reward;
             std::shared_ptr<StateDistr> next_state_distr;
 
+            double m_avg_return;
+            double m_subtree_entropy;
+
+            virtual void backup_m_avg_return(double cumulative_return);
+            virtual void backup_entropy(ThtsEnvContext& ctx);
+
             /**
              * Handles the thts sample_observation function by randomly sampling.
              * 

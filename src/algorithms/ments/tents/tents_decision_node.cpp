@@ -203,7 +203,17 @@ namespace thts {
         const double trial_cumulative_return,
         ThtsEnvContext& ctx) 
     {
-        backup_tents(ctx);
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        if (!manager.use_avg_return) {
+            backup_tents(ctx);
+            return;
+        }
+
+        num_backups++;
+        backup_update_map(ctx);
+        backup_m_avg_return(trial_cumulative_return_after_node);
+        backup_entropy(ctx);
+        soft_value = m_avg_return + get_temp() * m_subtree_entropy;
     }
 
     /**

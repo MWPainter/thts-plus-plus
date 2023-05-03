@@ -61,6 +61,14 @@ namespace thts {
             std::shared_ptr<ActionPrior> policy_prior;
             double psuedo_q_value_offset;
 
+            double m_avg_return;
+            double m_local_entropy;
+            double m_subtree_entropy;
+
+            virtual void backup_m_avg_return(double cumulative_return);
+            virtual double compute_m_local_entropy(ActionDistr& policy, ThtsEnvContext& ctx);
+            virtual void backup_entropy(ThtsEnvContext& ctx);
+
             /**
              * Returns if we have a valid 'policy_prior' to use.
              * 

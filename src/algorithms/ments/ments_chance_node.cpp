@@ -25,8 +25,27 @@ namespace thts {
             num_backups(0),
             soft_value(thts_manager->default_q_value),
             local_reward(thts_manager->thts_env->get_reward_itfc(state,action)),
-            next_state_distr(thts_manager->thts_env->get_transition_distribution_itfc(state,action)) 
+            next_state_distr(thts_manager->thts_env->get_transition_distribution_itfc(state,action)),
+            m_avg_return(0.0),
+            m_subtree_entropy(0.0) 
     {
+    }
+
+    void MentsCNode::backup_m_avg_return(double cumulative_return) {
+        m_avg_return += (cumulative_return - m_avg_return) / num_backups;
+    }
+
+    void MentsCNode::backup_entropy(ThtsEnvContext& ctx) {
+        m_subtree_entropy = 0.0;
+        double sum_child_backups = 0;
+        for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
+            MentsDNode& child = (MentsDNode&) *pr.second;
+            int child_backups = child.num_backups;
+            if (child_backups == 0) continue;
+            sum_child_backups += child_backups;
+            m_subtree_entropy *= (sum_child_backups - child_backups) / sum_child_backups;
+            m_subtree_entropy += child_backups * child.m_subtree_entropy / sum_child_backups; 
+        }
     }
 
     /**
@@ -99,7 +118,16 @@ namespace thts {
         const double trial_cumulative_return,
         ThtsEnvContext& ctx)
     {   
-        backup_soft();
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        if (!manager.use_avg_return) {
+            backup_soft();
+            return;
+        }
+
+        num_backups++;
+        backup_m_avg_return(trial_cumulative_return_after_node);
+        backup_entropy(ctx);
+        soft_value = m_avg_return + manager.temp * m_subtree_entropy;
     }
 
     /**

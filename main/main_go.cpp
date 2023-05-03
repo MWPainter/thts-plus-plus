@@ -64,8 +64,8 @@ int main(int argc, char* argv[]) {
 
         thts::run_go_games(
             expr_id,            // expr id
-            ALG_ID_DENTS,            // black
-            ALG_ID_KATA,             // white
+            ALG_ID_MENTS,            // black
+            ALG_ID_RENTS,             // white
             9,                  // board size
             10,                 // num games
             6.5,                // komi

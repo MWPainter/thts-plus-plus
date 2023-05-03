@@ -26,6 +26,8 @@ namespace thts {
         static const int recommend_visit_threshold_default=0;
         static const bool recommend_most_visited_default=false;
 
+        static const bool use_avg_return_default=false;
+
         double temp;
         double prior_policy_search_weight;
         double epsilon;
@@ -44,6 +46,8 @@ namespace thts {
         int recommend_visit_threshold;
         bool recommend_most_visited;
 
+        bool use_avg_return;
+
         MentsManagerArgs(std::shared_ptr<ThtsEnv> thts_env) :
             ThtsManagerArgs(thts_env),
             temp(temp_default),
@@ -59,7 +63,8 @@ namespace thts {
             shift_pseudo_q_values(shift_pseudo_q_values_default),
             psuedo_q_value_offset(psuedo_q_value_offset_default),
             recommend_visit_threshold(recommend_visit_threshold_default),
-            recommend_most_visited(recommend_most_visited_default) {}
+            recommend_most_visited(recommend_most_visited_default),
+            use_avg_return(use_avg_return_default) {}
 
         virtual ~MentsManagerArgs() = default;
     };
@@ -145,6 +150,8 @@ namespace thts {
             int recommend_visit_threshold;
             bool recommend_most_visited;
 
+            bool use_avg_return;
+
             MentsManager(const MentsManagerArgs& args) :
                 ThtsManager(args),
                 temp(args.temp),
@@ -160,6 +167,7 @@ namespace thts {
                 shift_pseudo_q_values(args.shift_pseudo_q_values),
                 psuedo_q_value_offset(args.psuedo_q_value_offset),
                 recommend_visit_threshold(args.recommend_visit_threshold),
-                recommend_most_visited(args.recommend_most_visited) {};
+                recommend_most_visited(args.recommend_most_visited),
+                use_avg_return(args.use_avg_return) {};
     };
 }

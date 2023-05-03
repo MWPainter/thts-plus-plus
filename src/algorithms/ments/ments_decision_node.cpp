@@ -33,7 +33,10 @@ namespace thts {
             soft_value(0.0),
             actions(thts_manager->thts_env->get_valid_actions_itfc(state)),
             policy_prior(),
-            psuedo_q_value_offset(0.0)
+            psuedo_q_value_offset(0.0),
+            m_avg_return(0.0),
+            m_local_entropy(0.0),
+            m_subtree_entropy(0.0)
     {
         if (thts_manager->heuristic_fn != nullptr) {
             soft_value = heuristic_value;
@@ -58,6 +61,41 @@ namespace thts {
                 }
                 psuedo_q_value_offset = thts_manager->psuedo_q_value_offset - mean_log_weight;
             }
+        }
+    }
+
+    void MentsDNode::backup_m_avg_return(double cumulative_return) {
+        m_avg_return += (cumulative_return - m_avg_return) / num_backups;
+    }
+
+    double MentsDNode::compute_m_local_entropy(ActionDistr& policy, ThtsEnvContext& ctx) {
+        m_local_entropy = 0.0;
+        for (pair<shared_ptr<const Action>,double> pr : policy) {
+            double prob = pr.second;
+            m_local_entropy -= prob * log(prob);
+        }
+        return m_local_entropy;
+    }
+
+    void MentsDNode::backup_entropy(ThtsEnvContext& ctx) {
+        // Get action distr
+        ActionDistr policy;
+        double sum_weights;
+        double normalisation_term;
+        lock_all_children();
+        compute_action_weights(policy, sum_weights, normalisation_term, ctx);
+        unlock_all_children();
+
+        // Update local entropy (updated the member var)
+        compute_m_local_entropy(policy, ctx);
+
+        // Update subtree entropy == expected child subtree entropies + local
+        double opp_coeff = is_opponent() ? -1.0 : 1.0;
+        m_subtree_entropy = opp_coeff * m_local_entropy;
+        for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pr : children) {
+            shared_ptr<const Action> action = pr.first;
+            MentsCNode& child = (MentsCNode&) *pr.second;
+            m_subtree_entropy += policy[action] * child.m_subtree_entropy;
         }
     }
     
@@ -346,7 +384,16 @@ namespace thts {
         const double trial_cumulative_return,
         ThtsEnvContext& ctx) 
     {
-        backup_soft(ctx);
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        if (!manager.use_avg_return) {
+            backup_soft(ctx);
+            return;
+        }
+
+        num_backups++;
+        backup_m_avg_return(trial_cumulative_return_after_node);
+        backup_entropy(ctx);
+        soft_value = m_avg_return + get_temp() * m_subtree_entropy;
     }
 
     /**
