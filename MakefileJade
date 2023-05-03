@@ -78,7 +78,7 @@ GO_CPPFLAGS = $(GO_INCLUDES)
 
 GO_CUDA_LDFLAGS = -lcudart -lcudnn -lcublas 
 GO_TENSORRT_LDFLAGS = -lnvinfer
-GO_LDFLAGS = -L/opt/local/lib -L /usr/local/cuda-11.7/lib64/ -L/usr/local/cuda/lib64/ -lzip -lz $(GO_CUDA_LDFLAGS) #$(GO_TENSORRT_LDFLAGS)
+GO_LDFLAGS = -L/jmain02/apps/cuda/11.2/lib64 -L/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/lib -L/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/tensorrt/TensorRT-8.5.1.7/lib -lzip -lz $(GO_CUDA_LDFLAGS) $(GO_TENSORRT_LDFLAGS)
 
 TARGET_GO_TEST = go-test
 
