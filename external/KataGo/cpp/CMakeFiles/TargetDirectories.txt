@@ -1,3 +1,0 @@
-/home/michael/Desktop/thts-plus-plus/external/KataGo/cpp/CMakeFiles/katago.dir
-/home/michael/Desktop/thts-plus-plus/external/KataGo/cpp/CMakeFiles/edit_cache.dir
-/home/michael/Desktop/thts-plus-plus/external/KataGo/cpp/CMakeFiles/rebuild_cache.dir

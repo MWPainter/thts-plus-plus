@@ -14,12 +14,12 @@ external/kata1*
 external/KataGo/.clang-format
 
 # Kata go ignores for compiled code
-# external/KataGo/cpp/CMakeCache.txt
-# external/KataGo/cpp/CMakeFiles
-# external/KataGo/cpp/Makefile
-# external/KataGo/cpp/cmake_install.cmake
-# external/KataGo/cpp/katago
-# external/KataGo/cpp/program/gitinfo.h
+external/KataGo/cpp/CMakeCache.txt
+external/KataGo/cpp/CMakeFiles
+external/KataGo/cpp/Makefile
+external/KataGo/cpp/cmake_install.cmake
+external/KataGo/cpp/katago
+external/KataGo/cpp/program/gitinfo.h
 
 # ignore any eigen compiled stuff
 external/eigen/CMakeFiles/
