@@ -6,6 +6,7 @@
 namespace thts {
     /**
      * Args object so that params can be set in a more named args way
+     * ++ hacky option for avg returns for go expr
      */
     struct MentsManagerArgs : public ThtsManagerArgs {
         static constexpr double temp_default=1.0;
@@ -128,6 +129,8 @@ namespace thts {
      *          to have a minimum number of samples before its a candidate for recommendation.
      *      recommend_most_visited:
      *          If we should recommend the most visited child node instead of the largest value.
+     * 
+     * ++ hacky option for avg returns for go expr
      *          
      */
     class MentsManager : public ThtsManager {

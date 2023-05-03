@@ -44,8 +44,8 @@ int main(int argc, char* argv[]) {
     // Expr to debug that all the io works
     if (expr_id == EXPR_ID_DEBUG) {
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();        
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 500.0);    
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 10.0);    
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 50.0);    
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 50.0);    
 
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE, 0.05);      
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE_OPP, 0.05);               
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
         thts::run_go_games(
             expr_id,            // expr id
             ALG_ID_MENTS,            // black
-            ALG_ID_KATA,             // white
+            ALG_ID_TENTS,             // white
             9,                  // board size
             10,                 // num games
             6.5,                // komi
@@ -109,8 +109,8 @@ int main(int argc, char* argv[]) {
         string alg_id(argv[3]);
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 500.0);
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 500.0);   
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 20.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 20.0);   
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE, 0.05);      
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE_OPP, 0.05);               
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.5);            
@@ -460,10 +460,10 @@ int main(int argc, char* argv[]) {
         double value_temp_opp = 20.0;
         
         if (algo1 == ALG_ID_KATA) {
-            temp = 10.0;
+            temp = 100.0;
         }
         if (algo2 == ALG_ID_KATA) {
-            temp_opp = 10.0;
+            temp_opp = 100.0;
         }
 
         if (algo1 == ALG_ID_MENTS) {

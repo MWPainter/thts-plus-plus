@@ -67,6 +67,7 @@ namespace thts {
 
     /**
      * Implements recommend action to call best dp value
+     * ++ hacky recommend with avg return implementation
     */
     shared_ptr<const Action> DBMentsDNode::recommend_action(ThtsEnvContext& ctx) const {
         MentsManager& manager = (MentsManager&) *thts_manager;
@@ -83,6 +84,8 @@ namespace thts {
      * Calls both the ments soft backup and dp backup
      * 
      * Recall that the dp backup needs to be passed the type of the child nodes (so can keep dp logic in dp node)
+     * 
+     * ++ hacky using avg_returns backup impl
      */
     void DBMentsDNode::backup(
         const vector<double>& trial_rewards_before_node, 

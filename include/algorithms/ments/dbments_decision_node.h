@@ -55,7 +55,7 @@ namespace thts {
              */
             virtual void visit(ThtsEnvContext& ctx);
 
-            // Hacking in avg returns for go experiments
+            // Hacking in avg returns recommend for go experiments
             std::shared_ptr<const Action> recommend_action_best_avg_return() const;
             
             /**

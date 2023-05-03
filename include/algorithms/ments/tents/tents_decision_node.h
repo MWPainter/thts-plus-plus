@@ -55,6 +55,9 @@ namespace thts {
             std::unordered_map<std::shared_ptr<const Action>,double> act_to_qval;
             std::string _selected_action_key;
 
+            // Hacky avg_returns implementation (requires directly computing tsallis entropy)
+            virtual double compute_m_local_entropy(ActionDistr& policy, ThtsEnvContext& ctx);
+
             /**
              * Returns the value of Q(s,a)/temp, which is frequently used in tents.
              * 

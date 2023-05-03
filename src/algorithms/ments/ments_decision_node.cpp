@@ -64,10 +64,16 @@ namespace thts {
         }
     }
 
+    /**
+     * hacky avg return backup
+    */
     void MentsDNode::backup_m_avg_return(double cumulative_return) {
         m_avg_return += (cumulative_return - m_avg_return) / num_backups;
     }
 
+    /**
+     * hacky compute local entropy
+    */
     double MentsDNode::compute_m_local_entropy(ActionDistr& policy, ThtsEnvContext& ctx) {
         m_local_entropy = 0.0;
         for (pair<shared_ptr<const Action>,double> pr : policy) {
@@ -78,6 +84,9 @@ namespace thts {
         return m_local_entropy;
     }
 
+    /**
+     * hacky entropy backup
+    */
     void MentsDNode::backup_entropy(ThtsEnvContext& ctx) {
         // Get action distr
         ActionDistr policy;
@@ -377,6 +386,7 @@ namespace thts {
 
     /**
      * Calls the ments implementation of backup, performing soft backup
+     * ++ hacky using avg_returns backup impl
      */
     void MentsDNode::backup(
         const vector<double>& trial_rewards_before_node, 

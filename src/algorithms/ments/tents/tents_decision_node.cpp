@@ -38,6 +38,20 @@ namespace thts {
         ss << decision_depth;
         _selected_action_key = ss.str();
     }
+    
+    /**
+     * ++ hacky option for avg returns for go expr
+     * this therefore computes the tsallis entropy directly
+    */
+    double TentsDNode::compute_m_local_entropy(ActionDistr& policy, ThtsEnvContext& ctx) {
+        double policy_norm = 0.0;
+        for (pair<shared_ptr<const Action>,double> pr : policy) {
+            double prob = pr.second;
+            policy_norm += prob * prob;
+        }
+        m_local_entropy = 0.5 * (1.0 - policy_norm);
+        return m_local_entropy;
+    }
 
     /**
      * Get the value of Q(s,a)/temp from the best available source (see ments get_soft_q_value, tries child, then prior)
@@ -195,6 +209,8 @@ namespace thts {
 
     /**
      * Calls the ments implementation of backup, performing soft backup
+     * 
+     * ++ hacky option for avg returns for go expr
      */
     void TentsDNode::backup(
         const vector<double>& trial_rewards_before_node, 
