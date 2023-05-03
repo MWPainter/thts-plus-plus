@@ -82,15 +82,16 @@ but I'm pretty bad at responding), I am very keen for this library to be easy to
 # Go Stuff
 
 To build, do the following steps:
-1. Run cmake in external/KataGo/cpp: cmake . -D USE_BACKEND=<your_backend_eg_CUDA> -D CMAKE_CXX_COMPILER=<your_cxx_compiler> -D CMAKE_C_COMPILER=<your_c_compiler>
-2. optional on cpu: -DUSE_AVX2=1 -DCMAKE_CXX_FLAGS='-march=native'
-2. For me on mac: cmake . -D USE_BACKEND=Eigen -D CMAKE_CXX_COMPILER=g++-12 -D CMAKE_C_COMPILER=gcc-12 -DUSE_AVX2=1 -DCMAKE_CXX_FLAGS='-march=native'
-2. For me on linux desktop: cmake -D USE_BACKEND=CUDA -D CUDNN_INCLUDE_DIR=$CUDNN_INCLUDE_DIR -D CUDNN_LIBRARY=$CUDNN_LIBRARY/libcudnn.so -D CMAKE_CUDA_COMPILER=/usr/local/cuda-11.7/bin/nvcc
-2. For me on remote: cmake . -D USE_BACKEND=CUDA -D CMAKE_CXX_COMPILER=g++ -D CMAKE_C_COMPILER=gcc
-2. Or for TensorRT on remote run: cmake . -D USE_BACKEND=TensorRT -D CMAKE_CXX_COMPILER=g++ -D CMAKE_C_COMPILER=gcc -D TENSORRT_INCLUDE_DIR=/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/tensorrt/TensorRT-8.5.1.7/include -D TENSORRT_LIBRARY=/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/tensorrt/TensorRT-8.5.1.7/lib/libnvinfer.so
-3. in external/ run: wget https://media.katagotraining.org/uploaded/networks/models/kata1/kata1-b40c256-s11840935168-d2898845681.bin.gz
-2. Run make: make
-3. TODO: add specifics to thts build for go things
+1. in external/ directory run the following: wget https://media.katagotraining.org/uploaded/networks/models/kata1/kata1-b40c256-s11840935168-d2898845681.bin.gz
+2. Run cmake in external/KataGo/cpp: cmake . -D USE_BACKEND=<your_backend_eg_CUDA> -D CMAKE_CXX_COMPILER=<your_cxx_compiler> -D CMAKE_C_COMPILER=<your_c_compiler>
+    1. optional on cpu: -DUSE_AVX2=1 -DCMAKE_CXX_FLAGS='-march=native'
+    2. For me on mac: cmake . -D USE_BACKEND=Eigen -D CMAKE_CXX_COMPILER=g++-12 -D CMAKE_C_COMPILER=gcc-12 -DUSE_AVX2=1 -DCMAKE_CXX_FLAGS='-march=native'
+    3. For me on linux desktop: cmake -D USE_BACKEND=CUDA -D CUDNN_INCLUDE_DIR=$CUDNN_INCLUDE_DIR -D CUDNN_LIBRARY=$CUDNN_LIBRARY/libcudnn.so -D CMAKE_CUDA_COMPILER=/usr/local/cuda-11.7/bin/nvcc
+    4. For me on remote: cmake . -D USE_BACKEND=CUDA -D CMAKE_CXX_COMPILER=g++ -D CMAKE_C_COMPILER=gcc
+    5. Or for TensorRT on remote run: cmake . -D USE_BACKEND=TensorRT -D CMAKE_CXX_COMPILER=g++ -D CMAKE_C_COMPILER=gcc -D TENSORRT_INCLUDE_DIR=/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/tensorrt/TensorRT-8.5.1.7/include -D TENSORRT_LIBRARY=/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/tensorrt/TensorRT-8.5.1.7/lib/libnvinfer.so
+3. Run make: make
+4. Now should be able to build make targets THTS++
+
 
 Note:
 - Building with edited cmake file won't actually be able to link, but it will build
