@@ -121,6 +121,11 @@ $(TEST_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
 	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
+# Build rule for main toy
+$(RUN_TOY_ENVS_MAIN_OBJ): $(RUN_TOY_ENVS_MAIN_SRC)
+	@mkdir -p $(@D)
+	$(CXX) $(CPPFLAGS) -c -o $@ $<
+
 
 
 #####
@@ -129,6 +134,14 @@ $(TEST_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 
 # Compiling 'thts' just builds objects for now (to be used as prereq basically)
 $(TARGET_THTS): $(OBJECTS)
+
+# Build target to run thts on toy envs
+$(TARGET_RUN_TOY_ENVS): $(OBJECTS) $(RUN_TOY_ENVS_MAIN_OBJ)
+	$(CXX) $(CPPFLAGS) $(LDFLAGS) -o $@ $^ 
+
+# Debug toy envs
+$(TARGET_RUN_TOY_ENVS_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
+$(TARGET_RUN_TOY_ENVS_DEBUG): $(TARGET_RUN_TOY_ENVS)
 
 # Build test program
 $(TARGET_THTS_TEST): INCLUDES += $(TEST_INCLUDES)
