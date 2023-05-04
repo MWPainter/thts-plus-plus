@@ -140,8 +140,10 @@ int main(int argc, char* argv[]) {
             true,
             15.0,               // time per move
             128,                 // num threads
-            false,              // NOT running hps
-            alg_params);        
+            true,     // running "hps" -> i.e. two runs would have same folder names => folder names need to use params
+            alg_params,
+            (emp_player != 0.0) ? "" : PARAM_USE_AVG_RETURN,
+            (emp_player == 0.0) ? "" : PARAM_USE_AVG_RETURN_OPP);        
         return 0;
     }
 
@@ -267,8 +269,8 @@ int main(int argc, char* argv[]) {
             128,                 // num threads
             true,               // ments hps
             alg_params,
-            PARAM_BIAS_OR_SEARCH_TEMP,          // hps key, black
-            PARAM_BIAS_OR_SEARCH_TEMP_OPP);     // hps key, white
+            PARAM_INIT_DECAY_TEMP,          // hps key, black
+            PARAM_INIT_DECAY_TEMP_OPP);     // hps key, white
     }
 
     // 006
@@ -380,7 +382,7 @@ int main(int argc, char* argv[]) {
             true,
             15.0,               // time per move
             128,                 // num threads
-            false,              // not really hps, but still self vs self
+            true,     // running "hps" -> i.e. two runs would have same folder names => folder names need to use params
             alg_params,
             (emp_recommender != 0.0) ? "" : PARAM_KATA_RECOMMEND_AVG_RETURN,
             (emp_recommender == 0.0) ? "" : PARAM_KATA_RECOMMEND_AVG_RETURN_OPP);        
@@ -630,7 +632,7 @@ int main(int argc, char* argv[]) {
             algo2,              // white
             19,                  // board size
             50,                 // num games
-            6.5,                // komi
+            7.5,                // komi
             true,
             15.0,               // time per move
             128,                 // num threads
