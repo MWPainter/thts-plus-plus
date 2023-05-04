@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
     // 002
     // Test empirical 
     if (expr_id == EXPR_ID_AVG_RETURN) {
-        double emp_player = stod(argv[2]);
+        double emp_plays_black = stod(argv[2]) == 0.0;
         string alg_id(argv[3]);
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.003); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.003);  
 
-        if (emp_player == 0.0) {
+        if (emp_plays_black) {
             alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
         } else { 
             alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
@@ -142,8 +142,8 @@ int main(int argc, char* argv[]) {
             128,                 // num threads
             true,     // running "hps" -> i.e. two runs would have same folder names => folder names need to use params
             alg_params,
-            (emp_player != 0.0) ? "" : PARAM_USE_AVG_RETURN,
-            (emp_player == 0.0) ? "" : PARAM_USE_AVG_RETURN_OPP);        
+            (!emp_plays_black) ? "" : PARAM_USE_AVG_RETURN,
+            (emp_plays_black) ? "" : PARAM_USE_AVG_RETURN_OPP);        
         return 0;
     }
 
@@ -360,13 +360,13 @@ int main(int argc, char* argv[]) {
     // 008
     // Test kata returns
     if (expr_id == EXPR_ID_KATA_RECOMMEND_TEST) {
-        double emp_recommender = stod(argv[2]);
+        double emp_recommender_plays_black = stod(argv[2]) == 0.0;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 10.0);
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 10.0);    
 
-        if (emp_recommender == 0.0) {
+        if (emp_recommender_plays_black) {
             alg_params->insert_or_assign(PARAM_KATA_RECOMMEND_AVG_RETURN, 1.0);
         } else { 
             alg_params->insert_or_assign(PARAM_KATA_RECOMMEND_AVG_RETURN_OPP, 1.0);
@@ -384,8 +384,8 @@ int main(int argc, char* argv[]) {
             128,                 // num threads
             true,     // running "hps" -> i.e. two runs would have same folder names => folder names need to use params
             alg_params,
-            (emp_recommender != 0.0) ? "" : PARAM_KATA_RECOMMEND_AVG_RETURN,
-            (emp_recommender == 0.0) ? "" : PARAM_KATA_RECOMMEND_AVG_RETURN_OPP);        
+            (!emp_recommender_plays_black) ? "" : PARAM_KATA_RECOMMEND_AVG_RETURN,
+            (emp_recommender_plays_black) ? "" : PARAM_KATA_RECOMMEND_AVG_RETURN_OPP);        
         return 0;
     }
 
