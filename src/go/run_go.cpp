@@ -404,7 +404,7 @@ namespace thts {
                     if (contains_key(alg_params, PARAM_PRIOR_COEFF)) {
                         manager_args.prior_policy_search_weight = alg_params->at(PARAM_PRIOR_COEFF);
                     }
-                    if (contains_key(alg_params, PARAM_USE_AVG_RETURN) && algo_id_for_this_move != ALG_ID_TENTS) {
+                    if (contains_key(alg_params, PARAM_USE_AVG_RETURN)) {
                         manager_args.use_avg_return = true;
                         manager_args.temp_decay_fn = decayed_temp_inv_log;
                     }
