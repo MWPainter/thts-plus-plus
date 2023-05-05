@@ -14,7 +14,7 @@ static const std::string EXPR_ID_DEBUG = "000_debug";
 static const std::string EXPR_ID_KOMI = "001_komi_9x9";
 static const std::string EXPR_ID_AVG_RETURN = "002_avg_return_test";
 static const std::string EXPR_ID_MENTS_HPS = "003_ments_hps";
-static const std::string EXPR_ID_DBMENTS_HPS = "004_dbments_hps";
+static const std::string EXPR_ID_EST_HPS = "004_est_hps";
 static const std::string EXPR_ID_DENTS_HPS = "005_dents_hps";
 static const std::string EXPR_ID_RENTS_HPS = "006_rents_hps";
 static const std::string EXPR_ID_TENTS_HPS = "007_tents_hps";
@@ -191,11 +191,11 @@ int main(int argc, char* argv[]) {
 
     // 004
     // DBMents temp hps
-    if (expr_id == EXPR_ID_DBMENTS_HPS) {
+    if (expr_id == EXPR_ID_EST_HPS) {
         double temp = stod(argv[2]);
         double temp_opp = stod(argv[3]);
 
-        string alg_id = ALG_ID_DBMENTS;
+        string alg_id = ALG_ID_EST;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
@@ -240,8 +240,8 @@ int main(int argc, char* argv[]) {
         string alg_id = ALG_ID_DENTS;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 500.0);         // use result from EXPR_ID_MENTS_HPS
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 500.0);     // use result from EXPR_ID_MENTS_HPS
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 500.0);         // use result from EXPR_ID_EST_HPS
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 500.0);     // use result from EXPR_ID_EST_HPS
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE, 0.05);      
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE_OPP, 0.05);               
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.5);            
@@ -321,7 +321,7 @@ int main(int argc, char* argv[]) {
         double temp = stod(argv[2]);
         double temp_opp = stod(argv[3]);
 
-        string alg_id = ALG_ID_RENTS;
+        string alg_id = ALG_ID_TENTS;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);

@@ -1,5 +1,5 @@
 # variables 
-EXPR_ID="004_dbments_hps"
+EXPR_ID="004_est_hps"
 
 temps=("1000.0" "500.0" "100.0" "50.0" "10.0")
 
