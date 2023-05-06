@@ -1,6 +1,7 @@
 #include "go/go_state_action.h"
 
 #include "helper_templates.h"
+#include "go/go_env.h"
 
 #include "KataGo/cpp/game/board.h"
 
@@ -64,7 +65,7 @@ namespace thts {
     string GoAction::get_pretty_print_string() const {
         stringstream ss;
         // ss << loc;
-        ss << "(" << get_x_coord(9) << "," << get_y_coord(9) << ")";
+        ss << "(" << get_x_coord(GoEnv::cur_board_size) << "," << get_y_coord(GoEnv::cur_board_size) << ")";
         return ss.str();
     }
 

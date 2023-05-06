@@ -376,7 +376,6 @@ namespace thts {
         }
 
         if (algo_id_for_this_move == ALG_ID_MENTS 
-            || algo_id_for_this_move == ALG_ID_DBMENTS 
             || algo_id_for_this_move == ALG_ID_RENTS 
             || algo_id_for_this_move == ALG_ID_TENTS) 
         {
@@ -588,10 +587,6 @@ namespace thts {
         if (algo_id_for_this_move == ALG_ID_MENTS) {
             shared_ptr<MentsManager> ments_manager = static_pointer_cast<MentsManager>(manager);
             return make_shared<MentsDNode>(ments_manager, cur_state, 0, move_counter);
-        }
-        if (algo_id_for_this_move == ALG_ID_DBMENTS) {
-            shared_ptr<MentsManager> ments_manager = static_pointer_cast<MentsManager>(manager);
-            return make_shared<DBMentsDNode>(ments_manager, cur_state, 0, move_counter);
         }
         if (algo_id_for_this_move == ALG_ID_RENTS) {
             shared_ptr<MentsManager> ments_manager = static_pointer_cast<MentsManager>(manager);

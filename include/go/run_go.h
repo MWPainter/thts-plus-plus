@@ -31,7 +31,6 @@ static const std::string ALG_ID_KATA = "kata";
 static const std::string ALG_ID_UCT = "uct";
 static const std::string ALG_ID_PUCT = "puct";
 static const std::string ALG_ID_MENTS = "ments";
-static const std::string ALG_ID_DBMENTS = "db-ments";
 static const std::string ALG_ID_DENTS = "dents";
 static const std::string ALG_ID_RENTS = "rents";
 static const std::string ALG_ID_TENTS = "tents";

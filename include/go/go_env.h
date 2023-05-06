@@ -41,6 +41,8 @@ namespace thts {
      *      _logger: Required in nn_eval construction, just use/pass empty
      *      nn_temp: A temperature to use when getting probabilities from the nn policy
      *      reward_scale: A scaling to use for rewards, the outputs from nn value function is in range [-1,1]
+     *      cur_board_size: Globally accessable board size to get around annoying passing of values to action pretty 
+     *          print function
      */
     class GoEnv : public ThtsEnv {
 
@@ -57,6 +59,9 @@ namespace thts {
 
             float nn_temp;
             double reward_scale;
+
+        public:
+            static int cur_board_size;
 
         /**
          * Functions to imlpement the ThtsEnv interface.

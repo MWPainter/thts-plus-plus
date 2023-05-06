@@ -1,7 +1,7 @@
 # variables 
-EXPR_ID="005_dents_hps"
+EXPR_ID="300_est_hps"
 
-temps=("100.0" "50.0" "20.0" "10.0" "5.0" "2.0")
+temps=("1000.0" "500.0" "100.0" "50.0" "10.0")
 
 for AGENT_ONE_ID in ${temps[@]}
 do
@@ -12,7 +12,7 @@ do
             OUTDIR=slurm_output/${EXPR_ID}
             mkdir -p $OUTDIR
             OUTFILE=slurm_output/${EXPR_ID}/9x9_${AGENT_ONE_ID}_vs_${AGENT_TWO_ID}.out
-            sbatch --job-name=5:${AGENT_ONE_ID}vs${AGENT_TWO_ID} --output=$OUTFILE --export=EXPR_ID=$EXPR_ID,AGENT_ONE_ID=$AGENT_ONE_ID,AGENT_TWO_ID=$AGENT_TWO_ID run_go.slurm
+            sbatch --job-name=4:${AGENT_ONE_ID}vs${AGENT_TWO_ID} --output=$OUTFILE --export=EXPR_ID=$EXPR_ID,AGENT_ONE_ID=$AGENT_ONE_ID,AGENT_TWO_ID=$AGENT_TWO_ID run_go.slurm
         fi
     done
 done

@@ -2,7 +2,7 @@
 EXPR_ID="101_round_robin_9x9"
 
 agent_ids_new=("rents" "tents")
-agent_ids_old=("kata" "ments" "db-ments" "dents" "est")
+agent_ids_old=("kata" "ments" "dents" "est")
 
 for AGENT_ONE_ID in ${agent_ids_new[@]}
 do

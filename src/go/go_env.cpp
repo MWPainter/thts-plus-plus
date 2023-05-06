@@ -7,6 +7,12 @@
 using namespace std; 
 
 namespace thts {
+
+    /**
+     * Initialise class variable
+    */
+    int GoEnv::cur_board_size = 19;
+    
     /**
      * Constructor
      */
@@ -61,6 +67,9 @@ namespace thts {
                 Setup::SETUP_FOR_MATCH                  // setup for match seems like the best option for running in eval mode
             );
             nn_eval->setDoRandomize(false);
+
+            // set global board size variable
+            cur_board_size = board_size;
         }
     }
 

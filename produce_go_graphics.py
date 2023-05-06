@@ -10,7 +10,7 @@ import numpy as np
 import os
 import sys
 
-from board import Board
+from external.KataGo.python.board import Board
 
 
 def _print_state_to_png(filename, board_array, board_size, loc_x_fn, loc_y_fn):

@@ -288,7 +288,7 @@ namespace thts {
     shared_ptr<const Action> MentsDNode::select_action_ments(ThtsEnvContext& ctx) {
         ActionDistr action_distr;
         compute_action_distribution(action_distr, ctx);
-        shared_ptr<const Action> selected_action = helper::sample_from_distribution(action_distr, *thts_manager);
+        shared_ptr<const Action> selected_action = helper::sample_from_distribution(action_distr, *thts_manager, false);
         if (!has_child_node(selected_action)) {
             create_child_node(selected_action);
         }
