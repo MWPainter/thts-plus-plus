@@ -1,5 +1,5 @@
 # variables 
-EXPR_ID="002_avg_return_test"
+EXPR_ID="008_test_kata_recommend"
 
 katas=("0.0" "1.0")
 

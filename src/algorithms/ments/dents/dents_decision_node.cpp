@@ -19,7 +19,12 @@ namespace thts {
                 static_pointer_cast<const DBMentsCNode>(parent)),
             EntDNode(),
             EmpNode(1, heuristic_value)
-    {
+    {   
+        // Init entropy
+        ActionDistr action_distr;
+        ThtsEnvContext ctx;
+        compute_action_distribution(action_distr, ctx);
+        backup_ent<DentsCNode>(children, action_distr, is_opponent());
     }
 
     /**

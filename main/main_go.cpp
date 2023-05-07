@@ -56,17 +56,17 @@ int main(int argc, char* argv[]) {
     // Expr to debug that all the io works
     if (expr_id == EXPR_ID_DEBUG) {
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();        
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 250.0);    
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 50.0);    
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 10.0);    
 
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE, 0.05);      
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE_OPP, 0.05);               
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE, 0.01);      
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP, 0.01);               
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.5);            
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.5);       
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID, 1.0);
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID_OPP, 1.0);  
-        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, 20.0);                
-        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, 20.0);            
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID, 1.0);
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID_OPP, 1.0);  
+        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, 10.0);                
+        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, 10.0);            
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 1.0);                                    
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 1.0); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.03); 
@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
             10,                 // num games
             7.5,                // komi
             true,
-            15.0,                // time per move
+            30.0,                // time per move
             64,                 // num threads
             false,
             alg_params);

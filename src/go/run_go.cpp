@@ -382,7 +382,7 @@ namespace thts {
             MentsManagerArgs manager_args(go_env);
             manager_args.is_two_player_game = true;
             manager_args.mcts_mode = true;
-            manager_args.recommend_visit_threshold = 100;
+            manager_args.recommend_visit_threshold = 20;
             manager_args.heuristic_fn = go_heuristic_fn;
             manager_args.prior_fn = go_prior_fn;
             manager_args.epsilon = 0.03;
@@ -433,13 +433,14 @@ namespace thts {
             DentsManagerArgs manager_args(go_env);
             manager_args.is_two_player_game = true;
             manager_args.mcts_mode = true;
-            manager_args.recommend_visit_threshold = 100;
+            manager_args.recommend_visit_threshold = 20;
             manager_args.heuristic_fn = go_heuristic_fn;
             manager_args.prior_fn = go_prior_fn;
             manager_args.epsilon = 0.03;
             manager_args.root_node_epsilon = 0.67;
             manager_args.shift_pseudo_q_values = true;
             manager_args.prior_policy_search_weight = 0.5;
+            
             if (alg_params != nullptr) {
                 if (!is_opp) {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP)) {
@@ -459,6 +460,10 @@ namespace thts {
                     }
                     if (contains_key(alg_params, PARAM_PRIOR_COEFF)) {
                         manager_args.prior_policy_search_weight = alg_params->at(PARAM_PRIOR_COEFF);
+                    }
+                    if (contains_key(alg_params, PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE)) {
+                        manager_args.value_temp_decay_root_node_visits_scale = alg_params->at(
+                            PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE);
                     }
                     if (contains_key(alg_params, PARAM_DECAY_TEMP_VISITS_SCALE)) {
                         manager_args.value_temp_decay_visits_scale = alg_params->at(PARAM_DECAY_TEMP_VISITS_SCALE);
@@ -489,6 +494,10 @@ namespace thts {
                     if (contains_key(alg_params, PARAM_PRIOR_COEFF_OPP)) {
                         manager_args.prior_policy_search_weight = alg_params->at(PARAM_PRIOR_COEFF_OPP);
                     }
+                    if (contains_key(alg_params, PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP)) {
+                        manager_args.value_temp_decay_root_node_visits_scale = alg_params->at(
+                            PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP);
+                    }
                     if (contains_key(alg_params, PARAM_DECAY_TEMP_VISITS_SCALE_OPP)) {
                         manager_args.value_temp_decay_visits_scale = alg_params->at(PARAM_DECAY_TEMP_VISITS_SCALE_OPP);
                     }
@@ -508,7 +517,7 @@ namespace thts {
             DentsManagerArgs manager_args(go_env);
             manager_args.is_two_player_game = true;
             manager_args.mcts_mode = true;
-            manager_args.recommend_visit_threshold = 100;
+            manager_args.recommend_visit_threshold = 20;
             manager_args.heuristic_fn = go_heuristic_fn;
             manager_args.prior_fn = go_prior_fn;
             manager_args.epsilon = 0.03;

@@ -91,8 +91,11 @@ namespace thts {
      * Return string with all of the relevant values in this node
      */
     string DentsCNode::get_pretty_print_val() const {
+        DentsManager& manager = (DentsManager&) *thts_manager;
+        double val_estimate = manager.use_dp_value ? dp_value : avg_return; 
+
         stringstream ss;
-        ss << dp_value << "(entrpy:" << subtree_entropy << ",val_temp:" << get_value_temp() << ",soft_val:" 
+        ss << val_estimate << "(entrpy:" << subtree_entropy << ",val_temp:" << get_value_temp() << ",soft_val:" 
             << soft_value << ")";
         return ss.str();
     }

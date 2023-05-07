@@ -18,6 +18,8 @@ static const std::string PARAM_INIT_DECAY_TEMP = "init_decay_temp";
 static const std::string PARAM_INIT_DECAY_TEMP_OPP = "init_decay_temp_opp";
 static const std::string PARAM_DECAY_TEMP_VISITS_SCALE = "visits_scale";
 static const std::string PARAM_DECAY_TEMP_VISITS_SCALE_OPP = "visits_scale_opp";
+static const std::string PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE = "root_node_visits_scale";
+static const std::string PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP = "root_node_visits_scale_opp";
 static const std::string PARAM_DECAY_TEMP_USE_SIGMOID = "use_sigmoid";
 static const std::string PARAM_DECAY_TEMP_USE_SIGMOID_OPP = "use_sigmoid_opp";
 
