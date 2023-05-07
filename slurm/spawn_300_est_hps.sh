@@ -1,7 +1,7 @@
 # variables 
 EXPR_ID="300_est_hps"
 
-temps=("1000.0" "500.0" "100.0" "50.0" "10.0")
+temps=("100.0" "50.0" "25.0" "10.0" "5.0")
 
 for AGENT_ONE_ID in ${temps[@]}
 do
