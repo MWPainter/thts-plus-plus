@@ -407,6 +407,9 @@ namespace thts {
                         manager_args.use_avg_return = true;
                         manager_args.temp_decay_fn = decayed_temp_inv_log;
                     }
+                    if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED)) {
+                        manager_args.recommend_most_visited = true;
+                    }
                 } else {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP_OPP)) {
                         manager_args.temp = alg_params->at(PARAM_BIAS_OR_SEARCH_TEMP_OPP);
@@ -423,6 +426,9 @@ namespace thts {
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN_OPP)) {// && algo_id_for_this_move != ALG_ID_TENTS) {
                         manager_args.use_avg_return = true;
                         manager_args.temp_decay_fn = decayed_temp_inv_log;
+                    }
+                    if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED_OPP)) {
+                        manager_args.recommend_most_visited = true;
                     }
                 }
             }
@@ -475,6 +481,9 @@ namespace thts {
                         manager_args.use_dp_value = false;
                         manager_args.temp_decay_fn = decayed_temp_inv_log;
                     }
+                    if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED)) {
+                        manager_args.recommend_most_visited = true;
+                    }
                 } else {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP_OPP)) {
                         manager_args.temp = alg_params->at(PARAM_BIAS_OR_SEARCH_TEMP_OPP);
@@ -507,6 +516,9 @@ namespace thts {
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN_OPP)) {
                         manager_args.use_dp_value = false;
                         manager_args.temp_decay_fn = decayed_temp_inv_log;
+                    }
+                    if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED_OPP)) {
+                        manager_args.recommend_most_visited = true;
                     }
                 }
             }
@@ -542,6 +554,9 @@ namespace thts {
                         manager_args.use_dp_value = false;
                         manager_args.temp_decay_fn = decayed_temp_inv_log;
                     }
+                    if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED)) {
+                        manager_args.recommend_most_visited = true;
+                    }
                 } else {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP_OPP)) {
                         manager_args.temp = alg_params->at(PARAM_BIAS_OR_SEARCH_TEMP_OPP);
@@ -558,6 +573,9 @@ namespace thts {
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN_OPP)) {
                         manager_args.use_dp_value = false;
                         manager_args.temp_decay_fn = decayed_temp_inv_log;
+                    }
+                    if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED_OPP)) {
+                        manager_args.recommend_most_visited = true;
                     }
                 }
             }

@@ -20,6 +20,7 @@ static const std::string EXPR_ID_DENTS_HPS = "005_dents_hps";
 static const std::string EXPR_ID_RENTS_HPS = "006_rents_hps";
 static const std::string EXPR_ID_TENTS_HPS = "007_tents_hps";
 static const std::string EXPR_ID_KATA_RECOMMEND_TEST = "008_test_kata_recommend";
+static const std::string EXPR_ID_REC_MOST_VISITED = "009_recommend_most_visited";
 
 // 100 series - final round robins on 9x9
 static const std::string EXPR_ID_RAND = "100_random_9x9"; // roiund robin with random search incl
@@ -400,6 +401,53 @@ int main(int argc, char* argv[]) {
             alg_params,
             (!emp_recommender_plays_black) ? "" : PARAM_KATA_RECOMMEND_AVG_RETURN,
             (emp_recommender_plays_black) ? "" : PARAM_KATA_RECOMMEND_AVG_RETURN_OPP);        
+        return 0;
+    }
+
+    // 009
+    // Test most visited for energy search algorithms
+    if (expr_id == EXPR_ID_REC_MOST_VISITED) {
+        double most_visited_plays_black = stod(argv[2]) == 0.0;
+        string alg_id(argv[3]);
+
+        shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 50.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 50.0);   
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE, 0.05);      
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE_OPP, 0.05);               
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.5);            
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.5);       
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID, 1.0);
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID_OPP, 1.0);  
+        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, 1.0);                
+        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, 1.0);              
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 1.0);                                    
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 1.0); 
+        alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.03); 
+        alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.03);   
+        alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
+
+        if (most_visited_plays_black) {
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);
+        } else { 
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);
+        }
+
+        thts::run_go_games(
+            expr_id,            // expr id
+            alg_id,              // black
+            alg_id,              // white
+            9,                  // board size
+            25,                 // num games
+            6.5,                // komi
+            true,
+            15.0,               // time per move
+            128,                 // num threads
+            true,     // running "hps" -> i.e. two runs would have same folder names => folder names need to use params
+            alg_params,
+            (!most_visited_plays_black) ? "" : PARAM_RECOMMEND_MOST_VISITED,
+            (most_visited_plays_black) ? "" : PARAM_RECOMMEND_MOST_VISITED_OPP);        
         return 0;
     }
 
