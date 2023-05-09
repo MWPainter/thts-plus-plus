@@ -292,7 +292,7 @@ namespace thts {
         }
 
         // If no children, best we can do is select a random action to recommend
-        if (action_values.size() == 0u) {
+        if (visit_counts.size() == 0u) {
             int index = thts_manager->get_rand_int(0, actions->size());
             return actions->at(index);
         }
