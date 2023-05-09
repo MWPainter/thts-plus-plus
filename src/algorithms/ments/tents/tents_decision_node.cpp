@@ -9,6 +9,8 @@
 
 using namespace std; 
 
+static double EPS = 1e-16;
+
 namespace thts {
     /**
      * Constructor, 
@@ -116,7 +118,10 @@ namespace thts {
             sum_sparse_values += act_to_qval.at(action);
         }
 
-        double spmax_common_term = 0.5 * pow(sum_sparse_values-1.0, 2.0) / pow(sparse_action_set->size(), 2.0);
+        double spmax_common_term = 0.0;
+        if (sparse_action_set->size() > 0) {
+            spmax_common_term = 0.5 * pow(sum_sparse_values-1.0, 2.0) / pow(sparse_action_set->size(), 2.0);
+        }
         double spmax = 0.5;
         for (shared_ptr<const Action> action : *sparse_action_set) {
             double action_val = act_to_qval.at(action);
@@ -149,7 +154,10 @@ namespace thts {
         for (shared_ptr<const Action> action : *sparse_action_set) {
             sum_sparse_values += get_soft_q_value_over_temp(action);
         }
-        double common_term = (sum_sparse_values - 1.0) / sparse_action_set->size();
+        double common_term = 0.0;
+        if (sparse_action_set->size() > 0) {
+            common_term = (sum_sparse_values - 1.0) / sparse_action_set->size();
+        }
 
         // compute weights and store
         for (shared_ptr<const Action> action : *actions) {
@@ -157,6 +165,15 @@ namespace thts {
             if (weight < 0.0) weight = 0.0;
             action_weights[action] = weight;
             sum_action_weights += weight;
+        }
+        
+        // If all action weights extremely small, then just make it uniform random, for numerical stability
+        if (sum_action_weights < EPS) {
+            double uniform_weight = 1.0 / actions->size();
+            for (shared_ptr<const Action> action : *actions) {
+                action_weights[action] = uniform_weight;
+            }
+            sum_action_weights = 1.0;
         }
     }
 
