@@ -71,6 +71,7 @@ namespace thts{
      *      width: The width of the frozen lake env
      *      map: An array of strings representing 
      *      cached_actions: Actions are constant, so make array at construction and just return it when want valid acts
+     *      reward_discount_factor: Reward returned for reaching goal at time t is (reward_discount_factor)^t
      */
     class FrozenLakeEnv : public ThtsEnv {
 
@@ -82,6 +83,7 @@ namespace thts{
             int width;
             const std::string* map;
             std::shared_ptr<IntActionVector> cached_actions;
+            double reward_discount_factor;
 
 
         /**
@@ -91,7 +93,7 @@ namespace thts{
             /**
              * Constructor
              */
-            FrozenLakeEnv(int width, int height, const std::string* map);
+            FrozenLakeEnv(int width, int height, const std::string* map, double reward_discount_factor=1.0);
 
             /**
              * Mark destructor as virtual for subclassing.
@@ -104,7 +106,7 @@ namespace thts{
              * Returns:
              *      Initial state for this environment instance
              */
-            std::shared_ptr<const IntPairState> get_initial_state() const;
+            std::shared_ptr<const Int3TupleState> get_initial_state() const;
 
             /**
              * Returns if a state is a sink state.
@@ -115,7 +117,7 @@ namespace thts{
              * Returns:
              *      True if 'state' is a sink state and false otherwise
              */
-            bool is_sink_state(std::shared_ptr<const IntPairState> state) const;
+            bool is_sink_state(std::shared_ptr<const Int3TupleState> state) const;
 
             /**
              * Returns a list of actions that are valid in a given state.
@@ -126,7 +128,7 @@ namespace thts{
              * Returns:
              *      Returns a list of actions available from 'state'
              */
-            std::shared_ptr<IntActionVector> get_valid_actions(std::shared_ptr<const IntPairState> state) const;
+            std::shared_ptr<IntActionVector> get_valid_actions(std::shared_ptr<const Int3TupleState> state) const;
 
             /**
              * Returns a distribution over successor states from a state action pair.
@@ -142,8 +144,8 @@ namespace thts{
              * Returns:
              *      Returns a successor state distribution from taking 'action' in state 'state'.
              */
-            std::shared_ptr<IntPairStateDistr> get_transition_distribution(
-                std::shared_ptr<const IntPairState> state, std::shared_ptr<const IntAction> action) const;
+            std::shared_ptr<Int3TupleStateDistr> get_transition_distribution(
+                std::shared_ptr<const Int3TupleState> state, std::shared_ptr<const IntAction> action) const;
 
             /**
              * Samples an successor state when taking an action from a state.
@@ -158,15 +160,15 @@ namespace thts{
              * Returns:
              *      Returns an successor state sampled from taking 'action' from 'state'
              */
-            std::shared_ptr<const IntPairState> sample_transition_distribution(
-                std::shared_ptr<const IntPairState> state, 
+            std::shared_ptr<const Int3TupleState> sample_transition_distribution(
+                std::shared_ptr<const Int3TupleState> state, 
                 std::shared_ptr<const IntAction> action) const;
 
             /**
              * See above docstring.
             */
-            std::shared_ptr<const IntPairState> sample_transition_distribution(
-                std::shared_ptr<const IntPairState> state, 
+            std::shared_ptr<const Int3TupleState> sample_transition_distribution(
+                std::shared_ptr<const Int3TupleState> state, 
                 std::shared_ptr<const IntAction> action, 
                 RandManager& rand_manager) const;
             
@@ -187,9 +189,9 @@ namespace thts{
              *      The reward for taking 'action' from 'state' (and sampling 'observation')
              */
             double get_reward(
-                std::shared_ptr<const IntPairState> state, 
+                std::shared_ptr<const Int3TupleState> state, 
                 std::shared_ptr<const IntAction> action, 
-                std::shared_ptr<const IntPairState> observation=nullptr) const;
+                std::shared_ptr<const Int3TupleState> observation=nullptr) const;
 
 
 
@@ -214,8 +216,8 @@ namespace thts{
              * Returns:
              *      Returns a distribution over observations from taking 'action' in state 'state'.
              */
-            virtual std::shared_ptr<IntPairStateDistr> get_observation_distribution(
-                std::shared_ptr<const IntAction> action, std::shared_ptr<const IntPairState> next_state) const;
+            virtual std::shared_ptr<Int3TupleStateDistr> get_observation_distribution(
+                std::shared_ptr<const IntAction> action, std::shared_ptr<const Int3TupleState> next_state) const;
 
             /**
              * Samples an observation when arriving in a (next) state after taking an action.
@@ -232,9 +234,9 @@ namespace thts{
              * Returns:
              *      Returns an observation sampled from taking 'action' that arived in 'next_state'
              */
-            virtual std::shared_ptr<const IntPairState> sample_observation_distribution(
+            virtual std::shared_ptr<const Int3TupleState> sample_observation_distribution(
                 std::shared_ptr<const IntAction> action, 
-                std::shared_ptr<const IntPairState> next_state, 
+                std::shared_ptr<const Int3TupleState> next_state, 
                 RandManager& rand_manager) const;
 
             /**
@@ -251,7 +253,7 @@ namespace thts{
              *      A ThtsEnvContext object, that will be passed to the Thts functions for a single trial, used to 
              *      provide some context or space for caching.
              */
-            virtual std::shared_ptr<ThtsEnvContext> sample_context(std::shared_ptr<const IntPairState> state) const;
+            virtual std::shared_ptr<ThtsEnvContext> sample_context(std::shared_ptr<const Int3TupleState> state) const;
 
 
 

@@ -36,10 +36,10 @@ if __name__ == "__main__":
         alpha = float(i+1)/100
         R_f = 0.8
         q = q_one_one(20, alpha, R_f)
-        print("Soft value of Q(1,1) 10-chain with temp of {alpha} and R_f={R_f} is: {q}".format(alpha=alpha, R_f=R_f, q=q))
+        print("Soft value of Q(1,1) 20-chain with temp of {alpha} and R_f={R_f} is: {q}".format(alpha=alpha, R_f=R_f, q=q))
               
     for i in range(100):
         alpha = float(i+1)/100
         R_f = 0.5
         q = q_one_one(20, alpha, R_f)
-        print("Soft value of Q(1,1) 10-chain with temp of {alpha} and R_f={R_f} is: {q}".format(alpha=alpha, R_f=R_f, q=q))
+        print("Soft value of Q(1,1) 20-chain with temp of {alpha} and R_f={R_f} is: {q}".format(alpha=alpha, R_f=R_f, q=q))

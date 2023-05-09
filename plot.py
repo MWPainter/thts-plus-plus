@@ -9,6 +9,8 @@ import seaborn as sns
 import pandas as pd
 import sys
 
+import glob
+
 def make_plot_df(
     df, 
     xaxis_key, 
@@ -96,11 +98,23 @@ def read_eval_files(filenames):
             replicates=replicates,
             values=values, 
             num_trialss=num_trialss, 
-            alg_id=alg_id).replace("H","_")
+            alg_id=alg_id)
 
     return alg_ids, bias_or_temps, replicates, values, num_trialss
 
-def make_plot(filenames, plot_filename, hue_key=None, title=None, xaxis_lab=None, yaxis_lab=None, legend_lab=None, num_trials_truncate=None):
+def make_plot(
+    filenames, 
+    plot_filename, 
+    hue_key=None, 
+    title=None, 
+    xaxis_lab=None, 
+    yaxis_lab=None, 
+    legend_lab=None, 
+    num_trials_truncate=None,
+    alg_ids_to_add_param_to=None):
+    """Read in data, preprocess, and then call make plot"""
+
+
     if hue_key is None:
         hue_key = "algorithm_id"
     if title is None:
@@ -111,8 +125,17 @@ def make_plot(filenames, plot_filename, hue_key=None, title=None, xaxis_lab=None
         yaxis_lab = "Monte-Carlo Value Estimate"
     if legend_lab is None:
         legend_lab = "Algorithm"
+    if alg_ids_to_add_param_to is None:
+        alg_ids_to_add_param_to = []
 
-    alg_ids, bias_or_temps, replicates, values, num_trialss = read_eval_files(filenames)    
+    alg_ids, bias_or_temps, replicates, values, num_trialss = read_eval_files(filenames)   
+
+    pretty_alg_ids = []
+    for i, alg_id in enumerate(alg_ids):
+        pretty_alg_id = alg_id
+        if alg_id in alg_ids_to_add_param_to:
+            pretty_alg_id = "{alg_id}({param})".format(alg_id=alg_id,param=bias_or_temps[i])
+        pretty_alg_ids.append(pretty_alg_id)
     
     mc_eval_df_dict = {
         "num_trials": num_trialss,
@@ -120,7 +143,7 @@ def make_plot(filenames, plot_filename, hue_key=None, title=None, xaxis_lab=None
         # "log_abs_mc_value_estimate": log_ys,
         "algorithm_id": alg_ids,
         "bias_or_temp": bias_or_temps,
-        "pretty_alg_id": alg_ids,
+        "pretty_alg_id": pretty_alg_ids,
         "replicates": replicates,
     }
     df = pd.DataFrame(mc_eval_df_dict)
@@ -147,192 +170,489 @@ def make_plot(filenames, plot_filename, hue_key=None, title=None, xaxis_lab=None
 
 
 if __name__ == "__main__":
+    if not os.path.exists("plots"):
+        os.makedirs("plots")
 
-    if sys.argv[1] == "001_01_10chain_uct":
+    #
+    # DChain figures
+    #
+    if "000_fig1a" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
         filenames = [
-            "results/dchain_env/10-1.0/001_len_10/uct/eval_bias=-1.csv",
-            "results/dchain_env/10-1.0/001_len_10/uct/eval_bias=10.csv",
-            "results/dchain_env/10-1.0/001_len_10/uct/eval_bias=3.csv",
-            "results/dchain_env/10-1.0/001_len_10/uct/eval_bias=2.csv",
-            "results/dchain_env/10-1.0/001_len_10/uct/eval_bias=1.csv",
-            "results/dchain_env/10-1.0/001_len_10/uct/eval_bias=0.3.csv",
-            "results/dchain_env/10-1.0/001_len_10/uct/eval_bias=0.1.csv",
+            "results/dchain_env/10-1.0/100_len_10_main_paper/uct/eval_bias=-1.csv",
+            "results/dchain_env/10-1.0/100_len_10_main_paper/dents/eval_epsilon=0.1,temp=1.csv",
+            "results/dchain_env/10-1.0/100_len_10_main_paper/ments/eval_epsilon=0.1,temp=1.csv",
+            "results/dchain_env/10-1.0/100_len_10_main_paper/ments/eval_epsilon=0.1,temp=0.01.csv",
         ]
         make_plot(
             filenames=filenames,
-            plot_filename="plots/{expr_id}.png".format(expr_id=sys.argv[1]),
+            plot_filename="plots/000_fig1a_dchain.png",
+            hue_key="pretty_alg_id",
+            title="",
+            num_trials_truncate=3000,
+            alg_ids_to_add_param_to=["ments"])
+        
+    if "000_fig1b" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = [
+            "results/dchain_env/10-0.5/100_len_10_main_paper/uct/eval_bias=-1.csv",
+            "results/dchain_env/10-0.5/100_len_10_main_paper/dents/eval_epsilon=0.1,temp=1.csv",
+            "results/dchain_env/10-0.5/100_len_10_main_paper/ments/eval_epsilon=0.1,temp=1.csv",
+            "results/dchain_env/10-0.5/100_len_10_main_paper/ments/eval_epsilon=0.1,temp=0.01.csv",
+        ]
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/000_fig1b_dchain_half.png",
+            title="",
+            hue_key="pretty_alg_id",
+            num_trials_truncate=3000,
+            alg_ids_to_add_param_to=["ments"])
+
+
+
+
+
+    #
+    # 10-chain, R_f = 1.0
+    #
+    expr_id = "001_len_10"
+    if "001_10chain_uct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-1.0/001_len_10/uct/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/001_10chain_uct_01.png",
             hue_key="bias_or_temp",
             num_trials_truncate=1500)
 
-
-
-    elif sys.argv[1] == "001_01_10chain_puct":
-        filenames = [
-            "results/dchain_env/10-1.0/001_len_10/puct/eval_bias=-1.csv",
-            "results/dchain_env/10-1.0/001_len_10/puct/eval_bias=3.csv",
-            "results/dchain_env/10-1.0/001_len_10/puct/eval_bias=2.csv",
-            "results/dchain_env/10-1.0/001_len_10/puct/eval_bias=1.csv",
-            "results/dchain_env/10-1.0/001_len_10/puct/eval_bias=0.3.csv",
-            "results/dchain_env/10-1.0/001_len_10/puct/eval_bias=0.1.csv",
-        ]
+    if "001_10chain_puct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-1.0/001_len_10/puct/eval_*.csv")
         make_plot(
             filenames=filenames,
-            plot_filename="plots/{expr_id}.png".format(expr_id=sys.argv[1]),
+            plot_filename="plots/001_10chain_puct_01.png",
             hue_key="bias_or_temp",
             num_trials_truncate=1500)
 
-
-
-    elif sys.argv[1] == "001_01_10chain_ments":
-        filenames = [
-            "results/dchain_env/10-1.0/001_len_10/ments/eval_epsilon=0.1,temp=0.01.csv",
-            "results/dchain_env/10-1.0/001_len_10/ments/eval_epsilon=0.1,temp=0.03.csv",
-            "results/dchain_env/10-1.0/001_len_10/ments/eval_epsilon=0.1,temp=0.1.csv",
-            "results/dchain_env/10-1.0/001_len_10/ments/eval_epsilon=0.1,temp=0.13.csv",
-            "results/dchain_env/10-1.0/001_len_10/ments/eval_epsilon=0.1,temp=0.137.csv",
-            "results/dchain_env/10-1.0/001_len_10/ments/eval_epsilon=0.1,temp=0.138.csv",
-            "results/dchain_env/10-1.0/001_len_10/ments/eval_epsilon=0.1,temp=0.139.csv",
-            "results/dchain_env/10-1.0/001_len_10/ments/eval_epsilon=0.1,temp=0.14.csv",
-            "results/dchain_env/10-1.0/001_len_10/ments/eval_epsilon=0.1,temp=0.2.csv",
-            "results/dchain_env/10-1.0/001_len_10/ments/eval_epsilon=0.1,temp=0.3.csv",
-            "results/dchain_env/10-1.0/001_len_10/ments/eval_epsilon=0.1,temp=1.csv",
-        ]
+    if "001_10chain_ments_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-1.0/001_len_10/ments/eval_*.csv")
         make_plot(
             filenames=filenames,
-            plot_filename="plots/{expr_id}.png".format(expr_id=sys.argv[1]),
+            plot_filename="plots/001_10chain_ments_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=10000)
+
+    if "001_10chain_dents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:      
+        filenames = glob.glob("results/dchain_env/10-1.0/001_len_10/dents/eval_*.csv")  
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/001_10chain_dents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=10000)
+
+    if "001_10chain_est_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:        
+        filenames = glob.glob("results/dchain_env/10-1.0/001_len_10/est/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/001_10chain_est_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=10000)
+        
+    if "001_10chain_rents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-1.0/001_len_10/rents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/001_10chain_rents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=10000)
+
+    if "001_10chain_tents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-1.0/001_len_10/tents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/001_10chain_tents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=10000)
+
+
+
+
+
+    #
+    # 10-chain, R_f = 0.8
+    #
+    expr_id = "001_len_10"
+    if "001_10chain8_uct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-0.8/001_len_10/uct/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/001_10chain8_uct_01.png",
             hue_key="bias_or_temp",
             num_trials_truncate=1500)
 
-
-
-    elif sys.argv[1] == "001_01_10chain_dbments":
-        filenames = [.replace("H","_")
-            "results/dchain_env/10-1.0/001_len_10/db-ments/eval_epsilon=0.1,temp=0.01.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-ments/eval_epsilon=0.1,temp=0.03.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-ments/eval_epsilon=0.1,temp=0.1.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-ments/eval_epsilon=0.1,temp=0.13.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-ments/eval_epsilon=0.1,temp=0.137.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-ments/eval_epsilon=0.1,temp=0.138.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-ments/eval_epsilon=0.1,temp=0.139.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-ments/eval_epsilon=0.1,temp=0.14.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-ments/eval_epsilon=0.1,temp=0.2.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-ments/eval_epsilon=0.1,temp=0.3.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-ments/eval_epsilon=0.1,temp=1.csv",
-        ]
+    if "001_10chain8_puct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-0.8/001_len_10/puct/eval_*.csv")
         make_plot(
             filenames=filenames,
-            plot_filename="plots/{expr_id}.png".format(expr_id=sys.argv[1]),
+            plot_filename="plots/001_10chain8_puct_01.png",
             hue_key="bias_or_temp",
             num_trials_truncate=1500)
 
-
-
-    elif sys.argv[1] == "001_01_10chain_dents":
-        filenames = [
-            "results/dchain_env/10-1.0/001_len_10/dents/eval_epsilon=0.1,init_temp=0.01.csv",
-            "results/dchain_env/10-1.0/001_len_10/dents/eval_epsilon=0.1,init_temp=0.03.csv",
-            "results/dchain_env/10-1.0/001_len_10/dents/eval_epsilon=0.1,init_temp=0.1.csv",
-            "results/dchain_env/10-1.0/001_len_10/dents/eval_epsilon=0.1,init_temp=0.13.csv",
-            "results/dchain_env/10-1.0/001_len_10/dents/eval_epsilon=0.1,init_temp=0.137.csv",
-            "results/dchain_env/10-1.0/001_len_10/dents/eval_epsilon=0.1,init_temp=0.138.csv",
-            "results/dchain_env/10-1.0/001_len_10/dents/eval_epsilon=0.1,init_temp=0.139.csv",
-            "results/dchain_env/10-1.0/001_len_10/dents/eval_epsilon=0.1,init_temp=0.14.csv",
-            "results/dchain_env/10-1.0/001_len_10/dents/eval_epsilon=0.1,init_temp=0.2.csv",
-            "results/dchain_env/10-1.0/001_len_10/dents/eval_epsilon=0.1,init_temp=0.3.csv",
-            "results/dchain_env/10-1.0/001_len_10/dents/eval_epsilon=0.1,init_temp=1.csv",
-        ]
+    if "001_10chain8_ments_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-0.8/001_len_10/ments/eval_*.csv")
         make_plot(
             filenames=filenames,
-            plot_filename="plots/{expr_id}.png".format(expr_id=sys.argv[1]),
+            plot_filename="plots/001_10chain8_ments_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=10000)
+
+    if "001_10chain8_dents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-0.8/001_len_10/dents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/001_10chain8_dents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=10000)
+
+    if "001_10chain8_est_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:    
+        filenames = glob.glob("results/dchain_env/10-0.8/001_len_10/est/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/001_10chain8_est_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=10000)
+        
+    if "001_10chain8_rents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-0.8/001_len_10/rents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/001_10chain8_rents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=10000)
+
+    if "001_10chain8_tents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-0.8/001_len_10/tents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/001_10chain8_tents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=10000)
+
+
+
+
+
+    #
+    # 10-chain, R_f = 0.5
+    #
+    expr_id = "001_len_10"
+    if "001_10chain5_uct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-0.5/001_len_10/uct/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/001_10chain5_uct_01.png",
             hue_key="bias_or_temp",
             num_trials_truncate=1500)
 
-
-
-    elif sys.argv[1] == "001_01_10chain_dbdents":
-        filenames = [
-            "results/dchain_env/10-1.0/001_len_10/db-dents/eval_epsilon=0.1,init_temp=0.01.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-dents/eval_epsilon=0.1,init_temp=0.03.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-dents/eval_epsilon=0.1,init_temp=0.1.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-dents/eval_epsilon=0.1,init_temp=0.13.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-dents/eval_epsilon=0.1,init_temp=0.137.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-dents/eval_epsilon=0.1,init_temp=0.138.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-dents/eval_epsilon=0.1,init_temp=0.139.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-dents/eval_epsilon=0.1,init_temp=0.14.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-dents/eval_epsilon=0.1,init_temp=0.2.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-dents/eval_epsilon=0.1,init_temp=0.3.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-dents/eval_epsilon=0.1,init_temp=1.csv",
-        ]
+    if "001_10chain5_puct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-0.5/001_len_10/puct/eval_*.csv")
         make_plot(
             filenames=filenames,
-            plot_filename="plots/{expr_id}.png".format(expr_id=sys.argv[1]),
+            plot_filename="plots/001_10chain5_puct_01.png",
             hue_key="bias_or_temp",
             num_trials_truncate=1500)
 
-
-
-    elif sys.argv[1] == "001_01_10chain_rents":
-        filenames = [
-            "results/dchain_env/10-1.0/001_len_10/rents/eval_epsilon=0.1,temp=0.01.csv",
-            "results/dchain_env/10-1.0/001_len_10/rents/eval_epsilon=0.1,temp=0.03.csv",
-            "results/dchain_env/10-1.0/001_len_10/rents/eval_epsilon=0.1,temp=0.1.csv",
-            "results/dchain_env/10-1.0/001_len_10/rents/eval_epsilon=0.1,temp=0.13.csv",
-            "results/dchain_env/10-1.0/001_len_10/rents/eval_epsilon=0.1,temp=0.137.csv",
-            "results/dchain_env/10-1.0/001_len_10/rents/eval_epsilon=0.1,temp=0.138.csv",
-            "results/dchain_env/10-1.0/001_len_10/rents/eval_epsilon=0.1,temp=0.139.csv",
-            "results/dchain_env/10-1.0/001_len_10/rents/eval_epsilon=0.1,temp=0.14.csv",
-            "results/dchain_env/10-1.0/001_len_10/rents/eval_epsilon=0.1,temp=0.2.csv",
-            "results/dchain_env/10-1.0/001_len_10/rents/eval_epsilon=0.1,temp=0.3.csv",
-            "results/dchain_env/10-1.0/001_len_10/rents/eval_epsilon=0.1,temp=1.csv",
-        ]
+    if "001_10chain5_ments_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-0.5/001_len_10/ments/eval_*.csv")
         make_plot(
             filenames=filenames,
-            plot_filename="plots/{expr_id}.png".format(expr_id=sys.argv[1]),
+            plot_filename="plots/001_10chain5_ments_01.png",
             hue_key="bias_or_temp",
-            num_trials_truncate=1500)
+            num_trials_truncate=10000)
 
-
-
-    elif sys.argv[1] == "001_01_10chain_tents":
-        filenames = [
-            "results/dchain_env/10-1.0/001_len_10/tents/eval_epsilon=0.1,temp=0.01.csv",
-            "results/dchain_env/10-1.0/001_len_10/tents/eval_epsilon=0.1,temp=0.03.csv",
-            "results/dchain_env/10-1.0/001_len_10/tents/eval_epsilon=0.1,temp=0.1.csv",
-            "results/dchain_env/10-1.0/001_len_10/tents/eval_epsilon=0.1,temp=0.13.csv",
-            "results/dchain_env/10-1.0/001_len_10/tents/eval_epsilon=0.1,temp=0.137.csv",
-            "results/dchain_env/10-1.0/001_len_10/tents/eval_epsilon=0.1,temp=0.138.csv",
-            "results/dchain_env/10-1.0/001_len_10/tents/eval_epsilon=0.1,temp=0.139.csv",
-            "results/dchain_env/10-1.0/001_len_10/tents/eval_epsilon=0.1,temp=0.14.csv",
-            "results/dchain_env/10-1.0/001_len_10/tents/eval_epsilon=0.1,temp=0.2.csv",
-            "results/dchain_env/10-1.0/001_len_10/tents/eval_epsilon=0.1,temp=0.3.csv",
-            "results/dchain_env/10-1.0/001_len_10/tents/eval_epsilon=0.1,temp=1.csv",
-        ]
+    if "001_10chain5_dents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-0.5/001_len_10/dents/eval_*.csv")
         make_plot(
             filenames=filenames,
-            plot_filename="plots/{expr_id}.png".format(expr_id=sys.argv[1]),
+            plot_filename="plots/001_10chain5_dents_01.png",
             hue_key="bias_or_temp",
-            num_trials_truncate=1500)
+            num_trials_truncate=10000)
 
-    
-    
-    elif sys.argv[1] == "001_01_10chain_mixed":
-        filenames = [
-            "results/dchain_env/10-1.0/001_len_10/uct/eval_bias=-1.csv",
-            "results/dchain_env/10-1.0/001_len_10/puct/eval_bias=-1.csv",
-            "results/dchain_env/10-1.0/001_len_10/ments/eval_epsilon=0.1,temp=1.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-ments/eval_epsilon=0.1,temp=1.csv",
-            "results/dchain_env/10-1.0/001_len_10/dents/eval_epsilon=0.1,init_temp=1.csv",
-            "results/dchain_env/10-1.0/001_len_10/db-dents/eval_epsilon=0.1,init_temp=1.csv",
-            "results/dchain_env/10-1.0/001_len_10/rents/eval_epsilon=0.1,temp=1.csv",
-            "results/dchain_env/10-1.0/001_len_10/tents/eval_epsilon=0.1,temp=1.csv",
-        ]
+    if "001_10chain5_est_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:    
+        filenames = glob.glob("results/dchain_env/10-0.5/001_len_10/est/eval_*.csv")
         make_plot(
             filenames=filenames,
-            plot_filename="plots/{expr_id}.png".format(expr_id=sys.argv[1]),
-            num_trials_truncate=1500)
+            plot_filename="plots/001_10chain5_est_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=10000)
+        
+    if "001_10chain5_rents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-0.5/001_len_10/rents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/001_10chain5_rents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=10000)
+
+    if "001_10chain5_tents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/10-0.5/001_len_10/tents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/001_10chain5_tents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=10000)
 
 
 
 
-#
-#
+
+    #
+    # 20-chain, R_f = 1.0
+    #
+    expr_id = "003_len_20"
+    if "002_20chain_uct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-1.0/003_len_20/uct/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain_uct_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+    if "002_20chain_puct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-1.0/003_len_20/puct/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain_puct_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+    if "002_20chain_ments_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-1.0/003_len_20/ments/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain_ments_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+    if "002_20chain_dents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:     
+        filenames = glob.glob("results/dchain_env/20-1.0/003_len_20/dents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain_dents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+    if "002_20chain_est_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv: 
+        filenames = glob.glob("results/dchain_env/20-1.0/003_len_20/est/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain_est_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+        
+    if "002_20chain_rents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-1.0/003_len_20/rents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain_rents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+    if "002_20chain_tents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-1.0/003_len_20/tents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain_tents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+
+
+
+
+    #
+    # 20-chain, R_f = 0.8
+    #
+    expr_id = "003_len_20"
+    if "002_20chain8_uct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-0.8/003_len_20/uct/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain8_uct_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+    if "002_20chain8_puct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-0.8/003_len_20/puct/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain8_puct_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+    if "002_20chain8_ments_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-0.8/003_len_20/ments/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain8_ments_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+    if "002_20chain8_dents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-0.8/003_len_20/dents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain8_dents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+    if "002_20chain8_est_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:    
+        filenames = glob.glob("results/dchain_env/20-0.8/003_len_20/est/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain8_est_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+        
+    if "002_20chain8_rents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-0.8/003_len_20/rents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain8_rents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+    if "002_20chain8_tents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-0.8/003_len_20/tents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain8_tents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+
+
+
+
+    #
+    # 20-chain, R_f = 0.5
+    #
+    expr_id = "003_len_20"
+    if "002_20chain5_uct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-0.5/003_len_20/uct/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain5_uct_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+    if "002_20chain5_puct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-0.5/003_len_20/puct/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain5_puct_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+    if "002_20chain5_ments_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-0.5/003_len_20/ments/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain5_ments_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+    if "002_20chain5_dents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-0.5/003_len_20/dents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain5_dents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+    if "002_20chain5_est_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:        
+        filenames = glob.glob("results/dchain_env/20-0.5/003_len_20/est/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain5_est_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+        
+    if "002_20chain5_rents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-0.5/003_len_20/rents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain5_rents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+    if "002_20chain5_tents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/dchain_env/20-0.5/003_len_20/tents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/002_20chain5_tents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=25000)
+
+
+
+
+
+    #
+    # frozen lake, 8x8 hps
+    #
+    expr_id = "001_fl8_hps"
+    if "003_fl8_hps_uct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/frozen_lake_env/FL_8x8/001_fl8_hps/uct/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/003_fl8_hps_uct_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=150000)
+
+    if "003_fl8_hps_puct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/frozen_lake_env/FL_8x8/001_fl8_hps/puct/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/003_fl8_hps_puct_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=150000)
+
+    if "003_fl8_hps_ments_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/frozen_lake_env/FL_8x8/001_fl8_hps/ments/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/003_fl8_hps_ments_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=150000)
+
+    if "003_fl8_hps_dents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:  
+        filenames = glob.glob("results/frozen_lake_env/FL_8x8/001_fl8_hps/dents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/003_fl8_hps_dents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=150000)
+
+    if "003_fl8_hps_est_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:    
+        filenames = glob.glob("results/frozen_lake_env/FL_8x8/001_fl8_hps/est/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/003_fl8_hps_est_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=150000)
+        
+    if "003_fl8_hps_rents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/frozen_lake_env/FL_8x8/001_fl8_hps/rents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/003_fl8_hps_rents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=150000)
+
+    if "003_fl8_hps_tents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/frozen_lake_env/FL_8x8/001_fl8_hps/tents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/003_fl8_hps_tents_01.png",
+            hue_key="bias_or_temp",
+            num_trials_truncate=150000)
+
+
+

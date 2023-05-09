@@ -526,47 +526,47 @@ int main(int argc, char* argv[]) {
         double value_temp_opp = 20.0;
         
         if (algo1 == ALG_ID_KATA) {
-            temp = 100.0;
+            temp = 10.0;
         }
         if (algo2 == ALG_ID_KATA) {
-            temp_opp = 100.0;
+            temp_opp = 10.0;
         }
 
         if (algo1 == ALG_ID_MENTS) {
-            temp = 100.0;
+            temp = 10.0;
         }
         if (algo2 == ALG_ID_MENTS) {
-            temp_opp = 100.0;
+            temp_opp = 10.0;
         }
 
         if (algo1 == ALG_ID_RENTS) {
-            temp = 100.0;
+            temp = 50.0;
         }
         if (algo2 == ALG_ID_RENTS) {
-            temp_opp = 100.0;
+            temp_opp = 50.0;
         }
 
         if (algo1 == ALG_ID_TENTS) {
-            temp = 100.0;
+            temp = 10.0;
         }
         if (algo2 == ALG_ID_TENTS) {
-            temp_opp = 100.0;
+            temp_opp = 10.0;
         }
 
         if (algo1 == ALG_ID_DENTS) {
-            temp = 500.0;
-            value_temp = 20.0;
+            temp = 25.0;
+            value_temp = 5.0;
         }
         if (algo2 == ALG_ID_DENTS) {
-            temp_opp = 500.0;
-            value_temp_opp = 20.0;
+            temp_opp = 25.0;
+            value_temp_opp = 5.0;
         }
 
         if (algo1 == ALG_ID_EST) {
-            temp = 500.0;
+            temp = 50.0;
         }
         if (algo2 == ALG_ID_EST) {
-            temp_opp = 500.0;
+            temp_opp = 50.0;
         }
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();

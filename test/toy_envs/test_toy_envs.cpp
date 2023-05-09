@@ -83,7 +83,7 @@ TEST(ToyEnvs_TestFrozenLake, sanity_check)
     vector<vector<shared_ptr<const IntAction>>> actss = {acts_1, acts_2, acts_3, acts_4, acts_5};
 
     for (u_long j=0; j < actss.size(); j++) {
-        shared_ptr<const IntPairState> state = env.get_initial_state();
+        shared_ptr<const Int3TupleState> state = env.get_initial_state();
         for (u_long i=0; i < actss[j].size(); i++) {
             EXPECT_FALSE(env.is_sink_state(state));
             shared_ptr<IntActionVector> valid_actions = env.get_valid_actions(state);

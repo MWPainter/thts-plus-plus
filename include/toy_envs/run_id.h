@@ -15,8 +15,10 @@ static const std::string SAILING_ENV_ID = "sailing_env";
 
 // chain env instance ids
 static const std::string D_10_ID = "10-1.0";
+static const std::string D_10_FF_ID = "10-0.8";
 static const std::string D_10_HALF_ID = "10-0.5";
 static const std::string D_20_ID = "20-1.0";
+static const std::string D_20_FF_ID = "20-0.8";
 static const std::string D_20_HALF_ID = "20-0.5";
 
 // fl env instance ids
@@ -34,27 +36,27 @@ static const std::string S_10_ID = "10";
 static const std::string DEBUG_EXPR_ID = "000";
 
 static const std::string D001_LEN10 = "001_len_10";    
-static const std::string D002_LEN20 = "002_len_20_ments_temp_search"; 
+// static const std::string D002_LEN20 = "002_len_20_ments_temp_search"; 
 static const std::string D003_LEN20 = "003_len_20";     
+static const std::string D004_LEN10_EPSILON = "004_len_10_epsilon";
+static const std::string D100_LEN10_PAPER = "100_len_10_main_paper"; 
 
-static const std::string FL001_8_HPS = "001_FL8_HPS";
-static const std::string FL002_8_TEST = "002_FL8_test";
-static const std::string FL003_16_TEST = "003_FL16_test";
+static const std::string FL001_8_HPS = "001_fl8_hps";
+static const std::string FL002_8_TEST = "002_fl8_test";
+static const std::string FL003_16_TEST = "003_fl16_test";
 
-static const std::string S001_5 = "001_S5_TEST";
-static const std::string S002_5 = "002_S5_HPS";
-static const std::string S001_7 = "001_S7_TEST";
-static const std::string S002_7 = "002_S7_HPS";
-static const std::string S001_10 = "001_S10_TEST";
-static const std::string S002_10 = "002_S10_HPS";
+static const std::string S001_5 = "001_s5_test";
+static const std::string S002_5 = "002_s5_hps";
+static const std::string S001_7 = "001_s7_test";
+static const std::string S002_7 = "002_s7_hps";
+static const std::string S001_10 = "001_s10_test";
+static const std::string S002_10 = "002_s10_hps";
 
 // alg ids
 static const std::string ALG_ID_UCT = "uct";
 static const std::string ALG_ID_PUCT = "puct";
 static const std::string ALG_ID_MENTS = "ments";
-static const std::string ALG_ID_DBMENTS = "db-ments";
 static const std::string ALG_ID_DENTS = "dents";
-static const std::string ALG_ID_DBDENTS = "db-dents";
 static const std::string ALG_ID_RENTS = "rents";
 static const std::string ALG_ID_TENTS = "tents";
 static const std::string ALG_ID_EST = "est";
@@ -64,7 +66,7 @@ static const std::string PARAMS_ID_UCT_BIAS = "bias";
 static const std::string PARAMS_ID_MENTS_TEMP = "temp";
 static const std::string PARAMS_ID_MENTS_EPSILON = "epsilon";
 static const std::string PARAMS_ID_MENTS_DEFAULT_Q_VALUE = "default_q_value";
-static const std::string PARAMS_ID_DENTS_INIT_TEMP = "value_temp_init";
+// static const std::string PARAMS_ID_DENTS_INIT_TEMP = "value_temp_init";
 
 
 namespace thts {
