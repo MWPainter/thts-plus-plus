@@ -421,12 +421,12 @@ int main(int argc, char* argv[]) {
             temp_opp = 10.0;
         }
 
-        if (algo1 == ALG_ID_DENTS) {
-            temp = 500.0;
+        if (algo1 == ALG_ID_EST) {
+            temp = 50.0;
             value_temp = 20.0;
         }
-        if (algo2 == ALG_ID_DENTS) {
-            temp_opp = 500.0;
+        if (algo2 == ALG_ID_EST) {
+            temp_opp = 50.0;
             value_temp_opp = 20.0;
         }
 
