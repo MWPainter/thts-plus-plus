@@ -622,15 +622,15 @@ int main(int argc, char* argv[]) {
             temp_opp = 10.0;
         }
 
-        if (algo1 == ALG_ID_DENTS) {
-            temp = 500.0;
+        if (algo1 == ALG_ID_EST) {
+            temp = 50.0;
             value_temp = 20.0;
         }
-        if (algo2 == ALG_ID_DENTS) {
-            temp_opp = 500.0;
+        if (algo2 == ALG_ID_EST) {
+            temp_opp = 50.0;
             value_temp_opp = 20.0;
         }
-
+        
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);   
@@ -686,40 +686,40 @@ int main(int argc, char* argv[]) {
         }
 
         if (algo1 == ALG_ID_MENTS) {
-            temp = 500.0;
+            temp = 10.0;
         }
         if (algo2 == ALG_ID_MENTS) {
-            temp_opp = 500.0;
+            temp_opp = 10.0;
         }
 
         if (algo1 == ALG_ID_RENTS) {
-            temp = 500.0;
+            temp = 50.0;
         }
         if (algo2 == ALG_ID_RENTS) {
-            temp_opp = 500.0;
+            temp_opp = 50.0;
         }
 
         if (algo1 == ALG_ID_TENTS) {
-            temp = 500.0;
+            temp = 10.0;
         }
         if (algo2 == ALG_ID_TENTS) {
-            temp_opp = 500.0;
+            temp_opp = 10.0;
         }
 
         if (algo1 == ALG_ID_DENTS) {
-            temp = 500.0;
-            value_temp = 20.0;
+            temp = 25.0;
+            value_temp = 5.0;
         }
         if (algo2 == ALG_ID_DENTS) {
-            temp_opp = 500.0;
-            value_temp_opp = 20.0;
+            temp_opp = 25.0;
+            value_temp_opp = 5.0;
         }
 
         if (algo1 == ALG_ID_EST) {
-            temp = 500.0;
+            temp = 50.0;
         }
         if (algo2 == ALG_ID_EST) {
-            temp_opp = 500.0;
+            temp_opp = 50.0;
         }
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();

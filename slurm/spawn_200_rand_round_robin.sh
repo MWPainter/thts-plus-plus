@@ -1,7 +1,7 @@
 # variables 
 EXPR_ID="200_rr_with_random_19x19"
 
-agent_ids=("kata" "dents" "unfrm")
+agent_ids=("kata" "est" "unfrm")
 
 for AGENT_ONE_ID in ${agent_ids[@]}
 do
