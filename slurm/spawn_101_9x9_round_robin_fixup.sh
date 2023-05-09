@@ -2,8 +2,8 @@
 EXPR_ID="101_round_robin_9x9"
 
 num_fixup=2
-agent_one_ids=("tents" "rents")
-agent_two_ids=("rents" "tents")
+agent_one_ids=("tents" "tents")
+agent_two_ids=("rents" "est")
 
 i=0
 until [ $i -ge $num_fixup ]
