@@ -291,6 +291,12 @@ namespace thts {
             visit_counts[action] = get_child_node(action)->num_visits;
         }
 
+        // If no children, best we can do is select a random action to recommend
+        if (action_values.size() == 0u) {
+            int index = thts_manager->get_rand_int(0, actions->size());
+            return actions->at(index);
+        }
+
         return helper::get_max_key_break_ties_randomly(visit_counts, *thts_manager);
     }
 
