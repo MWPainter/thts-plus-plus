@@ -9,6 +9,8 @@
 
 using namespace std; 
 
+static double EPS = 1e-16;
+
 namespace thts {
     /**
      * Constructor, 
@@ -143,6 +145,15 @@ namespace thts {
             if (weight < 0.0) weight = 0.0;
             action_weights[action] = weight;
             sum_action_weights += weight;
+        }
+        
+        // If all action weights extremely small, then just make it uniform random, for numerical stability
+        if (sum_action_weights < EPS) {
+            double uniform_weight = 1.0 / actions->size();
+            for (shared_ptr<const Action> action : *actions) {
+                action_weights[action] = uniform_weight;
+            }
+            sum_action_weights = 1.0;
         }
     }
 
