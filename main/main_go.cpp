@@ -21,6 +21,7 @@ static const std::string EXPR_ID_RENTS_HPS = "006_rents_hps";
 static const std::string EXPR_ID_TENTS_HPS = "007_tents_hps";
 static const std::string EXPR_ID_KATA_RECOMMEND_TEST = "008_test_kata_recommend";
 static const std::string EXPR_ID_REC_MOST_VISITED = "009_recommend_most_visited";
+static const std::string EXPR_ID_DENTS_SEARCH_TEMP_HPS = "010_dents_search_temp_hps";
 
 // 100 series - final round robins on 9x9
 static const std::string EXPR_ID_RAND = "100_random_9x9"; // roiund robin with random search incl
@@ -253,8 +254,8 @@ int main(int argc, char* argv[]) {
         string alg_id = ALG_ID_DENTS;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 35.0);         // use result from EXPR_ID_EST_HPS
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 35.0);     // use result from EXPR_ID_EST_HPS
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 40.0);         // use result from EXPR_ID_EST_HPS
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 40.0);     // use result from EXPR_ID_EST_HPS
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE, 0.003);      
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP, 0.003);   
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE, 0.05);      
@@ -447,6 +448,50 @@ int main(int argc, char* argv[]) {
             (!most_visited_plays_black) ? "" : PARAM_RECOMMEND_MOST_VISITED,
             (most_visited_plays_black) ? "" : PARAM_RECOMMEND_MOST_VISITED_OPP);        
         return 0;
+    }
+
+    // 010
+    // Dents search temp hps
+    if (expr_id == EXPR_ID_DENTS_SEARCH_TEMP_HPS) {
+        double temp = stod(argv[2]);
+        double temp_opp = stod(argv[3]);
+
+        string alg_id = ALG_ID_DENTS;
+
+        shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);         // use result from EXPR_ID_EST_HPS
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);     // use result from EXPR_ID_EST_HPS
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE, 0.003);      
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP, 0.003);   
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE, 0.05);      
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE_OPP, 0.05);               
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.5);            
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.5);       
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID, 1.0);
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID_OPP, 1.0);  
+        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, 0.1);                  // use result from EXP_ID_DENTS_HPS
+        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, 0.1);          // use result from EXP_ID_DENTS_HPS            
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 1.0);                                    
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 1.0); 
+        alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.03); 
+        alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.03);    
+        alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
+
+        thts::run_go_games(
+            expr_id,            // expr id
+            alg_id,            // black
+            alg_id,              // white
+            9,                  // board size
+            15,                 // num games
+            6.5,                // komi
+            true,
+            15.0,               // time per move
+            128,                 // num threads
+            true,               // ments hps
+            alg_params,
+            PARAM_INIT_DECAY_TEMP,          // hps key, black
+            PARAM_INIT_DECAY_TEMP_OPP);     // hps key, white
     }
 
     // 100
