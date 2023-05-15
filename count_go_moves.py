@@ -7,9 +7,6 @@ import sys
 import glob
 from collections import defaultdict
 
-from external.KataGo.python.board import Board
-
-
 
 
 def count(match_csv_filename, avg_num_trials_dict, num_moves_dict):
