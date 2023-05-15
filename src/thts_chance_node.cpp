@@ -118,9 +118,15 @@ namespace thts {
 
         auto iter = dmap.find(dnode_id);
         if (iter != dmap.end()) {
-            shared_ptr<ThtsDNode> child_node = shared_ptr<ThtsDNode>(dmap[dnode_id]);
-            children[observation] = child_node;
-            return child_node;
+            try {
+                shared_ptr<ThtsDNode> child_node = shared_ptr<ThtsDNode>(dmap[dnode_id]);
+                children[observation] = child_node;
+                return child_node;
+            } catch (const bad_weak_ptr& e) {
+                // from my understanding, we should never call this when the pointers don't exist?
+                // think there is something happening that don't fully understand right now
+                // think that if get a bad_weak_ptr, then should be fine to continue onto making the node and re-insert
+            }
         }
 
         shared_ptr<ThtsDNode> child_node = create_child_node_helper_itfc(observation, next_state);

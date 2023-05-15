@@ -40,6 +40,19 @@ static const std::string FL_RAND_8X8_TEST_MAP[] =
     "HFFFFFFG",
 };
 
+// python generate_random_frozen_lake_env.py 8 16 0.85
+static const std::string FL_RAND_8X16_MAP[] =
+{
+    "SFFFFFFFFFFFFFFF",
+    "FHFFFFFFHFFFFFFF",
+    "FFFFFFFFFFFFFHFF",
+    "HFFFFFFFFFFFFHFF",
+    "FFFFHHFFHFFFHFFF",
+    "FFFHFFHFFFHHFFFF",
+    "FHFFFHFFHHFFFFFF",
+    "FFFFHHFFFFFFFFFG",
+};
+
 
 // python generate_random_frozen_lake_env.py 8 16 0.85
 static const std::string FL_RAND_8X16_TEST_MAP[] = 

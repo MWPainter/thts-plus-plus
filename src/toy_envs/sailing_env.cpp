@@ -26,7 +26,8 @@ namespace thts {
     /**
      * Construct
     */
-    SailingEnv::SailingEnv(int width, int height) : ThtsEnv(true), width(width), height(height) 
+    SailingEnv::SailingEnv(int width, int height, int init_wind_dir) : 
+        ThtsEnv(true), width(width), height(height), init_wind_dir(init_wind_dir)
     {
     }
 
@@ -34,7 +35,7 @@ namespace thts {
      * Initial state is at 0,0 with wind NN direction
     */
     shared_ptr<const Int3TupleState> SailingEnv::get_initial_state() const {
-        return make_shared<Int3TupleState>(0,0,NN);
+        return make_shared<Int3TupleState>(0,0,init_wind_dir);
     }  
 
     /**

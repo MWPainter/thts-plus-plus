@@ -24,6 +24,7 @@ static const std::string D_20_HALF_ID = "20-0.5";
 // fl env instance ids
 static const std::string FL_8x8 = "FL_8x8";
 static const std::string FL_8x8_TEST = "FL_8x8_test";
+static const std::string FL_8x16 = "FL_8x16";
 static const std::string FL_8x16_TEST = "FL_8x16_test";
 
 
@@ -31,6 +32,9 @@ static const std::string FL_8x16_TEST = "FL_8x16_test";
 static const std::string S_5_ID = "5";
 static const std::string S_7_ID = "7";
 static const std::string S_10_ID = "10";
+static const std::string S_5_TEST_ID = "5_test";
+static const std::string S_7_TEST_ID = "7_test";
+static const std::string S_10_TEST_ID = "10_test";
 
 // expr ids
 static const std::string DEBUG_EXPR_ID = "000";
@@ -40,10 +44,13 @@ static const std::string D001_LEN10 = "001_len_10";
 static const std::string D003_LEN20 = "003_len_20";     
 static const std::string D004_LEN10_EPSILON = "004_len_10_epsilon";
 static const std::string D100_LEN10_PAPER = "100_len_10_main_paper"; 
+static const std::string D101_LEN10_MENTS_HPS = "101_len_10_ments_hps"; 
 
 static const std::string FL001_8_HPS = "001_fl8_hps";
 static const std::string FL002_8_TEST = "002_fl8_test";
-static const std::string FL003_16_TEST = "003_fl16_test";
+static const std::string FL003_8_TEMP_SENS_EG = "003_fl8_temp";
+static const std::string FL003_16_HPS= "003_fl16_hps";
+static const std::string FL004_16_TEST = "004_fl16_test";
 
 static const std::string S001_5 = "001_s5_test";
 static const std::string S002_5 = "002_s5_hps";

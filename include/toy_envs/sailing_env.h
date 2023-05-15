@@ -29,6 +29,7 @@ namespace thts{
         protected:
             int width;
             int height;
+            int init_wind_dir;
 
 
 
@@ -39,7 +40,7 @@ namespace thts{
             /**
              * Constructor
              */
-            SailingEnv(int width, int height);
+            SailingEnv(int width, int height, int init_wind_dir=NN);
 
             /**
              * Mark destructor as virtual for subclassing.
