@@ -89,6 +89,18 @@ namespace thts {
     }
 
     /**
+     * Returns the filename for the mc eval results file
+    */
+    string get_tree_filename(RunID& run_id, int replicate) {
+        stringstream ss;
+        ss << get_results_dir(run_id)
+            << "tree_"
+            << get_params_string_helper(run_id)
+            << ".txt";
+        return ss.str();
+    }
+
+    /**
      * Writes the param header to a file
     */
     void write_param_header_to_file(RunID& run_id, ofstream& out_file) {
@@ -171,6 +183,7 @@ namespace thts {
             shared_ptr<ThtsManager> thts_manager = run_id.get_thts_manager(env);
             shared_ptr<ThtsDNode> root_node = run_id.get_root_search_node(env, thts_manager);
             shared_ptr<ThtsLogger> logger = run_id.get_logger();
+            {
             ThtsPool thts_pool(thts_manager, root_node, run_id.num_threads, logger);
 
             // eval at 0 trials
@@ -210,6 +223,31 @@ namespace thts {
             write_param_header_to_file(run_id, logger_file);
             logger->write_to_ostream(logger_file);
             logger_file.close();
+
+            // Write tree to file
+            string tree_filename = get_tree_filename(run_id, replicate);
+            ofstream tree_file;
+            tree_file.open(tree_filename, ios::out);
+            tree_file << root_node->get_pretty_print_string(4) << endl;
+            tree_file.close();
+            }
+            
+            // cout << env.use_count() << endl;
+            // cout << thts_manager.use_count() << endl;
+            // cout << root_node.use_count() << endl;
+            // cout << logger.use_count() << endl;
+
+            // env.reset();
+            // thts_manager.reset();
+            // root_node.reset();
+            // logger.reset();
+
+            // cout << env.use_count() << endl;
+            // cout << thts_manager.use_count() << endl;
+            // cout << root_node.use_count() << endl;
+            // cout << logger.use_count() << endl;
+
+            eval_file.flush();
         }   
 
         // close eval file

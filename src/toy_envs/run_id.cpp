@@ -94,8 +94,10 @@ namespace thts {
                 return make_shared<FrozenLakeEnv>(8, 8, FL_RAND_8X8_MAP, 0.99);
             } else if (env_instance_id == FL_8x8_TEST) {
                 return make_shared<FrozenLakeEnv>(8, 8, FL_RAND_8X8_TEST_MAP, 0.99);
-            } else if (env_instance_id == FL_8x16) { 
-                return make_shared<FrozenLakeEnv>(8, 16, FL_RAND_8X16_MAP, 0.99);
+            } else if (env_instance_id == FL_8x12) { 
+                return make_shared<FrozenLakeEnv>(8, 16, FL_RAND_8X12_MAP, 0.99);
+            } else if (env_instance_id == FL_8x12_TEST) {
+                return make_shared<FrozenLakeEnv>(8, 16, FL_RAND_8X12_TEST_MAP, 0.99);
             } else if (env_instance_id == FL_8x16_TEST) {
                 return make_shared<FrozenLakeEnv>(8, 16, FL_RAND_8X16_TEST_MAP, 0.99);
             } else {
@@ -104,18 +106,10 @@ namespace thts {
         }
 
         if (env_id == SAILING_ENV_ID) {
-            if (env_instance_id == S_5_ID) {
-                return make_shared<SailingEnv>(5, 5);
-            } else if (env_instance_id == S_7_ID) {
-                return make_shared<SailingEnv>(7, 7);
-            } else if (env_instance_id == S_10_ID) {
-                return make_shared<SailingEnv>(10, 10);
-            } else if (env_instance_id == S_5_TEST_ID) {
-                return make_shared<SailingEnv>(5, 5, SS);
-            } else if (env_instance_id == S_7_TEST_ID) {
-                return make_shared<SailingEnv>(7, 7, SS);
-            } else if (env_instance_id == S_10_TEST_ID) {
-                return make_shared<SailingEnv>(10, 10, SS);
+            if (env_instance_id == S_6_ID) {
+                return make_shared<SailingEnv>(6, 6);
+            } else if (env_instance_id == S_6_TEST_ID) {
+                return make_shared<SailingEnv>(6, 6, SE);
             } else {
                 throw runtime_error("Not implemented yet");
             }
@@ -132,8 +126,6 @@ namespace thts {
             UctManagerArgs manager_args(env);
             manager_args.max_depth = max_trial_length;
             manager_args.mcts_mode = false;
-            // manager_args.use_transposition_table = true;
-            // manager_args.num_transposition_table_mutexes = 1;//128;
             manager_args.bias = alg_params.at(PARAMS_ID_UCT_BIAS);
             return make_shared<UctManager>(manager_args);
         } 
@@ -141,8 +133,6 @@ namespace thts {
             PuctManagerArgs manager_args(env);
             manager_args.max_depth = max_trial_length;
             manager_args.mcts_mode = false;
-            // manager_args.use_transposition_table = true;
-            // manager_args.num_transposition_table_mutexes = 1;//128;
             manager_args.bias = alg_params.at(PARAMS_ID_UCT_BIAS);
             return make_shared<PuctManager>(manager_args);
         }
@@ -153,8 +143,6 @@ namespace thts {
             MentsManagerArgs manager_args(env);
             manager_args.max_depth = max_trial_length;
             manager_args.mcts_mode = false;
-            // manager_args.use_transposition_table = true;
-            // manager_args.num_transposition_table_mutexes = 1;//128;
             manager_args.temp = alg_params.at(PARAMS_ID_MENTS_TEMP);
             manager_args.epsilon = alg_params.at(PARAMS_ID_MENTS_EPSILON);
             if (alg_params.find(PARAMS_ID_MENTS_DEFAULT_Q_VALUE) != alg_params.end()) {
@@ -167,8 +155,6 @@ namespace thts {
             DentsManagerArgs manager_args(env);
             manager_args.max_depth = max_trial_length;
             manager_args.mcts_mode = false;
-            // manager_args.use_transposition_table = true;
-            // manager_args.num_transposition_table_mutexes = 1;//128;
             manager_args.temp = alg_params.at(PARAMS_ID_MENTS_TEMP);
             manager_args.value_temp_init = alg_params.at(PARAMS_ID_MENTS_TEMP);
             manager_args.epsilon = alg_params.at(PARAMS_ID_MENTS_EPSILON);
@@ -250,7 +236,7 @@ namespace thts {
         // debug expr id for debugging
         if (expr_id == DEBUG_EXPR_ID) {
             string env_id = SAILING_ENV_ID;
-            string env_instance_id = S_5_ID;
+            string env_instance_id = S_6_ID;
             int num_trials = 150000;
             int max_trial_length = 50;
             int trials_log_delta = 250;
@@ -779,18 +765,23 @@ namespace thts {
 
 
 
-        // expr id: FL001_8_HPS
+
+
+
+
+
+        // expr id: FL12_051_HPS
         // Runs a hyperparameter search on all algos for frozen lake
-        if (expr_id == FL001_8_HPS) {
+        if (expr_id == FL12_051_HPS) {
             string env_id = FL_ENV_ID;
-            string env_instance_id = FL_8x8;
-            int num_trials = 150000;
+            string env_instance_id = FL_8x12;
+            int num_trials = 300000;
             int max_trial_length = 100;
             int trials_log_delta = 250;
-            int mc_eval_trials_delta = 250;
-            int rollouts_per_mc_eval = 250;
+            int mc_eval_trials_delta = 500;
+            int rollouts_per_mc_eval = 50;
             int num_repeats = 5;
-            int num_threads = 16;
+            int num_threads = 32;
             int eval_threads = 32;
 
             vector<string> alg_ids = {ALG_ID_UCT, ALG_ID_PUCT};
@@ -817,7 +808,7 @@ namespace thts {
 
             alg_ids = {ALG_ID_MENTS, ALG_ID_RENTS, ALG_ID_TENTS, ALG_ID_EST, ALG_ID_DENTS };
             vector<double> temps = {100.0, 10.0, 1.0, 0.1, 0.01, 0.001};
-            vector<double> epss = {1.0, 0.3, 0.1, 0.03, 0.01};
+            vector<double> epss = {2.0, 1.0, 0.3, 0.1, 0.03, 0.01};
             for (string alg_id : alg_ids) {
                 for (double temp : temps) {
                     for (double eps : epss) {
@@ -847,19 +838,18 @@ namespace thts {
             return run_ids;
         }
 
-        // expr id: FL002_8_TEST
+        // expr id: FL12_052_TEST
         // Test envs for hps selected params
-        // TODO: look at hps and set params
-        if (expr_id == FL002_8_TEST) {
+        if (expr_id == FL12_052_TEST) {
             string env_id = FL_ENV_ID;
-            string env_instance_id = FL_8x8_TEST;
+            string env_instance_id = FL_8x12_TEST;
             int num_trials = 500000;
             int max_trial_length = 100; 
             int trials_log_delta = 250;
             int mc_eval_trials_delta = 250;
             int rollouts_per_mc_eval = 250;
             int num_repeats = 25;
-            int num_threads = 16;
+            int num_threads = 32;
             int eval_threads = 32;
 
             vector<string> alg_ids = {ALG_ID_UCT, ALG_ID_PUCT};
@@ -890,19 +880,19 @@ namespace thts {
                     temp = 0.001;
                     eps = 1.0;
                 } else if (alg_id == ALG_ID_RENTS) {
-                    temp = 0.01;
-                    eps = 0.3;
+                    temp = 0.001;
+                    eps = 2.0;
                 } else if (alg_id == ALG_ID_TENTS) {
-                    temp = 0.01;
+                    temp = 0.001;
                     eps = 1.0;
                 } else if (alg_id == ALG_ID_EST) {
                     temp = 0.1;
-                    eps = 1.0;
+                    eps = 2.0;
                 } else if (alg_id == ALG_ID_DENTS) {
-                    temp = 1.0;
-                    eps = 0.1;
+                    temp = 0.1;
+                    eps = 1.0;
                 } else {
-                    throw runtime_error("error in FL002_8_TEST");
+                    throw runtime_error("error in FL12_052_TEST");
                 }
                 unordered_map<string,double> alg_params = 
                     {
@@ -928,19 +918,180 @@ namespace thts {
             return run_ids;
         }
 
-        // expr id: FL003_16_HPS
-        // Runs a hyperparameter search on all algos for frozen lake
-        if (expr_id == FL003_16_HPS) {
+        // expr id: FL16_060_TEST
+        // Test envs for hps selected params
+        if (expr_id == FL16_060_TEST) {
             string env_id = FL_ENV_ID;
-            string env_instance_id = FL_8x16;
+            string env_instance_id = FL_8x16_TEST;
+            int num_trials = 500000;
+            int max_trial_length = 100; 
+            int trials_log_delta = 250;
+            int mc_eval_trials_delta = 250;
+            int rollouts_per_mc_eval = 250;
+            int num_repeats = 25;
+            int num_threads = 32;
+            int eval_threads = 32;
+
+            vector<string> alg_ids = {ALG_ID_UCT, ALG_ID_PUCT};
+            for (string alg_id : alg_ids) {
+                double bias = UctManagerArgs::USE_AUTO_BIAS;
+                unordered_map<string,double> alg_params = {{PARAMS_ID_UCT_BIAS, bias}};
+                run_ids->push_back(RunID(
+                    env_id,
+                    env_instance_id,
+                    expr_id,
+                    alg_id,
+                    alg_params,
+                    num_trials,
+                    max_trial_length,
+                    trials_log_delta,
+                    mc_eval_trials_delta,
+                    rollouts_per_mc_eval,
+                    num_repeats,
+                    num_threads,
+                    eval_threads));
+            }
+
+            alg_ids = {ALG_ID_MENTS, ALG_ID_RENTS, ALG_ID_TENTS, ALG_ID_EST, ALG_ID_DENTS};
+            for (string alg_id : alg_ids) {
+                double temp = 1.0;
+                double eps = 1.0;
+                if (alg_id == ALG_ID_MENTS) {
+                    temp = 0.001;
+                    eps = 1.0;
+                } else if (alg_id == ALG_ID_RENTS) {
+                    temp = 0.001;
+                    eps = 2.0;
+                } else if (alg_id == ALG_ID_TENTS) {
+                    temp = 0.001;
+                    eps = 1.0;
+                } else if (alg_id == ALG_ID_EST) {
+                    temp = 0.1;
+                    eps = 2.0;
+                } else if (alg_id == ALG_ID_DENTS) {
+                    temp = 0.1;
+                    eps = 1.0;
+                } else {
+                    throw runtime_error("error in FL12_052_TEST");
+                }
+                unordered_map<string,double> alg_params = 
+                    {
+                        {PARAMS_ID_MENTS_TEMP, temp}, 
+                        {PARAMS_ID_MENTS_EPSILON, eps}
+                    };
+                run_ids->push_back(RunID(
+                    env_id,
+                    env_instance_id,
+                    expr_id,
+                    alg_id,
+                    alg_params,
+                    num_trials,
+                    max_trial_length,
+                    trials_log_delta,
+                    mc_eval_trials_delta,
+                    rollouts_per_mc_eval,
+                    num_repeats,
+                    num_threads,
+                    eval_threads));
+            }
+
+            return run_ids;
+        }
+
+        // expr id: FL8_05X_SENS
+        // Experiments showing sensitivity of ments temperature
+        // Runs a hyperparameter search on all algos for frozen lake
+        if (expr_id == FL8_053_SENS ||
+            expr_id == FL8_054_SENS ||
+            expr_id == FL8_055_SENS ||
+            expr_id == FL8_056_SENS ||
+            expr_id == FL8_057_SENS ||
+            expr_id == FL8_058_SENS ||
+            expr_id == FL8_059_SENS)
+        {
+            string env_id = FL_ENV_ID;
+            string env_instance_id = FL_8x8;
             int num_trials = 300000;
             int max_trial_length = 100;
             int trials_log_delta = 250;
             int mc_eval_trials_delta = 250;
             int rollouts_per_mc_eval = 250;
-            int num_repeats = 5;
-            int num_threads = 16;
+            int num_repeats = 15;
+            int num_threads = 32;
             int eval_threads = 32;
+
+            vector<string> alg_ids = {ALG_ID_MENTS, ALG_ID_EST, ALG_ID_DENTS};
+            double temp = 1.0;
+            double eps = 1.0;
+            if (expr_id == FL8_053_SENS) {
+                temp = 1.0;
+            } else if (expr_id == FL8_054_SENS) {
+                temp = 0.5;
+            } else if (expr_id == FL8_055_SENS) {
+                temp = 0.1;
+            } else if (expr_id == FL8_056_SENS) {
+                temp = 0.05;
+            } else if (expr_id == FL8_057_SENS) {
+                temp = 0.01;
+            } else if (expr_id == FL8_058_SENS) {
+                temp = 0.005;
+            } else if (expr_id == FL8_059_SENS) {
+                temp = 0.001;
+            } else {
+                throw runtime_error("something happened");
+            }
+            
+            for (string alg_id : alg_ids) {
+                unordered_map<string,double> alg_params = 
+                    {
+                        {PARAMS_ID_MENTS_TEMP, temp}, 
+                        {PARAMS_ID_MENTS_EPSILON, eps},
+                    };
+                run_ids->push_back(RunID(
+                    env_id,
+                    env_instance_id,
+                    expr_id,
+                    alg_id,
+                    alg_params,
+                    num_trials,
+                    max_trial_length,
+                    trials_log_delta,
+                    mc_eval_trials_delta,
+                    rollouts_per_mc_eval,
+                    num_repeats,
+                    num_threads,
+                    eval_threads));  
+            }
+
+            return run_ids;
+        }
+
+
+
+
+
+
+
+
+
+
+        
+
+        // expr id: S6_091_HPS
+        // Runs a hyperparameter search on all algos for sailing 6x6 env
+        if (expr_id == S6_091_HPS) {
+            string env_id = SAILING_ENV_ID;
+            string env_instance_id = S_6_ID;
+            int num_trials = 250000;
+            int max_trial_length = 50;
+            int trials_log_delta = 250;
+            int mc_eval_trials_delta = 250;
+            int rollouts_per_mc_eval = 250;
+            int num_repeats = 5;
+            int num_threads = 32;
+            int eval_threads = 32;
+
+            double default_q_value = -200.0;
 
             vector<string> alg_ids = {ALG_ID_UCT, ALG_ID_PUCT};
             vector<double> uct_biases = { UctManagerArgs::USE_AUTO_BIAS, 0.1, 1.0, 10.0, 100.0 };
@@ -965,8 +1116,8 @@ namespace thts {
             }
 
             alg_ids = {ALG_ID_MENTS, ALG_ID_RENTS, ALG_ID_TENTS, ALG_ID_EST, ALG_ID_DENTS };
-            vector<double> temps = {100.0, 10.0, 1.0, 0.1, 0.01};
-            vector<double> epss = {1.0, 0.3, 0.1, 0.03, 0.01};
+            vector<double> temps = {100.0, 10.0, 1.0, 0.1, 0.01, 0.001};
+            vector<double> epss = {2.0, 1.0, 0.3, 0.1}; //, 0.03, 0.01};
             for (string alg_id : alg_ids) {
                 for (double temp : temps) {
                     for (double eps : epss) {
@@ -974,6 +1125,7 @@ namespace thts {
                             {
                                 {PARAMS_ID_MENTS_TEMP, temp}, 
                                 {PARAMS_ID_MENTS_EPSILON, eps},
+                                {PARAMS_ID_MENTS_DEFAULT_Q_VALUE, default_q_value},
                             };
                         run_ids->push_back(RunID(
                             env_id,
@@ -995,104 +1147,19 @@ namespace thts {
 
             return run_ids;
         }
-
-        // expr id: FL004_16_TEST
-        // Test envs for hps selected params
-        // TODO: look at hps and set params
-        if (expr_id == FL004_16_TEST) {
-            string env_id = FL_ENV_ID;
-            string env_instance_id = FL_8x16_TEST;
-            int num_trials = 1000000;
-            int max_trial_length = 100; 
-            int trials_log_delta = 250;
-            int mc_eval_trials_delta = 250;
-            int rollouts_per_mc_eval = 250;
-            int num_repeats = 25;
-            int num_threads = 16;
-            int eval_threads = 32;
-
-            vector<string> alg_ids = {ALG_ID_UCT, ALG_ID_PUCT};
-            for (string alg_id : alg_ids) {
-                double bias = UctManagerArgs::USE_AUTO_BIAS;
-                unordered_map<string,double> alg_params = {{PARAMS_ID_UCT_BIAS, bias}};
-                run_ids->push_back(RunID(
-                    env_id,
-                    env_instance_id,
-                    expr_id,
-                    alg_id,
-                    alg_params,
-                    num_trials,
-                    max_trial_length,
-                    trials_log_delta,
-                    mc_eval_trials_delta,
-                    rollouts_per_mc_eval,
-                    num_repeats,
-                    num_threads,
-                    eval_threads));
-            }
-
-            alg_ids = {ALG_ID_MENTS, ALG_ID_RENTS, ALG_ID_TENTS, ALG_ID_EST, ALG_ID_DENTS};
-            for (string alg_id : alg_ids) {
-                double temp = 1.0;
-                double eps = 1.0;
-                if (alg_id == ALG_ID_MENTS) {
-                    temp = 0.001;
-                    eps = 1.0;
-                } else if (alg_id == ALG_ID_RENTS) {
-                    temp = 0.01;
-                    eps = 1.0;
-                } else if (alg_id == ALG_ID_TENTS) {
-                    temp = 0.01;
-                    eps = 1.0;
-                } else if (alg_id == ALG_ID_EST) {
-                    temp = 0.1;
-                    eps = 1.0;
-                } else if (alg_id == ALG_ID_DENTS) {
-                    temp = 0.1;
-                    eps = 1.0;
-                } else {
-                    throw runtime_error("error in FL003_8_TEST");
-                }
-                unordered_map<string,double> alg_params = 
-                    {
-                        {PARAMS_ID_MENTS_TEMP, temp}, 
-                        {PARAMS_ID_MENTS_EPSILON, eps}
-                    };
-                run_ids->push_back(RunID(
-                    env_id,
-                    env_instance_id,
-                    expr_id,
-                    alg_id,
-                    alg_params,
-                    num_trials,
-                    max_trial_length,
-                    trials_log_delta,
-                    mc_eval_trials_delta,
-                    rollouts_per_mc_eval,
-                    num_repeats,
-                    num_threads,
-                    eval_threads));
-            }
-
-            return run_ids;
-        }
-
-
-
-
-
-        // expr id: S001_5
-        // Tests sailing 5x5 env on the hyperparams selected in FL hps
-        if (expr_id == S001_5) {
+        
+        // expr id: S6_092_TEST
+        // Tests sailing 6x6 env, using a different starting direction
+        if (expr_id == S6_092_TEST) {
             string env_id = SAILING_ENV_ID;
-            string env_instance_id = S_5_TEST_ID;
-            int num_trials = 100000;
+            string env_instance_id = S_6_TEST_ID;
+            int num_trials = 300000;
             int max_trial_length = 50;
             int trials_log_delta = 250;
             int mc_eval_trials_delta = 250;
             int rollouts_per_mc_eval = 250;
             int num_repeats = 25;
-            int num_threads = 16;
+            int num_threads = 32;
             int eval_threads = 32;
 
             double default_q_value = -200.0;
@@ -1122,16 +1189,16 @@ namespace thts {
                 double temp = 1.0;
                 double eps = 1.0;
                 if (alg_id == ALG_ID_MENTS) {
-                    temp = 1.0;
+                    temp = 10.0;
                     eps = 1.0;
                 } else if (alg_id == ALG_ID_RENTS) {
                     temp = 10.0;
                     eps = 1.0;
                 } else if (alg_id == ALG_ID_TENTS) {
-                    temp = 10.0;
-                    eps = 1.0;
+                    temp = 0.1;
+                    eps = 2.0;
                 } else if (alg_id == ALG_ID_EST) {
-                    temp = 0.01;
+                    temp = 10.0;
                     eps = 1.0;
                 } else if (alg_id == ALG_ID_DENTS) {
                     temp = 10.0;
@@ -1163,573 +1230,6 @@ namespace thts {
 
             return run_ids;
         }
-
-        // expr id: S002_5
-        // Runs a hyperparameter search on all algos for sailing 5x5 env
-        // N.B. Probably not going to use these results, but running for completeness
-        if (expr_id == S002_5) {
-            string env_id = SAILING_ENV_ID;
-            string env_instance_id = S_5_ID;
-            int num_trials = 100000;
-            int max_trial_length = 50;
-            int trials_log_delta = 250;
-            int mc_eval_trials_delta = 250;
-            int rollouts_per_mc_eval = 250;
-            int num_repeats = 5;
-            int num_threads = 16;
-            int eval_threads = 32;
-
-            double default_q_value = -200.0;
-
-            vector<string> alg_ids = {ALG_ID_UCT, ALG_ID_PUCT};
-            vector<double> uct_biases = { UctManagerArgs::USE_AUTO_BIAS, 0.1, 1.0, 10.0, 100.0 };
-            for (string alg_id : alg_ids) {
-                for (double bias : uct_biases) {
-                    unordered_map<string,double> alg_params = {{PARAMS_ID_UCT_BIAS, bias}};
-                    run_ids->push_back(RunID(
-                        env_id,
-                        env_instance_id,
-                        expr_id,
-                        alg_id,
-                        alg_params,
-                        num_trials,
-                        max_trial_length,
-                        trials_log_delta,
-                        mc_eval_trials_delta,
-                        rollouts_per_mc_eval,
-                        num_repeats,
-                        num_threads,
-                        eval_threads));
-                }
-            }
-
-            alg_ids = {ALG_ID_MENTS, ALG_ID_RENTS, ALG_ID_TENTS, ALG_ID_EST, ALG_ID_DENTS };
-            vector<double> temps = {100.0, 10.0, 1.0, 0.1, 0.01};
-            vector<double> epss = {1.0, 0.3, 0.1, 0.03, 0.01};
-            for (string alg_id : alg_ids) {
-                for (double temp : temps) {
-                    for (double eps : epss) {
-                        unordered_map<string,double> alg_params = 
-                            {
-                                {PARAMS_ID_MENTS_TEMP, temp}, 
-                                {PARAMS_ID_MENTS_EPSILON, eps},
-                                {PARAMS_ID_MENTS_DEFAULT_Q_VALUE, default_q_value},
-                            };
-                        run_ids->push_back(RunID(
-                            env_id,
-                            env_instance_id,
-                            expr_id,
-                            alg_id,
-                            alg_params,
-                            num_trials,
-                            max_trial_length,
-                            trials_log_delta,
-                            mc_eval_trials_delta,
-                            rollouts_per_mc_eval,
-                            num_repeats,
-                            num_threads,
-                            eval_threads));       
-                    }
-                }
-            }
-
-            return run_ids;
-        }
-
-        // expr id: S001_7
-        // Tests sailing 7x7 env on the hyperparams selected in FL hps
-        if (expr_id == S001_7) {
-            string env_id = SAILING_ENV_ID;
-            string env_instance_id = S_7_TEST_ID;
-            int num_trials = 400000;
-            int max_trial_length = 50;
-            int trials_log_delta = 250;
-            int mc_eval_trials_delta = 250;
-            int rollouts_per_mc_eval = 250;
-            int num_repeats = 25;
-            int num_threads = 16;
-            int eval_threads = 32;
-
-            double default_q_value = -200.0;
-
-            vector<string> alg_ids = {ALG_ID_UCT, ALG_ID_PUCT};
-            for (string alg_id : alg_ids) {
-                double bias = UctManagerArgs::USE_AUTO_BIAS;
-                unordered_map<string,double> alg_params = {{PARAMS_ID_UCT_BIAS, bias}};
-                run_ids->push_back(RunID(
-                    env_id,
-                    env_instance_id,
-                    expr_id,
-                    alg_id,
-                    alg_params,
-                    num_trials,
-                    max_trial_length,
-                    trials_log_delta,
-                    mc_eval_trials_delta,
-                    rollouts_per_mc_eval,
-                    num_repeats,
-                    num_threads,
-                    eval_threads));
-            }
-
-            alg_ids = {ALG_ID_MENTS, ALG_ID_RENTS, ALG_ID_TENTS, ALG_ID_EST, ALG_ID_DENTS};
-            for (string alg_id : alg_ids) {
-                double temp = 1.0;
-                double eps = 1.0;
-                if (alg_id == ALG_ID_MENTS) {
-                    temp = 10.0;
-                    eps = 1.0;
-                } else if (alg_id == ALG_ID_RENTS) {
-                    temp = 10.0;
-                    eps = 0.3;
-                } else if (alg_id == ALG_ID_TENTS) {
-                    temp = 10.0;
-                    eps = 1.0;
-                } else if (alg_id == ALG_ID_EST) {
-                    temp = 10.0;
-                    eps = 1.0;
-                } else if (alg_id == ALG_ID_DENTS) {
-                    temp = 10.0;
-                    eps = 1.0;
-                } else {
-                    throw runtime_error("error in S001_7");
-                }
-                unordered_map<string,double> alg_params = 
-                        {
-                            {PARAMS_ID_MENTS_TEMP, temp}, 
-                            {PARAMS_ID_MENTS_EPSILON, eps},
-                            {PARAMS_ID_MENTS_DEFAULT_Q_VALUE, default_q_value},
-                        };
-                run_ids->push_back(RunID(
-                    env_id,
-                    env_instance_id,
-                    expr_id,
-                    alg_id,
-                    alg_params,
-                    num_trials,
-                    max_trial_length,
-                    trials_log_delta,
-                    mc_eval_trials_delta,
-                    rollouts_per_mc_eval,
-                    num_repeats,
-                    num_threads,
-                    eval_threads));
-            }
-
-            return run_ids;
-        }
-
-        // expr id: S002_7
-        // Runs a hyperparameter search on all algos for sailing 7x7 env
-        // N.B. Probably not going to use these results, but running for completeness
-        if (expr_id == S002_7) {
-            string env_id = SAILING_ENV_ID;
-            string env_instance_id = S_7_ID;
-            int num_trials = 200000;
-            int max_trial_length = 50;
-            int trials_log_delta = 250;
-            int mc_eval_trials_delta = 250;
-            int rollouts_per_mc_eval = 250;
-            int num_repeats = 5;
-            int num_threads = 16;
-            int eval_threads = 32;
-
-            double default_q_value = -200.0;
-
-            vector<string> alg_ids = {ALG_ID_UCT, ALG_ID_PUCT};
-            vector<double> uct_biases = { UctManagerArgs::USE_AUTO_BIAS, 0.1, 1.0, 10.0, 100.0 };
-            for (string alg_id : alg_ids) {
-                for (double bias : uct_biases) {
-                    unordered_map<string,double> alg_params = {{PARAMS_ID_UCT_BIAS, bias}};
-                    run_ids->push_back(RunID(
-                        env_id,
-                        env_instance_id,
-                        expr_id,
-                        alg_id,
-                        alg_params,
-                        num_trials,
-                        max_trial_length,
-                        trials_log_delta,
-                        mc_eval_trials_delta,
-                        rollouts_per_mc_eval,
-                        num_repeats,
-                        num_threads,
-                        eval_threads));
-                }
-            }
-
-            alg_ids = {ALG_ID_MENTS, ALG_ID_RENTS };
-            vector<double> temps = {100.0, 10.0, 1.0, 0.1, 0.01};
-            vector<double> epss = {1.0, 0.3, 0.1, 0.03, 0.01};
-            for (string alg_id : alg_ids) {
-                for (double temp : temps) {
-                    for (double eps : epss) {
-                        unordered_map<string,double> alg_params = 
-                            {
-                                {PARAMS_ID_MENTS_TEMP, temp}, 
-                                {PARAMS_ID_MENTS_EPSILON, eps},
-                                {PARAMS_ID_MENTS_DEFAULT_Q_VALUE, default_q_value},
-                            };
-                        run_ids->push_back(RunID(
-                            env_id,
-                            env_instance_id,
-                            expr_id,
-                            alg_id,
-                            alg_params,
-                            num_trials,
-                            max_trial_length,
-                            trials_log_delta,
-                            mc_eval_trials_delta,
-                            rollouts_per_mc_eval,
-                            num_repeats,
-                            num_threads,
-                            eval_threads));       
-                    }
-                }
-            }
-
-            alg_ids = { ALG_ID_TENTS };
-            temps = {0.01}; //100.0, 10.0, 1.0, 0.1
-            epss = {1.0, 0.3, 0.1, 0.03, 0.01};
-            for (string alg_id : alg_ids) {
-                for (double temp : temps) {
-                    for (double eps : epss) {
-                        unordered_map<string,double> alg_params = 
-                            {
-                                {PARAMS_ID_MENTS_TEMP, temp}, 
-                                {PARAMS_ID_MENTS_EPSILON, eps},
-                                {PARAMS_ID_MENTS_DEFAULT_Q_VALUE, default_q_value},
-                            };
-                        run_ids->push_back(RunID(
-                            env_id,
-                            env_instance_id,
-                            expr_id,
-                            alg_id,
-                            alg_params,
-                            num_trials,
-                            max_trial_length,
-                            trials_log_delta,
-                            mc_eval_trials_delta,
-                            rollouts_per_mc_eval,
-                            num_repeats,
-                            num_threads,
-                            eval_threads));       
-                    }
-                }
-            }
-
-            alg_ids = { ALG_ID_EST, ALG_ID_DENTS };
-            temps = {100.0, 10.0, 1.0, 0.1, 0.01};
-            epss = {1.0, 0.3, 0.1, 0.03, 0.01};
-            for (string alg_id : alg_ids) {
-                for (double temp : temps) {
-                    for (double eps : epss) {
-                        unordered_map<string,double> alg_params = 
-                            {
-                                {PARAMS_ID_MENTS_TEMP, temp}, 
-                                {PARAMS_ID_MENTS_EPSILON, eps},
-                                {PARAMS_ID_MENTS_DEFAULT_Q_VALUE, default_q_value},
-                            };
-                        run_ids->push_back(RunID(
-                            env_id,
-                            env_instance_id,
-                            expr_id,
-                            alg_id,
-                            alg_params,
-                            num_trials,
-                            max_trial_length,
-                            trials_log_delta,
-                            mc_eval_trials_delta,
-                            rollouts_per_mc_eval,
-                            num_repeats,
-                            num_threads,
-                            eval_threads));       
-                    }
-                }
-            }
-
-            return run_ids; 
-        }
-
-
-        //
-        // Sailing 10x10 tends to run out of memory easily, results on 7x7 are good enough and show that the algorithms
-        // do still work in stochastic envs
-        //
-
-        // // expr id: S001_10
-        // // Tests sailing 10x10 env on the hyperparams selected in FL hps
-        // if (expr_id == S001_10) {
-        //     string env_id = SAILING_ENV_ID;
-        //     string env_instance_id = S_10_TEST_ID;
-        //     int num_trials = 600000;
-        //     int max_trial_length = 50;
-        //     int trials_log_delta = 250;
-        //     int mc_eval_trials_delta = 250;
-        //     int rollouts_per_mc_eval = 250;
-        //     int num_repeats = 25;
-        //     int num_threads = 16;
-        //     int eval_threads = 32;
-
-        //     double default_q_value = -200.0;
-
-        //     vector<string> alg_ids = {ALG_ID_UCT, ALG_ID_PUCT};
-        //     for (string alg_id : alg_ids) {
-        //         double bias = UctManagerArgs::USE_AUTO_BIAS;
-        //         if (alg_id == ALG_ID_UCT) {
-        //             bias = 100.0;
-        //         } else if (alg_id == ALG_ID_PUCT) {
-        //             bias = 1.0;
-        //         }
-        //         unordered_map<string,double> alg_params = {{PARAMS_ID_UCT_BIAS, bias}};
-        //         run_ids->push_back(RunID(
-        //             env_id,
-        //             env_instance_id,
-        //             expr_id,
-        //             alg_id,
-        //             alg_params,
-        //             num_trials,
-        //             max_trial_length,
-        //             trials_log_delta,
-        //             mc_eval_trials_delta,
-        //             rollouts_per_mc_eval,
-        //             num_repeats,
-        //             num_threads,
-        //             eval_threads));
-        //     }
-
-        //     alg_ids = {ALG_ID_MENTS, ALG_ID_RENTS, ALG_ID_TENTS, ALG_ID_EST, ALG_ID_DENTS};
-        //     for (string alg_id : alg_ids) {
-        //         double temp = 1.0;
-        //         if (alg_id == ALG_ID_MENTS) {
-        //             temp = 1.0;
-        //         } else if (alg_id == ALG_ID_RENTS) {
-        //             temp = 1.0;
-        //         } else if (alg_id == ALG_ID_TENTS) {
-        //             temp = 1.0;
-        //         } else if (alg_id == ALG_ID_EST) {
-        //             temp = 1.0;
-        //         } else if (alg_id == ALG_ID_DENTS) {
-        //             temp = 1.0;
-        //         } else {
-        //             throw runtime_error("error in S001_7");
-        //         }
-        //         unordered_map<string,double> alg_params = 
-        //                 {
-        //                     {PARAMS_ID_MENTS_TEMP, temp}, 
-        //                     {PARAMS_ID_MENTS_EPSILON, 0.1},
-        //                     {PARAMS_ID_MENTS_DEFAULT_Q_VALUE, default_q_value},
-        //                 };
-        //         run_ids->push_back(RunID(
-        //             env_id,
-        //             env_instance_id,
-        //             expr_id,
-        //             alg_id,
-        //             alg_params,
-        //             num_trials,
-        //             max_trial_length,
-        //             trials_log_delta,
-        //             mc_eval_trials_delta,
-        //             rollouts_per_mc_eval,
-        //             num_repeats,
-        //             num_threads,
-        //             eval_threads));
-        //     }
-
-        //     return run_ids;
-        // }
-
-        // // expr id: S002_10
-        // // Runs a hyperparameter search on all algos for sailing 10x10 env
-        // // N.B. Probably not going to use these results, but running for completeness
-        // if (expr_id == S002_10) {
-        //     string env_id = SAILING_ENV_ID;
-        //     string env_instance_id = S_10_ID;
-        //     int num_trials = 200000;
-        //     int max_trial_length = 50;
-        //     int trials_log_delta = 250;
-        //     int mc_eval_trials_delta = 250;
-        //     int rollouts_per_mc_eval = 250;
-        //     int num_repeats = 5;
-        //     int num_threads = 16;
-        //     int eval_threads = 32;
-
-        //     double default_q_value = -200.0;
-
-        //     vector<string> alg_ids = {ALG_ID_UCT, ALG_ID_PUCT};
-        //     vector<double> uct_biases = { UctManagerArgs::USE_AUTO_BIAS, 0.1, 1.0, 10.0, 100.0 };
-        //     for (string alg_id : alg_ids) {
-        //         for (double bias : uct_biases) {
-        //             unordered_map<string,double> alg_params = {{PARAMS_ID_UCT_BIAS, bias}};
-        //             run_ids->push_back(RunID(
-        //                 env_id,
-        //                 env_instance_id,
-        //                 expr_id,
-        //                 alg_id,
-        //                 alg_params,
-        //                 num_trials,
-        //                 max_trial_length,
-        //                 trials_log_delta,
-        //                 mc_eval_trials_delta,
-        //                 rollouts_per_mc_eval,
-        //                 num_repeats,
-        //                 num_threads,
-        //                 eval_threads));
-        //         }
-        //     }
-
-        //     alg_ids = { ALG_ID_TENTS };
-        //     vector<double> temps = {0.01}; //100.0, 10.0, 1.0, 0.1
-        //     vector<double> epss = {1.0, 0.3, 0.1, 0.03, 0.01};
-        //     for (string alg_id : alg_ids) {
-        //         for (double temp : temps) {
-        //             for (double eps : epss) {
-        //                 unordered_map<string,double> alg_params = 
-        //                     {
-        //                         {PARAMS_ID_MENTS_TEMP, temp}, 
-        //                         {PARAMS_ID_MENTS_EPSILON, eps},
-        //                         {PARAMS_ID_MENTS_DEFAULT_Q_VALUE, default_q_value},
-        //                     };
-        //                 run_ids->push_back(RunID(
-        //                     env_id,
-        //                     env_instance_id,
-        //                     expr_id,
-        //                     alg_id,
-        //                     alg_params,
-        //                     num_trials,
-        //                     max_trial_length,
-        //                     trials_log_delta,
-        //                     mc_eval_trials_delta,
-        //                     rollouts_per_mc_eval,
-        //                     num_repeats,
-        //                     num_threads,
-        //                     eval_threads));       
-        //             }
-        //         }
-        //     }
-
-        //     alg_ids = { ALG_ID_EST };
-        //     temps = {10.0, 1.0, 0.1, 0.01}; //100.0
-        //     epss = {1.0, 0.3, 0.1, 0.03, 0.01};
-        //     for (string alg_id : alg_ids) {
-        //         for (double temp : temps) {
-        //             for (double eps : epss) {
-        //                 unordered_map<string,double> alg_params = 
-        //                     {
-        //                         {PARAMS_ID_MENTS_TEMP, temp}, 
-        //                         {PARAMS_ID_MENTS_EPSILON, eps},
-        //                         {PARAMS_ID_MENTS_DEFAULT_Q_VALUE, default_q_value},
-        //                     };
-        //                 run_ids->push_back(RunID(
-        //                     env_id,
-        //                     env_instance_id,
-        //                     expr_id,
-        //                     alg_id,
-        //                     alg_params,
-        //                     num_trials,
-        //                     max_trial_length,
-        //                     trials_log_delta,
-        //                     mc_eval_trials_delta,
-        //                     rollouts_per_mc_eval,
-        //                     num_repeats,
-        //                     num_threads,
-        //                     eval_threads));       
-        //             }
-        //         }
-        //     }
-
-        //     alg_ids = { ALG_ID_DENTS };
-        //     temps = {1.0, 0.1, 0.01}; //100.0, 10.0
-        //     epss = {1.0, 0.3, 0.1, 0.03, 0.01};
-        //     for (string alg_id : alg_ids) {
-        //         for (double temp : temps) {
-        //             for (double eps : epss) {
-        //                 unordered_map<string,double> alg_params = 
-        //                     {
-        //                         {PARAMS_ID_MENTS_TEMP, temp}, 
-        //                         {PARAMS_ID_MENTS_EPSILON, eps},
-        //                         {PARAMS_ID_MENTS_DEFAULT_Q_VALUE, default_q_value},
-        //                     };
-        //                 run_ids->push_back(RunID(
-        //                     env_id,
-        //                     env_instance_id,
-        //                     expr_id,
-        //                     alg_id,
-        //                     alg_params,
-        //                     num_trials,
-        //                     max_trial_length,
-        //                     trials_log_delta,
-        //                     mc_eval_trials_delta,
-        //                     rollouts_per_mc_eval,
-        //                     num_repeats,
-        //                     num_threads,
-        //                     eval_threads));       
-        //             }
-        //         }
-        //     }
-
-        //     alg_ids = {ALG_ID_MENTS };
-        //     temps = {1.0, 0.1, 0.01}; //100.0, 10.0
-        //     epss = {1.0, 0.3, 0.1, 0.03, 0.01};
-        //     for (string alg_id : alg_ids) {
-        //         for (double temp : temps) {
-        //             for (double eps : epss) {
-        //                 unordered_map<string,double> alg_params = 
-        //                     {
-        //                         {PARAMS_ID_MENTS_TEMP, temp}, 
-        //                         {PARAMS_ID_MENTS_EPSILON, eps},
-        //                         {PARAMS_ID_MENTS_DEFAULT_Q_VALUE, default_q_value},
-        //                     };
-        //                 run_ids->push_back(RunID(
-        //                     env_id,
-        //                     env_instance_id,
-        //                     expr_id,
-        //                     alg_id,
-        //                     alg_params,
-        //                     num_trials,
-        //                     max_trial_length,
-        //                     trials_log_delta,
-        //                     mc_eval_trials_delta,
-        //                     rollouts_per_mc_eval,
-        //                     num_repeats,
-        //                     num_threads,
-        //                     eval_threads));       
-        //             }
-        //         }
-        //     }
-
-        //     alg_ids = {ALG_ID_RENTS };
-        //     temps = {1.0, 0.1, 0.01}; //100.0, 10.0
-        //     epss = {1.0, 0.3, 0.1, 0.03, 0.01};
-        //     for (string alg_id : alg_ids) {
-        //         for (double temp : temps) {
-        //             for (double eps : epss) {
-        //                 unordered_map<string,double> alg_params = 
-        //                     {
-        //                         {PARAMS_ID_MENTS_TEMP, temp}, 
-        //                         {PARAMS_ID_MENTS_EPSILON, eps},
-        //                         {PARAMS_ID_MENTS_DEFAULT_Q_VALUE, default_q_value},
-        //                     };
-        //                 run_ids->push_back(RunID(
-        //                     env_id,
-        //                     env_instance_id,
-        //                     expr_id,
-        //                     alg_id,
-        //                     alg_params,
-        //                     num_trials,
-        //                     max_trial_length,
-        //                     trials_log_delta,
-        //                     mc_eval_trials_delta,
-        //                     rollouts_per_mc_eval,
-        //                     num_repeats,
-        //                     num_threads,
-        //                     eval_threads));       
-        //             }
-        //         }
-        //     }
-
-        //     return run_ids;
-        // }
 
         throw runtime_error("Error in get_run_ids_from_expr_id");
     }

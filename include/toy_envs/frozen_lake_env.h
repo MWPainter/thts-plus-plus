@@ -17,56 +17,69 @@ enum FLDirection { FL_RIGHT, FL_DOWN, FL_LEFT, FL_UP };
 // python generate_random_frozen_lake_env.py 8 8 0.8
 static const std::string FL_RAND_8X8_MAP[] = 
 {
-    "SFFFFFFF",
-    "FFFFFHHF",
-    "HHFFHFFF",
+    "SFFFFFHF",
     "FFFFFFFF",
-    "FFFFHHFH",
-    "FFFFFFFF",
-    "FFFFFFFF",
-    "FFFFFHFG",
+    "FHFHFFFF",
+    "FFFFFFHH",
+    "FFFHFFFF",
+    "FHHHFFFF",
+    "FFFFFHFF",
+    "FFFFFFFG",
+
 };
 
 // python generate_random_frozen_lake_env.py 8 8 0.8
 static const std::string FL_RAND_8X8_TEST_MAP[] = 
 {
-    "SFHFFFFH",
-    "FFHFFFFF",
-    "FHFFHFHH",
-    "FFFFFFFH",
-    "FFHFFFFF",
-    "FFFFFHFF",
-    "FFFFFFFF",
-    "HFFFFFFG",
+    "SFFHHFFF",
+    "HFFFHFFF",
+    "HFFFFFFF",
+    "HFFFFFFF",
+    "FFFFHFFH",
+    "FFFHFHHH",
+    "FFFFFFHF",
+    "FHFHFFFG",
 };
 
-// python generate_random_frozen_lake_env.py 8 16 0.85
-static const std::string FL_RAND_8X16_MAP[] =
+// python generate_random_frozen_lake_env.py 8 12 0.8
+static const std::string FL_RAND_8X12_MAP[] = 
 {
-    "SFFFFFFFFFFFFFFF",
-    "FHFFFFFFHFFFFFFF",
-    "FFFFFFFFFFFFFHFF",
-    "HFFFFFFFFFFFFHFF",
-    "FFFFHHFFHFFFHFFF",
-    "FFFHFFHFFFHHFFFF",
-    "FHFFFHFFHHFFFFFF",
-    "FFFFHHFFFFFFFFFG",
+    "SFHFFFHFFFFF",
+    "FFFFFFFHFFFF",
+    "HFFFFFHFFFFF",
+    "FHFFHFFFFFFF",
+    "HHFFFFFFFFFF",
+    "FHFFFFHFFFFF",
+    "FHFFFHHFHFFF",
+    "FFFFFFFFFHHG",
+};
+
+// python generate_random_frozen_lake_env.py 8 12 0.8
+static const std::string FL_RAND_8X12_TEST_MAP[] = 
+{
+    "SFHFFFFFFFHF",
+    "FFFFFFFFFFFF",
+    "FHFFFFHFFFFF",
+    "FFFHFFFFFFHF",
+    "FFFFFFFFFFFF",
+    "FFFFHFFFHFFF",
+    "FFHFFFFFFFFH",
+    "FFFFFFFFFFFG",
 };
 
 
-// python generate_random_frozen_lake_env.py 8 16 0.85
+// python generate_random_frozen_lake_env.py 8 16 0.8
 static const std::string FL_RAND_8X16_TEST_MAP[] = 
 {
-    "SFFHFFFHFFFFFHFF",
-    "HFFHFFFFFFFHFFFH",
-    "FFFFFFFFFFHFFFFF",
-    "FFFFFHFFFFFFFFFF",
-    "FHFFFFFHFFFFFHFF",
-    "FFFFFFHFFFFFFFHF",
-    "FFFFHHFFFFFHFFFF",
-    "HFFFHFFFFFFFFFFG",
+    "SFFFFHHFFFHHFHHF",
+    "FFHFFFFFFFHFHHHF",
+    "FFFFFFFHFFFFFFHF",
+    "FFFFFHHFHFFHFFFF",
+    "FHFFFFFFFFFFHHFF",
+    "FFFHFFFFFFHFFFHF",
+    "HFHFFFFFFFFFFFFF",
+    "FFFFFFHFHFFHFFFG",
 };
-
 
 
 namespace thts{
