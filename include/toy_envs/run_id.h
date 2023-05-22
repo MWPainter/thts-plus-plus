@@ -44,28 +44,29 @@ static const std::string S_6_TEST_ID = "6_test";
 static const std::string DEBUG_EXPR_ID = "000";
 
 // expr ids - dchain
-static const std::string D001_LEN10 = "001_len_10";    
-static const std::string D003_LEN20 = "003_len_20";     
-static const std::string D004_LEN10_EPSILON = "004_len_10_epsilon";
-static const std::string D100_LEN10_PAPER = "100_len_10_main_paper"; 
-static const std::string D101_LEN10_MENTS_HPS = "101_len_10_ments_hps"; 
+static const std::string D001_LEN10 = "001_len_10";
+// static const std::string D002_LEN10_HALF = "002_len_10_half";
+static const std::string D003_LEN20 = "003_len_20";
+// static const std::string D004_LEN20_HALF = "004_len_20_half";
+static const std::string D021_LEN10_PAPER = "021_len_10_main_paper"; 
+// static const std::string D022_LEN10_MENTS_HPS = "022_len_10_ments_hps"; 
 
 // expr ids - main gridworld
 static const std::string FL12_051_HPS = "051_fl12_hps";
 static const std::string FL12_052_TEST = "052_fl12_test";
-static const std::string FL16_060_TEST = "060_fl16_test";
+static const std::string FL16_050_TEST = "050_fl16_test";
 
 static const std::string S6_091_HPS = "091_s6_hps";
 static const std::string S6_092_TEST = "092_s6_test";
 
 // expr ids - app gridworld
-static const std::string FL8_053_SENS = "053_fl8_1-0";
-static const std::string FL8_054_SENS = "054_fl8_0-5";
-static const std::string FL8_055_SENS = "055_fl8_0-1";
-static const std::string FL8_056_SENS = "056_fl8_0-05";
-static const std::string FL8_057_SENS = "057_fl8_0-01";
-static const std::string FL8_058_SENS = "058_fl8_0-005";
-static const std::string FL8_059_SENS = "059_fl8_0-001";
+static const std::string FL8_053_SENS = "053_fl8_1_0";
+static const std::string FL8_054_SENS = "054_fl8_0_5";
+static const std::string FL8_055_SENS = "055_fl8_0_1";
+static const std::string FL8_056_SENS = "056_fl8_0_05";
+static const std::string FL8_057_SENS = "057_fl8_0_01";
+static const std::string FL8_058_SENS = "058_fl8_0_005";
+static const std::string FL8_059_SENS = "059_fl8_0_001";
 
 // alg ids
 static const std::string ALG_ID_UCT = "uct";
