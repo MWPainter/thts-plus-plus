@@ -254,8 +254,8 @@ int main(int argc, char* argv[]) {
         string alg_id = ALG_ID_DENTS;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 40.0);         // use result from EXPR_ID_EST_HPS
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 40.0);     // use result from EXPR_ID_EST_HPS
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 50.0);         // use result from EXPR_ID_EST_HPS
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 50.0);     // use result from EXPR_ID_EST_HPS
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE, 0.003);      
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP, 0.003);   
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE, 0.05);      
@@ -597,7 +597,7 @@ int main(int argc, char* argv[]) {
         }
 
         if (algo1 == ALG_ID_DENTS) {
-            temp = 40.0;
+            temp = 50.0;
             value_temp = 0.5;
         }
         if (algo2 == ALG_ID_DENTS) {
@@ -750,7 +750,7 @@ int main(int argc, char* argv[]) {
         }
 
         if (algo1 == ALG_ID_DENTS) {
-            temp = 40.0;
+            temp = 50.0;
             value_temp = 0.5;
         }
         if (algo2 == ALG_ID_DENTS) {
@@ -811,10 +811,10 @@ int main(int argc, char* argv[]) {
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp); 
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE, 0.01);      
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP, 0.01);   
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE, 0.003);      
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP, 0.003);  
         // alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE, 0.05);      
-        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE_OPP, 0.05);               
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE_OPP, 0.05);                  
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.5);            
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.5);       
         // alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID, 1.0);
