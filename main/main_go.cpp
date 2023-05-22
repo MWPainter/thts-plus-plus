@@ -31,12 +31,13 @@ static const std::string EXPR_ID_RR = "101_round_robin_9x9";
 static const std::string EPXR_ID_19_RAND_NO_TUNE = "200_rr_with_random_19x19";
 static const std::string EXPR_ID_19_RR_NO_TUNE = "201_round_robin_19x19";
 
-// 300 sereis - tuning on 19x19 and then round robin (will only run if 200 series wasn't as good as wanted)
-// also just focussing on the algorithms that actually have a chance at winning
+// 300 sereis - tuning on 19x19 (focussing on algorithms that have a chance at winning)
 static const std::string EXPR_ID_19_EST_HPS = "300_est_hps";
 static const std::string EXPR_ID_19_DENTS_HPS = "301_dents_hps";
-static const std::string EPXR_ID_19_RAND = "302_rr_with_random_19x19";
-static const std::string EXPR_ID_19_RR = "303_round_robin_19x19";
+
+// 400 series - final round robins on 19x19
+static const std::string EPXR_ID_19_RAND = "400_rr_with_random_19x19";
+static const std::string EXPR_ID_19_RR = "401_round_robin_19x19";
 
 
 int main(int argc, char* argv[]) {
@@ -687,8 +688,8 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID_OPP, 1.0);  
         alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, value_temp);                
         alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, value_temp_opp);             
-        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 1.0);                                    
-        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 1.0); 
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 5.0);                                    
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 5.0); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.03); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.03);   
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
