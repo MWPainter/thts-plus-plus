@@ -161,6 +161,12 @@ namespace thts {
             if (alg_params.find(PARAMS_ID_MENTS_DEFAULT_Q_VALUE) != alg_params.end()) {
                 manager_args.default_q_value = alg_params.at(PARAMS_ID_MENTS_DEFAULT_Q_VALUE);
             }
+            if (alg_params.find(PARAMS_ID_DENTS_IGNORE_DECAY) != alg_params.end()) {
+                manager_args.value_temp_decay_fn = decayed_temp_no_decay;
+            }
+            if (alg_params.find(PARAMS_ID_DENTS_TEMP) != alg_params.end()) {
+                manager_args.value_temp_init = alg_params.at(PARAMS_ID_DENTS_TEMP);
+            }
             return make_shared<DentsManager>(manager_args);
         }
 
@@ -595,6 +601,175 @@ namespace thts {
             return run_ids;
         }
 
+
+        // expr_id: D005_LEN20
+        // Runs algorithms with varying parameters on the 20-chain
+        if (expr_id == D005_LEN20) {
+            string env_id = DCHAIN_ENV_ID;
+            vector<string> env_instance_ids = {D_20_ID, D_20_HALF_ID};
+            int num_trials = 25000;
+            int max_trial_length = 100; 
+            int trials_log_delta = 10;
+            int mc_eval_trials_delta = 10;
+            int rollouts_per_mc_eval = 100;
+            int num_repeats = 10;
+            int num_threads = 32;
+            int eval_threads = 32;
+
+            for (string env_instance_id : env_instance_ids) {
+                
+                vector<string> alg_ids = {ALG_ID_MENTS};
+                vector<double> temps = { 10.0, 1.0, 0.5, 0.2, 0.15, 0.10, 0.05 };
+                vector<double> epss = { 10.0, 1.0, 0.1, 0.01 };
+                for (string alg_id : alg_ids) {
+                    for (double temp : temps) {
+                        for (double eps : epss) {
+                            unordered_map<string,double> alg_params = 
+                                {
+                                    {PARAMS_ID_MENTS_TEMP, temp}, 
+                                    {PARAMS_ID_MENTS_EPSILON, eps}
+                                };
+                            run_ids->push_back(RunID(
+                                env_id,
+                                env_instance_id,
+                                expr_id,
+                                alg_id,
+                                alg_params,
+                                num_trials,
+                                max_trial_length,
+                                trials_log_delta,
+                                mc_eval_trials_delta,
+                                rollouts_per_mc_eval,
+                                num_repeats,
+                                num_threads,
+                                eval_threads));
+                        }
+                    }
+                }
+            }
+
+            string env_instance_id = D_20_ID;
+
+            vector<string> alg_ids = {ALG_ID_DENTS, ALG_ID_EST};
+            vector<double> temps = { 10.0, 1.0, 0.5, 0.2, 0.15, 0.10, 0.05 };
+            vector<double> epss = { 10.0, 1.0, 0.1, 0.01 };
+            for (string alg_id : alg_ids) {
+                for (double temp : temps) {
+                    for (double eps : epss) {
+                        unordered_map<string,double> alg_params = 
+                            {
+                                {PARAMS_ID_MENTS_TEMP, temp}, 
+                                {PARAMS_ID_MENTS_EPSILON, eps}
+                            };
+                        run_ids->push_back(RunID(
+                            env_id,
+                            env_instance_id,
+                            expr_id,
+                            alg_id,
+                            alg_params,
+                            num_trials,
+                            max_trial_length,
+                            trials_log_delta,
+                            mc_eval_trials_delta,
+                            rollouts_per_mc_eval,
+                            num_repeats,
+                            num_threads,
+                            eval_threads));
+                    }
+                }
+            }
+
+            return run_ids;
+        }
+
+
+        // expr_id: D006_LEN20
+        // 20-chain with DENTS without decaying temp
+        if (expr_id == D006_LEN20) {
+            string env_id = DCHAIN_ENV_ID;
+            string env_instance_id = D_20_ID;
+            int num_trials = 25000;
+            int max_trial_length = 100; 
+            int trials_log_delta = 10;
+            int mc_eval_trials_delta = 10;
+            int rollouts_per_mc_eval = 100;
+            int num_repeats = 10;
+            int num_threads = 32;
+            int eval_threads = 32;
+
+            vector<string> alg_ids = {ALG_ID_DENTS};
+            vector<double> temps = { 10.0, 1.0, 0.5, 0.2, 0.15, 0.10, 0.05 };
+            vector<double> epss = { 10.0, 1.0, 0.1, 0.01 };
+            for (string alg_id : alg_ids) {
+                for (double temp : temps) {
+                    for (double eps : epss) {
+                        unordered_map<string,double> alg_params = 
+                            {
+                                {PARAMS_ID_MENTS_TEMP, temp}, 
+                                {PARAMS_ID_MENTS_EPSILON, eps},
+                                {PARAMS_ID_DENTS_IGNORE_DECAY, 1.0},
+                            };
+                        run_ids->push_back(RunID(
+                            env_id,
+                            env_instance_id,
+                            expr_id,
+                            alg_id,
+                            alg_params,
+                            num_trials,
+                            max_trial_length,
+                            trials_log_delta,
+                            mc_eval_trials_delta,
+                            rollouts_per_mc_eval,
+                            num_repeats,
+                            num_threads,
+                            eval_threads));
+                    }
+                }
+            }
+
+            return run_ids;
+        }
+
+
+        // expr_id: D006_LEN20
+        // 20-chain with DENTS tuned
+        if (expr_id == D007_LEN20) {
+            string env_id = DCHAIN_ENV_ID;
+            string env_instance_id = D_20_ID;
+            int num_trials = 25000;
+            int max_trial_length = 100; 
+            int trials_log_delta = 10;
+            int mc_eval_trials_delta = 10;
+            int rollouts_per_mc_eval = 100;
+            int num_repeats = 10;
+            int num_threads = 32;
+            int eval_threads = 32;
+
+            string alg_id = ALG_ID_DENTS;
+            unordered_map<string,double> alg_params = 
+                {
+                    {PARAMS_ID_MENTS_TEMP, 0.5}, 
+                    {PARAMS_ID_MENTS_EPSILON, 0.01},
+                    {PARAMS_ID_DENTS_TEMP, 10.0},
+                };
+            run_ids->push_back(RunID(
+                env_id,
+                env_instance_id,
+                expr_id,
+                alg_id,
+                alg_params,
+                num_trials,
+                max_trial_length,
+                trials_log_delta,
+                mc_eval_trials_delta,
+                rollouts_per_mc_eval,
+                num_repeats,
+                num_threads,
+                eval_threads));
+                
+            return run_ids;
+        }
+
         // expr id: D100_LEN10_PAPER = "100_len_10_main_paper"
         // rerunning with specific parameters with more replicates to make curves smoother for nice plots
         if (expr_id == D021_LEN10_PAPER) {
@@ -949,6 +1124,7 @@ namespace thts {
             int eval_threads = 32;
 
             vector<string> alg_ids = {ALG_ID_MENTS, ALG_ID_EST, ALG_ID_DENTS, ALG_ID_RENTS, ALG_ID_TENTS};
+            alg_ids = {ALG_ID_RENTS, ALG_ID_TENTS};
             double temp = 1.0;
             double eps = 1.0;
             if (expr_id == FL8_053_SENS) {

@@ -39,4 +39,11 @@ namespace thts {
     double decayed_temp_sigmoid(double scaled_visits) {
         return CONST_SIGMOID_NUMERATOR / (1.0 + exp(scaled_visits - 5.0)); 
     }
+
+    /**
+     * No decay
+    */
+    double decayed_temp_no_decay(double scaled_visits) {
+        return 1.0;
+    } 
 }

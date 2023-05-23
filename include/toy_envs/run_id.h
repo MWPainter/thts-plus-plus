@@ -48,6 +48,9 @@ static const std::string D001_LEN10 = "001_len_10";
 // static const std::string D002_LEN10_HALF = "002_len_10_half";
 static const std::string D003_LEN20 = "003_len_20";
 // static const std::string D004_LEN20_HALF = "004_len_20_half";
+static const std::string D005_LEN20 = "005_len_20";
+static const std::string D006_LEN20 = "006_len_20";
+static const std::string D007_LEN20 = "007_len_20";
 static const std::string D021_LEN10_PAPER = "021_len_10_main_paper"; 
 // static const std::string D022_LEN10_MENTS_HPS = "022_len_10_ments_hps"; 
 
@@ -82,6 +85,8 @@ static const std::string PARAMS_ID_UCT_BIAS = "bias";
 static const std::string PARAMS_ID_MENTS_TEMP = "temp";
 static const std::string PARAMS_ID_MENTS_EPSILON = "epsilon";
 static const std::string PARAMS_ID_MENTS_DEFAULT_Q_VALUE = "default_q_value";
+static const std::string PARAMS_ID_DENTS_IGNORE_DECAY = "no_dents_decay";
+static const std::string PARAMS_ID_DENTS_TEMP = "dents_temp";
 // static const std::string PARAMS_ID_DENTS_INIT_TEMP = "value_temp_init";
 
 

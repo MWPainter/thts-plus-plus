@@ -27,7 +27,9 @@ def make_plot_df(
     filename=None, 
     vertical_lines=None,
     palette=None,
-    dashes=None):
+    dashes=None,
+    y_axis_range=None,
+    use_legend=True):
     """General helper for plotting in our style."""
 
     plt.figure()
@@ -55,6 +57,10 @@ def make_plot_df(
             plt.axvline(x=x, color='k', linestyle='--')
     if legend_lab is not None:
         plt.legend(title=legend_lab)
+    if y_axis_range is not None:
+        plt.gca().set_ylim(y_axis_range)
+    if not use_legend:
+        plt.gca().get_legend().remove()
     if filename is not None:
         plt.savefig(filename)
         plt.close()
@@ -128,7 +134,9 @@ def make_plot(
     num_trials_truncate=None,
     alg_ids_to_add_param_to=None,
     y_transform=None,
-    sep_eps_plots=False):
+    sep_eps_plots=False,
+    y_axis_range=None,
+    use_legend=True):
     """Read in data, preprocess, and then call make plot"""
 
 
@@ -140,7 +148,7 @@ def make_plot(
         xaxis_lab = "Number of Trials"
     if yaxis_lab is None:
         yaxis_lab = "Monte-Carlo Value Estimate"
-    if legend_lab is None:
+    if legend_lab is None and use_legend:
         legend_lab = "Algorithm"
     if alg_ids_to_add_param_to is None:
         alg_ids_to_add_param_to = []
@@ -211,7 +219,9 @@ def make_plot(
         # y_scale_transform=y_scale_transform,
         # y_scale_inv_transform=y_scale_inv_transform,
         legend_lab=legend_lab,
-        filename=plot_filename)
+        filename=plot_filename,
+        y_axis_range=y_axis_range,
+        use_legend=use_legend)
     
     if not sep_eps_plots:
         return
@@ -233,7 +243,9 @@ def make_plot(
             # y_scale_transform=y_scale_transform,
             # y_scale_inv_transform=y_scale_inv_transform,
             legend_lab=legend_lab,
-            filename=eps_filename)
+            filename=eps_filename,
+            y_axis_range=y_axis_range,
+            use_legend=use_legend)
 
     
 def negative_log_transform(x):
@@ -295,6 +307,19 @@ if __name__ == "__main__":
             hue_key="pretty_alg_id",
             num_trials_truncate=100000)
         
+    if "000_fig_fl_full" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/*/eval_*.csv")
+        puct_filename = None
+        for filename in filenames:
+            if "puct" in filename:
+                puct_filename = filename
+        filenames.remove(puct_filename)
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/000_fig_fl_full.png",
+            hue_key="pretty_alg_id",
+            num_trials_truncate=1000000)
+        
     if "000_fig_sail" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
         filenames = glob.glob("results/sailing_env/6_test/092_s6_test/uct/eval_*.csv")
         filenames += glob.glob("results/sailing_env/6_test/092_s6_test/ments/eval_*.csv")
@@ -325,8 +350,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/001_10chain_01_uct_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "001_10chain_puct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/10-1.0/001_len_10/puct/eval_"
@@ -336,8 +363,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/001_10chain_01_puct_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "001_10chain_ments_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/10-1.0/001_len_10/ments/eval_"
@@ -347,8 +376,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/001_10chain_01_ments_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "001_10chain_rents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/10-1.0/001_len_10/rents/eval_"
@@ -358,8 +389,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/001_10chain_01_rents_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "001_10chain_tents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/10-1.0/001_len_10/tents/eval_"
@@ -369,8 +402,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/001_10chain_01_tents_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "001_10chain_dents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/10-1.0/001_len_10/dents/eval_"
@@ -380,8 +415,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/001_10chain_01_dents_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "001_10chain_est_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/10-1.0/001_len_10/est/eval_"
@@ -391,8 +428,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/001_10chain_01_est_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
         
 
 
@@ -411,8 +450,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/001_10chain5_01_uct_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "001_10chain5_puct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/10-0.5/001_len_10/puct/eval_"
@@ -422,8 +463,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/001_10chain5_01_puct_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "001_10chain5_ments_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/10-0.5/001_len_10/ments/eval_"
@@ -433,8 +476,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/001_10chain5_01_ments_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "001_10chain5_rents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/10-0.5/001_len_10/rents/eval_"
@@ -444,8 +489,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/001_10chain5_01_rents_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "001_10chain5_tents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/10-0.5/001_len_10/tents/eval_"
@@ -455,8 +502,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/001_10chain5_01_tents_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "001_10chain5_dents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/10-0.5/001_len_10/dents/eval_"
@@ -466,8 +515,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/001_10chain5_01_dents_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "001_10chain5_est_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/10-0.5/001_len_10/est/eval_"
@@ -477,8 +528,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/001_10chain5_01_est_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
         
 
 
@@ -497,8 +550,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/003_20chain_01_uct_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "003_20chain_puct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/20-1.0/003_len_20/puct/eval_"
@@ -508,8 +563,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/003_20chain_01_puct_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "003_20chain_ments_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/20-1.0/003_len_20/ments/eval_"
@@ -519,8 +576,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/003_20chain_01_ments_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "003_20chain_rents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/20-1.0/003_len_20/rents/eval_"
@@ -530,8 +589,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/003_20chain_01_rents_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "003_20chain_tents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/20-1.0/003_len_20/tents/eval_"
@@ -541,8 +602,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/003_20chain_01_tents_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "003_20chain_dents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/20-1.0/003_len_20/dents/eval_"
@@ -552,8 +615,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/003_20chain_01_dents_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "003_20chain_est_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/20-1.0/003_len_20/est/eval_"
@@ -563,8 +628,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/003_20chain_01_est_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
         
 
 
@@ -583,8 +650,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/003_20chain5_01_uct_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "003_20chain5_puct_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/20-0.5/003_len_20/puct/eval_"
@@ -594,8 +663,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/003_20chain5_01_puct_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "003_20chain5_ments_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/20-0.5/003_len_20/ments/eval_"
@@ -605,8 +676,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/003_20chain5_01_ments_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "003_20chain5_rents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/20-0.5/003_len_20/rents/eval_"
@@ -616,8 +689,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/003_20chain5_01_rents_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "003_20chain5_tents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/20-0.5/003_len_20/tents/eval_"
@@ -627,8 +702,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/003_20chain5_01_tents_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "003_20chain5_dents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/20-0.5/003_len_20/dents/eval_"
@@ -638,8 +715,10 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/003_20chain5_01_dents_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
             
     if "003_20chain5_est_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         prefix = "results/dchain_env/20-0.5/003_len_20/est/eval_"
@@ -649,8 +728,99 @@ if __name__ == "__main__":
             make_plot(
                 filenames=[filename],
                 plot_filename="plots/003_20chain5_01_est_{params}.png".format(params=params),
-                hue_key="bias_or_temp",
-                num_trials_truncate=10000)
+                hue_key="pretty_alg_id",
+                num_trials_truncate=10000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
+        
+
+
+
+
+
+    #
+    # Selected 20-chain, final experiments for appendix
+    #
+    expr_id = "005_len_20"
+    if "005_20chain_ments_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        prefix = "results/dchain_env/20-1.0/005_len_20/ments/eval_"
+        filenames = glob.glob(prefix + "*.csv")
+        for filename in filenames:
+            params = filename[len(prefix):-4]
+            make_plot(
+                filenames=[filename],
+                plot_filename="plots/005_20chain_01_ments_{params}.png".format(params=params),
+                hue_key="pretty_alg_id",
+                num_trials_truncate=25000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
+            
+    if "005_20chain5_ments_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        prefix = "results/dchain_env/20-0.5/005_len_20/ments/eval_"
+        filenames = glob.glob(prefix + "*.csv")
+        for filename in filenames:
+            params = filename[len(prefix):-4]
+            make_plot(
+                filenames=[filename],
+                plot_filename="plots/005_20chain5_01_ments_{params}.png".format(params=params),
+                hue_key="pretty_alg_id",
+                num_trials_truncate=25000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
+            
+    if "005_20chain_est_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        prefix = "results/dchain_env/20-1.0/005_len_20/est/eval_"
+        filenames = glob.glob(prefix + "*.csv")
+        for filename in filenames:
+            params = filename[len(prefix):-4]
+            make_plot(
+                filenames=[filename],
+                plot_filename="plots/005_20chain_01_est_{params}.png".format(params=params),
+                hue_key="pretty_alg_id",
+                num_trials_truncate=25000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
+            
+    if "005_20chain_dents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        prefix = "results/dchain_env/20-1.0/005_len_20/dents/eval_"
+        filenames = glob.glob(prefix + "*.csv")
+        for filename in filenames:
+            params = filename[len(prefix):-4]
+            make_plot(
+                filenames=[filename],
+                plot_filename="plots/005_20chain_01_dents_{params}.png".format(params=params),
+                hue_key="pretty_alg_id",
+                num_trials_truncate=25000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
+            
+    expr_id = "006_len_20"
+    if "006_20chain_dents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        prefix = "results/dchain_env/20-1.0/006_len_20/dents/eval_"
+        filenames = glob.glob(prefix + "*.csv")
+        for filename in filenames:
+            params = filename[len(prefix):-4]
+            make_plot(
+                filenames=[filename],
+                plot_filename="plots/006_20chain_01_dents_{params}.png".format(params=params),
+                hue_key="pretty_alg_id",
+                num_trials_truncate=25000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
+            
+    expr_id = "007_len_20"
+    if "007_20chain_dents_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        prefix = "results/dchain_env/20-1.0/007_len_20/dents/eval_"
+        filenames = glob.glob(prefix + "*.csv")
+        for filename in filenames:
+            params = filename[len(prefix):-4]
+            make_plot(
+                filenames=[filename],
+                plot_filename="plots/007_20chain_01_dents_{params}.png".format(params=params),
+                hue_key="pretty_alg_id",
+                num_trials_truncate=25000,
+                y_axis_range=[0.0,1.1],
+                use_legend=False)
 
 
 
