@@ -32,7 +32,7 @@ namespace thts::helper {
     T get_max_key_break_ties_randomly(unordered_map<T,NumericT>& map, RandManager& rand_manager) {
         NumericT best_val = numeric_limits<NumericT>::lowest();
         vector<T> best_keys;
-        for (pair<const T,NumericT> pr : map) {
+        for (pair<const T,NumericT>& pr : map) {
             NumericT val = pr.second;
             if (val < best_val) continue;
             if (val > best_val) {
