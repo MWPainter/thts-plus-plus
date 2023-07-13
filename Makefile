@@ -19,9 +19,11 @@ SOURCES += $(wildcard src/algorithms/ments/dents/*.cpp)
 SOURCES += $(wildcard src/algorithms/ments/rents/*.cpp)
 SOURCES += $(wildcard src/algorithms/ments/tents/*.cpp)
 SOURCES += $(wildcard src/algorithms/uct/*.cpp)
+SOURCES += $(wildcard src/distributions/*.cpp)
 OBJECTS = $(patsubst src/%.cpp, bin/src/%.o, $(SOURCES))
 TEST_SOURCES = $(wildcard test/*.cpp)
 TEST_SOURCES += $(wildcard test/algorithms/*.cpp)
+TEST_SOURCES += $(wildcard test/distributions/*.cpp)
 TEST_OBJECTS = $(patsubst test/%.cpp, bin/test/%.o, $(TEST_SOURCES))
 
 GTEST = external/googletest/build/lib/libgtest_main.a
