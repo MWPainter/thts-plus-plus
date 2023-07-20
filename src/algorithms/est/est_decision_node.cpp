@@ -56,6 +56,10 @@ namespace thts {
         } else {
             backup_emp(trial_cumulative_return_after_node);
         }
+        
+        if (manager.alias_use_caching) {
+            backup_update_alias_tables(ctx);
+        }
     }
 
     /**

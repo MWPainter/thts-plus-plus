@@ -126,6 +126,10 @@ namespace thts {
     
         // update local soft_value so that value is sensible / for pretty printing
         soft_value = val_estimate + get_value_temp() * subtree_entropy;
+
+        if (manager.alias_use_caching) {
+            backup_update_alias_tables(ctx);
+        }
     }
 
     /**

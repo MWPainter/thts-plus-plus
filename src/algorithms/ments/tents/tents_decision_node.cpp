@@ -182,7 +182,13 @@ namespace thts {
      * "{decision_depth}" -> selected_action
      */
     shared_ptr<const Action> TentsDNode::select_action(ThtsEnvContext& ctx) {
-        shared_ptr<const Action> selected_action = select_action_ments(ctx);
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        shared_ptr<const Action> selected_action;
+        if (manager.alias_use_caching) {
+            selected_action = select_action_alias_tables();
+        } else {
+            selected_action = select_action_ments(ctx);
+        }
         ctx.put_value_const(_selected_action_key, selected_action);
         return selected_action;
     }
@@ -239,6 +245,9 @@ namespace thts {
         MentsManager& manager = (MentsManager&) *thts_manager;
         if (!manager.use_avg_return) {
             backup_tents(ctx);
+            if (manager.alias_use_caching) {
+                backup_update_alias_tables(ctx);
+            }
             return;
         }
 
@@ -247,6 +256,9 @@ namespace thts {
         backup_m_avg_return(trial_cumulative_return_after_node);
         backup_entropy(ctx);
         soft_value = m_avg_return + get_temp() * m_subtree_entropy;
+        if (manager.alias_use_caching) {
+            backup_update_alias_tables(ctx);
+        }
     }
 
     /**

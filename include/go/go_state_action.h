@@ -43,6 +43,7 @@ namespace thts {
         double cached_white_lose_prob;
         double cached_no_result_prob;
         double cached_value;
+        double cached_white_score_mean;
         float cached_policy[NNPos::MAX_NN_POLICY_SIZE];
     };
 

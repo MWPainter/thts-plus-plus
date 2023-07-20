@@ -29,6 +29,9 @@ namespace thts {
 
         static const bool use_avg_return_default=false;
 
+        static const bool alias_use_caching_default=false;
+        static const int alias_recompute_freq_default=100;
+
         double temp;
         double prior_policy_search_weight;
         double epsilon;
@@ -49,6 +52,9 @@ namespace thts {
 
         bool use_avg_return;
 
+        bool alias_use_caching;
+        int alias_recompute_freq;
+
         MentsManagerArgs(std::shared_ptr<ThtsEnv> thts_env) :
             ThtsManagerArgs(thts_env),
             temp(temp_default),
@@ -65,7 +71,10 @@ namespace thts {
             psuedo_q_value_offset(psuedo_q_value_offset_default),
             recommend_visit_threshold(recommend_visit_threshold_default),
             recommend_most_visited(recommend_most_visited_default),
-            use_avg_return(use_avg_return_default) {}
+            use_avg_return(use_avg_return_default),
+
+            alias_use_caching(alias_use_caching_default),
+            alias_recompute_freq(alias_recompute_freq_default) {}
 
         virtual ~MentsManagerArgs() = default;
     };
@@ -130,6 +139,13 @@ namespace thts {
      *      recommend_most_visited:
      *          If we should recommend the most visited child node instead of the largest value.
      * 
+     * Member variables (alias table):
+     *      alias_use_caching:
+     *          If we should cache distributions using the distributions in 'distributions.h', and use the alias methods
+     *      alias_recompute_freq:
+     *          The frequency to recompute the alias tables. It will be recomputed every 
+     *          'alias_recompute_freq' * num_actions trials.
+     * 
      * ++ hacky option for avg returns for go expr
      *          
      */
@@ -155,6 +171,9 @@ namespace thts {
 
             bool use_avg_return;
 
+            bool alias_use_caching;
+            int alias_recompute_freq;
+
             MentsManager(const MentsManagerArgs& args) :
                 ThtsManager(args),
                 temp(args.temp),
@@ -171,6 +190,8 @@ namespace thts {
                 psuedo_q_value_offset(args.psuedo_q_value_offset),
                 recommend_visit_threshold(args.recommend_visit_threshold),
                 recommend_most_visited(args.recommend_most_visited),
-                use_avg_return(args.use_avg_return) {};
+                use_avg_return(args.use_avg_return),
+                alias_use_caching(args.alias_use_caching),
+                alias_recompute_freq(args.alias_recompute_freq) {};
     };
 }

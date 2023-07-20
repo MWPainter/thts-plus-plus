@@ -141,6 +141,10 @@ namespace thts {
      * Calls the rents implementation of select action
      */
     shared_ptr<const Action> RentsDNode::select_action(ThtsEnvContext& ctx) {
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        if (manager.alias_use_caching) {
+            return select_action_alias_tables();
+        }
         return select_action_rents(ctx);
     }
 

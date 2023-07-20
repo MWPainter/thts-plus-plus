@@ -17,7 +17,13 @@ namespace thts {
      * Constructor
      */
     GoEnv::GoEnv(
-        int board_size, float komi, bool use_nn_eval, string nn_eval_rand_seed, float nn_temp, double reward_scale) :
+        int board_size, 
+        float komi, 
+        bool use_nn_eval, 
+        string nn_eval_rand_seed, 
+        float nn_temp, 
+        double reward_scale, 
+        double dynamic_score_center) :
             ThtsEnv(true),
             board_size(board_size),
             komi(komi),
@@ -40,7 +46,8 @@ namespace thts {
             _cfg(),
             _logger(),
             nn_temp(nn_temp),
-            reward_scale(reward_scale)
+            reward_scale(reward_scale),
+            dynamic_score_center(dynamic_score_center)
     {
         if (use_nn_eval) {
             string model_filename = NN_FILENAME;
@@ -170,6 +177,26 @@ namespace thts {
     }
 
     /**
+     * 
+    */
+    void GoEnv::update_dynamic_score_center_for_root_state(shared_ptr<const GoState> state) {
+        if (!state->nn_output_cache->has_cached_nn_output) {
+            fill_cached_values_with_nn_output(state);
+        }
+        // copy computing a 'dynamic' score from katago (just copied params from 
+        // https://github.com/lightvector/KataGo/blob/2fbfb5defc3238af689eb10b9dfdd8766244c16a/cpp/configs/training/selfplay8mainb18.cfg)
+        double white_score_mean = state->nn_output_cache->cached_white_score_mean;
+        dynamic_score_center = white_score_mean * (1.0 - 0.25);
+        Board cur_board(state->get_current_board());
+        double cap = sqrt(cur_board.x_size * cur_board.y_size) * 0.5;
+        if (dynamic_score_center > white_score_mean + cap) {
+            dynamic_score_center = white_score_mean + cap;
+        } else if (dynamic_score_center < white_score_mean - cap) {
+            dynamic_score_center = white_score_mean - cap;
+        }
+    }
+
+    /**
      * Interface with KataGo neural net
      */
     void GoEnv::fill_cached_values_with_nn_output(shared_ptr<const GoState> state) {
@@ -189,6 +216,7 @@ namespace thts {
         // compute value from win prob + score
         double win_value = reward_scale * nn_output.whiteLossProb - reward_scale * nn_output.whiteWinProb;
 
+        // Copy compouting a 'static' score from katago
         double white_score_mean = nn_output.whiteScoreMean;
         double white_score_mean_sq = white_score_mean * white_score_mean;
         double white_score_std_dev = ScoreValue::getScoreStdev(white_score_mean, white_score_mean_sq);
@@ -196,9 +224,20 @@ namespace thts {
             white_score_mean, white_score_std_dev, 0.0, 2.0, cur_board);
         double score_value = -reward_scale * white_score_value;
 
+        // 'dynamic' score from katago
+        double dynamic_score_value = ScoreValue::expectedWhiteScoreValue(
+            white_score_mean, white_score_std_dev, dynamic_score_center, 0.5, cur_board);
+
+
+        // double value = 0.25 * win_value + 0.75 * score_value;
+        // double value = 0.5 * win_value + 0.5 * score_value;
         // double value = 0.625 * win_value + 0.375 * score_value;
-        double value = 0.75 * win_value + 0.25 * score_value;
+        // double value = 0.75 * win_value + 0.25 * score_value;
         // double value = 0.875 * win_value + 0.125 * score_value;
+
+        // copied params from same link in comment in 'update_dynmaic_score_center_for_state'
+        // Assumed that the values are in the range [-1,1], and normalised the weights to 1.0 total
+        double value = (1.0 * win_value + 0.05 * score_value + 0.3 * dynamic_score_value) / 1.35;
 
         // normalise policy
         // find max prob
@@ -235,6 +274,7 @@ namespace thts {
         state->nn_output_cache->cached_no_result_prob = nn_output.whiteNoResultProb;
 
         state->nn_output_cache->cached_value = value;
+        state->nn_output_cache->cached_white_score_mean = white_score_mean;
 
         for (int i=0; i < NNPos::MAX_NN_POLICY_SIZE; i++) {
             state->nn_output_cache->cached_policy[i] = nn_output.policyProbs[i];

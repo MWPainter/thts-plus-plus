@@ -32,6 +32,9 @@ static const std::string PARAM_KATA_RECOMMEND_AVG_RETURN_OPP = "kata_recommend_a
 static const std::string PARAM_RECOMMEND_MOST_VISITED = "recommend_most_visited";
 static const std::string PARAM_RECOMMEND_MOST_VISITED_OPP = "recommend_most_visited_opp";
 
+static const std::string PARAM_USE_ALIAS_METHODS = "alias";
+static const std::string PARAM_USE_ALIAS_METHODS_OPP = "alias_opp";
+
 static const std::string ALG_ID_KATA = "kata";
 static const std::string ALG_ID_UCT = "uct";
 static const std::string ALG_ID_PUCT = "puct";

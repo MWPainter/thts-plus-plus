@@ -98,6 +98,9 @@ namespace thts {
         if (!manager.use_avg_return) {
             backup_soft(ctx);
             backup_dp<DBMentsCNode>(children, is_opponent());
+            if (manager.alias_use_caching) {
+                backup_update_alias_tables(ctx);
+            }
             return;
         }
 

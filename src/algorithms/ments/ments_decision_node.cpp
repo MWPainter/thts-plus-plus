@@ -36,7 +36,10 @@ namespace thts {
             psuedo_q_value_offset(0.0),
             m_avg_return(0.0),
             m_local_entropy(0.0),
-            m_subtree_entropy(0.0)
+            m_subtree_entropy(0.0),
+            alias_uniform_distr(),
+            alias_prior_distr(),
+            alias_action_distr()
     {
         if (thts_manager->heuristic_fn != nullptr) {
             soft_value = heuristic_value;
@@ -62,8 +65,18 @@ namespace thts {
                 psuedo_q_value_offset = thts_manager->psuedo_q_value_offset - mean_log_weight;
             }
         }
-    }
 
+        if (thts_manager->alias_use_caching) {
+            alias_uniform_distr = make_shared<DiscreteUniformDistribution<shared_ptr<const Action>>>(actions);
+            if (thts_manager->prior_fn != nullptr) {
+                alias_prior_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(policy_prior, true);
+            }
+            shared_ptr<ActionDistr> action_weights = make_shared<ActionDistr>();
+            ThtsEnvContext spoof_ctx;
+            compute_action_distribution(*action_weights, spoof_ctx);
+            alias_action_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(action_weights, true);
+        }
+    }
     /**
      * hacky avg return backup
     */
@@ -296,9 +309,50 @@ namespace thts {
     }
 
     /**
+     * Select action using alias tables
+    */
+    std::shared_ptr<const Action> MentsDNode::select_action_alias_tables() {
+        // Compute lambda values (weights the mixed distributions)
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        double epsilon = manager.epsilon;
+        if (is_root_node() && manager.root_node_epsilon > 0.0) epsilon = manager.root_node_epsilon;
+        double lambda = epsilon / log(num_visits+1);
+        if (lambda > manager.max_explore_prob) {
+            lambda = manager.max_explore_prob;
+        }
+        double lambda_tilde = manager.prior_policy_search_weight / log(num_visits+3);
+
+        // Explicit weights for the mixed distribution
+        double uniform_weight = lambda;
+        double bts_weight = (1.0 - lambda) * (1.0 - lambda_tilde);
+        double prior_weight = (1.0 - lambda) * lambda_tilde;
+
+        // Make the mixed distribution
+        shared_ptr<MixedDistributionDistr<shared_ptr<const Action>>> mixed_distr_dict = 
+            make_shared<MixedDistributionDistr<shared_ptr<const Action>>>();
+        mixed_distr_dict->insert_or_assign(alias_uniform_distr, uniform_weight);
+        mixed_distr_dict->insert_or_assign(alias_action_distr, bts_weight);
+        if (prior_weight > 0.0) {
+            mixed_distr_dict->insert_or_assign(alias_prior_distr, prior_weight);
+        }
+        MixedDistribution mixed_distr(mixed_distr_dict);
+
+        // Sample, and handle making child if need be, return
+        shared_ptr<const Action> selected_action = mixed_distr.sample(manager);
+        if (!has_child_node(selected_action)) {
+            create_child_node(selected_action);
+        }
+        return selected_action;
+    }
+
+    /**
      * Calls the ments implementation of select action
      */
     shared_ptr<const Action> MentsDNode::select_action(ThtsEnvContext& ctx) {
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        if (manager.alias_use_caching) {
+            return select_action_alias_tables();
+        }
         return select_action_ments(ctx);
     }
 
@@ -411,6 +465,28 @@ namespace thts {
         backup_m_avg_return(trial_cumulative_return_after_node);
         backup_entropy(ctx);
         soft_value = m_avg_return + get_temp() * m_subtree_entropy;
+
+        if (manager.alias_use_caching) {
+            backup_update_alias_tables(ctx);
+        }
+    }
+
+    /**
+     * Update alias tables in backup
+    */
+    void MentsDNode::backup_update_alias_tables(ThtsEnvContext& ctx) {
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        int freq = manager.alias_recompute_freq * actions->size();
+        if ((num_backups % freq) == 0) {
+            shared_ptr<ActionDistr> action_distr = make_shared<ActionDistr>();
+            double _sum_weights;
+            double _normalisation_term;
+            lock_all_children();
+            compute_action_weights(*action_distr, _sum_weights, _normalisation_term, ctx);
+            unlock_all_children();
+            // compute_action_distribution(*action_distr, ctx);
+            alias_action_distr->reconstruct_alias_table(action_distr);
+        }
     }
 
     /**

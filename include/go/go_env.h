@@ -59,6 +59,7 @@ namespace thts {
 
             float nn_temp;
             double reward_scale;
+            double dynamic_score_center;
 
         public:
             static int cur_board_size;
@@ -73,7 +74,8 @@ namespace thts {
                 bool use_nn_eval=true, 
                 std::string nn_eval_rand_seed="60415", 
                 float nn_temp=1.0,
-                double reward_scale=100.0);
+                double reward_scale=100.0,
+                double dynamic_score_center=0.0);
             virtual ~GoEnv();
 
             std::shared_ptr<const GoState> get_initial_state() const;
@@ -100,6 +102,7 @@ namespace thts {
             void fill_cached_values_with_nn_output(std::shared_ptr<const GoState> state);
         
         public:
+            void update_dynamic_score_center_for_root_state(std::shared_ptr<const GoState> state);
             double get_heuristic_val_from_nn(std::shared_ptr<const GoState> state);
             double get_heuristic_val_from_nn_itfc(std::shared_ptr<const State> state);
             std::shared_ptr<GoActionPolicy> get_policy_from_nn(std::shared_ptr<const GoState> state);

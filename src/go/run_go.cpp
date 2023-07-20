@@ -410,6 +410,10 @@ namespace thts {
                     if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED)) {
                         manager_args.recommend_most_visited = true;
                     }
+                    if (contains_key(alg_params, PARAM_USE_ALIAS_METHODS)) {
+                        manager_args.alias_use_caching = true;
+                        manager_args.alias_recompute_freq = 1;
+                    }
                 } else {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP_OPP)) {
                         manager_args.temp = alg_params->at(PARAM_BIAS_OR_SEARCH_TEMP_OPP);
@@ -429,6 +433,10 @@ namespace thts {
                     }
                     if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED_OPP)) {
                         manager_args.recommend_most_visited = true;
+                    }
+                    if (contains_key(alg_params, PARAM_USE_ALIAS_METHODS_OPP)) {
+                        manager_args.alias_use_caching = true;
+                        manager_args.alias_recompute_freq = 1;
                     }
                 }
             }
@@ -484,6 +492,10 @@ namespace thts {
                     if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED)) {
                         manager_args.recommend_most_visited = true;
                     }
+                    if (contains_key(alg_params, PARAM_USE_ALIAS_METHODS)) {
+                        manager_args.alias_use_caching = true;
+                        manager_args.alias_recompute_freq = 1;
+                    }
                 } else {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP_OPP)) {
                         manager_args.temp = alg_params->at(PARAM_BIAS_OR_SEARCH_TEMP_OPP);
@@ -519,6 +531,10 @@ namespace thts {
                     }
                     if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED_OPP)) {
                         manager_args.recommend_most_visited = true;
+                    }
+                    if (contains_key(alg_params, PARAM_USE_ALIAS_METHODS_OPP)) {
+                        manager_args.alias_use_caching = true;
+                        manager_args.alias_recompute_freq = 1;
                     }
                 }
             }
@@ -557,6 +573,10 @@ namespace thts {
                     if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED)) {
                         manager_args.recommend_most_visited = true;
                     }
+                    if (contains_key(alg_params, PARAM_USE_ALIAS_METHODS)) {
+                        manager_args.alias_use_caching = true;
+                        manager_args.alias_recompute_freq = 1;
+                    }
                 } else {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP_OPP)) {
                         manager_args.temp = alg_params->at(PARAM_BIAS_OR_SEARCH_TEMP_OPP);
@@ -576,6 +596,10 @@ namespace thts {
                     }
                     if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED_OPP)) {
                         manager_args.recommend_most_visited = true;
+                    }
+                    if (contains_key(alg_params, PARAM_USE_ALIAS_METHODS_OPP)) {
+                        manager_args.alias_use_caching = true;
+                        manager_args.alias_recompute_freq = 1;
                     }
                 }
             }
@@ -678,6 +702,7 @@ namespace thts {
             // make env
             shared_ptr<GoEnv> go_env = make_shared<GoEnv>(board_size, komi);
             shared_ptr<const GoState> cur_state = go_env->get_initial_state();
+            go_env->update_dynamic_score_center_for_root_state(cur_state);
                 
             // Get the neural net eval for the initial state
             double init_nn_eval = go_env->get_heuristic_val_from_nn(cur_state);
@@ -745,6 +770,7 @@ namespace thts {
                 // Get the neural net eval for the current state
                 double nn_eval = go_env->get_heuristic_val_from_nn(cur_state);
                 double nn_black_win = go_env->get_black_win_prob_from_nn(cur_state);
+                go_env->update_dynamic_score_center_for_root_state(cur_state);
 
                 // Log move in match
                 string move_string = write_move_in_match_file(

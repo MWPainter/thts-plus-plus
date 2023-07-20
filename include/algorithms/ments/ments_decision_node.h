@@ -10,6 +10,8 @@
 #include "thts_env_context.h"
 #include "thts_manager.h"
 
+#include "distributions.h"
+
 #include <memory>
 #include <sstream>
 #include <string>
@@ -64,6 +66,10 @@ namespace thts {
             double m_avg_return;
             double m_local_entropy;
             double m_subtree_entropy;
+
+            std::shared_ptr<DiscreteUniformDistribution<std::shared_ptr<const Action>>> alias_uniform_distr;
+            std::shared_ptr<CategoricalDistribution<std::shared_ptr<const Action>>> alias_prior_distr;
+            std::shared_ptr<CategoricalDistribution<std::shared_ptr<const Action>>> alias_action_distr;
 
             virtual void backup_m_avg_return(double cumulative_return);
             virtual double compute_m_local_entropy(ActionDistr& policy, ThtsEnvContext& ctx);
@@ -189,6 +195,16 @@ namespace thts {
              *      ctx: A thts env context
              */
             void backup_soft(ThtsEnvContext& ctx);
+
+            /**
+             * Select an action using the alias tables
+            */
+            std::shared_ptr<const Action> select_action_alias_tables();
+
+            /**
+             * Update the alias tables
+            */
+            void backup_update_alias_tables(ThtsEnvContext& ctx);
 
 
 
