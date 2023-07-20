@@ -463,7 +463,10 @@ namespace thts {
 
         num_backups++;
         backup_m_avg_return(trial_cumulative_return_after_node);
-        backup_entropy(ctx);
+        int alias_update_freq = manager.alias_recompute_freq * actions->size();
+        if (!manager.alias_use_caching || (num_backups % alias_update_freq) == 0) {
+            backup_entropy(ctx);
+        }
         soft_value = m_avg_return + get_temp() * m_subtree_entropy;
 
         if (manager.alias_use_caching) {

@@ -66,12 +66,16 @@ namespace thts {
 
     /**
      * Updates the tents mapping for 'action' to/from 'neq_q_value'
+     * 
+     * Alias tables somehow broke this. Don't think it's that critical as TENTS hasn't performed well so far, probably 
+     * not the worst if values are a bit off or inconsistent with alias method
     */
     void TentsDNode::update_maps(shared_ptr<const Action> action, double new_q_value) {
         double old_q_value = act_to_qval[action];
         act_to_qval.erase(action);
+        MentsManager& manager = (MentsManager&) *thts_manager;
         for (auto it=qval_to_act.find(old_q_value); it != qval_to_act.end(); it++) {
-            if (it->first != old_q_value) throw runtime_error("Error in updating Tents maps.");
+            if (it->first != old_q_value && !manager.alias_use_caching) throw runtime_error("Error in updating Tents maps.");
             if (it->second != action) continue;
             qval_to_act.erase(it);
             break;
@@ -254,7 +258,10 @@ namespace thts {
         num_backups++;
         backup_update_map(ctx);
         backup_m_avg_return(trial_cumulative_return_after_node);
-        backup_entropy(ctx);
+        int alias_update_freq = manager.alias_recompute_freq * actions->size();
+        if (!manager.alias_use_caching || (num_backups % alias_update_freq) == 0) {
+            backup_entropy(ctx);
+        }
         soft_value = m_avg_return + get_temp() * m_subtree_entropy;
         if (manager.alias_use_caching) {
             backup_update_alias_tables(ctx);

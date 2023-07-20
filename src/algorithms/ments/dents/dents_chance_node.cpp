@@ -55,11 +55,15 @@ namespace thts {
         MentsCNode::num_backups++;
 
         // entropy backup
-        backup_ent<DentsDNode>(children);
+        DentsManager& manager = (DentsManager&) *thts_manager;
+        DentsDNode& parent_ref = (DentsDNode&) *parent.lock();
+        int alias_update_freq = manager.alias_recompute_freq * parent_ref.actions->size();
+        if (manager.alias_use_caching || (MentsCNode::num_backups % alias_update_freq) == 0) {
+            backup_ent<DentsDNode>(children);
+        }
 
         // value backup
         double val_estimate;
-        DentsManager& manager = (DentsManager&) *thts_manager;
         if (manager.use_dp_value) {
             backup_dp<DentsDNode>(children, local_reward, is_opponent());
             val_estimate = dp_value;
