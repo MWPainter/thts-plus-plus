@@ -3,9 +3,11 @@
 #include "thts_manager.h"
 
 #include "helper_templates.h"
+#include "thts_types.h"
 
 #include <memory>
 #include <vector>
+#include <unordered_map>
 
 namespace thts {
     using namespace std;
@@ -20,6 +22,11 @@ namespace thts {
              * Samples an object of type T from the distribution and returns it.
             */
             virtual T sample(RandManager& rand_manager) = 0;
+
+            /**
+             * Gets the current distribution in a map
+            */
+            virtual shared_ptr<unordered_map<T,double>> get_distr_map() = 0;
     };
 
 
@@ -45,6 +52,18 @@ namespace thts {
             virtual T sample(RandManager& rand_manager) {
                 int index = rand_manager.get_rand_int(0, keys->size());
                 return keys->at(index);
+            };
+
+            /**
+             * Gets the current distribution in a map
+            */
+            virtual shared_ptr<unordered_map<T,double>> get_distr_map() {
+                shared_ptr<unordered_map<T,double>> distr_map = make_shared<unordered_map<T,double>>();
+                double n = keys->size();
+                for (T& key : *keys) {
+                    distr_map->insert_or_assign(key, 1.0/n);
+                }
+                return distr_map;
             };
             
     };
@@ -127,6 +146,13 @@ namespace thts {
                     return alias_entry.first;
                 }
                 return alias_entry.second;
+            };
+
+            /**
+             * Gets the current distribution in a map
+            */
+            virtual shared_ptr<unordered_map<T,double>> get_distr_map() {
+                return distr;
             };
 
             /**
@@ -271,6 +297,24 @@ namespace thts {
                 shared_ptr<Distribution<T>> sampled_distr = helper::sample_from_distribution(*distr, rand_manager);
                 return sampled_distr->sample(rand_manager);
             };
+
+            /**
+             * Gets the current distribution in a map
+            */
+            virtual shared_ptr<unordered_map<T,double>> get_distr_map() {
+                shared_ptr<unordered_map<T,double>> distr_map = make_shared<unordered_map<T,double>>();
+                for (pair<shared_ptr<Distribution<T>>,double> pr : *distr) {
+                    shared_ptr<Distribution<T>> sub_distr = pr.first;
+                    double prob = pr.second;
+                    shared_ptr<unordered_map<T,double>> sub_distr_map = sub_distr->get_distr_map();
+                    for (pair<T,double> pr : *sub_distr_map) {
+                        T key = pr.first;
+                        double weight = pr.second;
+                        (*distr_map)[key] += prob * weight;
+                    }
+                }
+                return distr_map;
+            }
         
     };
 }

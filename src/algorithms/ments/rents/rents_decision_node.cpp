@@ -33,6 +33,8 @@ namespace thts {
             ss_p << "d_" << decision_depth-1;
             _parent_distr_key = ss_p.str();
         }
+
+        cached_action_distr = select_action_alias_tables_get_mixed_distr()->get_distr_map();
     }
 
     /**
@@ -138,12 +140,32 @@ namespace thts {
     }
 
     /**
+     * Add context stuff to select action alias tables
+    */
+    shared_ptr<const Action> RentsDNode::select_action_alias_tables(ThtsEnvContext& ctx) {
+        // Get mixed distribution
+        shared_ptr<MixedDistribution<shared_ptr<const Action>>> mixed_distr = 
+            select_action_alias_tables_get_mixed_distr();
+
+        // Put cached distribution in context
+        put_node_distr_in_context(cached_action_distr, ctx);
+
+        // Sample, and handle making child if need be, return
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        shared_ptr<const Action> selected_action = mixed_distr->sample(manager);
+        if (!has_child_node(selected_action)) {
+            create_child_node(selected_action);
+        }
+        return selected_action;
+    }
+
+    /**
      * Calls the rents implementation of select action
      */
     shared_ptr<const Action> RentsDNode::select_action(ThtsEnvContext& ctx) {
         MentsManager& manager = (MentsManager&) *thts_manager;
         if (manager.alias_use_caching) {
-            return select_action_alias_tables();
+            return select_action_alias_tables(ctx);
         }
         return select_action_rents(ctx);
     }
@@ -159,6 +181,15 @@ namespace thts {
             decision_depth, 
             decision_timestep, 
             static_pointer_cast<const RentsDNode>(shared_from_this()));
+    }
+
+    /**
+     * Update alias tables in backup
+     * Update the cached action distribution in rents
+    */
+    void RentsDNode::backup_update_alias_tables(ThtsEnvContext& ctx) {
+        MentsDNode::backup_update_alias_tables(ctx);
+        cached_action_distr = select_action_alias_tables_get_mixed_distr()->get_distr_map();
     }
 }
 

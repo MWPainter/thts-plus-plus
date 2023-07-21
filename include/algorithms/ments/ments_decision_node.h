@@ -197,6 +197,12 @@ namespace thts {
             void backup_soft(ThtsEnvContext& ctx);
 
             /**
+             * Gets the mixed distribution using alias tables
+            */
+            std::shared_ptr<MixedDistribution<std::shared_ptr<const Action>>> 
+                select_action_alias_tables_get_mixed_distr() const;
+
+            /**
              * Select an action using the alias tables
             */
             std::shared_ptr<const Action> select_action_alias_tables();
@@ -204,7 +210,7 @@ namespace thts {
             /**
              * Update the alias tables
             */
-            void backup_update_alias_tables(ThtsEnvContext& ctx);
+            virtual void backup_update_alias_tables(ThtsEnvContext& ctx);
 
 
 

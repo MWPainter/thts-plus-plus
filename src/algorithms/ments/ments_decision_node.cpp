@@ -309,9 +309,11 @@ namespace thts {
     }
 
     /**
-     * Select action using alias tables
+     * Gets the mixed distribution using alias tables
     */
-    std::shared_ptr<const Action> MentsDNode::select_action_alias_tables() {
+    shared_ptr<MixedDistribution<shared_ptr<const Action>>> 
+        MentsDNode::select_action_alias_tables_get_mixed_distr() const 
+    {
         // Compute lambda values (weights the mixed distributions)
         MentsManager& manager = (MentsManager&) *thts_manager;
         double epsilon = manager.epsilon;
@@ -335,10 +337,21 @@ namespace thts {
         if (prior_weight > 0.0) {
             mixed_distr_dict->insert_or_assign(alias_prior_distr, prior_weight);
         }
-        MixedDistribution mixed_distr(mixed_distr_dict);
+
+        return make_shared<MixedDistribution<shared_ptr<const Action>>>(mixed_distr_dict);
+    }
+
+    /**
+     * Select action using alias tables
+    */
+    std::shared_ptr<const Action> MentsDNode::select_action_alias_tables() {
+        // Get mixed distribution
+        shared_ptr<MixedDistribution<shared_ptr<const Action>>> mixed_distr = 
+            select_action_alias_tables_get_mixed_distr();
 
         // Sample, and handle making child if need be, return
-        shared_ptr<const Action> selected_action = mixed_distr.sample(manager);
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        shared_ptr<const Action> selected_action = mixed_distr->sample(manager);
         if (!has_child_node(selected_action)) {
             create_child_node(selected_action);
         }
