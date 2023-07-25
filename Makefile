@@ -38,7 +38,7 @@ CPPFLAGS = $(INCLUDES) -Wall -std=c++17
 TEST_CPPFLAGS = 
 CPPFLAGS_DEBUG = -g
 
-LDFLAGS = -lpthread
+LDFLAGS = -L/home/michael/anaconda3/envs/thts++/lib -ltcmalloc -lpthread
 TEST_LDFLAGS = -Lexternal/googletest/build/lib -lgtest -lgtest_main -lgmock
 
 TARGET_THTS = thts
