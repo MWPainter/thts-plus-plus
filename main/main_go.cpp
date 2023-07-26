@@ -24,16 +24,17 @@ static const std::string EXPR_ID_REC_MOST_VISITED = "009_recommend_most_visited"
 static const std::string EXPR_ID_DENTS_SEARCH_TEMP_HPS = "010_dents_search_temp_hps";
 
 // 100 series - final round robins on 9x9
-static const std::string EXPR_ID_RAND = "100_random_9x9"; // roiund robin with random search incl
+static const std::string EXPR_ID_RAND = "100_random_9x9"; // round robin with random search incl
 static const std::string EXPR_ID_RR = "101_round_robin_9x9";
 static const std::string EXPR_ID_RR_W_ALIAS = "102_round_robin_w_alias_9x9";
 
 // 200 series - round robin using params from 9x9
-static const std::string EPXR_ID_19_RAND_NO_TUNE = "200_rr_with_random_19x19";
+static const std::string EXPR_ID_19_RAND_NO_TUNE = "200_rr_with_random_19x19";
 static const std::string EXPR_ID_19_RR_NO_TUNE = "201_round_robin_19x19";
 static const std::string EXPR_ID_19_RR_NO_TUNE_W_ALIAS = "202_round_robin_w_alias_19x19";
+static const std::string EXPR_ID_19_RAND_NO_TUNE_MOAR = "203_rr_with_random_19x19";
 
-// 300 sereis - tuning on 19x19 (focussing on algorithms that have a chance at winning)
+// 300 series - tuning on 19x19 (focussing on algorithms that have a chance at winning)
 static const std::string EXPR_ID_19_EST_HPS = "300_est_hps";
 static const std::string EXPR_ID_19_DENTS_HPS = "301_dents_hps";
 
@@ -751,7 +752,7 @@ int main(int argc, char* argv[]) {
 
     // 200
     // Random - testing if uniform search can outperform Katago
-    if (expr_id == EPXR_ID_19_RAND_NO_TUNE) {
+    if (expr_id == EXPR_ID_19_RAND_NO_TUNE || expr_id == EXPR_ID_19_RAND_NO_TUNE_MOAR) {
         string algo1(argv[2]);
         string algo2(argv[3]);
 
