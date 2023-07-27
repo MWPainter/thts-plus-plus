@@ -20,7 +20,7 @@ namespace thts {
             EntDNode(),
             EmpNode(1, heuristic_value)
     {   
-        if (!thts_manager->alias_use_caching || thts_manager->value_temp_init == 0.0) {
+        if (!thts_manager->alias_use_caching && thts_manager->value_temp_init != 0.0) {
             // Init entropy
             ActionDistr action_distr;
             ThtsEnvContext ctx;
