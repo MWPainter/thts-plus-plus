@@ -552,6 +552,7 @@ namespace thts {
             manager_args.root_node_epsilon = 0.67;
             manager_args.shift_pseudo_q_values = true;
             manager_args.prior_policy_search_weight = 0.5;
+            manager_args.value_temp_init = 0.0;
             if (alg_params != nullptr) {
                 if (!is_opp) {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP)) {
