@@ -335,7 +335,7 @@ namespace thts {
             make_shared<MixedDistributionDistr<shared_ptr<const Action>>>();
         mixed_distr_dict->insert_or_assign(alias_uniform_distr, uniform_weight);
         mixed_distr_dict->insert_or_assign(alias_action_distr, bts_weight);
-        if (thts_manager.prior_fn != nullptr) {
+        if (manager.prior_fn != nullptr) {
             mixed_distr_dict->insert_or_assign(alias_prior_distr, prior_weight);
         }
 
