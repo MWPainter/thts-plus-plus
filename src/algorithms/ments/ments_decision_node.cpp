@@ -65,17 +65,6 @@ namespace thts {
                 psuedo_q_value_offset = thts_manager->psuedo_q_value_offset - mean_log_weight;
             }
         }
-
-        if (thts_manager->alias_use_caching) {
-            alias_uniform_distr = make_shared<DiscreteUniformDistribution<shared_ptr<const Action>>>(actions);
-            if (thts_manager->prior_fn != nullptr) {
-                alias_prior_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(policy_prior, true);
-            }
-            shared_ptr<ActionDistr> action_weights = make_shared<ActionDistr>();
-            ThtsEnvContext spoof_ctx;
-            compute_action_distribution(*action_weights, spoof_ctx);
-            alias_action_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(action_weights, true);
-        }
     }
     /**
      * hacky avg return backup
@@ -314,8 +303,20 @@ namespace thts {
     shared_ptr<MixedDistribution<shared_ptr<const Action>>> 
         MentsDNode::select_action_alias_tables_get_mixed_distr() const 
     {
-        // Compute lambda values (weights the mixed distributions)
+        // Lazily initialise distributions
         MentsManager& manager = (MentsManager&) *thts_manager;
+        if (alias_action_distr == nullptr) {
+            alias_uniform_distr = make_shared<DiscreteUniformDistribution<shared_ptr<const Action>>>(actions);
+            if (thts_manager.prior_fn != nullptr) {
+                alias_prior_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(policy_prior, true);
+            }
+            shared_ptr<ActionDistr> action_weights = make_shared<ActionDistr>();
+            ThtsEnvContext spoof_ctx;
+            compute_action_distribution(*action_weights, spoof_ctx);
+            alias_action_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(action_weights, true);
+        }
+        
+        // Compute lambda values (weights the mixed distributions)
         double epsilon = manager.epsilon;
         if (is_root_node() && manager.root_node_epsilon > 0.0) epsilon = manager.root_node_epsilon;
         double lambda = epsilon / log(num_visits+1);
@@ -334,7 +335,7 @@ namespace thts {
             make_shared<MixedDistributionDistr<shared_ptr<const Action>>>();
         mixed_distr_dict->insert_or_assign(alias_uniform_distr, uniform_weight);
         mixed_distr_dict->insert_or_assign(alias_action_distr, bts_weight);
-        if (prior_weight > 0.0) {
+        if (thts_manager.prior_fn != nullptr) {
             mixed_distr_dict->insert_or_assign(alias_prior_distr, prior_weight);
         }
 
