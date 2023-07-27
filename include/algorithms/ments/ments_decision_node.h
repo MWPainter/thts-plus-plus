@@ -199,18 +199,18 @@ namespace thts {
             /**
              * Lazily initialises the alias tables
             */
-            void lazy_init_alias_tables();
+            void lazy_init_alias_tables(ThtsEnvContext& ctx);
 
             /**
              * Gets the mixed distribution using alias tables
             */
             std::shared_ptr<MixedDistribution<std::shared_ptr<const Action>>> 
-                select_action_alias_tables_get_mixed_distr();
+                select_action_alias_tables_get_mixed_distr(ThtsEnvContext& ctx);
 
             /**
              * Select an action using the alias tables
             */
-            std::shared_ptr<const Action> select_action_alias_tables();
+            std::shared_ptr<const Action> select_action_alias_tables(ThtsEnvContext& ctx);
 
             /**
              * Update the alias tables
