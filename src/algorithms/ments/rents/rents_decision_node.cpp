@@ -190,7 +190,7 @@ namespace thts {
     */
     void RentsDNode::backup_update_alias_tables(ThtsEnvContext& ctx) {
         MentsDNode::backup_update_alias_tables(ctx);
-        cached_action_distr = select_action_alias_tables_get_mixed_distr()->get_distr_map();
+        cached_action_distr = select_action_alias_tables_get_mixed_distr(ctx)->get_distr_map();
     }
 }
 
