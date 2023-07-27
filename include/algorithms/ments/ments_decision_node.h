@@ -197,6 +197,11 @@ namespace thts {
             void backup_soft(ThtsEnvContext& ctx);
 
             /**
+             * Lazily initialises the alias tables
+            */
+            void lazy_init_alias_tables();
+
+            /**
              * Gets the mixed distribution using alias tables
             */
             std::shared_ptr<MixedDistribution<std::shared_ptr<const Action>>> 
