@@ -301,7 +301,7 @@ namespace thts {
      * Gets the mixed distribution using alias tables
     */
     shared_ptr<MixedDistribution<shared_ptr<const Action>>> 
-        MentsDNode::select_action_alias_tables_get_mixed_distr() const 
+        MentsDNode::select_action_alias_tables_get_mixed_distr() 
     {
         // Lazily initialise distributions
         MentsManager& manager = (MentsManager&) *thts_manager;
