@@ -298,25 +298,33 @@ namespace thts {
     }
 
     /**
+     * Lazily initialises the alias tables
+    */
+    void MentsDNode::lazy_init_alias_tables() {
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        alias_uniform_distr = make_shared<DiscreteUniformDistribution<shared_ptr<const Action>>>(actions);
+        if (manager.prior_fn != nullptr) {
+            alias_prior_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(policy_prior, true);
+        }
+        shared_ptr<ActionDistr> action_weights = make_shared<ActionDistr>();
+        ThtsEnvContext spoof_ctx;
+        compute_action_distribution(*action_weights, spoof_ctx);
+        alias_action_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(action_weights, true);
+    }
+
+    /**
      * Gets the mixed distribution using alias tables
     */
     shared_ptr<MixedDistribution<shared_ptr<const Action>>> 
         MentsDNode::select_action_alias_tables_get_mixed_distr() 
     {
         // Lazily initialise distributions
-        MentsManager& manager = (MentsManager&) *thts_manager;
         if (alias_action_distr == nullptr) {
-            alias_uniform_distr = make_shared<DiscreteUniformDistribution<shared_ptr<const Action>>>(actions);
-            if (manager.prior_fn != nullptr) {
-                alias_prior_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(policy_prior, true);
-            }
-            shared_ptr<ActionDistr> action_weights = make_shared<ActionDistr>();
-            ThtsEnvContext spoof_ctx;
-            compute_action_distribution(*action_weights, spoof_ctx);
-            alias_action_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(action_weights, true);
+            lazy_init_alias_tables();
         }
         
         // Compute lambda values (weights the mixed distributions)
+        MentsManager& manager = (MentsManager&) *thts_manager;
         double epsilon = manager.epsilon;
         if (is_root_node() && manager.root_node_epsilon > 0.0) epsilon = manager.root_node_epsilon;
         double lambda = epsilon / log(num_visits+1);
@@ -495,6 +503,11 @@ namespace thts {
         MentsManager& manager = (MentsManager&) *thts_manager;
         int freq = manager.alias_recompute_freq * actions->size();
         if ((num_backups % freq) == 0) {
+            // Lazily initialise distributions
+            if (alias_action_distr == nullptr) {
+                lazy_init_alias_tables();
+            }
+            
             shared_ptr<ActionDistr> action_distr = make_shared<ActionDistr>();
             double _sum_weights;
             double _normalisation_term;
