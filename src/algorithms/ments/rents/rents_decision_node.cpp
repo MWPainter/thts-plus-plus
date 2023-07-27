@@ -34,7 +34,8 @@ namespace thts {
             _parent_distr_key = ss_p.str();
         }
 
-        cached_action_distr = select_action_alias_tables_get_mixed_distr()->get_distr_map();
+        ThtsEnvContext spoof_ctx;
+        cached_action_distr = select_action_alias_tables_get_mixed_distr(spoof_ctx)->get_distr_map();
     }
 
     /**
