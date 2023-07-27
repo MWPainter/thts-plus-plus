@@ -510,7 +510,7 @@ namespace thts {
         if ((num_backups % freq) == 0) {
             // Lazily initialise distributions
             if (alias_action_distr == nullptr) {
-                lazy_init_alias_tables();
+                lazy_init_alias_tables(ctx);
             }
             
             shared_ptr<ActionDistr> action_distr = make_shared<ActionDistr>();
