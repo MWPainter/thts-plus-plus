@@ -300,27 +300,32 @@ namespace thts {
     /**
      * Lazily initialises the alias tables
     */
-    void MentsDNode::lazy_init_alias_tables() {
+    void MentsDNode::lazy_init_alias_tables(ThtsEnvContext& ctx) {
         MentsManager& manager = (MentsManager&) *thts_manager;
         alias_uniform_distr = make_shared<DiscreteUniformDistribution<shared_ptr<const Action>>>(actions);
         if (manager.prior_fn != nullptr) {
             alias_prior_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(policy_prior, true);
         }
-        shared_ptr<ActionDistr> action_weights = make_shared<ActionDistr>();
-        ThtsEnvContext spoof_ctx;
-        compute_action_distribution(*action_weights, spoof_ctx);
-        alias_action_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(action_weights, true);
+        // shared_ptr<ActionDistr> action_weights = make_shared<ActionDistr>();
+        // compute_action_distribution(*action_weights, spoof_ctx);
+        shared_ptr<ActionDistr> action_distr = make_shared<ActionDistr>();
+        double _sum_weights;
+        double _normalisation_term;
+        lock_all_children();
+        compute_action_weights(*action_distr, _sum_weights, _normalisation_term, ctx);
+        unlock_all_children();
+        alias_action_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(action_distr, true);
     }
 
     /**
      * Gets the mixed distribution using alias tables
     */
     shared_ptr<MixedDistribution<shared_ptr<const Action>>> 
-        MentsDNode::select_action_alias_tables_get_mixed_distr() 
+        MentsDNode::select_action_alias_tables_get_mixed_distr(ThtsEnvContext& ctx) 
     {
         // Lazily initialise distributions
         if (alias_action_distr == nullptr) {
-            lazy_init_alias_tables();
+            lazy_init_alias_tables(ctx);
         }
         
         // Compute lambda values (weights the mixed distributions)
@@ -353,10 +358,10 @@ namespace thts {
     /**
      * Select action using alias tables
     */
-    std::shared_ptr<const Action> MentsDNode::select_action_alias_tables() {
+    std::shared_ptr<const Action> MentsDNode::select_action_alias_tables(ThtsEnvContext& ctx) {
         // Get mixed distribution
         shared_ptr<MixedDistribution<shared_ptr<const Action>>> mixed_distr = 
-            select_action_alias_tables_get_mixed_distr();
+            select_action_alias_tables_get_mixed_distr(ctx);
 
         // Sample, and handle making child if need be, return
         MentsManager& manager = (MentsManager&) *thts_manager;
@@ -373,7 +378,7 @@ namespace thts {
     shared_ptr<const Action> MentsDNode::select_action(ThtsEnvContext& ctx) {
         MentsManager& manager = (MentsManager&) *thts_manager;
         if (manager.alias_use_caching) {
-            return select_action_alias_tables();
+            return select_action_alias_tables(ctx);
         }
         return select_action_ments(ctx);
     }
