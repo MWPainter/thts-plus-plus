@@ -808,7 +808,7 @@ int main(int argc, char* argv[]) {
             25,                 // num games
             7.5,                // komi
             true,
-            30.0,               // time per move
+            15.0,               // time per move
             128,                 // num threads
             false,              // NOT running ments hps
             alg_params);        
@@ -993,7 +993,7 @@ int main(int argc, char* argv[]) {
             50,                 // num games
             7.5,                // komi
             true,
-            30.0,               // time per move
+            15.0,               // time per move
             128,                 // num threads
             false,              // NOT running ments hps
             alg_params);        
