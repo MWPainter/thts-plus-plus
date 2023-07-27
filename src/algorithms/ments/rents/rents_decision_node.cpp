@@ -145,7 +145,7 @@ namespace thts {
     shared_ptr<const Action> RentsDNode::select_action_alias_tables(ThtsEnvContext& ctx) {
         // Get mixed distribution
         shared_ptr<MixedDistribution<shared_ptr<const Action>>> mixed_distr = 
-            select_action_alias_tables_get_mixed_distr();
+            select_action_alias_tables_get_mixed_distr(ctx);
 
         // Put cached distribution in context
         put_node_distr_in_context(cached_action_distr, ctx);
