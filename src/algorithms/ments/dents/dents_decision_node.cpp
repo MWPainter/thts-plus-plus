@@ -20,11 +20,13 @@ namespace thts {
             EntDNode(),
             EmpNode(1, heuristic_value)
     {   
-        // Init entropy
-        ActionDistr action_distr;
-        ThtsEnvContext ctx;
-        compute_action_distribution(action_distr, ctx);
-        backup_ent<DentsCNode>(children, action_distr, is_opponent());
+        if (!thts_manager->alias_use_caching || thts_manager->value_temp_init == 0.0) {
+            // Init entropy
+            ActionDistr action_distr;
+            ThtsEnvContext ctx;
+            compute_action_distribution(action_distr, ctx);
+            backup_ent<DentsCNode>(children, action_distr, is_opponent());
+        }
     }
 
     /**
