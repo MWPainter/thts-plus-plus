@@ -307,7 +307,7 @@ namespace thts {
         MentsManager& manager = (MentsManager&) *thts_manager;
         if (alias_action_distr == nullptr) {
             alias_uniform_distr = make_shared<DiscreteUniformDistribution<shared_ptr<const Action>>>(actions);
-            if (thts_manager.prior_fn != nullptr) {
+            if (manager.prior_fn != nullptr) {
                 alias_prior_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(policy_prior, true);
             }
             shared_ptr<ActionDistr> action_weights = make_shared<ActionDistr>();
