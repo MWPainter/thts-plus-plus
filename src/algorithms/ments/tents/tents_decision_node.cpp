@@ -189,7 +189,7 @@ namespace thts {
         MentsManager& manager = (MentsManager&) *thts_manager;
         shared_ptr<const Action> selected_action;
         if (manager.alias_use_caching) {
-            selected_action = select_action_alias_tables();
+            selected_action = select_action_alias_tables(ctx);
         } else {
             selected_action = select_action_ments(ctx);
         }
