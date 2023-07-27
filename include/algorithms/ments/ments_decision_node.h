@@ -200,7 +200,7 @@ namespace thts {
              * Gets the mixed distribution using alias tables
             */
             std::shared_ptr<MixedDistribution<std::shared_ptr<const Action>>> 
-                select_action_alias_tables_get_mixed_distr() const;
+                select_action_alias_tables_get_mixed_distr();
 
             /**
              * Select an action using the alias tables
