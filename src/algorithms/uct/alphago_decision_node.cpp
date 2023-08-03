@@ -41,9 +41,9 @@ namespace thts {
     */
     void AlphaGoDNode::visit(ThtsEnvContext& ctx) {
         PuctDNode::visit(ctx);
-        if (is_root_node()) {
-            add_dirichlet_noise_to_prior();
-        }
+        // if (is_root_node()) {
+        //     add_dirichlet_noise_to_prior();
+        // }
     }
     
     /**
