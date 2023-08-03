@@ -81,13 +81,13 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
 
-        // alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
-        // alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
 
         thts::run_go_games(
             expr_id,            // expr id
-            ALG_ID_EST, //ALG_ID_KATA,            // black
-            ALG_ID_DENTS,             // white
+            ALG_ID_RENTS, //ALG_ID_KATA,            // black
+            ALG_ID_EST,             // white
             19,                  // board size
             10,                 // num games
             7.5,                // komi
@@ -902,7 +902,7 @@ int main(int argc, char* argv[]) {
             50,                 // num games
             7.5,                // komi
             true,
-            30.0,               // time per move
+            15.0,               // time per move
             128,                 // num threads
             false,              // NOT running ments hps
             alg_params);        

@@ -43,7 +43,7 @@ namespace thts {
      * Or just null pointer if we're the root node
     */
     shared_ptr<ActionDistr> RentsDNode::get_parent_distr_from_context(ThtsEnvContext& ctx) const {
-        if (decision_depth < 1) return nullptr;
+        if (decision_depth < 1 || !ctx.contains_key(_parent_distr_key)) return nullptr;
         return ctx.get_value_ptr<ActionDistr>(_parent_distr_key);
     }
 
