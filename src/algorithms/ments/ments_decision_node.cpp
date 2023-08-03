@@ -269,7 +269,7 @@ namespace thts {
                 action_distr[action] += (1.0 - lambda) * lambda_tilde * policy_prior->at(action);
             }
             action_distr[action] += lambda * uniform_distr_mass;
-            if (action_distr[action] < EPS) {
+            if (isnan(action_distr[action]) || action_distr[action] < EPS) {
                 near_zero_prob_actions.push_back(action);
             }
         }
