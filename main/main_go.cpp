@@ -107,8 +107,8 @@ int main(int argc, char* argv[]) {
         double komi = stod(argv[2]);
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 10.0);
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 10.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 110.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0);
 
         thts::run_go_games(
             expr_id,            // expr id
@@ -510,8 +510,8 @@ int main(int argc, char* argv[]) {
         int threads_opp = stoi(argv[3]);
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 10.0);
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 10.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 110.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0);
         alg_params->insert_or_assign(NUM_THREADS_OVERRIDE, threads);
         alg_params->insert_or_assign(NUM_THREADS_OVERRIDE_OPP, threads_opp);
 
@@ -583,10 +583,10 @@ int main(int argc, char* argv[]) {
         double value_temp_opp = 20.0;
         
         if (algo1 == ALG_ID_KATA) {
-            temp = 10.0;
+            temp = 110.0;
         }
         if (algo2 == ALG_ID_KATA) {
-            temp_opp = 10.0;
+            temp_opp = 110.0;
         }
 
         if (algo1 == ALG_ID_EST) {
@@ -649,10 +649,10 @@ int main(int argc, char* argv[]) {
         double value_temp_opp = 20.0;
         
         if (algo1 == ALG_ID_KATA) {
-            temp = 10.0;
+            temp = 110.0;
         }
         if (algo2 == ALG_ID_KATA) {
-            temp_opp = 10.0;
+            temp_opp = 110.0;
         }
 
         if (algo1 == ALG_ID_MENTS) {
@@ -740,10 +740,10 @@ int main(int argc, char* argv[]) {
         double value_temp_opp = 20.0;
         
         if (algo1 == ALG_ID_KATA) {
-            temp = 10.0;
+            temp = 110.0;
         }
         if (algo2 == ALG_ID_KATA) {
-            temp_opp = 10.0;
+            temp_opp = 110.0;
         }
 
         if (algo1 == ALG_ID_MENTS) {
@@ -833,10 +833,10 @@ int main(int argc, char* argv[]) {
         double value_temp_opp = 20.0;
         
         if (algo1 == ALG_ID_KATA) {
-            temp = 10.0;
+            temp = 110.0;
         }
         if (algo2 == ALG_ID_KATA) {
-            temp_opp = 10.0;
+            temp_opp = 110.0;
         }
 
         if (algo1 == ALG_ID_EST) {
@@ -901,10 +901,10 @@ int main(int argc, char* argv[]) {
         double value_temp_opp = 20.0;
         
         if (algo1 == ALG_ID_KATA) {
-            temp = 10.0;
+            temp = 110.0;
         }
         if (algo2 == ALG_ID_KATA) {
-            temp_opp = 10.0;
+            temp_opp = 110.0;
         }
 
         if (algo1 == ALG_ID_MENTS) {
@@ -986,8 +986,8 @@ int main(int argc, char* argv[]) {
         string algo1(argv[2]);
         string algo2(argv[3]);
 
-        double temp = 10.0;
-        double temp_opp = 10.0;
+        double temp = 110.0;
+        double temp_opp = 110.0;
         double value_temp = 20.0;
         double value_temp_opp = 20.0;
         
