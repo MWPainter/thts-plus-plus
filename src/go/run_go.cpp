@@ -750,11 +750,17 @@ namespace thts {
                 i = 1-i;
 
                 // setup+run thts for this move
+                int num_threads_for_this_move = num_threads;
+                if (!is_opp && contains_key(alg_params, NUM_THREADS_OVERRIDE)) {
+                    num_threads_for_this_move = alg_params->at(NUM_THREADS_OVERRIDE);
+                } else if (is_opp && contains_key(alg_params, NUM_THREADS_OVERRIDE_OPP)) {
+                    num_threads_for_this_move = alg_params->at(NUM_THREADS_OVERRIDE_OPP);
+                }
                 shared_ptr<ThtsManager> thts_manager = make_manager(
                     go_env, cur_state, algo_id_for_this_move, board_size, alg_params, is_opp);
                 shared_ptr<ThtsDNode> root_node = make_root_node(
                     go_env, thts_manager, cur_state, algo_id_for_this_move, move_counter);
-                ThtsPool thts_pool(thts_manager, root_node, num_threads);
+                ThtsPool thts_pool(thts_manager, root_node, num_threads_for_this_move);
                 int trials_per_move = numeric_limits<int>::max();
                 double time_per_move = numeric_limits<double>::max();
                 if (use_time_controls) {
