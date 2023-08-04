@@ -520,12 +520,12 @@ int main(int argc, char* argv[]) {
             ALG_ID_KATA,             // black
             ALG_ID_KATA,             // white
             9,                  // board size
-            25,                 // num games
+            15,                 // num games
             6.5,               // komi
             true,
             15.0,               // time per move
             128,                // num threads
-            false,
+            true,
             alg_params,
             NUM_THREADS_OVERRIDE,          // hps key, black
             NUM_THREADS_OVERRIDE_OPP);     // hps key, white
@@ -559,12 +559,12 @@ int main(int argc, char* argv[]) {
             ALG_ID_EST,             // black
             ALG_ID_EST,             // white
             9,                  // board size
-            25,                 // num games
+            15,                 // num games
             6.5,               // komi
             true,
             15.0,               // time per move
             128,                // num threads
-            false,
+            true,
             alg_params,
             NUM_THREADS_OVERRIDE,          // hps key, black
             NUM_THREADS_OVERRIDE_OPP);     // hps key, white
