@@ -621,6 +621,13 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
 
+        if (algo1 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(NUM_THREADS_OVERRIDE, 32);
+        } 
+        if (algo2 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(NUM_THREADS_OVERRIDE_OPP, 32);
+        }
+
         thts::run_go_games(
             expr_id,            // expr id
             algo1,              // black
@@ -711,6 +718,13 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.03);   
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
+
+        if (algo1 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(NUM_THREADS_OVERRIDE, 32);
+        } 
+        if (algo2 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(NUM_THREADS_OVERRIDE_OPP, 32);
+        }
 
         thts::run_go_games(
             expr_id,            // expr id
@@ -806,6 +820,13 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
 
+        if (algo1 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(NUM_THREADS_OVERRIDE, 32);
+        } 
+        if (algo2 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(NUM_THREADS_OVERRIDE_OPP, 32);
+        }
+
         thts::run_go_games(
             expr_id,            // expr id
             algo1,              // black
@@ -871,6 +892,13 @@ int main(int argc, char* argv[]) {
         if (expr_id == EXPR_ID_19_RAND_NO_TUNE_W_ALIAS) {
             alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
             alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
+        }
+
+        if (algo1 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(NUM_THREADS_OVERRIDE, 32);
+        } 
+        if (algo2 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(NUM_THREADS_OVERRIDE_OPP, 32);
         }
 
         thts::run_go_games(
@@ -963,6 +991,13 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.03);   
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
+
+        if (algo1 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(NUM_THREADS_OVERRIDE, 32);
+        } 
+        if (algo2 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(NUM_THREADS_OVERRIDE_OPP, 32);
+        }
 
         thts::run_go_games(
             expr_id,            // expr id
@@ -1057,6 +1092,13 @@ int main(int argc, char* argv[]) {
 
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
+
+        if (algo1 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(NUM_THREADS_OVERRIDE, 32);
+        } 
+        if (algo2 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(NUM_THREADS_OVERRIDE_OPP, 32);
+        }
 
         thts::run_go_games(
             expr_id,            // expr id
