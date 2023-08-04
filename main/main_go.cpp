@@ -586,10 +586,10 @@ int main(int argc, char* argv[]) {
         }
 
         if (algo1 == ALG_ID_MENTS) {
-            temp = 10.0;
+            temp = 0.5;
         }
         if (algo2 == ALG_ID_MENTS) {
-            temp_opp = 10.0;
+            temp_opp = 0.5;
         }
 
         if (algo1 == ALG_ID_RENTS) {
@@ -677,10 +677,10 @@ int main(int argc, char* argv[]) {
         }
 
         if (algo1 == ALG_ID_MENTS) {
-            temp = 10.0;
+            temp = 0.5;
         }
         if (algo2 == ALG_ID_MENTS) {
-            temp_opp = 10.0;
+            temp_opp = 0.5;
         }
 
         if (algo1 == ALG_ID_RENTS) {
@@ -838,10 +838,10 @@ int main(int argc, char* argv[]) {
         }
 
         if (algo1 == ALG_ID_MENTS) {
-            temp = 10.0;
+            temp = 0.5;
         }
         if (algo2 == ALG_ID_MENTS) {
-            temp_opp = 10.0;
+            temp_opp = 0.5;
         }
 
         if (algo1 == ALG_ID_RENTS) {
@@ -929,10 +929,10 @@ int main(int argc, char* argv[]) {
         }
 
         if (algo1 == ALG_ID_MENTS) {
-            temp = 10.0;
+            temp = 0.5;
         }
         if (algo2 == ALG_ID_MENTS) {
-            temp_opp = 10.0;
+            temp_opp = 0.5;
         }
 
         if (algo1 == ALG_ID_RENTS) {
