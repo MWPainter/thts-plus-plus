@@ -1,9 +1,9 @@
 # variables 
 EXPR_ID="101_round_robin_9x9"
 
-num_fixup=10
-agent_one_ids=("tents" "tents" "tents" "tents" "tents" "kata" "est" "dents" "rents" "ments")
-agent_two_ids=("kata" "est" "dents" "rents" "ments" "tents" "tents" "tents" "tents" "tents")
+num_fixup=4
+agent_one_ids=("tents" "tents" "kata" "ments")
+agent_two_ids=("kata" "ments" "tents" "tents")
 
 i=0
 until [ $i -ge $num_fixup ]
