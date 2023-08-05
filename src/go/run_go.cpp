@@ -283,9 +283,8 @@ namespace thts {
             manager_args.heuristic_psuedo_trials = 1.0;
             manager_args.heuristic_fn = go_heuristic_fn;
             manager_args.prior_fn = go_prior_fn;
-            manager_args.dirichlet_noise_coeff = 0.25;
-            int num_moves_avail = go_env->get_valid_actions_itfc(init_state)->size();
-            manager_args.dirichlet_noise_param = 0.03 * board_size * board_size / num_moves_avail;
+            manager_args.dirichlet_noise_coeff = 0.0;
+            manager_args.dirichlet_noise_param = 0.0;
             if (alg_params != nullptr) {
                 if (!is_opp) {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP)) {
@@ -294,12 +293,22 @@ namespace thts {
                     if (contains_key(alg_params, PARAM_KATA_RECOMMEND_AVG_RETURN)) {
                         manager_args.recommend_most_visited = false;
                     }
+                    if (contains_key(alg_params, PARAM_USE_DIRICHLET_NOISE)) {
+                        int num_moves_avail = go_env->get_valid_actions_itfc(init_state)->size();
+                        manager_args.dirichlet_noise_coeff = 0.25;
+                        manager_args.dirichlet_noise_param = 0.03 * board_size * board_size / num_moves_avail;
+                    }
                 } else {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP_OPP)) {
                         manager_args.bias = alg_params->at(PARAM_BIAS_OR_SEARCH_TEMP_OPP);
                     }
                     if (contains_key(alg_params, PARAM_KATA_RECOMMEND_AVG_RETURN_OPP)) {
                         manager_args.recommend_most_visited = false;
+                    }
+                    if (contains_key(alg_params, PARAM_USE_DIRICHLET_NOISE_OPP)) {
+                        int num_moves_avail = go_env->get_valid_actions_itfc(init_state)->size();
+                        manager_args.dirichlet_noise_coeff = 0.25;
+                        manager_args.dirichlet_noise_param = 0.03 * board_size * board_size / num_moves_avail;
                     }
                 }
             }
