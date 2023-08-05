@@ -26,6 +26,7 @@ static const std::string EXPR_ID_KATA_THREAD_TEST = "011_kata_thread_test";
 static const std::string EXPR_ID_KATA_THREAD_TEST_WITH_DIRICHLET = "011a_kata_thread_test_with_dirichlet";
 static const std::string EXPR_ID_EST_THREAD_TEST = "012_est_thread_test";
 static const std::string EXPR_ID_DIRICHLET_NOISE = "013_dirichlet_noise";
+static const std::string EXPR_ID_PUCT_BIAS_HPS = "014_puct_bias_hps";
 
 // 100 series - final round robins on 9x9
 static const std::string EXPR_ID_RAND = "100_random_9x9"; // round robin with random search incl
@@ -67,7 +68,7 @@ int main(int argc, char* argv[]) {
     // Expr to debug that all the io works
     if (expr_id == EXPR_ID_DEBUG) {
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();       
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 110.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 50.0);
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 50.0); 
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE, 0.003);      
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP, 0.003);   
@@ -610,6 +611,36 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
+    // 014
+    // Puct bias hps
+    if (expr_id == EXPR_ID_MENTS_HPS) {
+        double temp = stod(argv[2]);
+        double temp_opp = stod(argv[3]);
+
+        string alg_id = ALG_ID_KATA;
+
+        shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);   
+        alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
+
+        thts::run_go_games(
+            expr_id,            // expr id
+            alg_id,            // black
+            alg_id,              // white
+            9,                  // board size
+            15,                 // num games
+            6.5,                // komi
+            true,
+            15.0,               // time per move
+            128,                 // num threads
+            true,               // ments hps
+            alg_params,
+            PARAM_BIAS_OR_SEARCH_TEMP,          // hps key, black
+            PARAM_BIAS_OR_SEARCH_TEMP_OPP);     // hps key, white
+    }
+
     // 100
     // Random - testing if uniform search can outperform Katago
     if (expr_id == EXPR_ID_RAND) {
@@ -770,8 +801,6 @@ int main(int argc, char* argv[]) {
             alg_params->insert_or_assign(NUM_THREADS_OVERRIDE_OPP, 32);
         }
 
-        int num_threads = (expr_id == EXPR_ID_RR) ? 32 : 128;
-
         thts::run_go_games(
             expr_id,            // expr id
             algo1,              // black
@@ -781,7 +810,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             15.0,               // time per move
-            num_threads,                 // num threads
+            32,                 // num threads
             false,              // NOT running ments hps
             alg_params);        
         return 0;
