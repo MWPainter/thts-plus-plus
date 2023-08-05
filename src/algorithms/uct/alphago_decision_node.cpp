@@ -27,6 +27,9 @@ namespace thts {
      */
     void AlphaGoDNode::add_dirichlet_noise_to_prior() {
         AlphaGoManager& manager = (AlphaGoManager&) *thts_manager;
+        if (manager.dirichlet_noise_coeff == 0.0) {
+            return;
+        }
         vector<double> eta = manager.sample_dirichlet(base_policy_prior->size());
         int i = 0;
         for (pair<shared_ptr<const Action>,double> pr : *base_policy_prior) {
