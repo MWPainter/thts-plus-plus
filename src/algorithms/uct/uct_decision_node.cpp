@@ -50,7 +50,7 @@ namespace thts {
      * Code more readable with 'has_prior()' rather than checking against a nullptr.
      */
     bool UctDNode::has_prior() const {
-        UctManager& manager = *static_pointer_cast<UctManager>(thts_manager);
+        UctManager& manager = (UctManager&) *thts_manager;
         return manager.prior_fn != nullptr;
     }
 

@@ -23,11 +23,14 @@ static const std::string EXPR_ID_KATA_RECOMMEND_TEST = "008_test_kata_recommend"
 static const std::string EXPR_ID_REC_MOST_VISITED = "009_recommend_most_visited";
 static const std::string EXPR_ID_DENTS_SEARCH_TEMP_HPS = "010_dents_search_temp_hps";
 static const std::string EXPR_ID_KATA_THREAD_TEST = "011_kata_thread_test";
+static const std::string EXPR_ID_KATA_THREAD_TEST_WITH_DIRICHLET = "011a_kata_thread_test_with_dirichlet";
 static const std::string EXPR_ID_EST_THREAD_TEST = "012_est_thread_test";
+static const std::string EXPR_ID_DIRICHLET_NOISE = "013_dirichlet_noise";
 
 // 100 series - final round robins on 9x9
 static const std::string EXPR_ID_RAND = "100_random_9x9"; // round robin with random search incl
 static const std::string EXPR_ID_RR = "101_round_robin_9x9";
+static const std::string EXPR_ID_RR_W_DIRICHLET = "101a_round_robin_with_dirichlet_9x9";
 static const std::string EXPR_ID_RR_W_ALIAS = "102_round_robin_w_alias_9x9";
 
 // 200 series - round robin using params from 9x9
@@ -505,7 +508,7 @@ int main(int argc, char* argv[]) {
 
     // 011
     // Run puct games and test optimal number of threads
-    if (expr_id == EXPR_ID_KATA_THREAD_TEST) {
+    if (expr_id == EXPR_ID_KATA_THREAD_TEST || expr_id == EXPR_ID_KATA_THREAD_TEST_WITH_DIRICHLET) {
         int threads = stoi(argv[2]);
         int threads_opp = stoi(argv[3]);
 
@@ -514,6 +517,11 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0);
         alg_params->insert_or_assign(NUM_THREADS_OVERRIDE, threads);
         alg_params->insert_or_assign(NUM_THREADS_OVERRIDE_OPP, threads_opp);
+
+        if (expr_id == EXPR_ID_KATA_THREAD_TEST_WITH_DIRICHLET) {
+            alg_params->insert_or_assign(PARAM_USE_DIRICHLET_NOISE, 1.0);
+            alg_params->insert_or_assign(PARAM_USE_DIRICHLET_NOISE_OPP, 1.0);
+        }
 
         thts::run_go_games(
             expr_id,            // expr id
@@ -568,6 +576,37 @@ int main(int argc, char* argv[]) {
             alg_params,
             NUM_THREADS_OVERRIDE,          // hps key, black
             NUM_THREADS_OVERRIDE_OPP);     // hps key, white
+        return 0;
+    }
+
+    // 013
+    // Test dirichlet noise 
+    if (expr_id == EXPR_ID_DIRICHLET_NOISE) {
+        double dirichlet_noise_for_black = stod(argv[2]) == 0.0;
+
+        shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 110.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0);   
+        if (dirichlet_noise_for_black) {
+            alg_params->insert_or_assign(PARAM_USE_DIRICHLET_NOISE, 1.0);
+        } else { 
+            alg_params->insert_or_assign(PARAM_USE_DIRICHLET_NOISE_OPP, 1.0);
+        }
+
+        thts::run_go_games(
+            expr_id,            // expr id
+            ALG_ID_KATA,              // black
+            ALG_ID_KATA,              // white
+            9,                  // board size
+            25,                 // num games
+            6.5,                // komi
+            true,
+            15.0,               // time per move
+            32,                 // num threads
+            true,     // running "hps" -> i.e. two runs would have same folder names => folder names need to use params
+            alg_params,
+            (!dirichlet_noise_for_black) ? "" : PARAM_USE_DIRICHLET_NOISE,
+            (dirichlet_noise_for_black) ? "" : PARAM_USE_DIRICHLET_NOISE_OPP);        
         return 0;
     }
 
@@ -646,7 +685,7 @@ int main(int argc, char* argv[]) {
     // 101
     // Round robin for 9x9
     // TODO: use tuned params
-    if (expr_id == EXPR_ID_RR) {
+    if (expr_id == EXPR_ID_RR || expr_id == EXPR_ID_RR_W_DIRICHLET) {
         string algo1(argv[2]);
         string algo2(argv[3]);
 
@@ -719,12 +758,19 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
 
+        if (expr_id == EXPR_ID_RR_W_DIRICHLET) {
+            alg_params->insert_or_assign(PARAM_USE_DIRICHLET_NOISE, 1.0);
+            alg_params->insert_or_assign(PARAM_USE_DIRICHLET_NOISE_OPP, 1.0);
+        }
+
         if (algo1 == ALG_ID_KATA) {
             alg_params->insert_or_assign(NUM_THREADS_OVERRIDE, 32);
         } 
         if (algo2 == ALG_ID_KATA) {
             alg_params->insert_or_assign(NUM_THREADS_OVERRIDE_OPP, 32);
         }
+
+        int num_threads = (expr_id == EXPR_ID_RR) ? 32 : 128;
 
         thts::run_go_games(
             expr_id,            // expr id
@@ -735,7 +781,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             15.0,               // time per move
-            128,                 // num threads
+            num_threads,                 // num threads
             false,              // NOT running ments hps
             alg_params);        
         return 0;

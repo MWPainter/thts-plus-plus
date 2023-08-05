@@ -32,7 +32,7 @@ namespace thts {
         for (pair<shared_ptr<const Action>,double> pr : *base_policy_prior) {
             shared_ptr<const Action> action = pr.first;
             double weight = pr.second;
-            (*policy_prior)[action] = weight + eta[i++];
+            (*policy_prior)[action] = (1.0 - manager.dirichlet_noise_coeff) * weight + manager.dirichlet_noise_coeff * eta[i++];
         }
     }
 
@@ -41,9 +41,9 @@ namespace thts {
     */
     void AlphaGoDNode::visit(ThtsEnvContext& ctx) {
         PuctDNode::visit(ctx);
-        // if (is_root_node()) {
-        //     add_dirichlet_noise_to_prior();
-        // }
+        if (is_root_node()) {
+            add_dirichlet_noise_to_prior();
+        }
     }
     
     /**
