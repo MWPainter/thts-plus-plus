@@ -41,6 +41,7 @@ static const std::string NUM_THREADS_OVERRIDE_OPP = "num_threads_override_opp";
 static const std::string PARAM_USE_DIRICHLET_NOISE = "add_dirichlet";
 static const std::string PARAM_USE_DIRICHLET_NOISE_OPP = "add_dirichlet";
 
+static const std::string ALG_ID_KATA_NATIVE = "native_kata";
 static const std::string ALG_ID_KATA = "kata";
 static const std::string ALG_ID_UCT = "uct";
 static const std::string ALG_ID_PUCT = "puct";

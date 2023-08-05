@@ -23,6 +23,9 @@
 #include "go/go_env.h"
 #include "go/go_state_action.h"
 
+#include "KataGo/cpp/search/search.h"
+#include "KataGo/cpp/search/searchparams.h"
+
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -197,14 +200,15 @@ namespace thts {
         int board_size,
         string alg_id,
         double nn_eval,
-        double nn_black_win) 
+        double nn_black_win,
+        int num_visits=0) 
     {
         stringstream ss;
         ss << move_counter << ","
             << go_action->loc << ","
             << "(" << go_action->get_x_coord(board_size) << "|" << go_action->get_y_coord(board_size) << "),"
             << alg_id << ","
-            << root_node->get_num_visits() << "," 
+            << ((root_node != nullptr) ? root_node->get_num_visits() : num_visits) << "," 
             << nn_eval << "," 
             << nn_black_win << endl;
         string match_line = ss.str();
@@ -671,6 +675,81 @@ namespace thts {
     }
 
     /**
+     * Running KataGo directly
+    */
+    shared_ptr<const GoAction> get_katago_move(
+        GoEnv& env, const GoState& state, bool is_white, double max_time, int max_trials, int& num_playouts) 
+    {
+        // Setup search params, took values from match config given in: https://github.com/lightvector/KataGo/blob/master/cpp/configs/match_example.cfg
+        // If not found in the config, values were kept at default
+        // Except: used the quotes cpuct = 1.1 from the paper
+        SearchParams params;
+        //Utility function parameters
+        params.winLossUtilityFactor = 1.0;
+        params.staticScoreUtilityFactor = 0.1;
+        params.dynamicScoreUtilityFactor = 0.3;
+        params.dynamicScoreCenterZeroWeight = 0.2;
+        params.dynamicScoreCenterScale = 0.75; 
+        params.noResultUtilityForWhite = 0.0; 
+        params.drawEquivalentWinsForWhite = 0.5; 
+
+        //Search tree exploration parameters
+        params.cpuctExploration = 1.1;
+        params.cpuctExplorationLog = 0.4;
+        params.fpuReductionMax = 0.2;
+        params.fpuParentWeightByVisitedPolicy = true;
+
+        //Tree value aggregation parameters
+        params.valueWeightExponent = 0.25;
+
+        //Root parameters
+        params.rootNumSymmetriesToSample = 1;
+        params.rootFpuReductionMax = 0.1;
+
+        //Parameters for choosing the move to play
+        params.chosenMoveTemperature = 0.2;
+        params.chosenMoveTemperatureEarly = 0.6;
+        params.chosenMoveTemperatureHalflife = 19;
+        params.chosenMoveSubtract = 0.0;
+        params.chosenMovePrune = 1.0;
+        params.useLcbForSelection = true;
+        params.lcbStdevs = 5.0;
+        params.minVisitPropForLCB = 0.15;
+
+        //Mild behavior hackery
+        params.rootEndingBonusPoints = 0.5;
+        params.rootPruneUselessMoves = true;
+        params.subtreeValueBiasFactor = 0.45;
+        params.subtreeValueBiasWeightExponent = 0.85;
+
+        //Threading-related
+        params.nodeTableShardsPowerOfTwo = 16;
+        params.numVirtualLossesPerThread = 1.0;
+        params.numThreads = 32;
+        params.maxVisits = ((int64_t)1) << 50;
+        params.maxPlayouts = max_trials;
+
+        // TIME CONTROL
+        params.maxTime = max_time;
+
+        // No cheating - only search when for the 'max_time' allowed
+        params.maxVisitsPondering = 0;
+        params.maxPlayoutsPondering = 0;
+        params.maxTimePondering = 0.0;
+        
+        string seed = "60415" + (is_white) ? "@W" : "@B";
+        Player pla = (is_white) ? P_WHITE : P_BLACK; 
+
+        Search katago_search(params, env.get_nn_eval(), env.get_logger(), seed);
+        katago_search.setPosition(pla, state.get_current_board(), *state.get_board_history()); // pass in these args
+        Loc loc = katago_search.runWholeSearchAndGetMove(pla);
+
+        num_playouts = katago_search.lastSearchNumPlayouts;
+
+        return make_shared<const GoAction>(loc);
+    }
+
+    /**
      * Performs all of the (replicated) runs corresponding to 'run_id'
      * (This is the one exposed function (for now) in run_toy.cpp)
     */
@@ -758,30 +837,51 @@ namespace thts {
                 bool is_opp = (i != 0);
                 i = 1-i;
 
-                // setup+run thts for this move
-                int num_threads_for_this_move = num_threads;
-                if (!is_opp && contains_key(alg_params, NUM_THREADS_OVERRIDE)) {
-                    num_threads_for_this_move = alg_params->at(NUM_THREADS_OVERRIDE);
-                } else if (is_opp && contains_key(alg_params, NUM_THREADS_OVERRIDE_OPP)) {
-                    num_threads_for_this_move = alg_params->at(NUM_THREADS_OVERRIDE_OPP);
-                }
-                shared_ptr<ThtsManager> thts_manager = make_manager(
-                    go_env, cur_state, algo_id_for_this_move, board_size, alg_params, is_opp);
-                shared_ptr<ThtsDNode> root_node = make_root_node(
-                    go_env, thts_manager, cur_state, algo_id_for_this_move, move_counter);
-                ThtsPool thts_pool(thts_manager, root_node, num_threads_for_this_move);
-                int trials_per_move = numeric_limits<int>::max();
-                double time_per_move = numeric_limits<double>::max();
-                if (use_time_controls) {
-                    time_per_move = trials_or_time_per_move;
-                } else {
-                    trials_per_move = (int) trials_or_time_per_move;
-                }
-                thts_pool.run_trials(trials_per_move, time_per_move);
+                // Forward declrs
+                shared_ptr<const GoAction> cur_action;
+                shared_ptr<ThtsDNode> root_node;
+                int num_playouts = 0;
 
-                // Perform action recommendaded by thts
-                shared_ptr<const GoAction> cur_action = static_pointer_cast<const GoAction>(
-                    root_node->recommend_action_itfc(*go_env->sample_context(cur_state)));
+                // Get move from katago
+                if (algo_id_for_this_move == ALG_ID_KATA_NATIVE) {
+                    int trials_per_move = numeric_limits<int>::max();
+                    double time_per_move = numeric_limits<double>::max();
+                    if (use_time_controls) {
+                        time_per_move = trials_or_time_per_move;
+                    } else {
+                        trials_per_move = (int) trials_or_time_per_move;
+                    }
+                    cur_action = get_katago_move(
+                        *go_env, *cur_state, is_opp, time_per_move, trials_per_move, num_playouts);
+
+                } else { 
+                    // otherwise setup+run thts for this move
+                    int num_threads_for_this_move = num_threads;
+                    if (!is_opp && contains_key(alg_params, NUM_THREADS_OVERRIDE)) {
+                        num_threads_for_this_move = alg_params->at(NUM_THREADS_OVERRIDE);
+                    } else if (is_opp && contains_key(alg_params, NUM_THREADS_OVERRIDE_OPP)) {
+                        num_threads_for_this_move = alg_params->at(NUM_THREADS_OVERRIDE_OPP);
+                    }
+                    shared_ptr<ThtsManager> thts_manager = make_manager(
+                        go_env, cur_state, algo_id_for_this_move, board_size, alg_params, is_opp);
+                    root_node = make_root_node(
+                        go_env, thts_manager, cur_state, algo_id_for_this_move, move_counter);
+                    ThtsPool thts_pool(thts_manager, root_node, num_threads_for_this_move);
+                    int trials_per_move = numeric_limits<int>::max();
+                    double time_per_move = numeric_limits<double>::max();
+                    if (use_time_controls) {
+                        time_per_move = trials_or_time_per_move;
+                    } else {
+                        trials_per_move = (int) trials_or_time_per_move;
+                    }
+                    thts_pool.run_trials(trials_per_move, time_per_move);
+
+                    // Get action recommended by thts/
+                    cur_action = static_pointer_cast<const GoAction>(
+                        root_node->recommend_action_itfc(*go_env->sample_context(cur_state)));
+                }
+                
+                // Perform move recommended by thts/katago
                 cur_state = go_env->sample_transition_distribution(cur_state, cur_action);
                 // Get the neural net eval for the current state
                 double nn_eval = go_env->get_heuristic_val_from_nn(cur_state);
@@ -797,27 +897,30 @@ namespace thts {
                     board_size, 
                     algo_id_for_this_move, 
                     nn_eval, 
-                    nn_black_win);
+                    nn_black_win,
+                    num_playouts);
                 cout << move_string;
                 cout.flush();
 
-                // Print tree to file
-                string tree_filename = get_tree_print_filename(
-                    expr_id, 
-                    alg1_id, 
-                    alg2_id, 
-                    board_size, 
-                    komi, 
-                    use_filenames_for_hps, 
-                    alg_params, 
-                    hps_key, 
-                    hps_opp_key, 
-                    game, 
-                    move_counter);
-                ofstream tree_file;
-                tree_file.open(tree_filename, ios::out);
-                print_tree_to_file(tree_file, root_node);
-                tree_file.close();
+                // Print tree to file (if not katago native)
+                if (algo_id_for_this_move != ALG_ID_KATA_NATIVE) {
+                    string tree_filename = get_tree_print_filename(
+                        expr_id, 
+                        alg1_id, 
+                        alg2_id, 
+                        board_size, 
+                        komi, 
+                        use_filenames_for_hps, 
+                        alg_params, 
+                        hps_key, 
+                        hps_opp_key, 
+                        game, 
+                        move_counter);
+                    ofstream tree_file;
+                    tree_file.open(tree_filename, ios::out);
+                    print_tree_to_file(tree_file, root_node);
+                    tree_file.close();
+                }
 
                 // increment move
                 move_counter++;

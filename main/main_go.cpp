@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
     // Expr to debug that all the io works
     if (expr_id == EXPR_ID_DEBUG) {
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();       
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 50.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 110.0);
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 50.0); 
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE, 0.003);      
         alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP, 0.003);   
@@ -91,14 +91,14 @@ int main(int argc, char* argv[]) {
 
         thts::run_go_games(
             expr_id,            // expr id
-            ALG_ID_RENTS, //ALG_ID_KATA,            // black
-            ALG_ID_EST,             // white
-            19,                  // board size
+            ALG_ID_EST, //ALG_ID_KATA,            // black
+            ALG_ID_KATA_NATIVE,             // white
+            9,                  // board size
             10,                 // num games
-            7.5,                // komi
+            6.5,                // komi
             true,
             15.0,                // time per move
-            64,                 // num threads
+            32,                 // num threads
             false,
             alg_params);
         return 0;

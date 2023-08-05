@@ -78,6 +78,9 @@ namespace thts {
                 double dynamic_score_center=0.0);
             virtual ~GoEnv();
 
+            NNEvaluator* get_nn_eval();
+            Logger* get_logger();
+
             std::shared_ptr<const GoState> get_initial_state() const;
 
             bool is_sink_state(std::shared_ptr<const GoState> state) const;

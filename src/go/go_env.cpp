@@ -89,6 +89,14 @@ namespace thts {
         }
     }
 
+    NNEvaluator* GoEnv::get_nn_eval() {
+        return nn_eval;
+    }
+
+    Logger* GoEnv::get_logger() {
+        return &_logger;
+    }
+
     /**
      * Get (cached) initial state
      */
@@ -237,7 +245,7 @@ namespace thts {
 
         // copied params from same link in comment in 'update_dynmaic_score_center_for_state'
         // Assumed that the values are in the range [-1,1], and normalised the weights to 1.0 total
-        double value = (1.0 * win_value + 0.05 * score_value + 0.3 * dynamic_score_value) / 1.35;
+        double value = (1.0 * win_value + 0.1 * score_value + 0.3 * dynamic_score_value) / 1.4;
 
         // normalise policy
         // find max prob

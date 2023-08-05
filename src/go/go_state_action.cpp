@@ -90,6 +90,13 @@ namespace thts {
         return board_history->getRecentBoard(0);
     }
 
+    /** Get the board history
+     * 
+    */
+    shared_ptr<BoardHistory> GoState::get_board_history() const {
+        return board_history;
+    }
+
     /**
      * Get the result of the game +1 for black win, -1 for white win, 0 for draw?
      * Assumes that we know game as ended and been scored when calling

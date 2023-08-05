@@ -64,6 +64,7 @@ namespace thts {
             GoState(std::shared_ptr<BoardHistory> board_history);
 
             const Board& get_current_board() const;
+            std::shared_ptr<BoardHistory> get_board_history() const;
 
             /**
              * Get the result of the game +1 for black win, -1 for white win, 0 for draw?
