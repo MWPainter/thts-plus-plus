@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
             komi,               // komi
             true,
             15.0,               // time per move
-            128,                // num threads
+            32,                // num threads
             false,
             alg_params);
         return 0;
@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             15.0,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,     // running "hps" -> i.e. two runs would have same folder names => folder names need to use params
             alg_params,
             (!emp_plays_black) ? "" : PARAM_USE_AVG_RETURN,
@@ -209,7 +209,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             15.0,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,               // ments hps
             alg_params,
             PARAM_BIAS_OR_SEARCH_TEMP,          // hps key, black
@@ -251,7 +251,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             15.0,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,               // ments hps
             alg_params,
             PARAM_BIAS_OR_SEARCH_TEMP,          // hps key, black
@@ -295,7 +295,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             15.0,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,               // ments hps
             alg_params,
             PARAM_INIT_DECAY_TEMP,          // hps key, black
@@ -335,7 +335,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             15.0,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,               // ments hps
             alg_params,
             PARAM_BIAS_OR_SEARCH_TEMP,          // hps key, black
@@ -377,7 +377,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             15.0,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,               // ments hps
             alg_params,
             PARAM_BIAS_OR_SEARCH_TEMP,          // hps key, black
@@ -408,7 +408,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             15.0,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,     // running "hps" -> i.e. two runs would have same folder names => folder names need to use params
             alg_params,
             (!emp_recommender_plays_black) ? "" : PARAM_KATA_RECOMMEND_AVG_RETURN,
@@ -455,7 +455,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             15.0,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,     // running "hps" -> i.e. two runs would have same folder names => folder names need to use params
             alg_params,
             (!most_visited_plays_black) ? "" : PARAM_RECOMMEND_MOST_VISITED,
@@ -500,7 +500,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             15.0,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,               // ments hps
             alg_params,
             PARAM_INIT_DECAY_TEMP,          // hps key, black
@@ -533,7 +533,7 @@ int main(int argc, char* argv[]) {
             6.5,               // komi
             true,
             15.0,               // time per move
-            128,                // num threads
+            32,                // num threads
             true,
             alg_params,
             NUM_THREADS_OVERRIDE,          // hps key, black
@@ -572,7 +572,7 @@ int main(int argc, char* argv[]) {
             6.5,               // komi
             true,
             15.0,               // time per move
-            128,                // num threads
+            32,                // num threads
             true,
             alg_params,
             NUM_THREADS_OVERRIDE,          // hps key, black
@@ -613,7 +613,7 @@ int main(int argc, char* argv[]) {
 
     // 014
     // Puct bias hps
-    if (expr_id == EXPR_ID_MENTS_HPS) {
+    if (expr_id == EXPR_ID_PUCT_BIAS_HPS) {
         double temp = stod(argv[2]);
         double temp_opp = stod(argv[3]);
 
@@ -634,7 +634,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             15.0,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,               // ments hps
             alg_params,
             PARAM_BIAS_OR_SEARCH_TEMP,          // hps key, black
