@@ -169,6 +169,19 @@ namespace thts {
             }
             return make_shared<DentsManager>(manager_args);
         }
+        if (alg_id == ALG_ID_DBMENTS) {
+            DentsManagerArgs manager_args(env);
+            manager_args.max_depth = max_trial_length;
+            manager_args.mcts_mode = false;
+            manager_args.temp = alg_params.at(PARAMS_ID_MENTS_TEMP);
+            manager_args.value_temp_init = alg_params.at(PARAMS_ID_MENTS_TEMP);
+            manager_args.epsilon = alg_params.at(PARAMS_ID_MENTS_EPSILON);
+            manager_args.value_temp_decay_fn = decayed_temp_no_decay;
+            if (alg_params.find(PARAMS_ID_MENTS_DEFAULT_Q_VALUE) != alg_params.end()) {
+                manager_args.default_q_value = alg_params.at(PARAMS_ID_MENTS_DEFAULT_Q_VALUE);
+            }
+            return make_shared<DentsManager>(manager_args);
+        }
 
         throw runtime_error("Error in RunID get_thts_manager");
     }
@@ -197,7 +210,7 @@ namespace thts {
             shared_ptr<MentsManager> ments_manager = static_pointer_cast<MentsManager>(manager);
             return make_shared<TentsDNode>(ments_manager, env->get_initial_state_itfc(), 0, 0);
         }
-        if (alg_id == ALG_ID_DENTS) {
+        if (alg_id == ALG_ID_DENTS || alg_id == ALG_ID_DBMENTS) {
             shared_ptr<DentsManager> dents_manager = static_pointer_cast<DentsManager>(manager);
             return make_shared<DentsDNode>(dents_manager, env->get_initial_state_itfc(), 0, 0);
         }
@@ -218,7 +231,7 @@ namespace thts {
             logger->set_trials_delta(trials_log_delta);
             return logger;
         } 
-        if (alg_id == ALG_ID_MENTS || alg_id == ALG_ID_DENTS || alg_id == ALG_ID_RENTS || alg_id == ALG_ID_TENTS) {
+        if (alg_id == ALG_ID_MENTS || alg_id == ALG_ID_DENTS || alg_id == ALG_ID_DBMENTS || alg_id == ALG_ID_RENTS || alg_id == ALG_ID_TENTS) {
             shared_ptr<ThtsLogger> logger = make_shared<MentsLogger>();
             logger->set_trials_delta(trials_log_delta);
             return logger;
@@ -299,6 +312,7 @@ namespace thts {
             int eval_threads = 32;
 
             for (string env_instance_id : env_instance_ids) {
+
                 vector<string> alg_ids = {ALG_ID_UCT, ALG_ID_PUCT};
                 vector<double> uct_biases = { UctManagerArgs::USE_AUTO_BIAS, 0.1, 1.0, 10.0, 100.0 };
                 for (string alg_id : alg_ids) {
@@ -770,7 +784,7 @@ namespace thts {
             return run_ids;
         }
 
-        // expr id: D100_LEN10_PAPER = "100_len_10_main_paper"
+        // expr id: D021_LEN10_PAPER = "100_len_10_main_paper"
         // rerunning with specific parameters with more replicates to make curves smoother for nice plots
         if (expr_id == D021_LEN10_PAPER) {
             string env_id = DCHAIN_ENV_ID;
@@ -835,6 +849,34 @@ namespace thts {
                 }
 
                 alg_ids = {ALG_ID_DENTS};
+                temps = { 1.0 };
+                for (string alg_id : alg_ids) {
+                    for (double temp : temps) {
+                        unordered_map<string,double> alg_params = 
+                            {
+                                {PARAMS_ID_MENTS_TEMP, temp}, 
+                                {PARAMS_ID_MENTS_EPSILON, 0.1}
+                            };
+                        run_ids->push_back(RunID(
+                            env_id,
+                            env_instance_id,
+                            expr_id,
+                            alg_id,
+                            alg_params,
+                            num_trials,
+                            max_trial_length,
+                            trials_log_delta,
+                            mc_eval_trials_delta,
+                            rollouts_per_mc_eval,
+                            num_repeats,
+                            num_threads,
+                            eval_threads));
+                    }
+                }
+
+                // adding DENTS with fixed beta(m)=alpha to demonstrate dents mimicing ments 
+                // (and just copied MENTS params without tunring)
+                alg_ids = {ALG_ID_DBMENTS};
                 temps = { 1.0 };
                 for (string alg_id : alg_ids) {
                     for (double temp : temps) {
@@ -955,27 +997,27 @@ namespace thts {
             int num_threads = 32;
             int eval_threads = 32;
 
-            vector<string> alg_ids = {ALG_ID_UCT, ALG_ID_PUCT};
-            for (string alg_id : alg_ids) {
-                double bias = UctManagerArgs::USE_AUTO_BIAS;
-                unordered_map<string,double> alg_params = {{PARAMS_ID_UCT_BIAS, bias}};
-                run_ids->push_back(RunID(
-                    env_id,
-                    env_instance_id,
-                    expr_id,
-                    alg_id,
-                    alg_params,
-                    num_trials,
-                    max_trial_length,
-                    trials_log_delta,
-                    mc_eval_trials_delta,
-                    rollouts_per_mc_eval,
-                    num_repeats,
-                    num_threads,
-                    eval_threads));
-            }
+            // vector<string> alg_ids = {ALG_ID_UCT, ALG_ID_PUCT};
+            // for (string alg_id : alg_ids) {
+            //     double bias = UctManagerArgs::USE_AUTO_BIAS;
+            //     unordered_map<string,double> alg_params = {{PARAMS_ID_UCT_BIAS, bias}};
+            //     run_ids->push_back(RunID(
+            //         env_id,
+            //         env_instance_id,
+            //         expr_id,
+            //         alg_id,
+            //         alg_params,
+            //         num_trials,
+            //         max_trial_length,
+            //         trials_log_delta,
+            //         mc_eval_trials_delta,
+            //         rollouts_per_mc_eval,
+            //         num_repeats,
+            //         num_threads,
+            //         eval_threads));
+            // }
 
-            alg_ids = {ALG_ID_MENTS, ALG_ID_RENTS, ALG_ID_TENTS, ALG_ID_EST, ALG_ID_DENTS};
+            vector<string> alg_ids = {ALG_ID_MENTS};//, ALG_ID_RENTS, ALG_ID_TENTS, ALG_ID_EST, ALG_ID_DENTS};
             for (string alg_id : alg_ids) {
                 double temp = 1.0;
                 double eps = 1.0;
@@ -1016,6 +1058,37 @@ namespace thts {
                     num_repeats,
                     num_threads,
                     eval_threads));
+            }
+
+            // adding DENTS with fixed beta(m)=alpha to demonstrate dents mimicing ments 
+            // (and just copied MENTS params without tunring)
+            alg_ids = {ALG_ID_DBMENTS};
+            vector<double> temps = { 0.01 };
+            vector<double> epss = { 1.0 };
+            for (string alg_id : alg_ids) {
+                for (double temp : temps) {
+                    for (double eps : epss) {
+                        unordered_map<string,double> alg_params = 
+                            {
+                                {PARAMS_ID_MENTS_TEMP, temp}, 
+                                {PARAMS_ID_MENTS_EPSILON, eps}
+                            };
+                        run_ids->push_back(RunID(
+                            env_id,
+                            env_instance_id,
+                            expr_id,
+                            alg_id,
+                            alg_params,
+                            num_trials,
+                            max_trial_length,
+                            trials_log_delta,
+                            mc_eval_trials_delta,
+                            rollouts_per_mc_eval,
+                            num_repeats,
+                            num_threads,
+                            eval_threads));
+                    }
+                }
             }
 
             return run_ids;

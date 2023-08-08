@@ -79,6 +79,7 @@ static const std::string ALG_ID_DENTS = "dents";
 static const std::string ALG_ID_RENTS = "rents";
 static const std::string ALG_ID_TENTS = "tents";
 static const std::string ALG_ID_EST = "est";
+static const std::string ALG_ID_DBMENTS = "db-ments";
 
 // param ids
 static const std::string PARAMS_ID_UCT_BIAS = "bias";

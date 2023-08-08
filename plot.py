@@ -28,7 +28,10 @@ def make_plot_df(
     vertical_lines=None,
     palette=None,
     dashes=None,
+    markers=None,
+    markevery=1,
     y_axis_range=None,
+    alpha=1.0,
     use_legend=True):
     """General helper for plotting in our style."""
 
@@ -43,8 +46,21 @@ def make_plot_df(
         palette = "deep"
     if dashes is None:
         dashes = False
+    if markers is None:
+        markers = False
 
-    sns.lineplot(data=df, x=xaxis_key, y=yaxis_key, hue=hue_key, style=style_key, palette=palette, dashes=dashes)
+    sns.lineplot(
+        data=df, 
+        x=xaxis_key, 
+        y=yaxis_key, 
+        hue=hue_key, 
+        style=style_key, 
+        palette=palette, 
+        dashes=dashes, 
+        markers=markers,
+        markevery=markevery,
+        mec=None,
+        alpha=alpha)
 
     if title is not None:
         plt.title(title)
@@ -136,6 +152,8 @@ def make_plot(
     y_transform=None,
     sep_eps_plots=False,
     y_axis_range=None,
+    add_markers=False,
+    markevery=1,
     use_legend=True):
     """Read in data, preprocess, and then call make plot"""
 
@@ -160,6 +178,8 @@ def make_plot(
         pretty_alg_id = alg_id
         if pretty_alg_id == "est":
             pretty_alg_id = "bts"
+        if pretty_alg_id == "db-ments":
+            pretty_alg_id = "dents"
         if alg_id in alg_ids_to_add_param_to:
             pretty_alg_id = "{alg_id}({param})".format(alg_id=pretty_alg_id,param=bias_or_temps[i])
         pretty_alg_ids.append(pretty_alg_id.upper())
@@ -201,6 +221,17 @@ def make_plot(
         if "RENTS" in alg_id:
             palette[alg_id] = "tab:brown"
 
+    markers = None
+    if add_markers:
+        markers = {}
+        for alg_id in alg_set:
+            markers[alg_id] = ""
+            if "MENTS" in alg_id:
+                markers[alg_id] = "+"
+            if "DENTS" in alg_id:
+                markers[alg_id] = "x"
+
+
     df = pd.DataFrame(mc_eval_df_dict)
 
     if num_trials_truncate is not None:
@@ -221,6 +252,8 @@ def make_plot(
         legend_lab=legend_lab,
         filename=plot_filename,
         y_axis_range=y_axis_range,
+        markers=markers,
+        markevery=markevery,
         use_legend=use_legend)
     
     if not sep_eps_plots:
@@ -245,6 +278,8 @@ def make_plot(
             legend_lab=legend_lab,
             filename=eps_filename,
             y_axis_range=y_axis_range,
+            markers=markers,
+            markevery=markevery,
             use_legend=use_legend)
 
     
@@ -270,7 +305,6 @@ if __name__ == "__main__":
         filenames = [
             "results/dchain_env/10-1.0/021_len_10_main_paper/uct/eval_bias=-1.csv",
             "results/dchain_env/10-1.0/021_len_10_main_paper/dents/eval_epsilon=0.1,temp=1.csv",
-            "results/dchain_env/10-1.0/021_len_10_main_paper/ments/eval_epsilon=0.1,temp=1.csv",
             "results/dchain_env/10-1.0/021_len_10_main_paper/ments/eval_epsilon=0.1,temp=0.01.csv",
         ]
         make_plot(
@@ -332,6 +366,41 @@ if __name__ == "__main__":
             plot_filename="plots/000_fig_sail.png",
             hue_key="pretty_alg_id",
             num_trials_truncate=1000000)
+        
+
+
+
+
+
+
+    #
+    # Rebuttal plots
+    #
+    if "000_rebuttal_one" in sys.argv or "all" in sys.argv:
+        filenames = [
+            "results/dchain_env/10-1.0/021_len_10_main_paper/ments/eval_epsilon=0.1,temp=1.csv",
+            "results/dchain_env/10-1.0/021_len_10_main_paper/db-ments/eval_epsilon=0.1,temp=1.csv",
+        ]
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/000_rebuttal_dchain.png",
+            hue_key="pretty_alg_id",
+            title="",
+            num_trials_truncate=3000,
+            add_markers=True,
+            markevery=10)
+        
+    if "000_rebuttal_two" in sys.argv or "all" in sys.argv:
+        filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/ments/eval_*.csv")
+        filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/db-ments/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/000_rebuttal_fl.png",
+            hue_key="pretty_alg_id",
+            num_trials_truncate=100000,
+            add_markers=True,
+            markevery=100)
+
         
 
 
