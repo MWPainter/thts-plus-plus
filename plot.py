@@ -397,7 +397,7 @@ if __name__ == "__main__":
             filenames=filenames,
             plot_filename="plots/000_rebuttal_fl.png",
             hue_key="pretty_alg_id",
-            num_trials_truncate=100000,
+            num_trials_truncate=1000000,
             add_markers=True,
             markevery=100)
 
