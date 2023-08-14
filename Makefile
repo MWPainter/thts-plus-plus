@@ -36,7 +36,7 @@ TEST_INCLUDES = -Iexternal/googletest/build/include
 
 CPPFLAGS = $(INCLUDES) -Wall -std=c++17
 TEST_CPPFLAGS = 
-CPPFLAGS_DEBUG = -g
+CPPFLAGS_DEBUG = -pg
 
 LDFLAGS = -L/home/michael/anaconda3/envs/thts++/lib -ltcmalloc -lpthread
 TEST_LDFLAGS = -Lexternal/googletest/build/lib -lgtest -lgtest_main -lgmock
