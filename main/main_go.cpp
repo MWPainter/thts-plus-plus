@@ -27,6 +27,10 @@ static const std::string EXPR_ID_KATA_THREAD_TEST_WITH_DIRICHLET = "011a_kata_th
 static const std::string EXPR_ID_EST_THREAD_TEST = "012_est_thread_test";
 static const std::string EXPR_ID_DIRICHLET_NOISE = "013_dirichlet_noise";
 static const std::string EXPR_ID_PUCT_BIAS_HPS = "014_puct_bias_hps";
+static const std::string EXPR_ID_KATA_VS_NATIVE = "015_compare_with_native";
+static const std::string EXPR_ID_KATA_VS_NATIVE_B = "015b_compare_with_native";
+static const std::string EXPR_ID_KATA_VS_NATIVE_19 = "016_compare_with_native_19";
+static const std::string EXPR_ID_KATA_VS_NATIVE_19_B = "016b_compare_with_native_19";
 
 // 100 series - final round robins on 9x9
 static const std::string EXPR_ID_RAND = "100_random_9x9"; // round robin with random search incl
@@ -641,6 +645,50 @@ int main(int argc, char* argv[]) {
             alg_params,
             PARAM_BIAS_OR_SEARCH_TEMP,          // hps key, black
             PARAM_BIAS_OR_SEARCH_TEMP_OPP);     // hps key, white
+    }
+
+    // 015
+    // Puct vs native kata
+    if (expr_id == EXPR_ID_KATA_VS_NATIVE || expr_id == EXPR_ID_KATA_VS_NATIVE_B) {
+        string algo1(argv[2]);
+        string algo2(argv[3]);
+
+        shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
+
+        thts::run_go_games(
+            expr_id,            // expr id
+            algo1,            // black
+            algo2,              // white
+            9,                  // board size
+            25,                 // num games
+            6.5,                // komi
+            false,              // limit by number of moves, not time
+            1600,               // num moves allowed
+            32,                 // num threads
+            false,               // ments hps
+            alg_params);
+    }
+
+    // 016
+    // Puct vs native kata (on 19x19)
+    if (expr_id == EXPR_ID_KATA_VS_NATIVE_19 || expr_id == EXPR_ID_KATA_VS_NATIVE_19_B) {
+        string algo1(argv[2]);
+        string algo2(argv[3]);
+
+        shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
+
+        thts::run_go_games(
+            expr_id,            // expr id
+            algo1,            // black
+            algo2,              // white
+            19,                  // board size
+            25,                 // num games
+            7.5,                // komi
+            false,              // limit by number of moves, not time
+            1600,               // num moves allowed
+            32,                 // num threads
+            false,               // ments hps
+            alg_params);
     }
 
     // 100
