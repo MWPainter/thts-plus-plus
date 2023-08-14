@@ -84,7 +84,7 @@ namespace thts {
             total_budget_on_last_visit = total_budget;
             ActionVector seq_halving_actions = *actions;
             seq_halving_round_budget_per_child = floor(
-                ((double) num_visits + total_budget) / (seq_halving_actions.size() + ceil(log2(actions->size()))) );
+                ((double) num_visits + total_budget) / (seq_halving_actions.size() * ceil(log2(actions->size()))) );
             if (seq_halving_round_budget_per_child < 1) {
                 seq_halving_round_budget_per_child = 1;
             }

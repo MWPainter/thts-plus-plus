@@ -407,7 +407,7 @@ if __name__ == "__main__":
         filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/ments/eval_*.csv")
         filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/db-ments/eval_*.csv")
         filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/hmcts/eval_*.csv")
-        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/uct/eval_*.csv")
+        filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/uct/eval_*.csv")
         make_plot(
             filenames=filenames,
             plot_filename="plots/000_rebuttal_fl.png",

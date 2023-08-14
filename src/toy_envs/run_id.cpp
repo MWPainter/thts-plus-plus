@@ -1045,31 +1045,28 @@ namespace thts {
                 }
             }
 
-            alg_ids = {ALG_ID_HMCTS};
             vector<int> uct_thresholds = { 10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000};
-            for (string alg_id : alg_ids) {
-                for (int thresh : uct_thresholds) {
-                    unordered_map<string,double> alg_params = 
-                    {
-                        {PARAMS_ID_UCT_BIAS, UctManagerArgs::USE_AUTO_BIAS},
-                        {PARAMS_ID_HMCTS_BUDGET, num_trials},
-                        {PARAMS_ID_HMCTS_UCT_BUDGET_THRESHOLD, thresh},
-                    };
-                    run_ids->push_back(RunID(
-                        env_id,
-                        env_instance_id,
-                        expr_id,
-                        alg_id,
-                        alg_params,
-                        num_trials,
-                        max_trial_length,
-                        trials_log_delta,
-                        mc_eval_trials_delta,
-                        rollouts_per_mc_eval,
-                        num_repeats,
-                        num_threads,
-                        eval_threads));
-                }
+            for (int thresh : uct_thresholds) {
+                unordered_map<string,double> alg_params = 
+                {
+                    {PARAMS_ID_UCT_BIAS, UctManagerArgs::USE_AUTO_BIAS},
+                    {PARAMS_ID_HMCTS_BUDGET, num_trials},
+                    {PARAMS_ID_HMCTS_UCT_BUDGET_THRESHOLD, thresh},
+                };
+                run_ids->push_back(RunID(
+                    env_id,
+                    env_instance_id,
+                    expr_id,
+                    ALG_ID_HMCTS,
+                    alg_params,
+                    num_trials,
+                    max_trial_length,
+                    trials_log_delta,
+                    mc_eval_trials_delta,
+                    rollouts_per_mc_eval,
+                    num_repeats,
+                    num_threads,
+                    eval_threads));
             }
 
             return run_ids;
@@ -1187,7 +1184,7 @@ namespace thts {
             {
                 {PARAMS_ID_UCT_BIAS, UctManagerArgs::USE_AUTO_BIAS},
                 {PARAMS_ID_HMCTS_BUDGET, num_trials},
-                {PARAMS_ID_HMCTS_UCT_BUDGET_THRESHOLD, 300},
+                {PARAMS_ID_HMCTS_UCT_BUDGET_THRESHOLD, 3000},
             };
             run_ids->push_back(RunID(
                 env_id,
