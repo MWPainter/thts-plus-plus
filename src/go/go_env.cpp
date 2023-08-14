@@ -181,7 +181,7 @@ namespace thts {
         if (!is_sink_state(observation)) return 0.0;
         if (observation->board_history->winner == P_BLACK) return 1.0 * reward_scale;
         if (observation->board_history->winner == P_WHITE) return -1.0 * reward_scale;
-        throw "Shouldn't be able to get here.";
+        return 0.0;
     }
 
     /**
