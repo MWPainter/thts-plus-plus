@@ -2,6 +2,11 @@
 
 #include "../search/searchnode.h"
 
+#include <limits>
+#include <cmath>
+#include <iostream>
+const double CONST_E = std::exp(1.0);
+
 //------------------------
 #include "../core/using.h"
 //------------------------
@@ -22,12 +27,14 @@ double Search::getExploreSelectionValue(
   if(nnPolicyProb < 0)
     return POLICY_ILLEGAL_SELECTION_VALUE;
 
-  double exploreComponent =
-    cpuctExploration(totalChildWeight,searchParams)
-    * parentUtilityStdevFactor
-    * nnPolicyProb
-    * sqrt(totalChildWeight + TOTALCHILDWEIGHT_PUCT_OFFSET)
-    / (1.0 + childWeight);
+  double exploreComponent = 0.0;
+  if (using_bts) {
+    exploreComponent = cpuctExploration(totalChildWeight,searchParams)
+      * parentUtilityStdevFactor
+      * nnPolicyProb
+      * sqrt(totalChildWeight + TOTALCHILDWEIGHT_PUCT_OFFSET)
+      / (1.0 + childWeight);
+  }
 
   //At the last moment, adjust value to be from the player's perspective, so that players prefer values in their favor
   //rather than in white's favor
@@ -296,12 +303,17 @@ double Search::getFpuValueForChildrenAssumeVisited(
 
 
 void Search::selectBestChildToDescend(
-  SearchThread& thread, const SearchNode& node, int nodeState,
+  SearchThread& thread, SearchNode& node, int nodeState,
   int& numChildrenFound, int& bestChildIdx, Loc& bestChildMoveLoc,
   bool posesWithChildBuf[NNPos::MAX_NN_POLICY_SIZE],
-  bool isRoot) const
+  bool isRoot)
 {
   assert(thread.pla == node.nextPla);
+
+  if (using_bts) {
+    return selectBestChildToDescendBts(
+      thread, node, nodeState, numChildrenFound, bestChildIdx, bestChildMoveLoc, posesWithChildBuf, isRoot);
+  }
 
   double maxSelectionValue = POLICY_ILLEGAL_SELECTION_VALUE;
   bestChildIdx = -1;
@@ -432,4 +444,235 @@ void Search::selectBestChildToDescend(
       bestChildMoveLoc = bestNewMoveLoc;
     }
   }
+}
+
+
+void Search::selectBestChildToDescendBts(
+  SearchThread& thread, SearchNode& node, int nodeState,
+  int& numChildrenFound, int& bestChildIdx, Loc& bestChildMoveLoc,
+  bool posesWithChildBuf[NNPos::MAX_NN_POLICY_SIZE],
+  bool isRoot)
+{
+  int64_t node_visits = node.stats.visits.load(std::memory_order_acquire);
+  int64_t num_legal_moves = 1;
+  node.bts_distr_lock.lock();
+  bool distributions_created = (node.bts_distr != nullptr);
+  if (distributions_created) {
+    num_legal_moves = node.valid_moves->size();
+  }
+  node.bts_distr_lock.unlock();
+
+  // O(A) recompute distributions
+  int recompute_freq = num_legal_moves;
+  if (!distributions_created || (node_visits % num_legal_moves) == 0) {
+    recomputeNodeDistributions(
+      thread, node, nodeState, 
+      posesWithChildBuf, isRoot, node_visits);
+  }
+
+  // O(1) sample, and fill out the values needed by the search
+  // hardcoded params, dont want to bother editing search params
+  double denominator = 1.0 / std::log(CONST_E + node_visits);
+  double lambda_tilde = 0.75 * denominator;
+  double lambda = (isRoot ? 0.5 : 0.1) * denominator;
+
+  double weight_unfrm = lambda;
+  double weight_nn = (1.0 - lambda) * lambda_tilde;
+  //double weight_bst = (1.0-lambda) * (1.0-lambda_tilde)
+
+  node.bts_distr_lock.lock();
+  std::shared_ptr<BtsDiscreteUniformDistribution<Loc>> unfrm_distr = node.unfrm_distr;
+  std::shared_ptr<BtsCategoricalDistribution<Loc>> nn_distr = node.nn_distr;
+  std::shared_ptr<BtsCategoricalDistribution<Loc>> bts_distr = node.bts_distr;
+  node.bts_distr_lock.unlock();
+
+  BtsMixedDistribution<Loc> mixed_distr(unfrm_distr, nn_distr, bts_distr, weight_unfrm, weight_nn);
+  bestChildMoveLoc = mixed_distr.sample(thread.int_distr, thread.real_distr, thread.rng_gen);
+
+  // Set the things that are expected to be returned, if making new node then index is at the end of the child array
+  // If making a new node, then lock in the Loc's index into children array, even if fail to make it for some reason
+  node.bts_search_lock.lock();
+  numChildrenFound = node.loc_to_child_idx.size();
+  if (node.loc_to_child_idx.find(bestChildMoveLoc) != node.loc_to_child_idx.end()) {
+    bestChildIdx = node.loc_to_child_idx[bestChildMoveLoc];
+  } else {
+    bestChildIdx = numChildrenFound;
+    node.loc_to_child_idx[bestChildMoveLoc] = bestChildIdx;
+  }
+  node.bts_search_lock.unlock();
+}
+
+
+void Search::recomputeNodeDistributions(
+  SearchThread& thread, SearchNode& node, int nodeState,
+  bool posesWithChildBuf[NNPos::MAX_NN_POLICY_SIZE],
+  bool isRoot, int64_t num_visits)
+{
+  // Check if need to make the static parts of distributions
+  node.bts_distr_lock.lock();
+  std::shared_ptr<std::vector<Loc>> valid_mvs = node.valid_moves;
+  node.bts_distr_lock.unlock();
+  if (valid_mvs == nullptr) {
+    const NNOutput* nn_output = node.getNNOutput();
+    const float* policy_probs = nn_output->getPolicyProbsMaybeNoised();
+
+    valid_mvs = std::make_shared<std::vector<Loc>>();
+    valid_mvs->reserve(policySize);
+    std::shared_ptr<std::unordered_map<Loc,double>> nn_distr_map = std::make_shared<std::unordered_map<Loc,double>>();
+    nn_distr_map->reserve(policySize);
+
+    for(int pos = 0; pos<policySize; pos++) {
+      Loc loc = NNPos::posToLoc(pos,thread.board.x_size,thread.board.y_size,nnXLen,nnYLen);
+      if (thread.history.isLegal(thread.board,loc,thread.pla)) {
+        valid_mvs->push_back(loc);
+        nn_distr_map->insert_or_assign(loc, policy_probs[pos]);
+      }
+    }
+
+    std::shared_ptr<BtsDiscreteUniformDistribution<Loc>> unfrm_distr = std::make_shared<BtsDiscreteUniformDistribution<Loc>>(valid_mvs);
+    std::shared_ptr<BtsCategoricalDistribution<Loc>> nn_distr = std::make_shared<BtsCategoricalDistribution<Loc>>(nn_distr_map);
+
+    node.bts_distr_lock.lock();
+    node.unfrm_distr = unfrm_distr;
+    node.nn_distr = nn_distr;
+    node.valid_moves = valid_mvs;
+    node.bts_distr_lock.unlock();
+  }
+
+  // Now below is pretty much just a c&p of computing PUCT weights (Q-vals), and then shoving them into a map
+  double max_weight = std::numeric_limits<double>::lowest();
+  std::shared_ptr<std::unordered_map<Loc,double>> bts_distr_map = std::make_shared<std::unordered_map<Loc,double>>();
+  bts_distr_map->reserve(policySize);
+
+  int childrenCapacity;
+  const SearchChildPointer* children = node.getChildren(nodeState,childrenCapacity);
+
+  double policyProbMassVisited = 0.0;
+  double maxChildWeight = 0.0;
+  double totalChildWeight = 0.0;
+  const NNOutput* nnOutput = node.getNNOutput();
+  assert(nnOutput != NULL);
+  const float* policyProbs = nnOutput->getPolicyProbsMaybeNoised();
+  for(int i = 0; i<childrenCapacity; i++) {
+    const SearchNode* child = children[i].getIfAllocated();
+    if(child == NULL)
+      break;
+    Loc moveLoc = children[i].getMoveLocRelaxed();
+    int movePos = getPos(moveLoc);
+    float nnPolicyProb = policyProbs[movePos];
+    policyProbMassVisited += nnPolicyProb;
+
+    int64_t edgeVisits = children[i].getEdgeVisits();
+    double childWeight = child->stats.getChildWeight(edgeVisits);
+
+    totalChildWeight += childWeight;
+    if(childWeight > maxChildWeight)
+      maxChildWeight = childWeight;
+  }
+  
+  assert(policyProbMassVisited <= 1.0001);
+
+  double parentUtility;
+  double parentWeightPerVisit;
+  double parentUtilityStdevFactor;
+  double fpuValue = getFpuValueForChildrenAssumeVisited(
+    node, thread.pla, isRoot, policyProbMassVisited,
+    parentUtility, parentWeightPerVisit, parentUtilityStdevFactor
+  );
+
+  std::fill(posesWithChildBuf,posesWithChildBuf+NNPos::MAX_NN_POLICY_SIZE,false);
+  bool antiMirror = searchParams.antiMirror && mirroringPla != C_EMPTY && isMirroringSinceSearchStart(thread.history,0);
+
+  for(int i = 0; i<childrenCapacity; i++) {
+    const SearchNode* child = children[i].getIfAllocated();
+    if(child == NULL)
+      break;
+    int64_t childEdgeVisits = children[i].getEdgeVisits();
+
+    Loc moveLoc = children[i].getMoveLocRelaxed();
+    bool isDuringSearch = true;
+    double selectionValue = getExploreSelectionValueOfChild(
+      node,policyProbs,child,
+      moveLoc,
+      totalChildWeight,childEdgeVisits,fpuValue,
+      parentUtility,parentWeightPerVisit,parentUtilityStdevFactor,
+      isDuringSearch,antiMirror,maxChildWeight,&thread
+    );
+    if(selectionValue > max_weight) {
+      max_weight = selectionValue;
+    }
+
+    posesWithChildBuf[getPos(moveLoc)] = true;
+    bts_distr_map->insert_or_assign(moveLoc, selectionValue);
+  }
+
+  const std::vector<int>& avoidMoveUntilByLoc = thread.pla == P_BLACK ? avoidMoveUntilByLocBlack : avoidMoveUntilByLocWhite;
+
+  // for(int movePos = 0; movePos<policySize; movePos++) {
+  for(Loc moveLoc : *valid_mvs) {
+    int movePos = NNPos::locToPos(moveLoc, thread.board.x_size, nnOutput->nnXLen, nnOutput->nnYLen);
+    bool alreadyTried = posesWithChildBuf[movePos];
+    if(alreadyTried)
+      continue;
+
+    // Loc moveLoc = NNPos::posToLoc(movePos,thread.board.x_size,thread.board.y_size,nnXLen,nnYLen);
+    if(moveLoc == Board::NULL_LOC)
+      continue;
+
+    // if(isRoot) {
+    //   assert(thread.board.pos_hash == rootBoard.pos_hash);
+    //   assert(thread.pla == rootPla);
+    //   if(!isAllowedRootMove(moveLoc))
+    //     continue;
+    // }
+    // if(avoidMoveUntilByLoc.size() > 0) {
+    //   assert(avoidMoveUntilByLoc.size() >= Board::MAX_ARR_SIZE);
+    //   int untilDepth = avoidMoveUntilByLoc[moveLoc];
+    //   if(thread.history.moveHistory.size() - rootHistory.moveHistory.size() < untilDepth)
+    //     continue;
+    // }
+
+    float nnPolicyProb = policyProbs[movePos];
+    // if(antiMirror) {
+    //   maybeApplyAntiMirrorPolicy(nnPolicyProb, moveLoc, policyProbs, node.nextPla, &thread);
+    // }
+
+    // Edited here to get new explore selection values for all potential new nodes
+    double selection_value = getNewExploreSelectionValue(
+      node,nnPolicyProb,totalChildWeight,fpuValue,
+      parentWeightPerVisit,parentUtilityStdevFactor,
+      maxChildWeight,&thread
+    );
+
+    if(selection_value > max_weight) {
+      max_weight = selection_value;
+    }
+
+    bts_distr_map->insert_or_assign(moveLoc, selection_value);
+  }
+
+  // finally make the bts distribution and update it
+  double temp = get_bts_temp(num_visits);
+  for (std::pair<Loc,double> pr : *bts_distr_map) {
+    Loc loc = pr.first;
+    double weight = pr.second;
+    double bts_weight = std::exp((weight - max_weight) / temp);
+    bts_distr_map->insert_or_assign(loc,bts_weight);
+  }
+
+  std::shared_ptr<BtsCategoricalDistribution<Loc>> bts_distr = std::make_shared<BtsCategoricalDistribution<Loc>>(bts_distr_map);
+  node.bts_distr_lock.lock();
+  node.bts_distr = bts_distr;
+  node.bts_distr_lock.unlock();
+}
+
+double Search::get_bts_temp(int64_t num_visits) {
+  // hardcoded init temp, sorry
+  double init_temp = 0.5;
+  double min_temp = 1.0e-6;
+  double temp = init_temp / std::log(CONST_E + num_visits);
+  if (temp < min_temp) {
+    return min_temp;
+  }
+  return temp;
 }

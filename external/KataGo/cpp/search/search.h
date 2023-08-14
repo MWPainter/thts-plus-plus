@@ -2,6 +2,7 @@
 #define SEARCH_SEARCH_H_
 
 #include <memory>
+#include <random>
 #include <unordered_set>
 
 #include "../core/global.h"
@@ -60,6 +61,13 @@ struct SearchThread {
 
   //Just controls some debug output
   std::set<Hash128> illegalMoveHashes;
+
+  //================================================================================================================
+  // Additions for hacking in BTS
+  //================================================================================================================
+  std::ranlux24 rng_gen;
+  std::uniform_int_distribution<int> int_distr;
+  std::uniform_real_distribution<double> real_distr;
 
   SearchThread(int threadIdx, const Search& search);
   ~SearchThread();
@@ -162,13 +170,18 @@ struct Search {
   std::vector<std::shared_ptr<NNOutput>*> oldNNOutputsToCleanUp;
 
   //================================================================================================================
+  // Additions for hacking in BTS
+  //================================================================================================================
+  bool using_bts;
+
+  //================================================================================================================
   // Constructors and Destructors
   // search.cpp
   //================================================================================================================
 
   //Note - randSeed controls a few things in the search, but a lot of the randomness actually comes from
   //random symmetries of the neural net evaluations, see nneval.h
-  Search(SearchParams params, NNEvaluator* nnEval, Logger* logger, const std::string& randSeed);
+  Search(SearchParams params, NNEvaluator* nnEval, Logger* logger, const std::string& randSeed, bool use_bts=false);
   ~Search();
 
   Search(const Search&) = delete;
@@ -538,11 +551,29 @@ private:
   ) const;
 
   void selectBestChildToDescend(
-    SearchThread& thread, const SearchNode& node, int nodeState,
+    SearchThread& thread, SearchNode& node, int nodeState,
     int& numChildrenFound, int& bestChildIdx, Loc& bestChildMoveLoc,
     bool posesWithChildBuf[NNPos::MAX_NN_POLICY_SIZE],
     bool isRoot
-  ) const;
+  );
+  
+  //================================================================================================================
+  // Additions for hacking in BTS
+  //================================================================================================================
+
+  void selectBestChildToDescendBts(
+    SearchThread& thread, SearchNode& node, int nodeState,
+    int& numChildrenFound, int& bestChildIdx, Loc& bestChildMoveLoc,
+    bool posesWithChildBuf[NNPos::MAX_NN_POLICY_SIZE],
+    bool isRoot
+  );
+  void recomputeNodeDistributions(
+    SearchThread& thread, SearchNode& node, int nodeState,
+    bool posesWithChildBuf[NNPos::MAX_NN_POLICY_SIZE],
+    bool isRoot, int64_t num_visits
+  );
+
+  double get_bts_temp(int64_t num_visits);
 
   //----------------------------------------------------------------------------------------
   // Update of node values during search

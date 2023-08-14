@@ -566,6 +566,8 @@ namespace thts {
             manager_args.shift_pseudo_q_values = true;
             manager_args.prior_policy_search_weight = 0.5;
             manager_args.value_temp_init = 0.0;
+            manager_args.temp_decay_visits_scale = 5.0;
+            manager_args.temp_decay_root_node_visits_scale = 5.0;
             if (alg_params != nullptr) {
                 if (!is_opp) {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP)) {
@@ -678,7 +680,7 @@ namespace thts {
      * Running KataGo directly
     */
     shared_ptr<const GoAction> get_katago_move(
-        GoEnv& env, const GoState& state, bool is_white, double max_time, int max_trials, int& num_playouts) 
+        GoEnv& env, const GoState& state, bool is_white, double max_time, int max_trials, int& num_playouts, bool use_bts) 
     {
         // Setup search params, took values from match config given in: https://github.com/lightvector/KataGo/blob/master/cpp/configs/match_example.cfg
         // If not found in the config, values were kept at default
@@ -740,7 +742,7 @@ namespace thts {
         string seed = "60415" + (is_white) ? "@W" : "@B";
         Player pla = (is_white) ? P_WHITE : P_BLACK; 
 
-        Search katago_search(params, env.get_nn_eval(), env.get_logger(), seed);
+        Search katago_search(params, env.get_nn_eval(), env.get_logger(), seed, use_bts);
         katago_search.setPosition(pla, state.get_current_board(), *state.get_board_history()); // pass in these args
         Loc loc = katago_search.runWholeSearchAndGetMove(pla);
 
@@ -843,7 +845,7 @@ namespace thts {
                 int num_playouts = 0;
 
                 // Get move from katago
-                if (algo_id_for_this_move == ALG_ID_KATA_NATIVE) {
+                if (algo_id_for_this_move == ALG_ID_KATA_NATIVE || algo_id_for_this_move == ALG_ID_KATA_NATIVE_BTS) {
                     int trials_per_move = numeric_limits<int>::max();
                     double time_per_move = numeric_limits<double>::max();
                     if (use_time_controls) {
@@ -851,8 +853,9 @@ namespace thts {
                     } else {
                         trials_per_move = (int) trials_or_time_per_move;
                     }
+                    bool use_bts = (algo_id_for_this_move == ALG_ID_KATA_NATIVE_BTS);
                     cur_action = get_katago_move(
-                        *go_env, *cur_state, is_opp, time_per_move, trials_per_move, num_playouts);
+                        *go_env, *cur_state, is_opp, time_per_move, trials_per_move, num_playouts, use_bts);
 
                 } else { 
                     // otherwise setup+run thts for this move
@@ -903,7 +906,7 @@ namespace thts {
                 cout.flush();
 
                 // Print tree to file (if not katago native)
-                if (algo_id_for_this_move != ALG_ID_KATA_NATIVE) {
+                if (algo_id_for_this_move != ALG_ID_KATA_NATIVE && algo_id_for_this_move != ALG_ID_KATA_NATIVE_BTS) {
                     string tree_filename = get_tree_print_filename(
                         expr_id, 
                         alg1_id, 

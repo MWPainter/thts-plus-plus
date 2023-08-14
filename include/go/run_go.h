@@ -42,6 +42,7 @@ static const std::string PARAM_USE_DIRICHLET_NOISE = "add_dirichlet";
 static const std::string PARAM_USE_DIRICHLET_NOISE_OPP = "add_dirichlet";
 
 static const std::string ALG_ID_KATA_NATIVE = "native_kata";
+static const std::string ALG_ID_KATA_NATIVE_BTS = "native_kata_bts";
 static const std::string ALG_ID_KATA = "kata";
 static const std::string ALG_ID_UCT = "uct";
 static const std::string ALG_ID_PUCT = "puct";

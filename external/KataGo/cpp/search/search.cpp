@@ -46,7 +46,10 @@ SearchThread::SearchThread(int tIdx, const Search& search)
    statsBuf(),
    upperBoundVisitsLeft(1e30),
    oldNNOutputsToCleanUp(),
-   illegalMoveHashes()
+   illegalMoveHashes(),
+   rng_gen(60415*tIdx),
+   int_distr(0,RAND_MAX),
+   real_distr(0.0,1.0)
 {
   statsBuf.resize(NNPos::MAX_NN_POLICY_SIZE);
   graphPath.reserve(256);
@@ -64,7 +67,7 @@ SearchThread::~SearchThread() {
 
 static const double VALUE_WEIGHT_DEGREES_OF_FREEDOM = 3.0;
 
-Search::Search(SearchParams params, NNEvaluator* nnEval, Logger* lg, const string& rSeed)
+Search::Search(SearchParams params, NNEvaluator* nnEval, Logger* lg, const string& rSeed, bool use_bts)
   :rootPla(P_BLACK),
    rootBoard(),
    rootHistory(),
@@ -105,7 +108,8 @@ Search::Search(SearchParams params, NNEvaluator* nnEval, Logger* lg, const strin
    threadTasks(NULL),
    threadTasksRemaining(NULL),
    oldNNOutputsToCleanUpMutex(),
-   oldNNOutputsToCleanUp()
+   oldNNOutputsToCleanUp(),
+   using_bts(use_bts)
 {
   assert(logger != NULL);
   nnXLen = nnEval->getNNXLen();
@@ -1215,8 +1219,83 @@ bool Search::playoutDescend(
       return true;
     }
 
+    // Searching with BTS
+    // best child idx is the location for the child 
+    // num children found accurate as of when called select action
+    if (using_bts) {
+      // just always check if needs expanding (its not too heavy)
+      // accept threads will wait while someone is expanding, make sure nodeState up to date
+      node.bts_search_lock.lock();
+      nodeState = node.state.load(std::memory_order_acquire);
+      bool suc = node.maybeExpandChildrenCapacityForNewChild(nodeState, numChildrenFound+1);
+      node.bts_search_lock.unlock();
+      if(!suc) {
+        std::this_thread::yield();
+        nodeState = node.state.load(std::memory_order_acquire);
+        continue;
+      }
+
+      // Get the child pointer
+      int childrenCapacity;
+      SearchChildPointer* children = node.getChildren(nodeState,childrenCapacity);
+      assert(childrenCapacity > bestChildIdx);
+      child = children[bestChildIdx].getIfAllocated();
+
+      // If child hasn't been made, try to make it
+      // Loop round and try another select action attempt if another thread is creating
+      bool constructing = false;
+      if (child == NULL) {
+        bool some_thread_is_constructing = children[bestChildIdx].thread_owns_construction.load(std::memory_order_acquire);
+        if (some_thread_is_constructing) {
+          continue;
+        }
+        bool suc = children[bestChildIdx].thread_owns_construction.compare_exchange_strong(
+            some_thread_is_constructing, true, std::memory_order_acq_rel);
+        if (!suc) {
+          continue;
+        }
+        constructing = true;
+      }
+
+      // If we get here, the child either already exists or we won race to construct this child
+      // Update board in thread struct
+      thread.history.makeBoardMoveAssumeLegal(thread.board,bestChildMoveLoc,thread.pla,rootKoHashTable);
+      thread.pla = getOpp(thread.pla);
+      if(searchParams.useGraphSearch)
+        thread.graphHash = GraphHash::getGraphHash(
+          thread.graphHash, thread.history, thread.pla, searchParams.graphSearchRepBound, searchParams.drawEquivalentWinsForWhite
+        );      
+        
+      // Copied code to construct child from below (check comments there)
+      if (constructing) {
+        const bool forceNonTerminal = searchParams.conservativePass && (&node == rootNode) && bestChildMoveLoc == Board::PASS_LOC;
+        child = allocateOrFindNode(thread, thread.pla, bestChildMoveLoc, forceNonTerminal, thread.graphHash);
+        child->virtualLosses.fetch_add(1,std::memory_order_release);
+
+        {
+          std::lock_guard<std::mutex> lock(mutexPool->getMutex(node.mutexIdx));
+          SearchNode* existingChild = children[bestChildIdx].getIfAllocated();
+          if(existingChild == NULL) {
+            children[bestChildIdx].setMoveLocRelaxed(bestChildMoveLoc);
+            children[bestChildIdx].store(child);
+          }
+          else {
+            child->virtualLosses.fetch_add(-1,std::memory_order_release);
+            return false;
+          }
+        }
+      }
+
+      // Also copied, think this is graph related (or consistency related maybe)
+      if(maybeCatchUpEdgeVisits(thread, node, child, nodeState, bestChildIdx)) {
+        updateStatsAfterPlayout(node,thread,isRoot);
+        child->virtualLosses.fetch_add(-1,std::memory_order_release);
+        return true;
+      }
+    }
+
     //Do we think we are searching a new child for the first time?
-    if(bestChildIdx >= numChildrenFound) {
+    else if(bestChildIdx >= numChildrenFound) {
       assert(bestChildIdx == numChildrenFound);
       assert(bestChildIdx < NNPos::MAX_NN_POLICY_SIZE);
       bool suc = node.maybeExpandChildrenCapacityForNewChild(nodeState, numChildrenFound+1);

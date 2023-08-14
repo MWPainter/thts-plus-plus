@@ -6,6 +6,7 @@
 #include "../search/search.h"
 
 #include <cinttypes>
+#include <limits>
 
 #include "../program/playutils.h"
 #include "../search/searchnode.h"
@@ -420,6 +421,41 @@ const SearchNode* Search::getChildForMove(const SearchNode* node, Loc moveLoc) c
 Loc Search::getChosenMoveLoc() {
   if(rootNode == NULL)
     return Board::NULL_LOC;
+
+  // // Just override this if using BTS
+  // // Hardcoded params in, sorry
+  // if (using_bts) {
+  //   int min_visit_thresh = 20;
+  //   Loc best_loc = Board::NULL_LOC;
+  //   double best_avg_return = std::numeric_limits<double>::lowest();
+  //   Loc best_loc_below_thresh = Board::NULL_LOC;
+  //   double best_avg_return_below_thresh = std::numeric_limits<double>::lowest();
+
+  //   int childrenCapacity;
+  //   const SearchChildPointer* children = rootNode->getChildren(rootNode->state, childrenCapacity);
+  //   for (int i=0; i<childrenCapacity; i++) {
+  //     const SearchNode* child = children[i].getIfAllocated();
+  //     if(child == NULL)
+  //       break;
+  //     int64_t visits = child->stats.visits.load(std::memory_order_acquire);
+  //     double avg_win_prob = child->stats.winLossValueAvg.load(std::memory_order_acquire);
+  //     if (rootPla == P_BLACK) {
+  //       avg_win_prob *= -1.0;
+  //     }  
+  //     if (visits >= min_visit_thresh && avg_win_prob > best_avg_return) {
+  //       best_loc = children[i].getMoveLocRelaxed();
+  //       best_avg_return = avg_win_prob;
+  //     } else if (visits < min_visit_thresh && avg_win_prob > best_avg_return_below_thresh) {
+  //       best_loc_below_thresh = children[i].getMoveLocRelaxed();
+  //       best_avg_return_below_thresh = avg_win_prob;
+  //     }
+  //   }
+    
+  //   if (best_loc != Board::NULL_LOC) {
+  //     return best_loc;
+  //   }
+  //   return best_loc_below_thresh;
+  // }
 
   vector<Loc> locs;
   vector<double> playSelectionValues;

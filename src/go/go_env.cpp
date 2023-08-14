@@ -284,6 +284,9 @@ namespace thts {
         state->nn_output_cache->cached_value = value;
         state->nn_output_cache->cached_white_score_mean = white_score_mean;
 
+        state->nn_output_cache->nn_x_len = nn_output.nnXLen;
+        state->nn_output_cache->nn_y_len = nn_output.nnYLen;
+
         for (int i=0; i < NNPos::MAX_NN_POLICY_SIZE; i++) {
             state->nn_output_cache->cached_policy[i] = nn_output.policyProbs[i];
         }
@@ -314,7 +317,10 @@ namespace thts {
         shared_ptr<GoActionPolicy> policy = make_shared<GoActionPolicy>();
         shared_ptr<GoActionVector> actions = get_valid_actions(state);
         for (shared_ptr<const GoAction> action : *actions) {
-            policy->insert_or_assign(action, state->nn_output_cache->cached_policy[action->loc]);
+            int xlen = state->nn_output_cache->nn_x_len;
+            int ylen = state->nn_output_cache->nn_y_len;
+            int pos = NNPos::locToPos(action->loc, init_board.x_size, xlen, ylen);
+            policy->insert_or_assign(action, state->nn_output_cache->cached_policy[pos]);
         }
 
         // normalise policy

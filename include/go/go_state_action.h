@@ -45,6 +45,8 @@ namespace thts {
         double cached_value;
         double cached_white_score_mean;
         float cached_policy[NNPos::MAX_NN_POLICY_SIZE];
+        int nn_x_len;
+        int nn_y_len;
     };
 
     /**

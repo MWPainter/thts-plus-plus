@@ -128,7 +128,7 @@ namespace thts {
         backup_m_avg_return(trial_cumulative_return_after_node);
         MentsDNode& parent_ref = (MentsDNode&) *parent.lock();
         int alias_update_freq = manager.alias_recompute_freq * parent_ref.actions->size();
-        if (manager.alias_use_caching || (MentsCNode::num_backups % alias_update_freq) == 0) {
+        if (!manager.alias_use_caching || (MentsCNode::num_backups % alias_update_freq) == 0) {
             backup_entropy(ctx);
         }
         soft_value = m_avg_return + manager.temp * m_subtree_entropy;

@@ -1,12 +1,15 @@
 #ifndef SEARCH_SEARCHNODE_H_
 #define SEARCH_SEARCHNODE_H_
 
+#include <mutex>
+
 #include "../core/global.h"
 #include "../core/hash.h"
 #include "../core/multithread.h"
 #include "../game/boardhistory.h"
 #include "../neuralnet/nneval.h"
 #include "../search/subtreevaluebiastable.h"
+#include "../search/distributions.h"
 
 struct SearchNode;
 struct SearchThread;
@@ -105,6 +108,9 @@ private:
   std::atomic<int64_t> edgeVisits;
   std::atomic<Loc> moveLoc; // Generally this will be always guarded under release semantics of data or of the array itself.
 public:
+  // Hacking in BTS
+  std::atomic<bool> thread_owns_construction;
+
   SearchChildPointer();
 
   SearchChildPointer(const SearchChildPointer&) = delete;
@@ -176,6 +182,9 @@ struct SearchNode {
   static constexpr int CHILDREN0SIZE = 8;
   static constexpr int CHILDREN1SIZE = 64;
   static constexpr int CHILDREN2SIZE = NNPos::MAX_NN_POLICY_SIZE;
+  // static constexpr int CHILDREN0SIZE = 64;
+  // static constexpr int CHILDREN1SIZE = NNPos::MAX_NN_POLICY_SIZE;
+  // static constexpr int CHILDREN2SIZE = NNPos::MAX_NN_POLICY_SIZE;
 
   //Lightweight mutable---------------------------------------------------------------
   //Protected under statsLock for writing
@@ -191,6 +200,19 @@ struct SearchNode {
   std::shared_ptr<SubtreeValueBiasEntry> subtreeValueBiasTableEntry;
 
   std::atomic<int32_t> dirtyCounter;
+
+  //--------------------------------------------------------------------------------
+  // Stuff added for hacking in BTS
+  //--------------------------------------------------------------------------------
+  std::mutex bts_search_lock;
+  std::unordered_map<Loc,int> loc_to_child_idx;
+
+  std::mutex bts_distr_lock;
+  std::shared_ptr<std::vector<Loc>> valid_moves;
+  std::shared_ptr<BtsCategoricalDistribution<Loc>> bts_distr;
+  std::shared_ptr<BtsCategoricalDistribution<Loc>> nn_distr;
+  std::shared_ptr<BtsDiscreteUniformDistribution<Loc>> unfrm_distr;
+
 
   //--------------------------------------------------------------------------------
   SearchNode(Player prevPla, bool forceNonTerminal, uint32_t mutexIdx);
