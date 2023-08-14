@@ -270,30 +270,29 @@ def make_plot(
     
     if not sep_eps_plots:
         return
-    
-    if sep_eps_plots:
-        eps_set = set(epsilons)
-        for eps in eps_set:
-            eps_df = df[df['eps'] == eps]
-            eps_filename = plot_filename.format(eps=eps)
-            make_plot_df(
-                df=eps_df, 
-                xaxis_key="num_trials", 
-                yaxis_key="mc_value_estimate", 
-                hue_key=hue_key,
-                palette=palette,
-                style_key=hue_key,
-                dashes=dashes,
-                xaxis_lab=xaxis_lab,
-                yaxis_lab=yaxis_lab,
-                # y_scale_transform=y_scale_transform,
-                # y_scale_inv_transform=y_scale_inv_transform,
-                legend_lab=legend_lab,
-                filename=eps_filename,
-                y_axis_range=y_axis_range,
-                markers=markers,
-                markevery=markevery,
-                use_legend=use_legend)
+
+    eps_set = set(epsilons)
+    for eps in eps_set:
+        eps_df = df[df['eps'] == eps]
+        eps_filename = plot_filename.format(eps=eps)
+        make_plot_df(
+            df=eps_df, 
+            xaxis_key="num_trials", 
+            yaxis_key="mc_value_estimate", 
+            hue_key=hue_key,
+            palette=palette,
+            style_key=hue_key,
+            dashes=dashes,
+            xaxis_lab=xaxis_lab,
+            yaxis_lab=yaxis_lab,
+            # y_scale_transform=y_scale_transform,
+            # y_scale_inv_transform=y_scale_inv_transform,
+            legend_lab=legend_lab,
+            filename=eps_filename,
+            y_axis_range=y_axis_range,
+            markers=markers,
+            markevery=markevery,
+            use_legend=use_legend)
 
     
 def negative_log_transform(x):
@@ -408,6 +407,7 @@ if __name__ == "__main__":
         filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/ments/eval_*.csv")
         filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/db-ments/eval_*.csv")
         filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/hmcts/eval_*.csv")
+        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/uct/eval_*.csv")
         make_plot(
             filenames=filenames,
             plot_filename="plots/000_rebuttal_fl.png",
