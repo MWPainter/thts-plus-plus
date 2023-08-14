@@ -90,7 +90,7 @@ static const std::string PARAMS_ID_MENTS_DEFAULT_Q_VALUE = "default_q_value";
 static const std::string PARAMS_ID_DENTS_IGNORE_DECAY = "no_dents_decay";
 static const std::string PARAMS_ID_DENTS_TEMP = "dents_temp";
 // static const std::string PARAMS_ID_DENTS_INIT_TEMP = "value_temp_init";
-static const std::string PARAMS_ID_HMCTS_BUDGET = "uct_budget_threshold";
+static const std::string PARAMS_ID_HMCTS_BUDGET = "hmcts_total_budget";
 static const std::string PARAMS_ID_HMCTS_UCT_BUDGET_THRESHOLD = "uct_budget_threshold";
 
 

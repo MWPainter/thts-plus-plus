@@ -145,7 +145,11 @@ namespace thts {
             decision_depth+1, 
             decision_timestep+1, 
             static_pointer_cast<const HmctsCNode>(shared_from_this()));
-        new_child->set_new_total_budget(budget_per_child.at(next_state));
+        int budget = 0;
+        if (!budget_per_child.empty()) {
+            budget_per_child.at(next_state);
+        }
+        new_child->set_new_total_budget(budget);
         return new_child;
     }
 }
