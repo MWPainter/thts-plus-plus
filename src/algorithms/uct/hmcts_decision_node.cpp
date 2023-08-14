@@ -24,15 +24,14 @@ namespace thts {
         int decision_timestep,
         shared_ptr<const HmctsCNode> parent) :
             UctDNode(
-                static_pointer_cast<ThtsManager>(thts_manager),
+                static_pointer_cast<UctManager>(thts_manager),
                 state,
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const UctCNode>(parent)),
             total_budget(0),
             total_budget_on_last_visit(0),
-            seq_halving_round_budget(0),
-            target_budget_per_child(0),
+            seq_halving_round_budget_per_child(0),
             seq_halving_actions()
     {   
     }
@@ -83,23 +82,23 @@ namespace thts {
 
         if (total_budget != total_budget_on_last_visit) {
             total_budget_on_last_visit = total_budget;
-            seq_halving_actions = make_shared<ActionVector>(*actions);
+            ActionVector seq_halving_actions = *actions;
             seq_halving_round_budget_per_child = floor(
-                ((double) num_visits + total_budget) / (seq_halving_actions->size() + ceil(log2(actions->size()))) );
+                ((double) num_visits + total_budget) / (seq_halving_actions.size() + ceil(log2(actions->size()))) );
             if (seq_halving_round_budget_per_child < 1) {
                 seq_halving_round_budget_per_child = 1;
             }
         }
 
-        if (children->size() != actions->size()) {
+        if (children.size() != actions->size()) {
             return;
         }
 
         lock_all_children();
-        while (seq_halving_actions->size() > 1) {
+        while (seq_halving_actions.size() > 1) {
             // check for outstanding budget
             bool child_has_outstanding_budget = false;
-            for (shared_ptr<const Action> act : *seq_halving_actions) {
+            for (shared_ptr<const Action> act : seq_halving_actions) {
                 HmctsCNode& child = (HmctsCNode&) *get_child_node(act);
                 if (child.num_visits < seq_halving_round_budget_per_child) {
                     child_has_outstanding_budget = true;
@@ -111,7 +110,7 @@ namespace thts {
             }
 
             // make new seq_halving_actions array, by sorting and taking the first half
-            int new_num_actions = ceil(seq_halving_actions->size() / 2.0);
+            int new_num_actions = ceil(seq_halving_actions.size() / 2.0);
             std::sort(
                 seq_halving_actions.begin(), 
                 seq_halving_actions.end(), 
@@ -120,7 +119,7 @@ namespace thts {
                 });
             ActionVector::const_iterator first = seq_halving_actions.begin();
             ActionVector::const_iterator last = seq_halving_actions.begin() + new_num_actions;
-            seq_halving_actions = make_shared<ActionVector>(first, last);
+            seq_halving_actions = ActionVector(first, last);
 
             // Update budget per child
             int additional_budget = floor(
@@ -131,7 +130,7 @@ namespace thts {
             seq_halving_round_budget_per_child += additional_budget;
         }
 
-        for (shared_ptr<const Action> act : *seq_halving_actions) {
+        for (shared_ptr<const Action> act : seq_halving_actions) {
             get_child_node(act)->set_new_total_budget(seq_halving_round_budget_per_child);
         }
         unlock_all_children();
@@ -174,7 +173,7 @@ namespace thts {
 
         vector<shared_ptr<const Action>> max_budget_remaining_actions;
         int max_budget_remaining = -1;
-        for (shared_ptr<const Action> act : *seq_halving_actions) {
+        for (shared_ptr<const Action> act : seq_halving_actions) {
             HmctsCNode& child = (HmctsCNode&) *get_child_node(act);
             int child_remaining_budget = seq_halving_round_budget_per_child - child.num_visits;
             if (child_remaining_budget > max_budget_remaining) {
@@ -196,7 +195,7 @@ namespace thts {
      */
     shared_ptr<const Action> HmctsDNode::select_action(ThtsEnvContext& ctx) {
         if (running_seq_halving()) {
-            return select_action_sequential_halving();
+            return select_action_sequential_halving(ctx);
         }
         return UctDNode::select_action(ctx);
     }

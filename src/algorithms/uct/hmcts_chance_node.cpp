@@ -15,23 +15,23 @@ namespace thts {
         int decision_depth,
         int decision_timestep,
         shared_ptr<const HmctsDNode> parent) :
-            ThtsCNode(
-                static_pointer_cast<ThtsManager>(thts_manager),
+            UctCNode(
+                static_pointer_cast<UctManager>(thts_manager),
                 state,
                 action,
                 decision_depth,
                 decision_timestep,
-                static_pointer_cast<const ThtsDNode>(parent)),
-            num_backups(0),
-            avg_return(0.0),
-            next_state_distr(thts_manager->thts_env->get_transition_distribution_itfc(state,action))
+                static_pointer_cast<const UctDNode>(parent)),
+            total_budget(0),
+            total_budget_on_last_visit(0),
+            budget_per_child()
     {  
     }
 
     /**
      * Running seq halving at this node?
     */
-    bool HmctsDNode::running_seq_halving() const {
+    bool HmctsCNode::running_seq_halving() const {
         HmctsManager& manager = (HmctsManager&) *thts_manager;
         return total_budget > manager.uct_budget_threshold;
     }
@@ -39,7 +39,7 @@ namespace thts {
     /**
      * Setter
     */
-    void HmctsDNode::set_new_total_budget(int budget) {
+    void HmctsCNode::set_new_total_budget(int budget) {
         total_budget = budget;
     }
 
@@ -51,20 +51,19 @@ namespace thts {
     void HmctsCNode::visit_update_budgets() {
         if (total_budget != total_budget_on_last_visit) {
             total_budget_on_last_visit = total_budget;
-            budget_per_child = make_unique<std::unordered_map<std::shared_ptr<const State>,int>>();
-            budgets_per_child->reserve(next_state_distr->size());
+            budget_per_child.reserve(next_state_distr->size());
             for (pair<shared_ptr<const State>,double> pr : *next_state_distr) {
                 shared_ptr<const State> state = pr.first;
                 double prob = pr.second;
-                budgets_per_child->insert_or_assign(state, ceil(prob * total_budget))
+                budget_per_child[state] = ceil(prob * total_budget);
             }
 
             lock_all_children();
             for (pair<shared_ptr<const State>,double> pr : *next_state_distr) {
                 shared_ptr<const State> state = pr.first;
                 if (has_child_node(state)) {
-                    HmctsDNode& child = get_child_node(state);
-                    child.set_new_total_budget(budgets_per_child->at(state));
+                    HmctsDNode& child = (HmctsDNode&) *get_child_node(state);
+                    child.set_new_total_budget(budget_per_child.at(state));
                 }
             }
             unlock_all_children();
@@ -105,12 +104,12 @@ namespace thts {
 
         vector<shared_ptr<const State>> max_budget_remaining_outcomes;
         double max_budget_remaining = -1;
-        for (pair<shared_ptr<const State>,int> pr : *budgets_per_child) {
+        for (pair<shared_ptr<const State>,int> pr : budget_per_child) {
             shared_ptr<const State> state = pr.first;
-            int budget = pr.second;
+            int child_budget = pr.second;
             double prob = next_state_distr->at(state);
-            HmctsDNode& child = (HmctsCNode&) *get_child_node(state);
-            double child_remaining_budget = (seq_halving_round_budget_per_child - child.num_visits) / prob;
+            HmctsDNode& child = (HmctsDNode&) *get_child_node(state);
+            double child_remaining_budget = (child_budget - child.num_visits) / prob;
             if (child_remaining_budget > max_budget_remaining) {
                 max_budget_remaining_outcomes = { state };
                 max_budget_remaining = child_remaining_budget;
@@ -140,13 +139,14 @@ namespace thts {
     shared_ptr<HmctsDNode> HmctsCNode::create_child_node_helper(shared_ptr<const State> observation) const
     {
         shared_ptr<const State> next_state = static_pointer_cast<const State>(observation);
-        shared_ptr<HmcstDNode> new_child = make_shared<HmctsDNode>(
+        shared_ptr<HmctsDNode> new_child = make_shared<HmctsDNode>(
             static_pointer_cast<HmctsManager>(thts_manager), 
             next_state,
             decision_depth+1, 
             decision_timestep+1, 
             static_pointer_cast<const HmctsCNode>(shared_from_this()));
-        new_child->set_new_total_budget(budgets_per_child->at(next_state));
+        new_child->set_new_total_budget(budget_per_child.at(next_state));
+        return new_child;
     }
 }
 

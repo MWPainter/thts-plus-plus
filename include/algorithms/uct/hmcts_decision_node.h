@@ -51,7 +51,7 @@ namespace thts {
             int total_budget;
             int total_budget_on_last_visit;
             int seq_halving_round_budget_per_child;
-            std::shared_ptr<ActionVector> seq_halving_actions;
+            ActionVector seq_halving_actions;
 
             /**
              * Helper to check if running in seq halving mode right now

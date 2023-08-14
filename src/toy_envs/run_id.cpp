@@ -1086,7 +1086,7 @@ namespace thts {
                     eval_threads));
             }
 
-            vector<string> alg_ids = {ALG_ID_MENTS, ALG_ID_RENTS, ALG_ID_TENTS, ALG_ID_EST, ALG_ID_DENTS};
+            alg_ids = {ALG_ID_MENTS, ALG_ID_RENTS, ALG_ID_TENTS, ALG_ID_EST, ALG_ID_DENTS};
             for (string alg_id : alg_ids) {
                 double temp = 1.0;
                 double eps = 1.0;

@@ -38,7 +38,7 @@ namespace thts {
         protected:
             int total_budget;
             int total_budget_on_last_visit;
-            std::unique_ptr<std::unordered_map<std::shared_ptr<const State>,int>> budgets_per_child;
+            std::unordered_map<std::shared_ptr<const State>,int> budget_per_child;
 
             /**
              * Helper to check if running in seq halving mode right now

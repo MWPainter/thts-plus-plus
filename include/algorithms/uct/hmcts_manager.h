@@ -2,6 +2,8 @@
 
 #include "algorithms/uct/uct_manager.h"
 
+#include <stdexcept>
+
 namespace thts {
     /**
      * Args object so that params can be set in a more named args way
@@ -35,14 +37,14 @@ namespace thts {
             int total_budget;
             int uct_budget_threshold;
 
-            PuctManager(const PuctManagerArgs& args) :
+            HmctsManager(const HmctsManagerArgs& args) :
                 UctManager(args),
                 total_budget(args.total_budget),
                 uct_budget_threshold(args.uct_budget_threshold) 
             {
                 // Required args
-                if (args.total_budget == HmctsManagerArgs.total_budget_default) {
-                    throw Exception("Total budget is required arg for HMCTS");
+                if (args.total_budget == HmctsManagerArgs::total_budget_default) {
+                    throw std::invalid_argument("Total budget is required arg for HMCTS");
                 }
             };
     };
