@@ -729,7 +729,7 @@ namespace thts {
         params.numVirtualLossesPerThread = 1.0;
         params.numThreads = 32;
         params.maxVisits = ((int64_t)1) << 50;
-        params.maxPlayouts = max_trials - params.numThreads;
+        params.maxPlayouts = max_trials;
 
         // TIME CONTROL
         params.maxTime = max_time;

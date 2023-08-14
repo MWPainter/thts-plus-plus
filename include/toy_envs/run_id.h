@@ -74,6 +74,7 @@ static const std::string FL8_059_SENS = "059_fl8_0_001";
 // alg ids
 static const std::string ALG_ID_UCT = "uct";
 static const std::string ALG_ID_PUCT = "puct";
+static const std::string ALG_ID_HMCTS = "hmcts";
 static const std::string ALG_ID_MENTS = "ments";
 static const std::string ALG_ID_DENTS = "dents";
 static const std::string ALG_ID_RENTS = "rents";
@@ -89,6 +90,8 @@ static const std::string PARAMS_ID_MENTS_DEFAULT_Q_VALUE = "default_q_value";
 static const std::string PARAMS_ID_DENTS_IGNORE_DECAY = "no_dents_decay";
 static const std::string PARAMS_ID_DENTS_TEMP = "dents_temp";
 // static const std::string PARAMS_ID_DENTS_INIT_TEMP = "value_temp_init";
+static const std::string PARAMS_ID_HMCTS_BUDGET = "uct_budget_threshold";
+static const std::string PARAMS_ID_HMCTS_UCT_BUDGET_THRESHOLD = "uct_budget_threshold";
 
 
 namespace thts {

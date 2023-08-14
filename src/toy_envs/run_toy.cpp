@@ -231,21 +231,6 @@ namespace thts {
             tree_file << root_node->get_pretty_print_string(4) << endl;
             tree_file.close();
             }
-            
-            // cout << env.use_count() << endl;
-            // cout << thts_manager.use_count() << endl;
-            // cout << root_node.use_count() << endl;
-            // cout << logger.use_count() << endl;
-
-            // env.reset();
-            // thts_manager.reset();
-            // root_node.reset();
-            // logger.reset();
-
-            // cout << env.use_count() << endl;
-            // cout << thts_manager.use_count() << endl;
-            // cout << root_node.use_count() << endl;
-            // cout << logger.use_count() << endl;
 
             eval_file.flush();
         }   
