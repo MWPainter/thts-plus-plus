@@ -584,7 +584,7 @@ namespace thts {
                     }
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN)) {
                         manager_args.use_dp_value = false;
-                        manager_args.temp_decay_fn = decayed_temp_inv_log;
+                        manager_args.temp_decay_fn = decayed_temp_inv_sqrt;
                     }
                     if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED)) {
                         manager_args.recommend_most_visited = true;
