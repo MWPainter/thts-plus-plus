@@ -74,34 +74,34 @@ int main(int argc, char* argv[]) {
     // Expr to debug that all the io works
     if (expr_id == EXPR_ID_DEBUG) {
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();       
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 10.0);
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0); 
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE, 0.003);      
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP, 0.003);   
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE, 0.05);      
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE_OPP, 0.05);                 
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.75);            
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.5);       
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID, 1.0);
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID_OPP, 1.0);  
-        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, 0.5);                
-        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, 0.5);                 
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 110.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 10.0);                
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.5);            
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.5);                 
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.01);                                    
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.01); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.01); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.01);   
+        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, 0.5);                
+        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, 0.5);  
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE, 0.003);      
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP, 0.003);   
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE, 0.05);      
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE_OPP, 0.05);       
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID, 1.0);
+        alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID_OPP, 1.0);  
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
 
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
 
-        alg_params->insert_or_assign(NUM_THREADS_OVERRIDE_OPP, 32);
+        alg_params->insert_or_assign(NUM_THREADS_OVERRIDE_OPP, 128);
 
         thts::run_go_games(
             expr_id,            // expr id
-            ALG_ID_EST, //ALG_ID_KATA,            // black
-            ALG_ID_KATA,             // white
+            ALG_ID_KATA, //ALG_ID_KATA,            // black
+            ALG_ID_EST,             // white
             9,                  // board size
             10,                 // num games
             6.5,                // komi
@@ -251,7 +251,7 @@ int main(int argc, char* argv[]) {
             alg_id,              // white
             9,                  // board size
             15,                 // num games
-            7.0,                // komi
+            6.5,                // komi
             true,
             15.0,               // time per move
             32,                 // num threads
@@ -288,7 +288,7 @@ int main(int argc, char* argv[]) {
             alg_id,              // white
             9,                  // board size
             15,                 // num games
-            7.0,                // komi
+            6.5,                // komi
             true,
             15.0,               // time per move
             32,                 // num threads
@@ -325,7 +325,7 @@ int main(int argc, char* argv[]) {
             alg_id,              // white
             9,                  // board size
             15,                 // num games
-            7.0,                // komi
+            6.5,                // komi
             true,
             15.0,               // time per move
             32,                 // num threads
@@ -734,7 +734,7 @@ int main(int argc, char* argv[]) {
             algo2,              // white
             9,                  // board size
             25,                 // num games
-            7.0,                // komi
+            6.5,                // komi
             false,              // limit by number of moves, not time
             1600,               // num moves allowed
             32,                 // num threads

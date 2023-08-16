@@ -265,6 +265,9 @@ namespace thts {
             action_distr[action] *= (1.0 - lambda) / sum_weights;
             if (manager.prior_policy_search_weight > 0.0) {
                 double lambda_tilde = manager.prior_policy_search_weight / log(num_visits+3);
+                if (lambda_tilde > 1.0) {
+                    lambda_tilde = 1.0;
+                }
                 action_distr[action] *= (1.0 - lambda_tilde);
                 action_distr[action] += (1.0 - lambda) * lambda_tilde * policy_prior->at(action);
             }
@@ -337,6 +340,9 @@ namespace thts {
             lambda = manager.max_explore_prob;
         }
         double lambda_tilde = manager.prior_policy_search_weight / log(num_visits+3);
+        if (lambda_tilde > 1.0) {
+            lambda_tilde = 1.0;
+        }
 
         // Explicit weights for the mixed distribution
         double uniform_weight = lambda;
