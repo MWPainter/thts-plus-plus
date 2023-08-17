@@ -1,7 +1,7 @@
 # variables 
 EXPR_ID="015_compare_with_native"
 
-agent_ids=("kata" "native_kata")
+agent_ids=("est" "native_kata")
 
 for AGENT_ONE_ID in ${agent_ids[@]}
 do
