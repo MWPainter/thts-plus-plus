@@ -294,8 +294,8 @@ int main(int argc, char* argv[]) {
             128,                 // num threads
             true,               // ments hps
             alg_params,
-            PARAM_BIAS_OR_SEARCH_TEMP,          // hps key, black
-            PARAM_BIAS_OR_SEARCH_TEMP_OPP);     // hps key, white
+            PARAM_PRIOR_COEFF,          // hps key, black
+            PARAM_PRIOR_COEFF_OPP);     // hps key, white
     }
 
     // 
@@ -331,8 +331,8 @@ int main(int argc, char* argv[]) {
             128,                 // num threads
             true,               // ments hps
             alg_params,
-            PARAM_BIAS_OR_SEARCH_TEMP,          // hps key, black
-            PARAM_BIAS_OR_SEARCH_TEMP_OPP);     // hps key, white
+            PARAM_MENTS_ROOT_EPS,          // hps key, black
+            PARAM_MENTS_ROOT_EPS_OPP);     // hps key, white
     }
 
     // 005
