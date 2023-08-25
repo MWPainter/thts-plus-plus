@@ -46,7 +46,7 @@ static const std::string EXPR_ID_19_RAND_NO_TUNE_W_ALIAS = "200a_rr_with_random_
 static const std::string EXPR_ID_19_RR_NO_TUNE = "201_round_robin_19x19";
 static const std::string EXPR_ID_19_RR_NO_TUNE_W_ALIAS = "202_round_robin_w_alias_19x19";
 
-// x00 series - final runs
+// x00 series - final runs, tuning
 static const std::string EXPR_ID_BTS_TEMP_CONST = "x00_bts_tune_temp_no_decay";
 static const std::string EXPR_ID_BTS_TEMP_DECAY = "x01_bts_tune_temp_sqrt_decay";
 static const std::string EXPR_ID_BTS_TEMP_VERSUS = "x02_bts_tune_temp_compare";
