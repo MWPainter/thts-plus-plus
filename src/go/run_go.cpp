@@ -418,7 +418,7 @@ namespace thts {
                     }
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN)) {
                         manager_args.use_avg_return = true;
-                        manager_args.temp_decay_fn = decayed_temp_inv_log;
+                        manager_args.temp_decay_fn = decayed_temp_no_decay;
                     }
                     if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED)) {
                         manager_args.recommend_most_visited = true;
@@ -442,7 +442,7 @@ namespace thts {
                     }
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN_OPP)) {// && algo_id_for_this_move != ALG_ID_TENTS) {
                         manager_args.use_avg_return = true;
-                        manager_args.temp_decay_fn = decayed_temp_inv_log;
+                        manager_args.temp_decay_fn = decayed_temp_no_decay;
                     }
                     if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED_OPP)) {
                         manager_args.recommend_most_visited = true;
@@ -500,7 +500,10 @@ namespace thts {
                     }
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN)) {
                         manager_args.use_dp_value = false;
-                        manager_args.temp_decay_fn = decayed_temp_inv_log;
+                        manager_args.temp_decay_fn = decayed_temp_inv_sqrt;//decayed_temp_inv_log;
+                    }
+                    if (contains_key(alg_params, PARAM_USE_CONST_SEARCH_TEMP)) {
+                        manager_args.temp_decay_fn = decayed_temp_no_decay;
                     }
                     if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED)) {
                         manager_args.recommend_most_visited = true;
@@ -540,7 +543,10 @@ namespace thts {
                     }
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN_OPP)) {
                         manager_args.use_dp_value = false;
-                        manager_args.temp_decay_fn = decayed_temp_inv_log;
+                        manager_args.temp_decay_fn = decayed_temp_inv_sqrt;//decayed_temp_inv_log;
+                    }
+                    if (contains_key(alg_params, PARAM_USE_CONST_SEARCH_TEMP_OPP)) {
+                        manager_args.temp_decay_fn = decayed_temp_no_decay;
                     }
                     if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED_OPP)) {
                         manager_args.recommend_most_visited = true;
@@ -566,8 +572,8 @@ namespace thts {
             manager_args.shift_pseudo_q_values = true;
             manager_args.prior_policy_search_weight = 0.5;
             manager_args.value_temp_init = 0.0;
-            manager_args.temp_decay_visits_scale = 5.0;
-            manager_args.temp_decay_root_node_visits_scale = 5.0;
+            manager_args.temp_decay_visits_scale = 15.0;
+            manager_args.temp_decay_root_node_visits_scale = 15.0;
             if (alg_params != nullptr) {
                 if (!is_opp) {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP)) {
@@ -584,7 +590,10 @@ namespace thts {
                     }
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN)) {
                         manager_args.use_dp_value = false;
-                        manager_args.temp_decay_fn = decayed_temp_inv_sqrt;
+                        manager_args.temp_decay_fn = decayed_temp_inv_log;
+                    }
+                    if (contains_key(alg_params, PARAM_USE_CONST_SEARCH_TEMP)) {
+                        manager_args.temp_decay_fn = decayed_temp_no_decay;
                     }
                     if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED)) {
                         manager_args.recommend_most_visited = true;
@@ -609,6 +618,9 @@ namespace thts {
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN_OPP)) {
                         manager_args.use_dp_value = false;
                         manager_args.temp_decay_fn = decayed_temp_inv_log;
+                    }
+                    if (contains_key(alg_params, PARAM_USE_CONST_SEARCH_TEMP_OPP)) {
+                        manager_args.temp_decay_fn = decayed_temp_no_decay;
                     }
                     if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED_OPP)) {
                         manager_args.recommend_most_visited = true;
