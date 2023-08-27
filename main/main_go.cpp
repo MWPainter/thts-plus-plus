@@ -99,17 +99,17 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);
 
-        alg_params->insert_or_assign(NUM_THREADS_OVERRIDE, 128);
+        // alg_params->insert_or_assign(NUM_THREADS_OVERRIDE, 128);
 
         thts::run_go_games(
             expr_id,            // expr id
             ALG_ID_EST, //ALG_ID_KATA,            // black
             ALG_ID_KATA,             // white
-            9,                  // board size
+            19,                  // board size
             10,                 // num games
-            6.5,                // komi
+            7.5,                // komi
             true,
-            2.5,                // time per move
+            10.0,                // time per move
             32,                 // num threads 
             false,
             alg_params);   
@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             2.5,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,               // ments hps
             alg_params,
             PARAM_BIAS_OR_SEARCH_TEMP,          // hps key, black
@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             2.5,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,               // ments hps
             alg_params,
             PARAM_BIAS_OR_SEARCH_TEMP,          // hps key, black
@@ -238,7 +238,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             2.5,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,               // ments hps
             alg_params,
             (!const_plays_black) ? "" : PARAM_USE_CONST_SEARCH_TEMP,          // hps key, black
@@ -278,7 +278,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             2.5,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,               // ments hps
             alg_params,
             PARAM_PRIOR_COEFF,          // hps key, black
@@ -318,7 +318,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             2.5,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,               // ments hps
             alg_params,
             PARAM_MENTS_ROOT_EPS,          // hps key, black
@@ -358,7 +358,7 @@ int main(int argc, char* argv[]) {
             6.5,                // komi
             true,
             2.5,               // time per move
-            128,                 // num threads
+            32,                 // num threads
             true,               // ments hps
             alg_params,
             PARAM_MENTS_ROOT_EPS,          // hps key, black
