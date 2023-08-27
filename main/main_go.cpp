@@ -76,10 +76,10 @@ int main(int argc, char* argv[]) {
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();       
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0);                
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.5);            
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.5);                 
-        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.1);                                    
-        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.1); 
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);            
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);                 
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.01);                                    
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.01); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.01); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.01);   
         alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, 0.5);                
@@ -133,8 +133,8 @@ int main(int argc, char* argv[]) {
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);              
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.5);            
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.5);                  
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);            
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);                  
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.03);                                    
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.03); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.03); 
@@ -172,9 +172,9 @@ int main(int argc, char* argv[]) {
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);              
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.5);            
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.5);                  
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);             
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);            
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);                  
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.03);                                    
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.03); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.03); 
@@ -209,9 +209,9 @@ int main(int argc, char* argv[]) {
         double temp_const = 5.0;
         double temp_decay = 50.0;
 
-        shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();         
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.5);            
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.5);                  
+        shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();               
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);            
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);               
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.03);                                    
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.03); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.03); 
