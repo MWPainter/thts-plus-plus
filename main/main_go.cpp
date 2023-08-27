@@ -105,11 +105,11 @@ int main(int argc, char* argv[]) {
             expr_id,            // expr id
             ALG_ID_EST, //ALG_ID_KATA,            // black
             ALG_ID_KATA,             // white
-            19,                  // board size
+            9,                  // board size
             10,                 // num games
-            7.5,                // komi
+            6.5,                // komi
             true,
-            10.0,                // time per move
+            2.5,                // time per move
             32,                 // num threads 
             false,
             alg_params);   
