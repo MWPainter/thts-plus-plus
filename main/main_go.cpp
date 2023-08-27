@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
             10,                 // num games
             6.5,                // komi
             true,
-            5.0,                // time per move
+            2.5,                // time per move
             32,                 // num threads 
             false,
             alg_params);   
@@ -152,7 +152,7 @@ int main(int argc, char* argv[]) {
             15,                 // num games
             6.5,                // komi
             true,
-            5.0,               // time per move
+            2.5,               // time per move
             128,                 // num threads
             true,               // ments hps
             alg_params,
@@ -190,7 +190,7 @@ int main(int argc, char* argv[]) {
             15,                 // num games
             6.5,                // komi
             true,
-            5.0,               // time per move
+            2.5,               // time per move
             128,                 // num threads
             true,               // ments hps
             alg_params,
@@ -237,7 +237,7 @@ int main(int argc, char* argv[]) {
             15,                 // num games
             6.5,                // komi
             true,
-            5.0,               // time per move
+            2.5,               // time per move
             128,                 // num threads
             true,               // ments hps
             alg_params,
@@ -277,7 +277,7 @@ int main(int argc, char* argv[]) {
             15,                 // num games
             6.5,                // komi
             true,
-            5.0,               // time per move
+            2.5,               // time per move
             128,                 // num threads
             true,               // ments hps
             alg_params,
@@ -317,7 +317,7 @@ int main(int argc, char* argv[]) {
             15,                 // num games
             6.5,                // komi
             true,
-            5.0,               // time per move
+            2.5,               // time per move
             128,                 // num threads
             true,               // ments hps
             alg_params,
@@ -357,7 +357,7 @@ int main(int argc, char* argv[]) {
             15,                 // num games
             6.5,                // komi
             true,
-            5.0,               // time per move
+            2.5,               // time per move
             128,                 // num threads
             true,               // ments hps
             alg_params,
