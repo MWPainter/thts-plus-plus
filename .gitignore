@@ -17,6 +17,7 @@ external/.DS_Store
 # Externals (from other branches)
 external/KataGo
 external/eigen
+external/eigen-3.4.0
 
 # External files (other branches)
 external/kata1*
