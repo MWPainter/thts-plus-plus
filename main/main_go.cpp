@@ -55,7 +55,7 @@ static const std::string EXPR_ID_BTS_EPS_COEFF = "x04_bts_tune_eps_coeff";
 static const std::string EXPR_ID_BTS_ROOT_EPS_COEFF = "x05_bts_tune_root_eps_coeff";
 // bts num threads
 // retry dp+most_visited vs dp+largetst_val vs ar+most_visited vs ar+largest_val
-// puct num threads 
+static const std::string EXPR_ID_PUCT_NUM_THREADS = "x08_puct_tune_threads";
 // puct dirichlet noise
 // puct compare with native (9x9)
 // puct compare with native (19x19)
@@ -402,6 +402,47 @@ int main(int argc, char* argv[]) {
             alg_params,
             PARAM_MENTS_ROOT_EPS,          // hps key, black
             PARAM_MENTS_ROOT_EPS_OPP);     // hps key, white
+    }
+
+    //
+    // x06
+    // 
+    //  
+
+    //
+    // x07
+    // 
+    //  
+
+    //
+    // x08 - puct_tune_threads
+    // Puct num threads
+    //  
+    if (expr_id == EXPR_ID_PUCT_NUM_THREADS) {
+        int threads = stoi(argv[2]);
+        int threads_opp = stoi(argv[3]);
+
+        shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 110.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0);
+        alg_params->insert_or_assign(NUM_THREADS_OVERRIDE, threads);
+        alg_params->insert_or_assign(NUM_THREADS_OVERRIDE_OPP, threads_opp);
+
+        thts::run_go_games(
+            expr_id,            // expr id
+            ALG_ID_KATA,             // black
+            ALG_ID_KATA,             // white
+            9,                  // board size
+            15,                 // num games
+            6.5,               // komi
+            true,
+            2.5,               // time per move
+            32,                // num threads
+            true,
+            alg_params,
+            NUM_THREADS_OVERRIDE,          // hps key, black
+            NUM_THREADS_OVERRIDE_OPP);     // hps key, white
+        return 0;
     }
 
     // -------------------------------------------------------------------------
