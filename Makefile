@@ -20,6 +20,7 @@ SOURCES += $(wildcard src/algorithms/ments/rents/*.cpp)
 SOURCES += $(wildcard src/algorithms/ments/tents/*.cpp)
 SOURCES += $(wildcard src/algorithms/uct/*.cpp)
 SOURCES += $(wildcard src/distributions/*.cpp)
+SOURCES += $(wildcard src/multi_objective/*.cpp)
 OBJECTS = $(patsubst src/%.cpp, bin/src/%.o, $(SOURCES))
 TEST_SOURCES = $(wildcard test/*.cpp)
 TEST_SOURCES += $(wildcard test/algorithms/*.cpp)
@@ -28,7 +29,7 @@ TEST_OBJECTS = $(patsubst test/%.cpp, bin/test/%.o, $(TEST_SOURCES))
 
 GTEST = external/googletest/build/lib/libgtest_main.a
 
-INCLUDES = -Iinclude/ -Isrc/ -Iexternal/ -I.
+INCLUDES = -I. -Iinclude/ -Isrc/ -Iexternal/ -Iexternal/eigen-3.4.0/
 TEST_INCLUDES = -Iexternal/googletest/build/include
 
 CPPFLAGS = $(INCLUDES) -Wall -std=c++17
