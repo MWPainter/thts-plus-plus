@@ -54,6 +54,7 @@ static const std::string EXPR_ID_BTS_PRIOR_COEFF = "x03_bts_tune_prior_coeff";
 static const std::string EXPR_ID_BTS_EPS_COEFF = "x04_bts_tune_eps_coeff";
 static const std::string EXPR_ID_BTS_ROOT_EPS_COEFF = "x05_bts_tune_root_eps_coeff";
 // bts num threads
+// retry dp+most_visited vs dp+largetst_val vs ar+most_visited vs ar+largest_val
 // puct num threads 
 // puct dirichlet noise
 // puct compare with native (9x9)
