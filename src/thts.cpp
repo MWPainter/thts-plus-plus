@@ -244,10 +244,7 @@ namespace thts {
      * Selection phase uses visit and selection functions to fill 'nodes_to_backup' and 'rewards', passed by ref.
      * Backup phase calls backup on 'nodes_to_backup' passing them rewards from 'rewards'.
      * 
-     * If logging, grabs logging lock, checks if it is time to log and calls 'log' if it is, making sure to grab the 
-     * lock for the root node as 'log' doesn't do that but needs to access the root node. When all trials are completed
-     * (trials_completed == num_trials), then call 'update_prior_runtime' for logger as it should be called after all 
-     * trials are finished.
+     * Trys to perform logging at the end of this trial (if there is a logger and is time to log)
      */
     void ThtsPool::run_thts_trial(int trials_remaining) {
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>> nodes_to_backup;
@@ -257,6 +254,16 @@ namespace thts {
         run_selection_phase(nodes_to_backup, rewards, *context);
         run_backup_phase(nodes_to_backup, rewards, *context);
 
+        try_log();
+    }
+    
+    /**
+    * If logging, grabs logging lock, checks if it is time to log and calls 'log' if it is, making sure to grab the
+    * lock for the root node as 'log' doesn't do that but needs to access the root node. When all trials are completed
+    * (trials_completed == num_trials), then call 'update_prior_runtime' for logger as it should be called after all
+    * trials are finished.
+    */
+    void ThtsPool::try_log() {
         if (logger != nullptr) {
             lock_guard<mutex> logging_lg(logging_lock);
             trials_completed++;
@@ -272,6 +279,7 @@ namespace thts {
             }
         }
     }
+
 
     /**
      * The worker thread function.

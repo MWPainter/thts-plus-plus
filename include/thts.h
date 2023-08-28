@@ -186,6 +186,12 @@ namespace thts {
             virtual void run_thts_trial(int trials_remaining);
 
             /**
+            * Checks if we need to perform logging, and if so, will write a log to the logger
+            */
+            void try_log();
+
+
+            /**
              * The worker thread thnuk.
              * 
              * Waits for work, and calls 'run_thts_trial' until there is no more work to do.
