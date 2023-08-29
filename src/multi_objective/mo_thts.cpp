@@ -1,7 +1,7 @@
-#include "thts.h"
+#include "multi_objective/mo_thts.h"
 
-#include "thts_chance_node.h"
 #include "thts_types.h"
+#include "multi_objective/mo_thts_chance_node.h"
 
 #include <utility>
 
@@ -14,7 +14,7 @@ namespace thts {
      */
     MoThtsPool::MoThtsPool(
         shared_ptr<ThtsManager> thts_manager, 
-        shared_ptr<ThtsDNode> root_node, 
+        shared_ptr<MoThtsDNode> root_node, 
         int num_threads, 
         shared_ptr<ThtsLogger> logger) :
             ThtsPool(thts_manager, root_node, num_threads, logger)
@@ -25,7 +25,7 @@ namespace thts {
      * See ThtsPool::run_selection_phase
      * 
      * This is a copy and pase, replacing the reward type from double to Eigen::VectorXd, and calling 
-     * 'get_mo_reward_itfc' rather than 'get_reward_itfc'
+     * 'get_mo_reward_itfc' rather than 'get_reward_itfc', and using mo_heuristic_value instead of heuristic_value
      */
     void MoThtsPool::run_selection_phase(
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>>& nodes_to_backup, 
@@ -56,7 +56,8 @@ namespace thts {
             chance_node->unlock();
 
             // push onto 'nodes_to_backup' and 'rewards'
-            shared_ptr<const State> state = cur_node->state;
+            MoThtsDNode& mo_cur_node = (MoThtsDNode&) *cur_node;
+            shared_ptr<const State> state = mo_cur_node.state;
             MoThtsEnv& mo_thts_env = (MoThtsEnv&) *thts_manager->thts_env;
             Eigen::VectorXd reward = mo_thts_env.get_mo_reward_itfc(state, action, observation);
             nodes_to_backup.push_back(make_pair(cur_node, chance_node));
@@ -78,14 +79,19 @@ namespace thts {
      * See ThtsPool::run_backup_phase
      * 
      * This is a copy and pase, replacing the reward type from double to Eigen::VectorXd
+     * 
+     * Added insta return if nothing to backup, and using rewards[0] to get the dimension of the rewards
      */
     void MoThtsPool::run_backup_phase(
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>>& nodes_to_backup, 
         vector<Eigen::VectorXd>& rewards, 
         ThtsEnvContext& context)
     {
-        double total_return = 0.0;
-        for (double& reward : rewards) total_return += reward;
+        if (nodes_to_backup.size() == 0) return;
+
+        int dim = rewards[0].rows();
+        Eigen::VectorXd total_return = Eigen::VectorXd::Constant(dim, 0.0);
+        for (Eigen::VectorXd& reward : rewards) total_return += reward;
 
         vector<Eigen::VectorXd> rewards_after;
         vector<Eigen::VectorXd> rewards_before(rewards);
@@ -103,17 +109,17 @@ namespace thts {
             total_return_after += reward;
 
             pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>> pr = nodes_to_backup.back();
-            shared_ptr<ThtsDNode> decision_node = pr.first;
-            shared_ptr<ThtsCNode> chance_node = pr.second;
+            MoThtsDNode& decision_node = (MoThtsDNode&) *pr.first;
+            MoThtsCNode& chance_node = (MoThtsCNode&) *pr.second;
             nodes_to_backup.pop_back();
 
-            chance_node->lock();
-            chance_node->backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);
-            chance_node->unlock();
+            chance_node.lock();
+            chance_node.backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);
+            chance_node.unlock();
 
-            decision_node->lock();
-            decision_node->backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);
-            decision_node->unlock();
+            decision_node.lock();
+            decision_node.backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);
+            decision_node.unlock();
         }
     }
 
@@ -126,7 +132,8 @@ namespace thts {
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>> nodes_to_backup;
         vector<Eigen::VectorXd> rewards; 
         
-        shared_ptr<ThtsEnvContext> context = thts_manager->thts_env->sample_context_itfc(root_node->state);
+        MoThtsDNode& mo_root_node = (MoThtsDNode&) *root_node;
+        shared_ptr<ThtsEnvContext> context = thts_manager->thts_env->sample_context_itfc(mo_root_node.state);
         run_selection_phase(nodes_to_backup, rewards, *context);
         run_backup_phase(nodes_to_backup, rewards, *context);
 
