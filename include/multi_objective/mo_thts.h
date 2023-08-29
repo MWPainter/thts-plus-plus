@@ -1,10 +1,11 @@
 #pragma once
 
-#include "thts_pool.h"
-#include "thts_decision_node.h"
+#include "thts.h"
 #include "thts_env_context.h"
 #include "thts_logger.h"
 #include "thts_manager.h"
+#include "multi_objective/mo_thts_decision_node.h"
+#include "multi_objective/mo_thts_env.h"
 
 #include <chrono>
 #include <condition_variable>
@@ -23,11 +24,10 @@ namespace thts {
      * 
      * See ThtsPool for a full description of this class
      * 
-     * This multi-objective version just replaces the 'double' 
-     * 
-     * 
+     * This multi-objective version just replaces the 'double' reward type with rewards of type 'Eigen::VectorXd' and 
+     * makes appropriate type changes to MultiObjective (Mo____) classes where necessary.
      */
-    class ThtsPool {
+    class MoThtsPool : public ThtsPool {
 
         public:
             /**
@@ -43,7 +43,7 @@ namespace thts {
              */
             MoThtsPool(
                 std::shared_ptr<ThtsManager> thts_manager=nullptr, 
-                std::shared_ptr<ThtsDNode> root_node=nullptr, 
+                std::shared_ptr<MoThtsDNode> root_node=nullptr, 
                 int num_threads=1,
                 std::shared_ptr<ThtsLogger> logger=nullptr);
 

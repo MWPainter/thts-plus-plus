@@ -17,13 +17,24 @@ namespace thts {
     
     /**
      * An abstract class for representing an multi-objective environment.
+     * 
+     * Member variables:
+     *      reward_dim: 
      */
     class MoThtsEnv : public ThtsEnv {
+        protected:
+            int reward_dim;
+
         public:
             /**
              * Constructor
              */
-            MoThtsEnv(bool is_fully_observable);
+            MoThtsEnv(int reward_dim, bool is_fully_observable);
+
+            /**
+             * Reward dim getter
+            */
+            int get_reward_dim();
             
             /**
              * Override ThtsEnv get_reward_itfc to make it throw an exception. It shouldn't be called by multi-objective
