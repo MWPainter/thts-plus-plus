@@ -25,6 +25,7 @@ external/KataGo/cpp/program/gitinfo.h
 external/eigen/CMakeFiles/
 external/eigen/cmake_install.cmake
 external/eigen/build
+external/eigen-3.4.0
 
 # Results outputs
 plots

@@ -48,7 +48,9 @@ static const std::string EXPR_ID_19_RR_NO_TUNE_W_ALIAS = "202_round_robin_w_alia
 
 // x00 series - final runs, tuning
 static const std::string EXPR_ID_BTS_TEMP_CONST = "x00_bts_tune_temp_no_decay";
+static const std::string EXPR_ID_BTS_TEMP_CONST_LOWER_PRIOR = "x00a_bts_tune_temp_no_decay";
 static const std::string EXPR_ID_BTS_TEMP_DECAY = "x01_bts_tune_temp_sqrt_decay";
+static const std::string EXPR_ID_BTS_TEMP_DECAY_LOWER_PRIOR = "x01a_bts_tune_temp_sqrt_decay";
 static const std::string EXPR_ID_BTS_TEMP_VERSUS = "x02_bts_tune_temp_compare";
 static const std::string EXPR_ID_BTS_PRIOR_COEFF = "x03_bts_tune_prior_coeff";
 static const std::string EXPR_ID_BTS_EPS_COEFF = "x04_bts_tune_eps_coeff";
@@ -145,17 +147,21 @@ int main(int argc, char* argv[]) {
     // x00 - bts_tune_temp_no_decay
     // BTS temp
     //
-    if (expr_id == EXPR_ID_BTS_TEMP_CONST) {
+    if (expr_id == EXPR_ID_BTS_TEMP_CONST || expr_id == EXPR_ID_BTS_TEMP_CONST_LOWER_PRIOR) {
         double temp = stod(argv[2]);
         double temp_opp = stod(argv[3]);
 
         string alg_id = ALG_ID_EST;
+        double prior_coeff = 1.0;
+        if (expr_id == EXPR_ID_BTS_TEMP_CONST_LOWER_PRIOR) {
+            prior_coeff = 0.2;
+        }
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);              
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);            
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);                  
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);                     
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, prior_coeff);            
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, prior_coeff);          
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.03);                                    
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.03); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.03); 
@@ -188,17 +194,21 @@ int main(int argc, char* argv[]) {
     // x01 - bts_tune_temp_sqrt_decay
     // BTS temp
     //
-    if (expr_id == EXPR_ID_BTS_TEMP_DECAY) {
+    if (expr_id == EXPR_ID_BTS_TEMP_DECAY || expr_id == EXPR_ID_BTS_TEMP_DECAY_LOWER_PRIOR) {
         double temp = stod(argv[2]);
         double temp_opp = stod(argv[3]);
 
         string alg_id = ALG_ID_EST;
+        double prior_coeff = 1.0;
+        if (expr_id == EXPR_ID_BTS_TEMP_DECAY_LOWER_PRIOR) {
+            prior_coeff = 0.2;
+        }
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);             
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);            
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);                  
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, prior_coeff);            
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, prior_coeff);                  
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.03);                                    
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.03); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.03); 
