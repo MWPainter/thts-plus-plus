@@ -63,8 +63,7 @@ static const std::string EXPR_ID_PUCT_NUM_THREADS = "x08_puct_tune_threads";
 // puct compare with native (19x19)
 static const std::string EXPR_ID_MENTS_TEMP = "x12_ments_tune_temp";
 static const std::string EXPR_ID_RENTS_TEMP = "x13_rents_tune_temp";
-// rents temp
-// tents temp
+static const std::string EXPR_ID_TENTS_TEMP = "x14_tents_tune_temp";
 // dents value temp (sqrt decay?)
 
 // y00 series - final runs, round robins on 9x9
@@ -243,8 +242,8 @@ int main(int argc, char* argv[]) {
         bool const_plays_black = (stod(argv[2]) == 0.0);
         string alg_id = ALG_ID_EST;
 
-        double temp_const = 5.0;
-        double temp_decay = 50.0;
+        double temp_const = 0.3;
+        double temp_decay = 3.0;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();               
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);            
@@ -520,6 +519,47 @@ int main(int argc, char* argv[]) {
         double temp_opp = stod(argv[3]);
 
         string alg_id = ALG_ID_RENTS;
+
+        shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);             
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);            
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);                  
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.03);                                    
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.03); 
+        alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.03); 
+        alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.03);   
+
+        alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
+
+        thts::run_go_games(
+            expr_id,            // expr id
+            alg_id,            // black
+            alg_id,              // white
+            9,                  // board size
+            15,                 // num games
+            6.5,                // komi
+            true,
+            2.5,               // time per move
+            32,                 // num threads
+            true,               // ments hps
+            alg_params,
+            PARAM_BIAS_OR_SEARCH_TEMP,          // hps key, black
+            PARAM_BIAS_OR_SEARCH_TEMP_OPP);     // hps key, white
+    }
+
+    //
+    // x14 - tents_tune_temp
+    // TENTS temp
+    //
+    if (expr_id == EXPR_ID_TENTS_TEMP) {
+        double temp = stod(argv[2]);
+        double temp_opp = stod(argv[3]);
+
+        string alg_id = ALG_ID_TENTS;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
