@@ -295,8 +295,8 @@ int main(int argc, char* argv[]) {
         string alg_id = ALG_ID_EST;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 50.0);
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 50.0);              
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 3.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 3.0);              
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, coeff);            
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, coeff_opp);                  
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.03);                                    
@@ -308,8 +308,6 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);
-        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);
 
         thts::run_go_games(
             expr_id,            // expr id
@@ -338,8 +336,8 @@ int main(int argc, char* argv[]) {
         string alg_id = ALG_ID_EST;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 50.0);
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 50.0);              
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 3.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 3.0);              
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.5);            
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.5);                  
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, coeff);                                    
@@ -351,8 +349,6 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);
-        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);
 
         thts::run_go_games(
             expr_id,            // expr id
@@ -381,8 +377,8 @@ int main(int argc, char* argv[]) {
         string alg_id = ALG_ID_EST;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 50.0);
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 50.0);              
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 3.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 3.0);              
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.5);            
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.5);                  
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, coeff);                                    
@@ -394,8 +390,6 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);
-        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);
 
         thts::run_go_games(
             expr_id,            // expr id
