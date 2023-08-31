@@ -1,7 +1,8 @@
 # variables 
 EXPR_ID="x14_tents_tune_temp"
 
-temps=("3.0" "1.0" "0.3" "0.1" "0.03")
+# temps=("3.0" "1.0" "0.3" "0.1" "0.03")
+temps=("300.0" "100.0" "30.0" "10.0" "3.0")
 
 for AGENT_ONE_ID in ${temps[@]}
 do
