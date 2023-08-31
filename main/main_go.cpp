@@ -379,8 +379,8 @@ int main(int argc, char* argv[]) {
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 3.0);
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 3.0);              
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.5);            
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.5);                  
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.75);            
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.75);                  
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, coeff);                                    
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, coeff_opp); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.03); 
