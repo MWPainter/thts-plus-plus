@@ -59,8 +59,6 @@ static const std::string EXPR_ID_BTS_ROOT_EPS_COEFF = "x05_bts_tune_root_eps_coe
 // retry dp+most_visited vs dp+largetst_val vs ar+most_visited vs ar+largest_val
 static const std::string EXPR_ID_PUCT_NUM_THREADS = "x08_puct_tune_threads";
 // puct dirichlet noise
-// puct compare with native (9x9)
-// puct compare with native (19x19)
 static const std::string EXPR_ID_MENTS_TEMP = "x12_ments_tune_temp";
 static const std::string EXPR_ID_RENTS_TEMP = "x13_rents_tune_temp";
 static const std::string EXPR_ID_TENTS_TEMP = "x14_tents_tune_temp";
@@ -71,10 +69,13 @@ static const std::string EXPR_ID_TENTS_TEMP = "x14_tents_tune_temp";
 // no alias
 static const std::string EXPR_ID_ROUND_ROBIN_9_ALIAS = "y02_round_robin_with_alias";
 // alias
+// compare with native (9x9) - puct/bts w/time + puct/bts w/1600 trials
 
 // z00 series - final runs, round robins on 19x19
+// +rand rr
 // no alias
 // alias
+// puct compare with native (19x19) - puct/bts w/time + puct/bts w/1600 trials
 
 
 
@@ -643,19 +644,19 @@ int main(int argc, char* argv[]) {
         }
 
         if (algo1 == ALG_ID_DENTS) {
-            temp = 3.0;
-            value_temp = 0.5;
+            temp = 0.3;
+            value_temp = 0.3;
         }
         if (algo2 == ALG_ID_DENTS) {
-            temp_opp = 3.0;
-            value_temp_opp = 0.5;
+            temp_opp = 0.3;
+            value_temp_opp = 0.3;
         }
 
         if (algo1 == ALG_ID_EST) {
-            temp = 3.0;
+            temp = 0.3;
         }
         if (algo2 == ALG_ID_EST) {
-            temp_opp = 3.0;
+            temp_opp = 0.3;
         }
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
@@ -669,12 +670,12 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.001);   
 
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE, 0.003);      
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP, 0.003);   
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE, 0.05);      
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE_OPP, 0.05);       
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID, 1.0);
-        alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID_OPP, 1.0);  
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE, 0.003);      
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP, 0.003);   
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE, 0.05);      
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE_OPP, 0.05);       
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID, 1.0);
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID_OPP, 1.0);  
         alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, value_temp);                
         alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, value_temp_opp); 
 
@@ -683,6 +684,9 @@ int main(int argc, char* argv[]) {
 
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
+
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);  
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  
         
         thts::run_go_games(
             expr_id,            // expr id
