@@ -62,19 +62,19 @@ static const std::string EXPR_ID_PUCT_NUM_THREADS = "x08_puct_tune_threads";
 static const std::string EXPR_ID_MENTS_TEMP = "x12_ments_tune_temp";
 static const std::string EXPR_ID_RENTS_TEMP = "x13_rents_tune_temp";
 static const std::string EXPR_ID_TENTS_TEMP = "x14_tents_tune_temp";
-// dents value temp (sqrt decay?)
+static const std::string EXPR_ID_DENTS_VALUE_TEMP = "x15_dents_tune_value_temp";
+static const std::string EXPR_ID_DENTS_VALUE_TEMP_CONST_SEARCH_TEMP = "x15a_dents_tune_value_temp_const_search_temp";
 
 // y00 series - final runs, round robins on 9x9
 // +rand rr
 // no alias
 static const std::string EXPR_ID_ROUND_ROBIN_9_ALIAS = "y02_round_robin_with_alias";
-// alias
 // compare with native (9x9) - puct/bts w/time + puct/bts w/1600 trials
 
 // z00 series - final runs, round robins on 19x19
 // +rand rr
 // no alias
-// alias
+static const std::string EXPR_ID_ROUND_ROBIN_19_ALIAS = "z02_round_robin_with_alias";
 // puct compare with native (19x19) - puct/bts w/time + puct/bts w/1600 trials
 
 
@@ -588,6 +588,54 @@ int main(int argc, char* argv[]) {
             PARAM_BIAS_OR_SEARCH_TEMP_OPP);     // hps key, white
     }
 
+    // 
+    // x15 - dents_tune_value_temp
+    // DENTS value temp
+    // 
+    if (expr_id == EXPR_ID_DENTS_VALUE_TEMP || expr_id == EXPR_ID_DENTS_VALUE_TEMP_CONST_SEARCH_TEMP) {
+        double value_temp = stod(argv[2]);
+        double value_temp_opp = stod(argv[3]);
+
+        string alg_id = ALG_ID_EST;
+
+        shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 3.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 3.0);              
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.75);            
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.75);                  
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.3);                                    
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.3); 
+        alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001); 
+        alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.001);   
+        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, value_temp);                
+        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, value_temp_opp); 
+        
+        alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
+
+        if (expr_id == EXPR_ID_DENTS_VALUE_TEMP_CONST_SEARCH_TEMP) {
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);
+        }
+
+        thts::run_go_games(
+            expr_id,            // expr id
+            alg_id,            // black
+            alg_id,              // white
+            9,                  // board size
+            15,                 // num games
+            6.5,                // komi
+            true,
+            2.5,               // time per move
+            32,                 // num threads
+            true,               // ments hps
+            alg_params,
+            PARAM_MENTS_ROOT_EPS,          // hps key, black
+            PARAM_MENTS_ROOT_EPS_OPP);     // hps key, white
+    }
+
     // -------------------------------------------------------------------------
     // y00 series - 9x9 round robins
     // -------------------------------------------------------------------------
@@ -607,6 +655,121 @@ int main(int argc, char* argv[]) {
     // Round robin 9x9 with alias
     //
     if (expr_id == EXPR_ID_ROUND_ROBIN_9_ALIAS) {
+        string algo1(argv[2]);
+        string algo2(argv[3]);
+
+        double temp = 10.0;
+        double temp_opp = 10.0;
+        double value_temp = 20.0;
+        double value_temp_opp = 20.0;
+        
+        if (algo1 == ALG_ID_KATA) {
+            temp = 110.0;
+        }
+        if (algo2 == ALG_ID_KATA) {
+            temp_opp = 110.0;
+        }
+
+        if (algo1 == ALG_ID_MENTS) {
+            temp = 0.3;
+        }
+        if (algo2 == ALG_ID_MENTS) {
+            temp_opp = 0.3;
+        }
+
+        if (algo1 == ALG_ID_RENTS) {
+            temp = 0.3;
+        }
+        if (algo2 == ALG_ID_RENTS) {
+            temp_opp = 0.3;
+        }
+
+        if (algo1 == ALG_ID_TENTS) {
+            temp = 3.0;
+        }
+        if (algo2 == ALG_ID_TENTS) {
+            temp_opp = 3.0;
+        }
+
+        if (algo1 == ALG_ID_DENTS) {
+            temp = 0.3;
+            value_temp = 0.3;
+        }
+        if (algo2 == ALG_ID_DENTS) {
+            temp_opp = 0.3;
+            value_temp_opp = 0.3;
+        }
+
+        if (algo1 == ALG_ID_EST) {
+            temp = 3.0;
+        }
+        if (algo2 == ALG_ID_EST) {
+            temp_opp = 3.0;
+        }
+
+        shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);   
+               
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.75);            
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.75);       
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.3);                                    
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.3); 
+        alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001); 
+        alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.001);   
+
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE, 0.003);      
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_ROOT_NODE_VISITS_SCALE_OPP, 0.003);   
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE, 0.05);      
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_VISITS_SCALE_OPP, 0.05);       
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID, 1.0);
+        // alg_params->insert_or_assign(PARAM_DECAY_TEMP_USE_SIGMOID_OPP, 1.0);  
+        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, value_temp);                
+        alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, value_temp_opp); 
+
+        alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
+
+        alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
+
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);  
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  
+        
+        thts::run_go_games(
+            expr_id,            // expr id
+            algo1,              // black
+            algo2,              // white
+            9,                  // board size
+            50,                 // num games
+            6.5,                // komi
+            true,
+            2.5,               // time per move
+            32,                 // num threads
+            false,              // NOT running ments hps
+            alg_params);        
+        return 0;
+    }
+
+    // -------------------------------------------------------------------------
+    // z00 series - 19x19 round robins
+    // -------------------------------------------------------------------------
+
+    //
+    // y00
+    // Round robin with random search
+    //
+
+    //
+    // y01
+    // Round robin 9x9
+    //
+
+    //
+    // y02 - round_robin_with_alias
+    // Round robin 9x9 with alias
+    //
+    if (expr_id == EXPR_ID_ROUND_ROBIN_19_ALIAS) {
         string algo1(argv[2]);
         string algo2(argv[3]);
 
@@ -692,20 +855,16 @@ int main(int argc, char* argv[]) {
             expr_id,            // expr id
             algo1,              // black
             algo2,              // white
-            9,                  // board size
+            19,                  // board size
             50,                 // num games
             6.5,                // komi
             true,
-            2.5,               // time per move
+            10.0,               // time per move
             32,                 // num threads
             false,              // NOT running ments hps
             alg_params);        
         return 0;
     }
-
-    // -------------------------------------------------------------------------
-    // z00 series - 19x19 round robins
-    // -------------------------------------------------------------------------
 
     // -------------------------------------------------------------------------
     // 000 series - old tests - tuning params
