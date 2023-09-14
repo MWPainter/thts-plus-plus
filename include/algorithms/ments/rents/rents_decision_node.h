@@ -127,6 +127,11 @@ namespace thts {
             std::shared_ptr<const Action> select_action_alias_tables(ThtsEnvContext& ctx);
 
             /**
+             * Implement menst soft backup with an auxilary variable for sum(exp(Q(s,a)/temp))
+            */
+            virtual void backup_soft_with_max_heap(ThtsEnvContext& ctx);
+
+            /**
              * Update the alias tables
             */
             virtual void backup_update_alias_tables(ThtsEnvContext& ctx);

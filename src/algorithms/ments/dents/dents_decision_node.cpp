@@ -48,25 +48,25 @@ namespace thts {
             visits_scale);
     }
 
-    /**
-     * Gets the soft q value of a child node (as considered by this current node).
-     * 
-     * These values are of the form V + temp_decayed * H. Note that the 'temp_decayed' used is the decayed temperature 
-     * for *this* node, not the child node, and the soft value returned != child.soft_value.
-     * 
-     * Other cases are suitably handled by the implementation in MentsDNode, so just call that
-    */
-    double DentsDNode::get_soft_q_value(std::shared_ptr<const Action> action, double opp_coeff) const {
-        if (!has_child_node(action)) {
-            return MentsDNode::get_soft_q_value(action, opp_coeff);
-        }
+    // /**
+    //  * Gets the soft q value of a child node (as considered by this current node).
+    //  * 
+    //  * These values are of the form V + temp_decayed * H. Note that the 'temp_decayed' used is the decayed temperature 
+    //  * for *this* node, not the child node, and the soft value returned != child.soft_value.
+    //  * 
+    //  * Other cases are suitably handled by the implementation in MentsDNode, so just call that
+    // */
+    // double DentsDNode::get_soft_q_value(std::shared_ptr<const Action> action, double opp_coeff) const {
+    //     if (!has_child_node(action)) {
+    //         return MentsDNode::get_soft_q_value(action, opp_coeff);
+    //     }
 
-        DentsManager& manager = (DentsManager&) *thts_manager;
-        DentsCNode& child = (DentsCNode&) *get_child_node(action);
-        double val_estimate = child.dp_value;
-        if (!manager.use_dp_value) val_estimate = child.avg_return;
-        return opp_coeff * (val_estimate + get_value_temp() * child.subtree_entropy);
-    }
+    //     DentsManager& manager = (DentsManager&) *thts_manager;
+    //     DentsCNode& child = (DentsCNode&) *get_child_node(action);
+    //     double val_estimate = child.dp_value;
+    //     if (!manager.use_dp_value) val_estimate = child.avg_return;
+    //     return opp_coeff * (val_estimate + get_value_temp() * child.subtree_entropy);
+    // }
 
     /**
      * Calls the empnode implementation of recommend action
@@ -119,10 +119,17 @@ namespace thts {
             backup_ent<DentsCNode>(children, action_distr, is_opponent());
         }
 
-        // value backup
+        // value backup (update maxheap if using that)
         double val_estimate;
         if (manager.use_dp_value) {
-            backup_dp<DentsCNode>(children, is_opponent());
+            shared_ptr<const Action> selected_action = nullptr;
+            double child_value = 0.0;
+            if (manager.use_max_heap) {
+                shared_ptr<const Action> selected_action = ctx.get_value_ptr_const<Action>(_action_selected_key);
+                DentsCNode& child = (DentsCNode&) *get_child_node(selected_action);
+                child_value = child.dp_value;
+            }
+            backup_dp<DentsCNode>(children, is_opponent(), selected_action, child_value);
             val_estimate = dp_value;
         } else {
             backup_emp(trial_cumulative_return_after_node);

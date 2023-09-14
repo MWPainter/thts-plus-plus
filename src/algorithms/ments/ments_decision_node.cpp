@@ -4,9 +4,8 @@
 
 #include <cmath>
 #include <limits>
+#include <sstream>
 
-
-#include <iostream>
 using namespace std; 
     
 // Epsilon to be used as a minimum prob, if lower than this just set to zero
@@ -39,7 +38,11 @@ namespace thts {
             m_subtree_entropy(0.0),
             alias_uniform_distr(),
             alias_prior_distr(),
-            alias_action_distr()
+            alias_action_distr(),
+            _action_selected_key(),
+            max_heap(nullptr),
+            sum_exp_child_terms(),
+            sum_exp_child_values(0.0)
     {
         if (thts_manager->heuristic_fn != nullptr) {
             soft_value = heuristic_value;
@@ -64,6 +67,14 @@ namespace thts {
                 }
                 psuedo_q_value_offset = thts_manager->psuedo_q_value_offset - mean_log_weight;
             }
+        }
+
+        stringstream ss;
+        ss << "a_" << decision_depth;
+        _action_selected_key = ss.str();
+
+        if (thts_manager->use_max_heap) {
+            max_heap = make_shared<MaxHeap<std::shared_ptr<const Action>>>();
         }
     }
     /**
@@ -383,10 +394,17 @@ namespace thts {
      */
     shared_ptr<const Action> MentsDNode::select_action(ThtsEnvContext& ctx) {
         MentsManager& manager = (MentsManager&) *thts_manager;
+        shared_ptr<const Action> selected_action = nullptr;
         if (manager.alias_use_caching) {
-            return select_action_alias_tables(ctx);
+            selected_action = select_action_alias_tables(ctx);
+        } else {
+            selected_action = select_action_ments(ctx);
         }
-        return select_action_ments(ctx);
+
+        if (manager.use_max_heap) {
+            ctx.put_value_const(_action_selected_key, selected_action);
+        }
+        return selected_action;
     }
 
     /**
@@ -463,6 +481,11 @@ namespace thts {
      * Also don't forget to increment num_backups
      */
     void MentsDNode::backup_soft(ThtsEnvContext& ctx) {
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        if (manager.use_max_heap) {
+            return backup_soft_with_max_heap(ctx);
+        }
+
         num_backups++;
 
         ActionDistr action_weights;
@@ -475,6 +498,46 @@ namespace thts {
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         double temp = get_temp();
         soft_value = opp_coeff * temp * (log(sum_weights) + normalisation_term);
+    }
+
+    /**
+     * Implement soft backup with auxilary variables to make it quick
+     * 
+     * Child must exist, because action selection would have created it if it didn't
+     * 
+     * Remembver to update num backups
+     * Get child
+     * Get old child term and old max val
+     * Compute new child term + update'max_heap' and 'sum_exp_child_terms'
+     * Remove old exp((old_Q-old_max_val)/temp) (the value of sum_exp_child_terms)
+     * Update sum_exp_child_values for a new normalisation term
+     *      sum(exp((Q - old_max_val)/temp)) -> sum(exp((Q - new_max_val)/temp))
+     * Add new exp((new_Q-new_max_val)/temp)
+     * Set the soft value
+    */
+    void MentsDNode::backup_soft_with_max_heap(ThtsEnvContext& ctx) {
+        num_backups++;
+
+        shared_ptr<const Action> selected_action = ctx.get_value_ptr_const<Action>(_action_selected_key);
+        MentsCNode& child = (MentsCNode&) *get_child_node(selected_action);
+        lock_guard<mutex> lg(child.node_lock);
+        
+        double old_child_term = sum_exp_child_terms[selected_action];
+        double old_max_value = max_heap->peek_top_value();
+
+        double temp = get_temp();
+        double opp_coeff = is_opponent() ? -1.0 : 1.0;
+        double child_value = opp_coeff * child.soft_value;
+        max_heap->insert_or_assign(selected_action, child_value);
+        double max_value = max_heap->peek_top_value();
+        double child_term = exp((child_value - max_value) / temp);
+        sum_exp_child_terms[selected_action] = child_term;
+
+        sum_exp_child_values -= old_child_term;
+        sum_exp_child_values *= exp((-max_value + old_max_value) / temp);
+        sum_exp_child_values += child_term;
+
+        soft_value = opp_coeff * (log(sum_exp_child_values) + max_value / temp);
     }
 
     /**

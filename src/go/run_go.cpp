@@ -402,6 +402,8 @@ namespace thts {
             manager_args.root_node_epsilon = 0.7;
             manager_args.shift_pseudo_q_values = true;
             manager_args.prior_policy_search_weight = 0.5;
+            manager_args.use_max_heap = (algo_id_for_this_move != ALG_ID_TENTS);
+
             if (alg_params != nullptr) {
                 if (!is_opp) {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP)) {
@@ -417,6 +419,7 @@ namespace thts {
                         manager_args.prior_policy_search_weight = alg_params->at(PARAM_PRIOR_COEFF);
                     }
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN)) {
+                        manager_args.use_max_heap = false;
                         manager_args.use_avg_return = true;
                         manager_args.temp_decay_fn = decayed_temp_no_decay;
                     }
@@ -440,7 +443,8 @@ namespace thts {
                     if (contains_key(alg_params, PARAM_PRIOR_COEFF_OPP)) {
                         manager_args.prior_policy_search_weight = alg_params->at(PARAM_PRIOR_COEFF_OPP);
                     }
-                    if (contains_key(alg_params, PARAM_USE_AVG_RETURN_OPP)) {// && algo_id_for_this_move != ALG_ID_TENTS) {
+                    if (contains_key(alg_params, PARAM_USE_AVG_RETURN_OPP)) {
+                        manager_args.use_max_heap = false;
                         manager_args.use_avg_return = true;
                         manager_args.temp_decay_fn = decayed_temp_no_decay;
                     }
@@ -468,6 +472,7 @@ namespace thts {
             manager_args.shift_pseudo_q_values = true;
             manager_args.prior_policy_search_weight = 0.5;
             manager_args.value_temp_decay_fn = decayed_temp_inv_sqrt;
+            manager_args.use_max_heap = true;
             
             if (alg_params != nullptr) {
                 if (!is_opp) {
@@ -500,6 +505,7 @@ namespace thts {
                         manager_args.value_temp_decay_fn = decayed_temp_sigmoid;
                     }
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN)) {
+                        manager_args.use_max_heap = false;
                         manager_args.use_dp_value = false;
                         manager_args.temp_decay_fn = decayed_temp_inv_sqrt;//decayed_temp_inv_log;
                     }
@@ -543,6 +549,7 @@ namespace thts {
                         manager_args.value_temp_decay_fn = decayed_temp_sigmoid;
                     }
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN_OPP)) {
+                        manager_args.use_max_heap = false;
                         manager_args.use_dp_value = false;
                         manager_args.temp_decay_fn = decayed_temp_inv_sqrt;//decayed_temp_inv_log;
                     }
@@ -575,6 +582,8 @@ namespace thts {
             manager_args.value_temp_init = 0.0;
             manager_args.temp_decay_visits_scale = 15.0;
             manager_args.temp_decay_root_node_visits_scale = 15.0;
+            manager_args.use_max_heap = true;
+
             if (alg_params != nullptr) {
                 if (!is_opp) {
                     if (contains_key(alg_params, PARAM_BIAS_OR_SEARCH_TEMP)) {
@@ -590,6 +599,7 @@ namespace thts {
                         manager_args.prior_policy_search_weight = alg_params->at(PARAM_PRIOR_COEFF);
                     }
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN)) {
+                        manager_args.use_max_heap = false;
                         manager_args.use_dp_value = false;
                         manager_args.temp_decay_fn = decayed_temp_inv_log;
                     }
@@ -617,6 +627,7 @@ namespace thts {
                         manager_args.prior_policy_search_weight = alg_params->at(PARAM_PRIOR_COEFF_OPP);
                     }
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN_OPP)) {
+                        manager_args.use_max_heap = false;
                         manager_args.use_dp_value = false;
                         manager_args.temp_decay_fn = decayed_temp_inv_log;
                     }

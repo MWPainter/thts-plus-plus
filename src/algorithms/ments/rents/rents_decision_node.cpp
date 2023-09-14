@@ -22,7 +22,10 @@ namespace thts {
                 state,
                 decision_depth,
                 decision_timestep,
-                static_pointer_cast<const MentsCNode>(parent))
+                static_pointer_cast<const MentsCNode>(parent)),
+            _node_distr_key(),
+            _parent_distr_key(),
+            cached_action_distr()
     {
         stringstream ss_n;
         ss_n << "d_" << decision_depth;
@@ -165,10 +168,56 @@ namespace thts {
      */
     shared_ptr<const Action> RentsDNode::select_action(ThtsEnvContext& ctx) {
         MentsManager& manager = (MentsManager&) *thts_manager;
+        shared_ptr<const Action> selected_action;
         if (manager.alias_use_caching) {
-            return select_action_alias_tables(ctx);
+            selected_action = select_action_alias_tables(ctx);
+        } else {
+            selected_action = select_action_rents(ctx);
         }
-        return select_action_rents(ctx);
+        if (manager.use_max_heap) {
+            ctx.put_value_const(_action_selected_key, selected_action);
+        }
+        return selected_action;
+    }
+
+    /**
+     * Implement soft backup with auxilary variables to make it quick
+     * - see MentsDNode.cpp implementation for description of what this is doing
+     * - only changes are adding the 'parent_prob' into the 'child_term'
+    */
+    void RentsDNode::backup_soft_with_max_heap(ThtsEnvContext& ctx) {
+        num_backups++;
+
+        shared_ptr<const Action> selected_action = ctx.get_value_ptr_const<Action>(_action_selected_key);
+        RentsCNode& child = (RentsCNode&) *get_child_node(selected_action);
+        lock_guard<mutex> lg(child.node_lock);
+        
+        double old_child_term = sum_exp_child_terms[selected_action];
+        double old_max_value = max_heap->peek_top_value();
+
+        double temp = get_temp();
+        double opp_coeff = is_opponent() ? -1.0 : 1.0;
+        double child_value = opp_coeff * child.soft_value;
+        max_heap->insert_or_assign(selected_action, child_value);
+        double max_value = max_heap->peek_top_value();
+        double parent_prob = get_parent_action_prob(get_parent_distr_from_context(ctx), selected_action);
+        double child_term = parent_prob * exp((child_value - max_value) / temp);
+        sum_exp_child_terms[selected_action] = child_term;
+
+        sum_exp_child_values -= old_child_term;
+        sum_exp_child_values *= exp((-max_value + old_max_value) / temp);
+        sum_exp_child_values += child_term;
+
+        soft_value = opp_coeff * (log(sum_exp_child_values) + max_value / temp);
+    }
+
+    /**
+     * Update alias tables in backup
+     * Update the cached action distribution in rents
+    */
+    void RentsDNode::backup_update_alias_tables(ThtsEnvContext& ctx) {
+        MentsDNode::backup_update_alias_tables(ctx);
+        cached_action_distr = select_action_alias_tables_get_mixed_distr(ctx)->get_distr_map();
     }
 
     /**
@@ -182,15 +231,6 @@ namespace thts {
             decision_depth, 
             decision_timestep, 
             static_pointer_cast<const RentsDNode>(shared_from_this()));
-    }
-
-    /**
-     * Update alias tables in backup
-     * Update the cached action distribution in rents
-    */
-    void RentsDNode::backup_update_alias_tables(ThtsEnvContext& ctx) {
-        MentsDNode::backup_update_alias_tables(ctx);
-        cached_action_distr = select_action_alias_tables_get_mixed_distr(ctx)->get_distr_map();
     }
 }
 

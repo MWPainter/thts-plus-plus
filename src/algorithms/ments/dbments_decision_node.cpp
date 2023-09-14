@@ -97,7 +97,14 @@ namespace thts {
         MentsManager& manager = (MentsManager&) *thts_manager;
         if (!manager.use_avg_return) {
             backup_soft(ctx);
-            backup_dp<DBMentsCNode>(children, is_opponent());
+            shared_ptr<const Action> selected_action = nullptr;
+            double child_value = 0.0;
+            if (manager.use_max_heap) {
+                shared_ptr<const Action> selected_action = ctx.get_value_ptr_const<Action>(_action_selected_key);
+                DBMentsCNode& child = (DBMentsCNode&) *get_child_node(selected_action);
+                child_value = child.dp_value;
+            }
+            backup_dp<DBMentsCNode>(children, is_opponent(), selected_action, child_value);
             if (manager.alias_use_caching) {
                 backup_update_alias_tables(ctx);
             }

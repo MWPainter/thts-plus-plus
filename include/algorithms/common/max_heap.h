@@ -1,6 +1,10 @@
+#pragma once
+
 #include <cassert>
 #include <vector>
 #include <unordered_map>
+
+#include <iostream>
 
 namespace thts {
 
@@ -8,22 +12,23 @@ namespace thts {
      * An implementation of a key, value binary heap
     */
     template <typename K>
-    class BinaryHeap {
+    class MaxHeap {
         
-        private:
-            struct BinHeapItem {
+        protected:
+            struct MaxHeapItem {
+                MaxHeapItem(K key, double value) : key(key), value(value) {};
                 K key;
                 double value;
             };
 
         protected:
-            std::vector<BinHeapItem<K>> heap;
+            std::vector<MaxHeapItem> heap;
             std::unordered_map<K,int> heap_indices;
 
         public:
-            BinaryHeap() : heap(), heap_indices() {};
+            MaxHeap() : heap(), heap_indices() {};
 
-            BinaryHeap(int max_elements) : heap(), heap_indices() {
+            MaxHeap(int max_elements) : heap(), heap_indices() {
                 heap.reserve(max_elements);
                 heap_indices.reserve(max_elements);
             };
@@ -32,11 +37,10 @@ namespace thts {
              * Fills the heap with some initial value and then sorts it to satisfy the max heap property in O(n) time
             */
             void fill_and_heapify(std::unordered_map<K,double>& init_values) {
-                assert(heap.size() > 0);
+                assert(heap.size() == 0);
                 int i = 0;
                 for (std::pair<K,double> pr : init_values) {
-                    heap[i].key = pr.first;
-                    heap[i].value = pr.second;
+                    heap.push_back(MaxHeapItem(pr.first, pr.second));
                     heap_indices[pr.first] = i++;
                 }
                 heapify();
@@ -49,27 +53,38 @@ namespace thts {
             double peek_top_value() {
                 return heap[0].value;
             };
+            
+            /**
+             * Pop top element:
+             * Swap top and last element in array
+             * Remove the last element (the one that used to be on top)
+             * Sift down the value we moved to the top
+            */
+            void pop() {
+                swap(0, heap.size()-1);
+                heap_indices.erase(heap[heap.size()-1].key);
+                heap.erase(heap.end()-1);
+                sift_down(0);
+            }
 
             /**
              * Updates a value in the heap, and inserts it if it doesn't exist
              * Insert by placing at the end of the arrays and sifting up
             */
-            void update_or_insert(K key, double value) {
+            void insert_or_assign(K key, double value) {
                 // Update value if can find it, otherwise insert if doesn't exist
                 if (heap_indices.find(key) != heap_indices.end()) {
                     heap[heap_indices[key]].value = value;
                 } else {
                     int new_indx = heap.size();
-                    heap.push_back(BinHeapItem<K>());
-                    heap[new_indx].key = key;
-                    heap[new_indx].value = value;
+                    heap.push_back(MaxHeapItem(key, value));
                     heap_indices[key] = new_indx;
                 }
 
                 // Sift up or down into correct place
                 int i = heap_indices[key];
-                int p = parent(indx);
-                if (heap[p].value < heap[i].value) {
+                int p = parent(i);
+                if (heap[p].value <= heap[i].value) {
                     sift_up(i);
                 } else {
                     sift_down(i);
@@ -101,9 +116,9 @@ namespace thts {
                 heap_indices[key_i] = j;
                 heap_indices[key_j] = i;
                 heap[i].key = key_j;
-                heap[i].key = val_j;
                 heap[j].key = key_i;
-                heap[j].key = val_i;
+                heap[i].value = val_j;
+                heap[j].value = val_i;
             };
 
             /**
@@ -126,11 +141,11 @@ namespace thts {
              * If the current index is largest, break, we satisfy max heap
              * Otherwise swap and repeat
             */
-            void sift_down(int i) {
+            void sift_down(unsigned int i) {
                 while (true) {
-                    int left = left_child(i);
-                    int right = right_child(i);
-                    int largest = i;
+                    unsigned int left = left_child(i);
+                    unsigned int right = right_child(i);
+                    unsigned int largest = i;
                     if (left < heap.size() && heap[left].value > heap[largest].value) {
                         largest = left;
                     }
@@ -149,6 +164,7 @@ namespace thts {
              * Assumes that 'heap' and 'heap_indices' are filled, but dont necessaruly satisfy the max heap property
             */
             void heapify() {
+                using namespace std;
                 for (int i=heap.size()-1; i>=0; i--) {
                     sift_down(i);
                 }

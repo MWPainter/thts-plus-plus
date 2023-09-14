@@ -31,6 +31,8 @@ namespace thts {
 
         static const bool alias_use_caching_default=false;
         static const int alias_recompute_freq_default=100;
+        
+        static const bool use_max_heap_default=false;
 
         double temp;
         double prior_policy_search_weight;
@@ -55,6 +57,8 @@ namespace thts {
         bool alias_use_caching;
         int alias_recompute_freq;
 
+        bool use_max_heap;
+
         MentsManagerArgs(std::shared_ptr<ThtsEnv> thts_env) :
             ThtsManagerArgs(thts_env),
             temp(temp_default),
@@ -74,7 +78,9 @@ namespace thts {
             use_avg_return(use_avg_return_default),
 
             alias_use_caching(alias_use_caching_default),
-            alias_recompute_freq(alias_recompute_freq_default) {}
+            alias_recompute_freq(alias_recompute_freq_default),
+            
+            use_max_heap(use_max_heap_default) {}
 
         virtual ~MentsManagerArgs() = default;
     };
@@ -174,6 +180,8 @@ namespace thts {
             bool alias_use_caching;
             int alias_recompute_freq;
 
+            bool use_max_heap;
+
             MentsManager(const MentsManagerArgs& args) :
                 ThtsManager(args),
                 temp(args.temp),
@@ -192,6 +200,7 @@ namespace thts {
                 recommend_most_visited(args.recommend_most_visited),
                 use_avg_return(args.use_avg_return),
                 alias_use_caching(args.alias_use_caching),
-                alias_recompute_freq(args.alias_recompute_freq) {};
+                alias_recompute_freq(args.alias_recompute_freq),
+                use_max_heap(args.use_max_heap) {};
     };
 }
