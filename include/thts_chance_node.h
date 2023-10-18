@@ -70,7 +70,7 @@ namespace thts {
             DNodeChildMap children;
 
             std::shared_ptr<StateDistr> next_state_distr;
-            std::unordered_map<std::shared_ptr<const Observation>,std::atomic<int>> child_constructed;
+            std::unordered_map<std::shared_ptr<const State>,std::atomic<int>> child_constructed;
 
         public: 
             /**

@@ -286,9 +286,9 @@ namespace thts {
      * Otherwise it reutns true if its a nullptr or the child decision node is under construction
     */
     bool ThtsCNode::is_nullptr_or_should_skip_under_construction_child(shared_ptr<const State> state) {
-        node_lock.unlock();
-        std::this_thread::yield();
-        node_lock.lock();
+        // node_lock.unlock();
+        // std::this_thread::yield();
+        // node_lock.lock();
 
         if (state == nullptr) return true;
         if (!thts_manager->avoid_selecting_children_under_construction) return false;

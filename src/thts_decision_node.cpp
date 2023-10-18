@@ -284,9 +284,9 @@ namespace thts {
      * For deterministic environments, this includes the child decision node
     */
     bool ThtsDNode::is_nullptr_or_should_skip_under_construction_child(shared_ptr<const Action> action) {
-        node_lock.unlock();
-        std::this_thread::yield();
-        node_lock.lock();
+        // node_lock.unlock();
+        // std::this_thread::yield();
+        // node_lock.lock();
 
         if (action == nullptr) return true;
         if (!thts_manager->avoid_selecting_children_under_construction) return false;
