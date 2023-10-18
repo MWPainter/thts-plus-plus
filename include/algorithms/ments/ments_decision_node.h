@@ -60,7 +60,7 @@ namespace thts {
         protected:
             int num_backups;
             double soft_value;
-            std::shared_ptr<ActionVector> actions;
+            // std::shared_ptr<ActionVector> actions;
             std::shared_ptr<ActionPrior> policy_prior;
             double psuedo_q_value_offset;
 
@@ -77,6 +77,9 @@ namespace thts {
             std::unordered_map<std::shared_ptr<const Action>, double> sum_exp_child_terms;
             double sum_exp_child_values;
 
+            /**
+             * Entropy backups (used for AR-MENTS)
+            */
             virtual void backup_m_avg_return(double cumulative_return);
             virtual double compute_m_local_entropy(ActionDistr& policy, ThtsEnvContext& ctx);
             virtual void backup_entropy(ThtsEnvContext& ctx);

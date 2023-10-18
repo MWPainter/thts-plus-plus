@@ -90,7 +90,7 @@ namespace thts::test {
             void set_children(CNodeChildMap child_map) { children = child_map; }
 
             // expose methods
-            void fill_ucb_values(unordered_map<shared_ptr<const Action>,double>& ucb_values, ThtsEnvContext& ctx) const
+            void fill_ucb_values(unordered_map<shared_ptr<const Action>,double>& ucb_values, ThtsEnvContext& ctx) 
             {
                 UctDNode::fill_ucb_values(ucb_values, ctx);
             }
@@ -175,7 +175,7 @@ namespace thts::test {
                 void, 
                 fill_ucb_values, 
                 ((unordered_map<shared_ptr<const Action>,double>&), ThtsEnvContext&), 
-                (const, override));
+                (override));
 
             // expose methods
             std::shared_ptr<const Action> select_action_ucb(ThtsEnvContext& ctx) {

@@ -220,6 +220,9 @@ namespace thts {
 
                 vector<int> large_indices;
                 vector<int> small_indices;
+                large_indices.reserve(distr->size());
+                small_indices.reserve(distr->size());
+                
                 for (size_t i = 0; i < alias_table.size(); i++) {
                     if (alias_table[i].threshold > 1.0) {
                         large_indices.push_back(i);

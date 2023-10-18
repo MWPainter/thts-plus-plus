@@ -32,8 +32,13 @@ namespace thts {
             decision_depth(decision_depth),
             decision_timestep(decision_timestep),
             parent(parent),
-            num_visits(0)
+            num_visits(0),
+            next_state_distr(thts_manager->thts_env->get_transition_distribution_itfc(state,action)),
+            child_constructed()
     {
+        for (pair<shared_ptr<const State>,double> pr : *next_state_distr) {
+            child_constructed.emplace(pr.first,CNODE_STATE_UNCONSTRUCTED);
+        }
     }
 
     /**
@@ -93,6 +98,11 @@ namespace thts {
      * 
      * Additionally, we protect accessing 'dmap[dnode_id]' with the mutex 'thts_manager->dmap_mutexes[mutex_indx]' 
      * where 'mutex_indx = hash(dnode_id) % thts_manager->dmap_mutexes.size()', by locking it using a lock_guard.
+     * 
+     * Updates for the avoid_selecting_children_under_construction mode, updates the construction state when claiming 
+     * the construction and after putting it in the child map. If we fail to update the construction state, it means 
+     * that another thread either is constructing or has constructed the child. We can safely return a nullptr, and 
+     * the select action methods should loop if the action/next state corresponds to a child that is under construciton.
      */
     shared_ptr<ThtsDNode> ThtsCNode::create_child_node_itfc(
         shared_ptr<const Observation> observation, shared_ptr<const State> next_state) 
@@ -100,8 +110,19 @@ namespace thts {
         if (has_child_node_itfc(observation)) return get_child_node_itfc(observation);
 
         if (!thts_manager->use_transposition_table) {
+            if (thts_manager->avoid_selecting_children_under_construction) {
+                shared_ptr<const State> state = static_pointer_cast<const State>(observation);
+                                                                    // N.B. this makes it no longer work for Observation != State,
+                bool success = set_child_under_construction(state); // but that's never the case in this branch 
+                                                                    // N.B.B. When integrate to main, fix this
+                if (!success) return nullptr;
+            }
             shared_ptr<ThtsDNode> child_node = create_child_node_helper_itfc(observation, next_state);
             children[observation] = child_node;
+            if (thts_manager->avoid_selecting_children_under_construction) {
+                bool success = set_child_constructed(state);
+                if (!success) return nullptr;
+            }
             return child_node;
         }
 
@@ -129,9 +150,20 @@ namespace thts {
             }
         }
 
+        if (thts_manager->avoid_selecting_children_under_construction) {
+            shared_ptr<const State> state = static_pointer_cast<const State>(observation);
+                                                                // N.B. this makes it no longer work for Observation != State,
+            bool success = set_child_under_construction(state); // but that's never the case in this branch 
+                                                                // N.B.B. When integrate to main, fix this
+            if (!success) return nullptr;
+        }
         shared_ptr<ThtsDNode> child_node = create_child_node_helper_itfc(observation, next_state);
         children[observation] = child_node;
         dmap[dnode_id] = child_node;
+        if (thts_manager->avoid_selecting_children_under_construction) {
+            bool success = set_child_constructed(state);
+            if (!success) return nullptr;
+        }
         return child_node;
     }
 
@@ -214,5 +246,36 @@ namespace thts {
         ss << "\n";
         for (int i=0; i<num_tabs; i++) ss << "|\t";
         ss << "],";
+    }
+    
+    /**
+     * Tries to set that the child is going to be constructed (and is 'under construction'). Returns false if it fails 
+     * to update the state
+    */
+    bool ThtsCNode::set_child_under_construction(shared_ptr<const State> state) {
+        int unconstructed = DNODE_STATE_UNCONSTRUCTED;
+        int under_construciton = DNODE_STATE_UNDER_CONSTRUCTION;
+        return child_constructed[state].compare_exchange_strong(unconstructed, under_construciton);
+    }
+
+    /**
+     * Tries to set that child is constructed. Returns false if it fails to update.
+    */
+    bool ThtsCNode::set_child_constructed(shared_ptr<const State> state) {
+        int under_construciton = DNODE_STATE_UNDER_CONSTRUCTION;
+        int constructed = DNODE_STATE_UNCONSTRUCTED;
+        return child_constructed[state].compare_exchange_strong(under_construciton, constructed);
+    }
+    
+    /**
+     * When running in avoid_selecting_children_under_construction mode, this is just a null ptr check
+     * Otherwise it reutns true if its a nullptr or the child decision node is under construction
+    */
+    bool ThtsCNode::is_nullptr_or_should_skip_under_construction_child(shared_ptr<const State> state) {
+        if (state == nullptr) return true;
+        if (thts_manager->avoid_selecting_children_under_construction) return false;
+        int node_state = child_constructed[state].load();
+        if (node_state == DNODE_STATE_UNDER_CONSTRUCTION) return true;
+        return false;
     }
 }
