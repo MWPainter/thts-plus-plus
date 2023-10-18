@@ -30,7 +30,7 @@ namespace thts {
                 static_pointer_cast<const ThtsCNode>(parent)),
             num_backups(0),
             soft_value(0.0),
-            actions(thts_manager->thts_env->get_valid_actions_itfc(state)),
+            // actions(thts_manager->thts_env->get_valid_actions_itfc(state)),
             policy_prior(),
             psuedo_q_value_offset(0.0),
             m_avg_return(0.0),
@@ -77,6 +77,7 @@ namespace thts {
             max_heap = make_shared<MaxHeap<std::shared_ptr<const Action>>>();
         }
     }
+
     /**
      * hacky avg return backup
     */
@@ -304,9 +305,12 @@ namespace thts {
     shared_ptr<const Action> MentsDNode::select_action_ments(ThtsEnvContext& ctx) {
         ActionDistr action_distr;
         compute_action_distribution(action_distr, ctx);
-        shared_ptr<const Action> selected_action = helper::sample_from_distribution(action_distr, *thts_manager, false);
-        if (!has_child_node(selected_action)) {
-            create_child_node(selected_action);
+        shared_ptr<const Action> selected_action = nullptr;
+        while (is_nullptr_or_should_skip_under_construction_child(selected_action)) {
+            selected_action = helper::sample_from_distribution(action_distr, *thts_manager, false);
+            if (!has_child_node(selected_action)) {
+                create_child_node(selected_action);
+            }
         }
         return selected_action;
     }
@@ -381,10 +385,14 @@ namespace thts {
             select_action_alias_tables_get_mixed_distr(ctx);
 
         // Sample, and handle making child if need be, return
+        // If child already under construction then repeat sample
         MentsManager& manager = (MentsManager&) *thts_manager;
-        shared_ptr<const Action> selected_action = mixed_distr->sample(manager);
-        if (!has_child_node(selected_action)) {
-            create_child_node(selected_action);
+        shared_ptr<const Action> selected_action = nullptr;
+        while (is_nullptr_or_should_skip_under_construction_child(selected_action)) {
+            selected_action = mixed_distr->sample(manager);
+            if (!has_child_node(selected_action)) {
+                create_child_node(selected_action);
+            }
         }
         return selected_action;
     }

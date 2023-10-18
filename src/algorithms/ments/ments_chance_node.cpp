@@ -25,9 +25,9 @@ namespace thts {
             num_backups(0),
             soft_value(thts_manager->default_q_value),
             local_reward(thts_manager->thts_env->get_reward_itfc(state,action)),
-            next_state_distr(thts_manager->thts_env->get_transition_distribution_itfc(state,action)),
+            // next_state_distr(thts_manager->thts_env->get_transition_distribution_itfc(state,action)),
             m_avg_return(0.0),
-            m_subtree_entropy(0.0) 
+            m_subtree_entropy(0.0)
     {
     }
 
@@ -59,9 +59,12 @@ namespace thts {
      * Implementation of sample_observation, that uses the sample from distribution helper function.
      */
     shared_ptr<const State> MentsCNode::sample_observation_random() {
-        shared_ptr<const State> sampled_state = helper::sample_from_distribution(*next_state_distr, *thts_manager);
-        if (!has_child_node(sampled_state)) {
-            create_child_node(sampled_state);
+        shared_ptr<const State> sampled_state = nullptr;
+        while (is_nullptr_or_should_skip_under_construction_child(sampled_state)) {
+            sampled_state = helper::sample_from_distribution(*next_state_distr, *thts_manager);
+            if (!has_child_node(sampled_state)) {
+                create_child_node(sampled_state);
+            }
         }
         return sampled_state;
     }

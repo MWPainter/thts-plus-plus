@@ -135,10 +135,12 @@ namespace thts {
         shared_ptr<ActionDistr> action_distr = make_shared<ActionDistr>();
         compute_action_distribution(*action_distr, ctx);
         put_node_distr_in_context(action_distr, ctx);
-        shared_ptr<const Action> selected_action = helper::sample_from_distribution(
-            *action_distr, *thts_manager, false);
-        if (!has_child_node(selected_action)) {
-            create_child_node(selected_action);
+        shared_ptr<const Action> selected_action;
+        while (is_nullptr_or_should_skip_under_construction_child(selected_action)) {
+            selected_action = helper::sample_from_distribution(*action_distr, *thts_manager, false);
+            if (!has_child_node(selected_action)) {
+                create_child_node(selected_action);
+            }
         }
         return selected_action;
     }
@@ -156,9 +158,12 @@ namespace thts {
 
         // Sample, and handle making child if need be, return
         MentsManager& manager = (MentsManager&) *thts_manager;
-        shared_ptr<const Action> selected_action = mixed_distr->sample(manager);
-        if (!has_child_node(selected_action)) {
-            create_child_node(selected_action);
+        shared_ptr<const Action> selected_action;
+        while (is_nullptr_or_should_skip_under_construction_child(selected_action)) {
+            selected_action = mixed_distr->sample(manager);
+            if (!has_child_node(selected_action)) {
+                create_child_node(selected_action);
+            }
         }
         return selected_action;
     }
