@@ -812,6 +812,12 @@ namespace thts {
         int black_wins = 0;
         int white_wins = 0;
 
+        // Early stopping
+        double early_stop_win_prob_threshold = 0.001;
+        int early_stop_moves_req = 10;
+        int full_playout_freq = 5;
+
+
         for (int game=0; game<num_games; game++) {
             // print
             cout << "Starting game number " << game << " between " << alg1_id << " and " << alg2_id << " with komi " 
@@ -858,8 +864,12 @@ namespace thts {
             string algo_ids[] = {alg1_id, alg2_id};
             int i = 0;
             int move_counter = 0;
+            bool full_playout = (game % full_playout_freq) == 0;
+            bool early_stop = false;
+            int early_stop_moves_black_winning = 0;
+            int early_stop_moves_white_winning = 0;
 
-            while (!go_env->is_sink_state_itfc(cur_state)) {
+            while (!go_env->is_sink_state_itfc(cur_state) && !early_stop) {
 
                 // get next player + update i for next move
                 string algo_id_for_this_move = algo_ids[i];
@@ -954,11 +964,39 @@ namespace thts {
 
                 // increment move
                 move_counter++;
+
+                // check if early stop
+                if (!full_playout) {
+                    if (nn_black_win <= early_stop_win_prob_threshold) {
+                        early_stop_moves_black_winning = 0;
+                        early_stop_moves_white_winning++;
+                    } else if (1.0 - nn_black_win <= early_stop_win_prob_threshold) {
+                        early_stop_moves_black_winning++;
+                        early_stop_moves_white_winning = 0;
+                    } else {
+                        early_stop_moves_black_winning = 0;
+                        early_stop_moves_white_winning = 0;
+                    }
+
+                    early_stop = (early_stop_moves_black_winning >= early_stop_moves_req);
+                    early_stop = early_stop || (early_stop_moves_white_winning >= early_stop_moves_req);
+                }
             }
 
             // get result and score of the match
+            // n.b. score will be 0.0 if early stop (ends with a .5 from komi otherwise)
             double result = cur_state->get_result();
             double score = cur_state->get_score();
+            if (early_stop) {
+                if (early_stop_moves_black_winning > 0) {
+                    result = 1.0;
+                } else if (early_stop_moves_white_winning > 0) {
+                    result = -1.0;
+                } else {
+                    throw runtime_error("Shouldn't be early stopping without a clear winner");
+                }
+                score = 0.0;
+            }
             if (result > 0.0) black_wins++;
             if (result < 0.0) white_wins++;
 
