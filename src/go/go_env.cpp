@@ -55,7 +55,7 @@ namespace thts {
             Rand rand(nn_eval_rand_seed);
             int max_concurrent_evals = 256;         
             int expected_concurrent_evals = 128;         
-            int default_max_batch_size = 128;           
+            int default_max_batch_size = 128;       
             bool require_exact_nn_len = true;
             
             nn_eval = Setup::initializeNNEvaluator(
