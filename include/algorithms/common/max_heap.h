@@ -33,6 +33,10 @@ namespace thts {
                 heap_indices.reserve(max_elements);
             };
 
+            size_t size() {
+                return heap.size();
+            }
+
             /**
              * Fills the heap with some initial value and then sorts it to satisfy the max heap property in O(n) time
             */

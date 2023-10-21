@@ -228,10 +228,14 @@ namespace thts {
         }
 
         // compute action weights
+        // check for nan underflow, and set to zero in that case
         sum_action_weights = 0.0;
         for (shared_ptr<const Action> action : *actions) {
             double soft_q_value = get_soft_q_value(action,opp_coeff);
             double action_weight = exp((soft_q_value/temp) - normalisation_term);
+            if (isnan(action_weight)) {
+                action_weight = 0.0;
+            }
             action_weights[action] = action_weight;
             sum_action_weights += action_weight;
         }
@@ -531,7 +535,8 @@ namespace thts {
         lock_guard<mutex> lg(child.node_lock);
         
         double old_child_term = sum_exp_child_terms[selected_action];
-        double old_max_value = max_heap->peek_top_value();
+        double old_max_value = 0.0;
+        if (max_heap->size() > 0) old_max_value = max_heap->peek_top_value();
 
         double temp = get_temp();
         double opp_coeff = is_opponent() ? -1.0 : 1.0;

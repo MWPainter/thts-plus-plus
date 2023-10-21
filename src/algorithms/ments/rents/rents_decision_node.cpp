@@ -198,7 +198,8 @@ namespace thts {
         lock_guard<mutex> lg(child.node_lock);
         
         double old_child_term = sum_exp_child_terms[selected_action];
-        double old_max_value = max_heap->peek_top_value();
+        double old_max_value = 0.0;
+        if (max_heap->size() > 0) old_max_value = max_heap->peek_top_value();
 
         double temp = get_temp();
         double opp_coeff = is_opponent() ? -1.0 : 1.0;

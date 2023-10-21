@@ -45,7 +45,8 @@ void run_ments_integration_test(
     double stay_prob=0.0, 
     int print_tree_depth=0, 
     double temp=1.0, 
-    bool use_temp_decay=false) 
+    bool use_temp_decay=false,
+    bool use_max_heap=false) 
 {
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
 
@@ -56,6 +57,7 @@ void run_ments_integration_test(
     manager_args.mcts_mode = false;
     manager_args.temp = temp;
     manager_args.temp_decay_fn = use_temp_decay ? decayed_temp_inv_sqrt : nullptr;
+    manager_args.use_max_heap = use_max_heap;
     shared_ptr<MentsManager> manager = make_shared<MentsManager>(manager_args);
     shared_ptr<MentsDNode> root_node = make_shared<MentsDNode>(manager, grid_env->get_initial_state_itfc(), 0, 0);
     ThtsPool uct_pool(manager, root_node, num_threads);
@@ -77,37 +79,55 @@ void run_ments_integration_test(
 }
 
 TEST(Ments_IntegrationTest, easy_grid_world) {
-    run_ments_integration_test(1, 1, 10000, 0.0, 2, 1.0);
+    run_ments_integration_test(1, 1, 10000, 0.0, 2, 1.0, false, false);
 }
 
 TEST(Ments_IntegrationTest, easy_grid_world_multithreaded) {
-    run_ments_integration_test(2, 4, 10000, 0.0, 1, 0.5);
+    run_ments_integration_test(2, 4, 10000, 0.0, 1, 0.5, false, false);
 }
 
 TEST(Ments_IntegrationTest, easy_grid_world_stochastic) {
-    run_ments_integration_test(1, 1, 10000, 0.1, 2, 1.0);
+    run_ments_integration_test(1, 1, 10000, 0.1, 2, 1.0, false, false);
 }
 
 TEST(Ments_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
-    run_ments_integration_test(2, 4, 10000, 0.1, 1, 0.5);
+    run_ments_integration_test(2, 4, 10000, 0.1, 1, 0.5, false, false);
+}
+
+
+
+TEST(Ments_WithMaxHeap_IntegrationTest, easy_grid_world) {
+    run_ments_integration_test(1, 1, 10000, 0.0, 2, 1.0, false, true);
+}
+
+TEST(Ments_WithMaxHeap_IntegrationTest, easy_grid_world_multithreaded) {
+    run_ments_integration_test(2, 4, 10000, 0.0, 1, 0.5, false, true);
+}
+
+TEST(Ments_WithMaxHeap_IntegrationTest, easy_grid_world_stochastic) {
+    run_ments_integration_test(1, 1, 10000, 0.1, 2, 1.0, false, true);
+}
+
+TEST(Ments_WithMaxHeap_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
+    run_ments_integration_test(2, 4, 10000, 0.1, 1, 0.5, false, true);
 }
 
 
 
 TEST(Ments_WithTempDecay_IntegrationTest, easy_grid_world) {
-    run_ments_integration_test(1, 1, 10000, 0.0, 2, 1.0, true);
+    run_ments_integration_test(1, 1, 10000, 0.0, 2, 1.0, true, false);
 }
 
 TEST(Ments_WithTempDecay_IntegrationTest, easy_grid_world_multithreaded) {
-    run_ments_integration_test(2, 4, 10000, 0.0, 1, 0.5, true);
+    run_ments_integration_test(2, 4, 10000, 0.0, 1, 0.5, true, false);
 }
 
 TEST(Ments_WithTempDecay_IntegrationTest, easy_grid_world_stochastic) {
-    run_ments_integration_test(1, 1, 10000, 0.1, 2, 1.0, true);
+    run_ments_integration_test(1, 1, 10000, 0.1, 2, 1.0, true, false);
 }
 
 TEST(Ments_WithTempDecay_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
-    run_ments_integration_test(2, 4, 10000, 0.1, 1, 0.5, true);
+    run_ments_integration_test(2, 4, 10000, 0.1, 1, 0.5, true, false);
 }
 
 
@@ -116,7 +136,12 @@ TEST(Ments_WithTempDecay_IntegrationTest, easy_grid_world_stochastic_multithread
  * Also run full whack on a simple game to check that the opponent logic all works
  */
 void run_ments_game_integration_test(
-    int env_size, int num_trials, int print_tree_depth=0, int decision_timestep=0, bool use_temp_decay=false) 
+    int env_size, 
+    int num_trials, 
+    int print_tree_depth=0, 
+    int decision_timestep=0, 
+    bool use_temp_decay=false,
+    bool use_max_heap=false) 
 {
     shared_ptr<ThtsEnv> game_env = make_shared<TestThtsGameEnv>(env_size);
     MentsManagerArgs manager_args(game_env);
@@ -126,6 +151,7 @@ void run_ments_game_integration_test(
     manager_args.is_two_player_game = true;
     manager_args.temp = 1.0;
     manager_args.temp_decay_fn = use_temp_decay ? decayed_temp_inv_sqrt : nullptr;
+    manager_args.use_max_heap = use_max_heap;
     shared_ptr<MentsManager> manager = make_shared<MentsManager>(manager_args);
     shared_ptr<MentsDNode> root_node = make_shared<MentsDNode>(
         manager, game_env->get_initial_state_itfc(), 0, decision_timestep);
@@ -139,19 +165,29 @@ void run_ments_game_integration_test(
 }
 
 TEST(Ments_IntegrationTest, two_player_game_env) {
-    run_ments_game_integration_test(3, 10000, 4, 0);
+    run_ments_game_integration_test(3, 10000, 4, 0, false, false);
 }
 
 TEST(Ments_IntegrationTest, two_player_game_env_starting_as_opponent) {
-    run_ments_game_integration_test(3, 10000, 4, 1);
+    run_ments_game_integration_test(3, 10000, 4, 1, false, false);
+}
+
+
+
+TEST(Ments_WithMaxHeap_IntegrationTest, two_player_game_env) {
+    run_ments_game_integration_test(3, 10000, 4, 0, false, true);
+}
+
+TEST(Ments_WithMaxHeap_IntegrationTest, two_player_game_env_starting_as_opponent) {
+    run_ments_game_integration_test(3, 10000, 4, 1, false, true);
 }
 
 
 
 TEST(Ments_WithTempDecay_IntegrationTest, two_player_game_env) {
-    run_ments_game_integration_test(3, 10000, 4, 0, true);
+    run_ments_game_integration_test(3, 10000, 4, 0, true, false);
 }
 
 TEST(Ments_WithTempDecay_IntegrationTest, two_player_game_env_starting_as_opponent) {
-    run_ments_game_integration_test(3, 10000, 4, 1, true);
+    run_ments_game_integration_test(3, 10000, 4, 1, true, false);
 }
