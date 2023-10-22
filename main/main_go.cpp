@@ -466,7 +466,7 @@ int main(int argc, char* argv[]) {
     // w021_bts_tune_prior_coeff
     // Prior coeff
     //
-    if (expr_id == EXPR_ID_W020_BTS_PRIOR_COEFF || expr_id == EXPR_ID_W020_BTS_PRIOR_COEFF) {
+    if (expr_id == EXPR_ID_W020_BTS_PRIOR_COEFF || expr_id == EXPR_ID_W021_BTS_PRIOR_COEFF) {
         double coeff = stod(argv[2]);
         double coeff_opp = stod(argv[3]);
 
