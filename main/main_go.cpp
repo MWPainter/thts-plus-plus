@@ -22,6 +22,7 @@ static const std::string EXPR_ID_W004_BTS_TEMP_VERSUS = "w004_bts_tune_temp_comp
 static const std::string EXPR_ID_W010_BTS_MOST_VISITED_TEMP = "w010_bts_tune_temp_most_visited";
 static const std::string EXPR_ID_W011_BTS_MOST_VISITED_COMPARE = "w011_bts_tune_most_visited_compare";
 static const std::string EXPR_ID_W020_BTS_PRIOR_COEFF = "w020_bts_tune_prior_coeff";
+static const std::string EXPR_ID_W021_BTS_PRIOR_COEFF = "w021_bts_tune_prior_coeff";
 static const std::string EXPR_ID_W030_BTS_EPS_COEFF = "w030_bts_tune_eps_coeff";
 static const std::string EXPR_ID_W040_MENTS_TEMP = "w040_ments_tune_temp";
 static const std::string EXPR_ID_W041_MENTS_TEMP = "w041_ments_tune_temp_most_visit";
@@ -462,9 +463,10 @@ int main(int argc, char* argv[]) {
 
     //
     // w020_bts_tune_prior_coeff
+    // w021_bts_tune_prior_coeff
     // Prior coeff
     //
-    if (expr_id == EXPR_ID_W020_BTS_PRIOR_COEFF) {
+    if (expr_id == EXPR_ID_W020_BTS_PRIOR_COEFF || expr_id == EXPR_ID_W020_BTS_PRIOR_COEFF) {
         double coeff = stod(argv[2]);
         double coeff_opp = stod(argv[3]);
 
