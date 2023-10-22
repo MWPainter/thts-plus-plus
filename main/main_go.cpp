@@ -455,8 +455,8 @@ int main(int argc, char* argv[]) {
         // alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using w011
-        alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using w011
+        // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using w011
+        // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using w011
         // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using w011
         // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using w011
 
