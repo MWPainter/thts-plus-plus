@@ -520,8 +520,8 @@ int main(int argc, char* argv[]) {
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);           // TODO: set using w011
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3);       // TODO: set using w011        
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.75);                  // TODO: set using w020
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.75);              // TODO: set using w020         
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.00);                  // TODO: set using w020
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.00);              // TODO: set using w020         
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, coeff);                                    
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, coeff_opp); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, coeff); 
@@ -580,9 +580,9 @@ int main(int argc, char* argv[]) {
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);             
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.75);                  // TODO: set using w020
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.75);              // TODO: set using w020      
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);                    
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.00);                  // TODO: set using w020
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.00);              // TODO: set using w020     
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.3);                // TODO: set using w030                     
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.3);            // TODO: set using w030
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001);                   // TODO: set using w030
@@ -592,8 +592,8 @@ int main(int argc, char* argv[]) {
         // alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using w011
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using w011
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  
 
         if (expr_id == EXPR_ID_W041_MENTS_TEMP 
             || expr_id == EXPR_ID_W051_RENTS_TEMP
@@ -640,9 +640,9 @@ int main(int argc, char* argv[]) {
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         // alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
-        // alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);             
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.75);                  // TODO: set using w020
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.75);              // TODO: set using w020      
+        // alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);                    
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.00);                  // TODO: set using w020
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.00);              // TODO: set using w020       
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.3);                // TODO: set using w030                     
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.3);            // TODO: set using w030
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001);                   // TODO: set using w030
@@ -652,8 +652,8 @@ int main(int argc, char* argv[]) {
         // alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using w011
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using w011
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  
 
         if (recommend_most_visited_plays_black) {
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);
