@@ -113,7 +113,7 @@ namespace thts {
         // entropy backup
         DentsManager& manager = (DentsManager&) *thts_manager;
         int alias_update_freq = manager.alias_recompute_freq * actions->size();
-        if (!manager.alias_use_caching || (MentsDNode::num_backups % alias_update_freq) == 0) {
+        if (!manager.alias_use_caching || (MentsDNode::num_backups % alias_update_freq) == 0 || MentsDNode::num_backups == 1) {
             ActionDistr action_distr;
             compute_action_distribution(action_distr, ctx);
             backup_ent<DentsCNode>(children, action_distr, is_opponent());
