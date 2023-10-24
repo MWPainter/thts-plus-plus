@@ -659,29 +659,29 @@ int main(int argc, char* argv[]) {
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);
             if (expr_id == EXPR_ID_W042_MENTS_TEMP) {
                 alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.00);      // TODO: set using w041
-                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.03);  // TODO: set using w040
+                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.10);  // TODO: set using w040
             }
             if (expr_id == EXPR_ID_W052_RENTS_TEMP) {
                 alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.00);      // TODO: set using w051
-                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.03);  // TODO: set using w050
+                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.01);  // TODO: set using w050
             }
             if (expr_id == EXPR_ID_W062_TENTS_TEMP) {
-                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.03);      // TODO: set using w061
+                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 300.0);      // TODO: set using w061
                 alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 100.0);  // TODO: set using w060
             }
         } else {
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);
             if (expr_id == EXPR_ID_W042_MENTS_TEMP) {
-                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.03);      // TODO: set using w040
+                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.10);      // TODO: set using w040
                 alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.00);  // TODO: set using w041
             }
             if (expr_id == EXPR_ID_W052_RENTS_TEMP) {
-                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.03);      // TODO: set using w050
+                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.01);      // TODO: set using w050
                 alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.00);  // TODO: set using w051
             }
             if (expr_id == EXPR_ID_W062_TENTS_TEMP) {
                 alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 100.0);      // TODO: set using w060
-                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.03);  // TODO: set using w061
+                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 300.0);  // TODO: set using w061
             }
         }
 
