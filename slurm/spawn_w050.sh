@@ -1,7 +1,8 @@
 # variables 
 EXPR_ID="w050_rents_tune_temp"
 
-temps=("3.0" "1.0" "0.3" "0.1" "0.03")
+# temps=("3.0" "1.0" "0.3" "0.1" "0.03")
+temps=("0.3" "0.1" "0.03" "0.01" "0.003")
 
 for AGENT_ONE_ID in ${temps[@]}
 do
