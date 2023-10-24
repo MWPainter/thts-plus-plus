@@ -917,8 +917,8 @@ int main(int argc, char* argv[]) {
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);                     
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.2);                   // TODO: set using x004      
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.2);               // TODO: set using x004
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);                   // TODO: set using x004      
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);               // TODO: set using x004
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.03);                                    
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.03); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.03); 
