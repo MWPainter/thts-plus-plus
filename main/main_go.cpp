@@ -658,29 +658,29 @@ int main(int argc, char* argv[]) {
         if (recommend_most_visited_plays_black) {
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);
             if (expr_id == EXPR_ID_W042_MENTS_TEMP) {
-                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.03);      // TODO: set using w041
+                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.00);      // TODO: set using w041
                 alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.03);  // TODO: set using w040
             }
             if (expr_id == EXPR_ID_W052_RENTS_TEMP) {
-                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.03);      // TODO: set using w051
+                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.00);      // TODO: set using w051
                 alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.03);  // TODO: set using w050
             }
             if (expr_id == EXPR_ID_W062_TENTS_TEMP) {
                 alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.03);      // TODO: set using w061
-                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.03);  // TODO: set using w060
+                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 100.0);  // TODO: set using w060
             }
         } else {
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);
             if (expr_id == EXPR_ID_W042_MENTS_TEMP) {
                 alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.03);      // TODO: set using w040
-                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.03);  // TODO: set using w041
+                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.00);  // TODO: set using w041
             }
             if (expr_id == EXPR_ID_W052_RENTS_TEMP) {
                 alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.03);      // TODO: set using w050
-                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.03);  // TODO: set using w051
+                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.00);  // TODO: set using w051
             }
             if (expr_id == EXPR_ID_W062_TENTS_TEMP) {
-                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.03);      // TODO: set using w060
+                alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 100.0);      // TODO: set using w060
                 alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.03);  // TODO: set using w061
             }
         }
@@ -864,7 +864,7 @@ int main(int argc, char* argv[]) {
         string alg_id = ALG_ID_EST;
 
         double temp_const = 1.0; // TODO: set using x000 + x001
-        double temp_decay = 0.1; // TODO: set using x002 + x003
+        double temp_decay = 1.0; // TODO: set using x002 + x003
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();               
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);                   // TODO: set using x000 - x003    
@@ -957,8 +957,8 @@ int main(int argc, char* argv[]) {
         bool recommend_most_visited_plays_black = (stod(argv[2]) == 0.0);
         string alg_id = ALG_ID_EST;
 
-        double temp_value = 0.1;    // TODO: set using w004
-        double temp_visited = 0.3;  // TODO: set using w010
+        double temp_value = 1.0;    // TODO: set using x004
+        double temp_visited = 0.3;  // TODO: set using x010
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();   
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.2);                   // TODO: set using x004   
