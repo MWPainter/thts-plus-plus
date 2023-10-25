@@ -958,7 +958,7 @@ int main(int argc, char* argv[]) {
         string alg_id = ALG_ID_EST;
 
         double temp_value = 1.0;    // TODO: set using x004
-        double temp_visited = 0.3;  // TODO: set using x010
+        double temp_visited = 1.0;  // TODO: set using x010
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();   
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);                   // TODO: set using x004   
@@ -1012,8 +1012,8 @@ int main(int argc, char* argv[]) {
         string alg_id = ALG_ID_EST;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 3.0);           // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 3.0);       // TODO: set using x011            
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);           // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0);       // TODO: set using x011            
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, coeff);            
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, coeff_opp);              
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.003);                                    
@@ -1057,8 +1057,8 @@ int main(int argc, char* argv[]) {
         string alg_id = ALG_ID_EST;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);           // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3);       // TODO: set using x011        
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);           // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0);       // TODO: set using x011        
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.75);                  // TODO: set using x020
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.75);              // TODO: set using x020         
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, coeff);                                    
