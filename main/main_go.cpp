@@ -928,8 +928,8 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x004
-        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x004
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x004
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x004
         alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);
         alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);
 
@@ -1122,10 +1122,10 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);             
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.75);                  // TODO: set using x020
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.75);              // TODO: set using x020      
-        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.3);                // TODO: set using x030                     
-        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.3);            // TODO: set using x030
-        alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001);                   // TODO: set using x030
-        alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.001);               // TODO: set using x030
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.003);                // TODO: set using x030                     
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.003);            // TODO: set using x030
+        alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.003);                   // TODO: set using x030
+        alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.003);               // TODO: set using x030
 
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
@@ -1182,10 +1182,10 @@ int main(int argc, char* argv[]) {
         // alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);             
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.75);                  // TODO: set using x020
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.75);              // TODO: set using x020      
-        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.3);                // TODO: set using x030                     
-        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.3);            // TODO: set using x030
-        alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001);                   // TODO: set using x030
-        alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.001);               // TODO: set using x030
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.003);                // TODO: set using x030                     
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.003);            // TODO: set using x030
+        alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.003);                   // TODO: set using x030
+        alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.003);               // TODO: set using x030
 
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
