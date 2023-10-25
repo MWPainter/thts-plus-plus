@@ -1,7 +1,8 @@
 # variables 
 EXPR_ID="x020_bts_tune_prior_coeff"
 
-temps=("0.5" "0.75" "1.0" "1.5" "2.0" "3.0")
+# temps=("0.5" "0.75" "1.0" "1.5" "2.0" "3.0")
+temps=("2.0" "3.0" "5.0" "10.0")
 
 for AGENT_ONE_ID in ${temps[@]}
 do

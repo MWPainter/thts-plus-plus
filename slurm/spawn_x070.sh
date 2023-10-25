@@ -1,7 +1,7 @@
 # variables 
 EXPR_ID="x070_dents_tune_value_temp"
 
-temps=("30.0" "10.0" "3.0" "1.0" "0.3")
+temps=("3.0" "1.0" "0.3" "0.1" "0.03")
 
 for AGENT_ONE_ID in ${temps[@]}
 do
