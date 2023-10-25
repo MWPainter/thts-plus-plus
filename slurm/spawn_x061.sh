@@ -2,7 +2,8 @@
 EXPR_ID="x061_tents_tune_temp_most_visit"
 
 # temps=("3.0" "1.0" "0.3" "0.1" "0.03")
-temps=("300.0" "100.0" "30.0" "10.0" "3.0")
+# temps=("300.0" "100.0" "30.0" "10.0" "3.0")
+temps=("30.0" "10.0" "3.0" "1.0" "0.3")
 
 for AGENT_ONE_ID in ${temps[@]}
 do

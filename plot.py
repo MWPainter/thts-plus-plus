@@ -86,7 +86,7 @@ def make_plot_df(
         for x in vertical_lines:
             plt.axvline(x=x, color='k', linestyle='--')
     if legend_lab is not None:
-        plt.legend(title=legend_lab)
+        plt.legend(loc="lower right", title=legend_lab)
     if y_axis_range is not None:
         plt.gca().set_ylim(y_axis_range)
     if not use_legend:
@@ -181,7 +181,8 @@ def make_plot(
     add_markers=False,
     markevery=1,
     use_legend=True,
-    hue_per_algo=True):
+    hue_per_algo=True,
+    alpha=1.0):
     """Read in data, preprocess, and then call make plot"""
 
 
@@ -257,11 +258,11 @@ def make_plot(
         for alg_id in alg_set:
             markers[alg_id] = ""
             if "UCT" in alg_id:
-                markers[alg_id] = "x"
+                markers[alg_id] = 4
             if "MENTS" in alg_id:
-                markers[alg_id] = "+"
+                markers[alg_id] = 5
             if "DENTS" in alg_id:
-                markers[alg_id] = "x"
+                markers[alg_id] = 6
 
 
     df = pd.DataFrame(mc_eval_df_dict)
@@ -286,7 +287,8 @@ def make_plot(
         y_axis_range=y_axis_range,
         markers=markers,
         markevery=markevery,
-        use_legend=use_legend)
+        use_legend=use_legend,
+        alpha=alpha)
     
     if not sep_eps_plots:
         return
@@ -312,7 +314,8 @@ def make_plot(
             y_axis_range=y_axis_range,
             markers=markers,
             markevery=markevery,
-            use_legend=use_legend)
+            use_legend=use_legend,
+            alpha=alpha)
 
     
 def negative_log_transform(x):
@@ -387,7 +390,8 @@ if __name__ == "__main__":
             num_trials_truncate=3000,
             alg_ids_to_add_param_to=["ments"],
             add_markers=True,
-            markevery=10)
+            markevery=10,
+            alpha=0.9)
         
     if "000_fig1b" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
         filenames = [
@@ -404,7 +408,8 @@ if __name__ == "__main__":
             num_trials_truncate=3000,
             alg_ids_to_add_param_to=["ments"],
             add_markers=True,
-            markevery=10)
+            markevery=10,
+            alpha=0.9)
         
     if "000_fig_fl" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
         filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/uct/eval_*.csv")
