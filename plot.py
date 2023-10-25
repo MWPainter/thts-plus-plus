@@ -3,6 +3,7 @@ import os
 import matplotlib
 if 'SSH_CLIENT' in os.environ or 'SSH_TTY' in os.environ:
     matplotlib.use('Agg')
+import matplotlib as mpl
 from matplotlib import pyplot as plt
 import seaborn as sns
 
@@ -22,8 +23,8 @@ def make_plot_df(
     xaxis_lab=None, 
     yaxis_lab=None, 
     legend_lab=None,
-    y_scale_transform=None,
-    y_scale_inv_transform=None,
+    y_scale_transform_forward=None,
+    y_scale_transform_inverse=None,
     filename=None, 
     vertical_lines=None,
     palette=None,
@@ -32,15 +33,28 @@ def make_plot_df(
     markevery=1,
     y_axis_range=None,
     alpha=1.0,
-    use_legend=True):
+    use_legend=True,
+    font_scale=1.15):
     """General helper for plotting in our style."""
 
     plt.figure()
     sns.set(style="darkgrid")
 
-    if y_scale_transform is not None and y_scale_inv_transform is not None:
-        # plt.gca().set_yscale("function", function=[y_scale_transform, y_scale_inv_transform])
-        plt.gca().set_yscale("function", functions=[y_scale_transform, y_scale_inv_transform])
+    # params = {
+    #     'axes.labelsize': 48,
+    #     'axes.titlesize': 48, 
+    #     # 'text.fontsize': 20, 
+    #     'legend.fontsize': 48, 
+    #     # 'xtick.labelsize': 48, 
+    #     # 'ytick.labelsize': 48,
+    # }
+    # mpl.rcParams.update(params)
+    # # mpl.rcParams['font.size'] = font_size
+    # # mpl.rcParams.update({'font.size': font_size})
+    sns.set(font_scale=font_scale)
+
+    if y_scale_transform_forward is not None and y_scale_transform_inverse is not None:
+        plt.yscale("function", functions=(y_scale_transform_forward, y_scale_transform_inverse))
 
     if palette is None:
         palette = "deep"
@@ -77,12 +91,13 @@ def make_plot_df(
         plt.gca().set_ylim(y_axis_range)
     if not use_legend:
         plt.gca().get_legend().remove()
+
     if filename is not None:
         plt.savefig(filename)
         plt.close()
 
 
-def read_mc_eval_into_arrays(filename, alg_ids, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs, alg_id=None):
+def read_mc_eval_into_arrays(filename, alg_ids, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs, dents_temps, alg_id=None):
     with open(filename) as f:
         param_ids = f.readline().strip().split(",")
         param_vals = f.readline().strip().split(",")
@@ -90,11 +105,14 @@ def read_mc_eval_into_arrays(filename, alg_ids, bias_or_temps, replicates, value
 
         epsilon = 0.0
         uct_thresh = 0
+        dents_temp = 0.0
         for param_id, val in zip(param_ids,param_vals):
             if param_id == "alg":
                 alg_id = val
-            elif param_id in ["bias", "temp", "init_temp"]:
+            elif param_id in ["bias", "temp"]:
                 bias_or_temp = float(val)
+            elif param_id in ["dents_temp"]:
+                dents_temp = float(val)
             elif param_id in ["epsilon"]:
                 epsilon = float(val)
             elif param_id in ["uct_budget_threshold"]:
@@ -120,9 +138,10 @@ def read_mc_eval_into_arrays(filename, alg_ids, bias_or_temps, replicates, value
             num_trialss.append(int(csv_vals[num_trials_idx]))
             epsilons.append(float(epsilon))
             hmcts_uct_threshs.append(uct_thresh)
+            dents_temps.append(float(dents_temp))
 
 def read_eval_files(filenames):
-    alg_ids, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs = [], [], [], [], [], [], []
+    alg_ids, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs, dents_temps = [], [], [], [], [], [], [], []
 
     for filename in filenames:
         alg_id = None
@@ -140,9 +159,10 @@ def read_eval_files(filenames):
             num_trialss=num_trialss, 
             epsilons=epsilons,
             hmcts_uct_threshs=hmcts_uct_threshs,
+            dents_temps=dents_temps,
             alg_id=alg_id)
 
-    return alg_ids, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs
+    return alg_ids, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs, dents_temps
 
 def make_plot(
     filenames, 
@@ -154,7 +174,8 @@ def make_plot(
     legend_lab=None, 
     num_trials_truncate=None,
     alg_ids_to_add_param_to=None,
-    y_transform=None,
+    y_scale_transform_forward=None,
+    y_scale_transform_inverse=None,
     sep_eps_plots=False,
     y_axis_range=None,
     add_markers=False,
@@ -177,7 +198,7 @@ def make_plot(
     if alg_ids_to_add_param_to is None:
         alg_ids_to_add_param_to = []
 
-    alg_ids, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs = read_eval_files(filenames)   
+    alg_ids, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs, dents_temps = read_eval_files(filenames)   
 
     pretty_alg_ids = []
     for i, alg_id in enumerate(alg_ids):
@@ -189,10 +210,6 @@ def make_plot(
         if alg_id in alg_ids_to_add_param_to:
             pretty_alg_id = "{alg_id}({param})".format(alg_id=pretty_alg_id,param=bias_or_temps[i])
         pretty_alg_ids.append(pretty_alg_id.upper())
-
-    if y_transform is not None:
-        for i, val in enumerate(values):
-            values[i] = y_transform(val)
     
     mc_eval_df_dict = {
         "num_trials": num_trialss,
@@ -204,6 +221,7 @@ def make_plot(
         "replicates": replicates,
         "eps": epsilons,
         "uct_budget_threshold": hmcts_uct_threshs,
+        "dents_temp": dents_temps,
     }
     
     palette = None
@@ -215,7 +233,7 @@ def make_plot(
         for alg_id in alg_set:
             dashes[alg_id] = ""
             if "0.01" in alg_id:
-                dashes[alg_id] = (5,4)
+                dashes[alg_id] = (4,2)
             if "UCT" in alg_id:
                 palette[alg_id] = "tab:green"
             if "PUCT" in alg_id:
@@ -238,6 +256,8 @@ def make_plot(
         markers = {}
         for alg_id in alg_set:
             markers[alg_id] = ""
+            if "UCT" in alg_id:
+                markers[alg_id] = "x"
             if "MENTS" in alg_id:
                 markers[alg_id] = "+"
             if "DENTS" in alg_id:
@@ -259,8 +279,8 @@ def make_plot(
         dashes=dashes,
         xaxis_lab=xaxis_lab,
         yaxis_lab=yaxis_lab,
-        # y_scale_transform=y_scale_transform,
-        # y_scale_inv_transform=y_scale_inv_transform,
+        y_scale_transform_forward=y_scale_transform_forward,
+        y_scale_transform_inverse=y_scale_transform_inverse,
         legend_lab=legend_lab,
         filename=plot_filename,
         y_axis_range=y_axis_range,
@@ -285,8 +305,8 @@ def make_plot(
             dashes=dashes,
             xaxis_lab=xaxis_lab,
             yaxis_lab=yaxis_lab,
-            # y_scale_transform=y_scale_transform,
-            # y_scale_inv_transform=y_scale_inv_transform,
+            y_scale_transform_forward=y_scale_transform_forward,
+            y_scale_transform_inverse=y_scale_transform_inverse,
             legend_lab=legend_lab,
             filename=eps_filename,
             y_axis_range=y_axis_range,
@@ -299,6 +319,44 @@ def negative_log_transform(x):
     # EPS = 1e-10
     # if x < EPS: x = EPS
     return np.log(x)
+
+def y_scale_piecwise_linear_forward(x, min_y=0.0, mid_y=0.65, scaled_y=0.1, max_y=1.0):
+    """
+    data is min_y -> mid_y -> max_y
+    want it to be plotted at min_y -> scaled_y -> max_y
+
+    y = x.copy()
+    y[y<0.6] = 0.25 * y[y<0.6]/0.6
+    y[y>=0.6] = 0.25 + 0.75 * (y[y>=0.6] - 0.6) / 0.4
+    return y
+    """
+    y = x.copy()
+    y[y<mid_y] = min_y + (scaled_y - min_y) * (y[y<mid_y] - min_y) / (mid_y-min_y)
+    y[y>=mid_y] = scaled_y + (max_y - scaled_y) * (y[y>=mid_y] - mid_y) / (max_y-mid_y)
+    return y
+    
+def y_scale_piecwise_linear_inverse(x, min_y=0.0, mid_y=0.65, scaled_y=0.1, max_y=1.0):
+    """
+    data is min_y -> scaled_y -> max_y
+    want it to be plotted at min_y -> mid_y -> max_y
+
+    y = x.copy()
+    y[y<0.25] = 0.6 * y[y<0.25] / 0.25
+    y[y>=0.25] = 0.6 + 0.4 * (y[y>=0.25] - 0.25) / 0.75
+    return y
+
+    y = x.copy()
+    y[y<scaled_y] = min_y + (mid_y - min_y) * (y[y<scaled_y] - min_y) / (scaled_y-min_y)
+    y[y>=scaled_y] = mid_y + (max_y - mid_y) * (y[y>=scaled_y] - scaled_y) / (max_y-scaled_y)
+    return y
+    """
+    return y_scale_piecwise_linear_forward(x, min_y=min_y, mid_y=scaled_y, scaled_y=mid_y, max_y=max_y)
+
+def get_piecwise_linear_forward_transform(min_y,mid_y,scaled_y,max_y):
+    return lambda x: y_scale_piecwise_linear_forward(x,min_y,mid_y,scaled_y,max_y)
+
+def get_piecwise_linear_inverse_transform(min_y,mid_y,scaled_y,max_y):
+    return lambda x: y_scale_piecwise_linear_inverse(x,min_y,mid_y,scaled_y,max_y)
 
 
 
@@ -316,7 +374,9 @@ if __name__ == "__main__":
     if "000_fig1a" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
         filenames = [
             "results/dchain_env/10-1.0/021_len_10_main_paper/uct/eval_bias=-1.csv",
-            "results/dchain_env/10-1.0/021_len_10_main_paper/dents/eval_epsilon=0.1,temp=1.csv",
+            # "results/dchain_env/10-1.0/021_len_10_main_paper/dents/eval_epsilon=0.1,temp=1.csv",
+            "results/dchain_env/10-1.0/021_len_10_main_paper/db-ments/eval_epsilon=0.1,temp=1.csv",
+            "results/dchain_env/10-1.0/021_len_10_main_paper/ments/eval_epsilon=0.1,temp=1.csv",
             "results/dchain_env/10-1.0/021_len_10_main_paper/ments/eval_epsilon=0.1,temp=0.01.csv",
         ]
         make_plot(
@@ -325,7 +385,9 @@ if __name__ == "__main__":
             hue_key="pretty_alg_id",
             title="",
             num_trials_truncate=3000,
-            alg_ids_to_add_param_to=["ments"])
+            alg_ids_to_add_param_to=["ments"],
+            add_markers=True,
+            markevery=10)
         
     if "000_fig1b" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
         filenames = [
@@ -340,7 +402,9 @@ if __name__ == "__main__":
             title="",
             hue_key="pretty_alg_id",
             num_trials_truncate=3000,
-            alg_ids_to_add_param_to=["ments"])
+            alg_ids_to_add_param_to=["ments"],
+            add_markers=True,
+            markevery=10)
         
     if "000_fig_fl" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
         filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/uct/eval_*.csv")
@@ -354,17 +418,28 @@ if __name__ == "__main__":
             num_trials_truncate=100000)
         
     if "000_fig_fl_full" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/*/eval_*.csv")
+        # filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/*/eval_*.csv")
+        filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/uct/eval_*.csv")
+        filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/ments/eval_*.csv")
+        filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/est/eval_*.csv")
+        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/db-ments/eval_*.csv")
+        filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/dents/eval_*.csv")
+        filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/rents/eval_*.csv")
+        filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/tents/eval_*.csv")
+        filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/hmcts/eval_*.csv")
         puct_filename = None
         for filename in filenames:
             if "puct" in filename:
                 puct_filename = filename
-        filenames.remove(puct_filename)
+        if puct_filename is not None:
+            filenames.remove(puct_filename)
         make_plot(
             filenames=filenames,
             plot_filename="plots/000_fig_fl_full.png",
             hue_key="pretty_alg_id",
-            num_trials_truncate=1000000)
+            num_trials_truncate=1000000,
+            y_scale_transform_forward=y_scale_piecwise_linear_forward,
+            y_scale_transform_inverse=y_scale_piecwise_linear_inverse)
         
     if "000_fig_sail" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
         filenames = glob.glob("results/sailing_env/6_test/092_s6_test/uct/eval_*.csv")
@@ -373,11 +448,14 @@ if __name__ == "__main__":
         filenames += glob.glob("results/sailing_env/6_test/092_s6_test/dents/eval_*.csv")
         filenames += glob.glob("results/sailing_env/6_test/092_s6_test/rents/eval_*.csv")
         filenames += glob.glob("results/sailing_env/6_test/092_s6_test/tents/eval_*.csv")
+        filenames += glob.glob("results/sailing_env/6_test/092_s6_test/hmcts/eval_*.csv")
         make_plot(
             filenames=filenames,
             plot_filename="plots/000_fig_sail.png",
             hue_key="pretty_alg_id",
-            num_trials_truncate=1000000)
+            num_trials_truncate=1000000,
+            y_scale_transform_forward=get_piecwise_linear_forward_transform(-120.0,-40.0,-90.0,0),
+            y_scale_transform_inverse=get_piecwise_linear_inverse_transform(-120.0,-40.0,-90.0,0))
         
 
 
@@ -998,6 +1076,15 @@ if __name__ == "__main__":
             num_trials_truncate=1000000,
             sep_eps_plots=True)
         
+    if "051_06_fl12_hps_dents_02" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/frozen_lake_env/FL_8x12/051a_fl12_hps/dents/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/051_06_fl12_hps_dents_02.png",
+            hue_key="dents_temp",
+            num_trials_truncate=1000000,
+            hue_per_algo=False)
+        
     if "051_07_fl12_hps_est_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
         filenames = glob.glob("results/frozen_lake_env/FL_8x12/051_fl12_hps/est/eval_*.csv")
         make_plot(
@@ -1139,6 +1226,15 @@ if __name__ == "__main__":
             hue_key="bias_or_temp",
             num_trials_truncate=1000000,
             sep_eps_plots=True)
+        
+    if "091_08_s6_hps_hmcts_01" in sys.argv or "all" in sys.argv or expr_id in sys.argv:
+        filenames = glob.glob("results/sailing_env/6/091_s6_hps/hmcts/eval_*.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/091_08_s6_hps_hmcts_01.png",
+            hue_key="uct_budget_threshold",
+            num_trials_truncate=1000000,
+            hue_per_algo=False)
         
 
 

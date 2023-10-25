@@ -56,6 +56,7 @@ static const std::string D021_LEN10_PAPER = "021_len_10_main_paper";
 
 // expr ids - main gridworld
 static const std::string FL12_051_HPS = "051_fl12_hps";
+static const std::string FL12_051A_HPS = "051a_fl12_hps";
 static const std::string FL12_052_TEST = "052_fl12_test";
 static const std::string FL16_050_TEST = "050_fl16_test";
 
@@ -89,7 +90,6 @@ static const std::string PARAMS_ID_MENTS_EPSILON = "epsilon";
 static const std::string PARAMS_ID_MENTS_DEFAULT_Q_VALUE = "default_q_value";
 static const std::string PARAMS_ID_DENTS_IGNORE_DECAY = "no_dents_decay";
 static const std::string PARAMS_ID_DENTS_TEMP = "dents_temp";
-// static const std::string PARAMS_ID_DENTS_INIT_TEMP = "value_temp_init";
 static const std::string PARAMS_ID_HMCTS_BUDGET = "hmcts_total_budget";
 static const std::string PARAMS_ID_HMCTS_UCT_BUDGET_THRESHOLD = "uct_budget_threshold";
 

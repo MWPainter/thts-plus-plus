@@ -1046,18 +1046,66 @@ namespace thts {
             }
 
             vector<int> uct_thresholds = { 10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000};
-            for (int thresh : uct_thresholds) {
+            uct_biases = { UctManagerArgs::USE_AUTO_BIAS, 0.1, 1.0, 10.0, 100.0 };
+            for (double bias : uct_biases) {
+                for (int thresh : uct_thresholds) {
+                    unordered_map<string,double> alg_params = 
+                    {
+                        {PARAMS_ID_UCT_BIAS, bias},
+                        {PARAMS_ID_HMCTS_BUDGET, num_trials},
+                        {PARAMS_ID_HMCTS_UCT_BUDGET_THRESHOLD, thresh},
+                    };
+                    run_ids->push_back(RunID(
+                        env_id,
+                        env_instance_id,
+                        expr_id,
+                        ALG_ID_HMCTS,
+                        alg_params,
+                        num_trials,
+                        max_trial_length,
+                        trials_log_delta,
+                        mc_eval_trials_delta,
+                        rollouts_per_mc_eval,
+                        num_repeats,
+                        num_threads,
+                        eval_threads));
+                }
+            }
+
+            return run_ids;
+        }
+
+        // expr id: FL12_051A_HPS
+        // Tunes the dents temperature after the rest of the params are set
+        if (expr_id == FL12_051A_HPS) {
+            string env_id = FL_ENV_ID;
+            string env_instance_id = FL_8x12;
+            int num_trials = 300000;
+            int max_trial_length = 100;
+            int trials_log_delta = 250;
+            int mc_eval_trials_delta = 500;
+            int rollouts_per_mc_eval = 50;
+            int num_repeats = 5;
+            int num_threads = 32;
+            int eval_threads = 32;
+
+            string alg_id = ALG_ID_DENTS;
+            double m_temp = 0.1;
+            double eps = 1.0;
+            vector<double> d_temps = {100.0, 10.0, 1.0, 0.1};
+
+            for (double d_temp : d_temps) {
                 unordered_map<string,double> alg_params = 
-                {
-                    {PARAMS_ID_UCT_BIAS, UctManagerArgs::USE_AUTO_BIAS},
-                    {PARAMS_ID_HMCTS_BUDGET, num_trials},
-                    {PARAMS_ID_HMCTS_UCT_BUDGET_THRESHOLD, thresh},
-                };
+                    {
+                        {PARAMS_ID_MENTS_TEMP, m_temp}, 
+                        {PARAMS_ID_MENTS_EPSILON, eps},
+                        {PARAMS_ID_DENTS_TEMP, d_temp}, 
+                    };
                 run_ids->push_back(RunID(
                     env_id,
                     env_instance_id,
                     expr_id,
-                    ALG_ID_HMCTS,
+                    alg_id,
                     alg_params,
                     num_trials,
                     max_trial_length,
@@ -1066,7 +1114,7 @@ namespace thts {
                     rollouts_per_mc_eval,
                     num_repeats,
                     num_threads,
-                    eval_threads));
+                    eval_threads));    
             }
 
             return run_ids;
@@ -1133,6 +1181,9 @@ namespace thts {
                         {PARAMS_ID_MENTS_TEMP, temp}, 
                         {PARAMS_ID_MENTS_EPSILON, eps}
                     };
+                if (alg_id == ALG_ID_DENTS) {
+                    alg_params.insert_or_assign(PARAMS_ID_DENTS_TEMP, 1.0);
+                }
                 run_ids->push_back(RunID(
                     env_id,
                     env_instance_id,
@@ -1432,6 +1483,34 @@ namespace thts {
                 }
             }
 
+            vector<int> uct_thresholds = { 10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000};
+            uct_biases = { UctManagerArgs::USE_AUTO_BIAS, 0.1, 1.0, 10.0, 100.0 };
+            for (double bias : uct_biases) {
+                for (int thresh : uct_thresholds) {
+                    unordered_map<string,double> alg_params = 
+                    {
+                        {PARAMS_ID_UCT_BIAS, bias},
+                        {PARAMS_ID_HMCTS_BUDGET, num_trials},
+                        {PARAMS_ID_HMCTS_UCT_BUDGET_THRESHOLD, thresh},
+                        {PARAMS_ID_MENTS_DEFAULT_Q_VALUE, default_q_value},
+                    };
+                    run_ids->push_back(RunID(
+                        env_id,
+                        env_instance_id,
+                        expr_id,
+                        ALG_ID_HMCTS,
+                        alg_params,
+                        num_trials,
+                        max_trial_length,
+                        trials_log_delta,
+                        mc_eval_trials_delta,
+                        rollouts_per_mc_eval,
+                        num_repeats,
+                        num_threads,
+                        eval_threads));
+                }
+            }
+
             return run_ids;
         }
         
@@ -1499,6 +1578,9 @@ namespace thts {
                             {PARAMS_ID_MENTS_EPSILON, eps},
                             {PARAMS_ID_MENTS_DEFAULT_Q_VALUE, default_q_value},
                         };
+                if (alg_id == ALG_ID_DENTS) {
+                    alg_params.insert_or_assign(PARAMS_ID_DENTS_TEMP, 10.0);
+                }
                 run_ids->push_back(RunID(
                     env_id,
                     env_instance_id,
@@ -1514,6 +1596,28 @@ namespace thts {
                     num_threads,
                     eval_threads));
             }
+
+            unordered_map<string,double> alg_params = 
+            {
+                {PARAMS_ID_UCT_BIAS, UctManagerArgs::USE_AUTO_BIAS},
+                {PARAMS_ID_HMCTS_BUDGET, num_trials},
+                {PARAMS_ID_HMCTS_UCT_BUDGET_THRESHOLD, 30},
+                {PARAMS_ID_MENTS_DEFAULT_Q_VALUE, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                env_instance_id,
+                expr_id,
+                ALG_ID_HMCTS,
+                alg_params,
+                num_trials,
+                max_trial_length,
+                trials_log_delta,
+                mc_eval_trials_delta,
+                rollouts_per_mc_eval,
+                num_repeats,
+                num_threads,
+                eval_threads));
 
             return run_ids;
         }
