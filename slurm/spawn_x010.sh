@@ -1,7 +1,8 @@
 # variables 
 EXPR_ID="x010_bts_tune_temp_most_visited"
 
-temps=("3.0" "1.0" "0.3" "0.1" "0.03")
+# temps=("3.0" "1.0" "0.3" "0.1" "0.03")
+temps=("100.0" "30.0" "10.0" "3.0" "1.0")
 
 for AGENT_ONE_ID in ${temps[@]}
 do
