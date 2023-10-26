@@ -1564,7 +1564,7 @@ int main(int argc, char* argv[]) {
     // z000_puct_vs_kata_native
     // PUCT vs Native Kata
     //
-    if (expr_id == EXPR_ID_Y000_PUCT_VS_KATA_NATIVE) {
+    if (expr_id == EXPR_ID_Z000_PUCT_VS_KATA_NATIVE) {
         string algo1(argv[2]);
         string algo2(argv[3]);
 
@@ -1590,7 +1590,7 @@ int main(int argc, char* argv[]) {
     // z001_ar_bts_vs_kata_native
     // BTS vs Native Kata
     //
-    if (expr_id == EXPR_ID_Y001_AR_BTS_VS_KATA_NATIVE) {
+    if (expr_id == EXPR_ID_Z001_AR_BTS_VS_KATA_NATIVE) {
         string algo1(argv[2]);
         string algo2(argv[3]);
 
@@ -1641,7 +1641,7 @@ int main(int argc, char* argv[]) {
     // z010_ar_vs_dp
     // Average returns vs Dynamic Programming
     //
-    if (expr_id == EXPR_ID_Y010_AR_VS_DP) {
+    if (expr_id == EXPR_ID_Z010_AR_VS_DP) {
         double emp_plays_black = stod(argv[2]) == 0.0;
         string alg_id(argv[3]);
 
@@ -1782,7 +1782,7 @@ int main(int argc, char* argv[]) {
     // z030_ar_round_robin
     // Round robins (with and without random search - with random search only tests against some)
     //
-    if (expr_id == EXPR_ID_Y020_AR_RR_WITH_RAND || expr_id == EXPR_ID_Y030_AR_RR) {
+    if (expr_id == EXPR_ID_Z020_AR_RR_WITH_RAND || expr_id == EXPR_ID_Z030_AR_RR) {
         string algo1(argv[2]);
         string algo2(argv[3]);
 
