@@ -1532,7 +1532,7 @@ int main(int argc, char* argv[]) {
         if (algo2 == ALG_ID_EST) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3); // TODO: set using x011
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x011
-            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x004
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);      // TODO: set using x004
         }
 
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
@@ -1965,7 +1965,7 @@ int main(int argc, char* argv[]) {
         if (algo2 == ALG_ID_EST) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3); // TODO: set using x011
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x011
-            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x004
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);      // TODO: set using x004
         }
 
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
