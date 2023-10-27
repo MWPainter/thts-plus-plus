@@ -472,7 +472,7 @@ namespace thts {
             manager_args.root_node_epsilon = 0.67;
             manager_args.shift_pseudo_q_values = true;
             manager_args.prior_policy_search_weight = 0.5;
-            manager_args.value_temp_decay_fn = decayed_temp_inv_sqrt;
+            manager_args.value_temp_decay_fn = decayed_temp_inv_log; // decayed_temp_inv_sqrt;
             manager_args.use_max_heap = true;
             manager_args.avoid_selecting_children_under_construction = true;
             
@@ -513,6 +513,12 @@ namespace thts {
                     }
                     if (contains_key(alg_params, PARAM_USE_CONST_SEARCH_TEMP)) {
                         manager_args.temp_decay_fn = decayed_temp_no_decay;
+                    }
+                    if (contains_key(alg_params, PARAM_USE_INV_SQRT_SEARCH_TEMP)) {
+                        manager_args.temp_decay_fn = decayed_temp_inv_sqrt;
+                    }
+                    if (contains_key(alg_params, PARAM_USE_INV_LOG_SEARCH_TEMP)) {
+                        manager_args.temp_decay_fn = decayed_temp_inv_log;
                     }
                     if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED)) {
                         manager_args.recommend_most_visited = true;
@@ -557,6 +563,12 @@ namespace thts {
                     }
                     if (contains_key(alg_params, PARAM_USE_CONST_SEARCH_TEMP_OPP)) {
                         manager_args.temp_decay_fn = decayed_temp_no_decay;
+                    }
+                    if (contains_key(alg_params, PARAM_USE_INV_SQRT_SEARCH_TEMP_OPP)) {
+                        manager_args.temp_decay_fn = decayed_temp_inv_sqrt;
+                    }
+                    if (contains_key(alg_params, PARAM_USE_INV_LOG_SEARCH_TEMP_OPP)) {
+                        manager_args.temp_decay_fn = decayed_temp_inv_log;
                     }
                     if (contains_key(alg_params, PARAM_RECOMMEND_MOST_VISITED_OPP)) {
                         manager_args.recommend_most_visited = true;

@@ -1,5 +1,5 @@
 # variables 
-EXPR_ID="w001_bts_tune_temp_no_decay"
+EXPR_ID="w001_bts_tune_temp_sqrt_decay"
 
 temps=("3.0" "1.0" "0.3" "0.1" "0.03")
 

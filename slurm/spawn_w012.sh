@@ -1,7 +1,7 @@
 # variables 
-EXPR_ID="w004_bts_tune_temp_compare"
+EXPR_ID="w012_bts_tune_temp_most_visited_log_decay"
 
-temps=("0.0" "1.0")
+temps=("3.0" "1.0" "0.3" "0.1" "0.03")
 
 for AGENT_ONE_ID in ${temps[@]}
 do
@@ -12,7 +12,7 @@ do
             OUTDIR=slurm_output/${EXPR_ID}
             mkdir -p $OUTDIR
             OUTFILE=slurm_output/${EXPR_ID}/9x9_${AGENT_ONE_ID}_vs_${AGENT_TWO_ID}.out
-            sbatch --job-name=w04:${AGENT_ONE_ID}vs${AGENT_TWO_ID} --output=$OUTFILE --export=EXPR_ID=$EXPR_ID,AGENT_ONE_ID=$AGENT_ONE_ID,AGENT_TWO_ID=$AGENT_TWO_ID run_go.slurm
+            sbatch --job-name=w12:${AGENT_ONE_ID}vs${AGENT_TWO_ID} --output=$OUTFILE --export=EXPR_ID=$EXPR_ID,AGENT_ONE_ID=$AGENT_ONE_ID,AGENT_TWO_ID=$AGENT_TWO_ID run_go.slurm
         fi
     done
 done

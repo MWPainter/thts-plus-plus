@@ -1,5 +1,5 @@
 # variables 
-EXPR_ID="w010_bts_tune_temp_most_visited"
+EXPR_ID="w010_bts_tune_temp_most_visited_no_decay"
 
 temps=("3.0" "1.0" "0.3" "0.1" "0.03")
 

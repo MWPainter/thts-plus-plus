@@ -43,6 +43,12 @@ static const std::string PARAM_USE_DIRICHLET_NOISE_OPP = "add_dirichlet";
 
 static const std::string PARAM_USE_CONST_SEARCH_TEMP = "use_const_search_temp";
 static const std::string PARAM_USE_CONST_SEARCH_TEMP_OPP = "use_const_search_temp_opp";
+static const std::string PARAM_USE_INV_SQRT_SEARCH_TEMP = "use_inv_sqrt_search_temp";
+static const std::string PARAM_USE_INV_SQRT_SEARCH_TEMP_OPP = "use_inv_sqrt_search_temp_opp";
+static const std::string PARAM_USE_INV_LOG_SEARCH_TEMP = "use_inv_log_search_temp";
+static const std::string PARAM_USE_INV_LOG_SEARCH_TEMP_OPP = "use_inv_log_search_temp_opp";
+static const std::string PARAM_SEARCH_TEMP_DECAY_TYPE = "search_temp_decay";
+static const std::string PARAM_SEARCH_TEMP_DECAY_TYPE_OPP = "search_temp_decay_opp";
 
 static const std::string ALG_ID_KATA_NATIVE = "native_kata";
 static const std::string ALG_ID_KATA_NATIVE_BTS = "native_kata_bts";

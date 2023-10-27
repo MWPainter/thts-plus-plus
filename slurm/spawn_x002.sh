@@ -1,8 +1,7 @@
 # variables 
-EXPR_ID="x002_bts_tune_temp_sqrt_decay"
+EXPR_ID="x002_bts_tune_temp_log_decay"
 
-# temps=("3.0" "1.0" "0.3" "0.1" "0.03")
-temps=("30.0" "10.0" "3.0" "1.0" "0.3")
+temps=("3.0" "1.0" "0.3" "0.1" "0.03")
 
 for AGENT_ONE_ID in ${temps[@]}
 do

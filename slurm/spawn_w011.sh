@@ -1,7 +1,7 @@
 # variables 
-EXPR_ID="w011_bts_tune_most_visited_compare"
+EXPR_ID="w011_bts_tune_temp_most_visited_sqrt_decay"
 
-temps=("0.0" "1.0")
+temps=("3.0" "1.0" "0.3" "0.1" "0.03")
 
 for AGENT_ONE_ID in ${temps[@]}
 do
