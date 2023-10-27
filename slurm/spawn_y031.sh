@@ -1,5 +1,5 @@
 # variables 
-EXPR_ID="y030_ar_round_robin"
+EXPR_ID="y031_dp_round_robin"
 
 agent_ids=("kata" "ments" "dents" "est")
 
@@ -12,7 +12,7 @@ do
             OUTDIR=slurm_output/${EXPR_ID}
             mkdir -p $OUTDIR
             OUTFILE=slurm_output/${EXPR_ID}/9x9_${AGENT_ONE_ID}_vs_${AGENT_TWO_ID}.out
-            sbatch --job-name=y30:${AGENT_ONE_ID}vs${AGENT_TWO_ID} --output=$OUTFILE --export=EXPR_ID=$EXPR_ID,AGENT_ONE_ID=$AGENT_ONE_ID,AGENT_TWO_ID=$AGENT_TWO_ID run_go.slurm
+            sbatch --job-name=y31:${AGENT_ONE_ID}vs${AGENT_TWO_ID} --output=$OUTFILE --export=EXPR_ID=$EXPR_ID,AGENT_ONE_ID=$AGENT_ONE_ID,AGENT_TWO_ID=$AGENT_TWO_ID run_go.slurm
         fi
     done
 done

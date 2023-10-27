@@ -103,18 +103,18 @@ int main(int argc, char* argv[]) {
     // Expr to debug that all the io works
     if (expr_id == EXPR_ID_DEBUG) {
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3);   
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 100.0);   
                
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 0.75);            
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 0.75);       
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.0);            
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.0);       
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.001);                                    
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.001); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.001);   
 
-        // alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
-        // alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
 
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
@@ -128,12 +128,12 @@ int main(int argc, char* argv[]) {
         thts::run_go_games(
             expr_id,            // expr id
             ALG_ID_EST, //ALG_ID_KATA,            // black
-            ALG_ID_MENTS,             // white
-            9,                  // board size
+            ALG_ID_KATA,             // white
+            19,                  // board size
             10,                 // num games
-            6.5,                // komi
+            7.5,                // komi
             true,
-            2.5,                // time per move
+            5.0,                // time per move
             32,                 // num threads 
             false,
             alg_params);   
@@ -320,8 +320,8 @@ int main(int argc, char* argv[]) {
         // alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using w004
-        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using w004
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using w004
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using w004
         alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);
         alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);
 
@@ -364,8 +364,8 @@ int main(int argc, char* argv[]) {
         // alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using w004
-        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using w004
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using w004
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using w004
 
         if (recommend_most_visited_plays_black) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp_visited);
@@ -564,9 +564,9 @@ int main(int argc, char* argv[]) {
         bool recommend_most_visited_plays_black = (stod(argv[2]) == 0.0);
 
         string alg_id = ALG_ID_MENTS;
-        if (expr_id == EXPR_ID_W050_RENTS_TEMP || expr_id == EXPR_ID_W051_RENTS_TEMP) {
+        if (expr_id == EXPR_ID_W052_RENTS_TEMP) {
             alg_id = ALG_ID_RENTS;
-        } else if (expr_id == EXPR_ID_W060_TENTS_TEMP || expr_id == EXPR_ID_W061_TENTS_TEMP) {
+        } else if (expr_id == EXPR_ID_W062_TENTS_TEMP) {
             alg_id = ALG_ID_TENTS;
         } 
 
@@ -796,7 +796,7 @@ int main(int argc, char* argv[]) {
         string alg_id = ALG_ID_EST;
 
         double temp_const = 1.0; // TODO: set using x000 + x001
-        double temp_decay = 3.0; // TODO: set using x002 + x003
+        double temp_decay = 1.0; // TODO: set using x002 + x003
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();               
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);                   // TODO: set using x000 - x003    
@@ -890,7 +890,7 @@ int main(int argc, char* argv[]) {
         string alg_id = ALG_ID_EST;
 
         double temp_value = 1.0;    // TODO: set using x004
-        double temp_visited = 1.0;  // TODO: set using x010
+        double temp_visited = 0.3;  // TODO: set using x010
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();   
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);                   // TODO: set using x004   
@@ -944,8 +944,8 @@ int main(int argc, char* argv[]) {
         string alg_id = ALG_ID_EST;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);           // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0);       // TODO: set using x011            
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);           // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3);       // TODO: set using x011            
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF, coeff);            
         alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, coeff_opp);              
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.003);                                    
@@ -957,10 +957,10 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
-        // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
+        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x011
+        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x011
 
         thts::run_go_games(
             expr_id,            // expr id
@@ -989,10 +989,10 @@ int main(int argc, char* argv[]) {
         string alg_id = ALG_ID_EST;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);           // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0);       // TODO: set using x011        
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.0);                  // TODO: set using x020
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.0);              // TODO: set using x020         
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);           // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3);       // TODO: set using x011        
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);                  // TODO: set using x020
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);              // TODO: set using x020         
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, coeff);                                    
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, coeff_opp); 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, coeff); 
@@ -1002,10 +1002,10 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
-        // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
+        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x011
+        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x011
 
         thts::run_go_games(
             expr_id,            // expr id
@@ -1052,8 +1052,8 @@ int main(int argc, char* argv[]) {
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);                     
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.0);                  // TODO: set using x020
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.0);              // TODO: set using x020        
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);                  // TODO: set using x020
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);              // TODO: set using x020        
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.001);              // TODO: set using x030                 
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.001);          // TODO: set using x030
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001);                   // TODO: set using x030
@@ -1063,8 +1063,8 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  
 
         if (expr_id == EXPR_ID_W041_MENTS_TEMP 
             || expr_id == EXPR_ID_W051_RENTS_TEMP
@@ -1112,8 +1112,8 @@ int main(int argc, char* argv[]) {
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
         // alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
         // alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_opp);                     
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.0);                  // TODO: set using x020
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.0);              // TODO: set using x020         
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);                  // TODO: set using x020
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);              // TODO: set using x020         
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.001);              // TODO: set using x030                 
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.001);          // TODO: set using x030
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001);                   // TODO: set using x030
@@ -1123,8 +1123,8 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); 
 
         if (recommend_most_visited_plays_black) {
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);
@@ -1183,10 +1183,10 @@ int main(int argc, char* argv[]) {
         string alg_id = ALG_ID_DENTS;
 
         shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);           // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0);       // TODO: set using x011         
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.0);                  // TODO: set using x020
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.0);              // TODO: set using x020         
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);           // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3);       // TODO: set using x011         
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);                  // TODO: set using x020
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);              // TODO: set using x020         
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.001);              // TODO: set using x030                 
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.001);          // TODO: set using x030
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001);                   // TODO: set using x030
@@ -1198,10 +1198,10 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
-        // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
+        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x011
+        // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x011
 
         thts::run_go_games(
             expr_id,            // expr id
@@ -1269,8 +1269,8 @@ int main(int argc, char* argv[]) {
         // alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0);   
         // alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);           // TODO: set using x011
         // alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0);       // TODO: set using x011        
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.0);                  // TODO: set using x020
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.0);              // TODO: set using x020         
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);                  // TODO: set using x020
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);              // TODO: set using x020         
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.001);              // TODO: set using x030                 
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.001);          // TODO: set using x030
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001);                   // TODO: set using x030
@@ -1280,17 +1280,17 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
-        // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x004
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x004
 
         if (algo1 == ALG_ID_KATA_NATIVE) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 110.0);
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0);       // TODO: set using x011  
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3);       // TODO: set using x011  
         } else {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0);   
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);           // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);           // TODO: set using x011
         }
 
         thts::run_go_games(
@@ -1320,7 +1320,7 @@ int main(int argc, char* argv[]) {
         if (emp_plays_black) {
             alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
 
-            alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.0);                  // TODO: set using x020        
+            alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);                  // TODO: set using x020        
             alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.001);              // TODO: set using x030 
             alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001);                   // TODO: set using x030
 
@@ -1330,7 +1330,7 @@ int main(int argc, char* argv[]) {
         } else {
             alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
 
-            alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.0);              // TODO: set using x020                
+            alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);              // TODO: set using x020                
             alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.001);          // TODO: set using x030 
             alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.001);               // TODO: set using x030
 
@@ -1346,76 +1346,80 @@ int main(int argc, char* argv[]) {
         double value_temp_opp = 0.0;
 
         if (alg_id == ALG_ID_EST && emp_plays_black) {
-            temp = 0.1;         // TODO: set using x011
-            temp_opp = 0.1;     // TODO: set using w011
+            temp = 0.3;         // TODO: set using x011
+            temp_opp = 0.3;     // TODO: set using w011
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);     // TODO: set using x004
-            // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); // TODO: set using w004
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); // TODO: set using w004
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using w011
         }
         if (alg_id == ALG_ID_EST && !emp_plays_black) {
             temp_opp = 0.3;     // TODO: set using x011
-            temp = 0.1;         // TODO: set using w011
+            temp = 0.3;         // TODO: set using w011
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); // TODO: set using x004
-            // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);     // TODO: set using w004
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);     // TODO: set using w004
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using w011
         }
 
         if (alg_id == ALG_ID_MENTS && emp_plays_black) {
             temp = 0.3;         // TODO: set using x042
-            temp_opp = 0.1;     // TODO: set using w042
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0); // TODO: set using x042
+            temp_opp = 1.0;     // TODO: set using w042
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0); // TODO: set using x042
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);     // TODO: set using w042
         }
         if (alg_id == ALG_ID_MENTS && !emp_plays_black) {
             temp_opp = 0.3;     // TODO: set using x042
-            temp = 0.1;         // TODO: set using w042
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x042
+            temp = 1.0;         // TODO: set using w042
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x042
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using w042
         }
 
         if (alg_id == ALG_ID_RENTS && emp_plays_black) {
             temp = 0.3;         // TODO: set using x052
-            temp_opp = 0.1;     // TODO: set using w052
+            temp_opp = 1.0;     // TODO: set using w052
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0); // TODO: set using x052
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);     // TODO: set using w052
         }
         if (alg_id == ALG_ID_RENTS && !emp_plays_black) {
             temp_opp = 0.3;     // TODO: set using x052
-            temp = 0.1;         // TODO: set using w052
+            temp = 1.0;         // TODO: set using w052
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x052
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using w052
         }
 
         if (alg_id == ALG_ID_TENTS && emp_plays_black) {
             temp = 0.3;         // TODO: set using x062
-            temp_opp = 0.1;     // TODO: set using w062
+            temp_opp = 300.0;     // TODO: set using w062
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0); // TODO: set using x062
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);     // TODO: set using w062
         }
         if (alg_id == ALG_ID_TENTS && !emp_plays_black) {
             temp_opp = 0.3;     // TODO: set using x062
-            temp = 0.1;         // TODO: set using w062
+            temp = 300.0;         // TODO: set using w062
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x062
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using w062
         }
 
-        if (alg_id == ALG_ID_EST && emp_plays_black) {
-            temp = 0.1;             // TODO: set using x011
-            value_temp = 1.0;       // TODO: set using x070
-            temp_opp = 0.1;         // TODO: set using w011
-            value_temp_opp = 1.0;   // TODO: set using x070
+        if (alg_id == ALG_ID_DENTS && emp_plays_black) {
+            temp = 0.3;             // TODO: set using x011
+            value_temp = 0.3;       // TODO: set using x070
+            temp_opp = 0.3;         // TODO: set using w011
+            value_temp_opp = 0.3;   // TODO: set using w070
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);     // TODO: set using x004
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); // TODO: set using w004
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using w011
         }
-        if (alg_id == ALG_ID_EST && !emp_plays_black) {
-            temp_opp = 0.1;         // TODO: set using x011
-            value_temp_opp = 1.0;   // TODO: set using x070
-            temp = 0.1;             // TODO: set using w011
-            value_temp = 1.0;       // TODO: set using x070
+        if (alg_id == ALG_ID_DENTS && !emp_plays_black) {
+            temp_opp = 0.3;         // TODO: set using x011
+            value_temp_opp = 0.3;   // TODO: set using x070
+            temp = 0.3;             // TODO: set using w011
+            value_temp = 0.3;       // TODO: set using w070
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); // TODO: set using x004
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);     // TODO: set using w004
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using w011
         }
 
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
@@ -1460,10 +1464,10 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
 
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.0);                  // TODO: set using x020        
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);                  // TODO: set using x020        
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.001);              // TODO: set using x030 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001);                   // TODO: set using x030
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.0);              // TODO: set using x020                
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);              // TODO: set using x020                
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.001);          // TODO: set using x030 
         alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.001);               // TODO: set using x030
         
@@ -1476,59 +1480,158 @@ int main(int argc, char* argv[]) {
 
         if (algo1 == ALG_ID_MENTS) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);     // TODO: set using x042
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x042
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x042
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);   
         }
         if (algo2 == ALG_ID_MENTS) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3); // TODO: set using x042
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x042
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x042
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); 
         }
 
         if (algo1 == ALG_ID_RENTS) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 110.0);     // TODO: set using x052
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);     // TODO: set using x052
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x052
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);   
         }
         if (algo2 == ALG_ID_RENTS) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0); // TODO: set using x052
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3); // TODO: set using x052
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x052
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); 
         }
 
         if (algo1 == ALG_ID_TENTS) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 110.0);     // TODO: set using x062
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 3.0);     // TODO: set using x062
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x062
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);   
         }
         if (algo2 == ALG_ID_TENTS) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0); // TODO: set using x062
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 3.0); // TODO: set using x062
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x062
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); 
         }
 
         if (algo1 == ALG_ID_DENTS) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);     // TODO: set using x011
-            alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, 1.0);               // TODO: set using x070                
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);     // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, 0.3);               // TODO: set using x070                
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x011
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x004
         }
         if (algo2 == ALG_ID_DENTS) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0); // TODO: set using x011
-            alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, 1.0);       // TODO: set using x070
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3); // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, 0.3);       // TODO: set using x070
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x011
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x004
         }
 
         if (algo1 == ALG_ID_EST) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);     // TODO: set using x011
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);     // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x011
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x004
         }
         if (algo2 == ALG_ID_EST) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0); // TODO: set using x011
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3); // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x011
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x004
+        }
+
+        alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
+        
+        thts::run_go_games(
+            expr_id,            // expr id
+            algo1,              // black
+            algo2,              // white
+            9,                  // board size
+            50,                 // num games
+            6.5,                // komi
+            true,
+            2.5,               // time per move
+            32,                 // num threads
+            false,              // NOT running ments hps
+            alg_params);        
+        return 0;
+    }
+
+    //
+    // y021_dp_round_robin_with_rand
+    // y031_dp_round_robin
+    // Round robins (with and without random search - with random search only tests against some)
+    //
+    if (expr_id == EXPR_ID_Y021_DP_RR_WITH_RAND || expr_id == EXPR_ID_Y031_DP_RR) {
+        string algo1(argv[2]);
+        string algo2(argv[3]);
+
+        shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.0);                  // TODO: set using w020        
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.003);              // TODO: set using w030 
+        alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.003);                   // TODO: set using w030
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.0);              // TODO: set using w020                
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.003);          // TODO: set using w030 
+        alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.003);               // TODO: set using w030
+        
+        if (algo1 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 110.0);  
+        }
+        if (algo2 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0); 
+        }
+
+        if (algo1 == ALG_ID_MENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);     // TODO: set using w042
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using w042
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);   
+        }
+        if (algo2 == ALG_ID_MENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0); // TODO: set using w042
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using w042
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); 
+        }
+
+        if (algo1 == ALG_ID_RENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);     // TODO: set using w052
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using w052
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);   
+        }
+        if (algo2 == ALG_ID_RENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0); // TODO: set using w052
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using w052
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); 
+        }
+
+        if (algo1 == ALG_ID_TENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 300.0);     // TODO: set using w062
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using w062
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);   
+        }
+        if (algo2 == ALG_ID_TENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 300.0); // TODO: set using w062
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using w062
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); 
+        }
+
+        if (algo1 == ALG_ID_DENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);     // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, 0.3);               // TODO: set using w070                
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using w004
+        }
+        if (algo2 == ALG_ID_DENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3); // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, 0.3);       // TODO: set using w070
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using w004
+        }
+
+        if (algo1 == ALG_ID_EST) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);     // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using w004
+        }
+        if (algo2 == ALG_ID_EST) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3); // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using w004
         }
 
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
@@ -1599,8 +1702,8 @@ int main(int argc, char* argv[]) {
         // alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0);   
         // alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);           // TODO: set using x011
         // alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0);       // TODO: set using x011        
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.0);                  // TODO: set using x020
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.0);              // TODO: set using x020         
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);                  // TODO: set using x020
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);              // TODO: set using x020         
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.001);              // TODO: set using x030                 
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.001);          // TODO: set using x030
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001);                   // TODO: set using x030
@@ -1610,17 +1713,17 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
         alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
-        // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
-        // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x011
-        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x004
+        alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x004
 
         if (algo1 == ALG_ID_KATA_NATIVE) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 110.0);
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0);       // TODO: set using x011  
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3);       // TODO: set using x011  
         } else {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0);   
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);           // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);           // TODO: set using x011
         }
 
         thts::run_go_games(
@@ -1650,7 +1753,7 @@ int main(int argc, char* argv[]) {
         if (emp_plays_black) {
             alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
 
-            alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.0);                  // TODO: set using x020        
+            alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);                  // TODO: set using x020        
             alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.001);              // TODO: set using x030 
             alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001);                   // TODO: set using x030
 
@@ -1660,7 +1763,7 @@ int main(int argc, char* argv[]) {
         } else {
             alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
 
-            alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.0);              // TODO: set using x020                
+            alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);              // TODO: set using x020                
             alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.001);          // TODO: set using x030 
             alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.001);               // TODO: set using x030
 
@@ -1676,76 +1779,80 @@ int main(int argc, char* argv[]) {
         double value_temp_opp = 0.0;
 
         if (alg_id == ALG_ID_EST && emp_plays_black) {
-            temp = 0.1;         // TODO: set using x011
-            temp_opp = 0.1;     // TODO: set using w011
+            temp = 0.3;         // TODO: set using x011
+            temp_opp = 0.3;     // TODO: set using w011
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);     // TODO: set using x004
-            // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); // TODO: set using w004
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); // TODO: set using w004
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using w011
         }
         if (alg_id == ALG_ID_EST && !emp_plays_black) {
             temp_opp = 0.3;     // TODO: set using x011
-            temp = 0.1;         // TODO: set using w011
+            temp = 0.3;         // TODO: set using w011
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); // TODO: set using x004
-            // alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);     // TODO: set using w004
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);     // TODO: set using w004
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using w011
         }
 
         if (alg_id == ALG_ID_MENTS && emp_plays_black) {
             temp = 0.3;         // TODO: set using x042
-            temp_opp = 0.1;     // TODO: set using w042
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0); // TODO: set using x042
+            temp_opp = 1.0;     // TODO: set using w042
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0); // TODO: set using x042
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);     // TODO: set using w042
         }
         if (alg_id == ALG_ID_MENTS && !emp_plays_black) {
             temp_opp = 0.3;     // TODO: set using x042
-            temp = 0.1;         // TODO: set using w042
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x042
+            temp = 1.0;         // TODO: set using w042
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x042
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using w042
         }
 
         if (alg_id == ALG_ID_RENTS && emp_plays_black) {
             temp = 0.3;         // TODO: set using x052
-            temp_opp = 0.1;     // TODO: set using w052
+            temp_opp = 1.0;     // TODO: set using w052
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0); // TODO: set using x052
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);     // TODO: set using w052
         }
         if (alg_id == ALG_ID_RENTS && !emp_plays_black) {
             temp_opp = 0.3;     // TODO: set using x052
-            temp = 0.1;         // TODO: set using w052
+            temp = 1.0;         // TODO: set using w052
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x052
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using w052
         }
 
         if (alg_id == ALG_ID_TENTS && emp_plays_black) {
-            temp = 0.3;         // TODO: set using x062
-            temp_opp = 0.1;     // TODO: set using w062
+            temp = 3.0;         // TODO: set using x062
+            temp_opp = 300.0;     // TODO: set using w062
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0); // TODO: set using x062
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);     // TODO: set using w062
         }
         if (alg_id == ALG_ID_TENTS && !emp_plays_black) {
-            temp_opp = 0.3;     // TODO: set using x062
-            temp = 0.1;         // TODO: set using w062
+            temp_opp = 3.0;     // TODO: set using x062
+            temp = 300.0;         // TODO: set using w062
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x062
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using w062
         }
 
-        if (alg_id == ALG_ID_EST && emp_plays_black) {
-            temp = 0.1;             // TODO: set using x011
-            value_temp = 1.0;       // TODO: set using x070
-            temp_opp = 0.1;         // TODO: set using w011
-            value_temp_opp = 1.0;   // TODO: set using x070
+        if (alg_id == ALG_ID_DENTS && emp_plays_black) {
+            temp = 0.3;             // TODO: set using x011
+            value_temp = 0.3;       // TODO: set using x070
+            temp_opp = 0.3;         // TODO: set using w011
+            value_temp_opp = 0.3;   // TODO: set using w070
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);     // TODO: set using x004
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); // TODO: set using w004
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using w011
         }
-        if (alg_id == ALG_ID_EST && !emp_plays_black) {
-            temp_opp = 0.1;         // TODO: set using x011
-            value_temp_opp = 1.0;   // TODO: set using x070
-            temp = 0.1;             // TODO: set using w011
-            value_temp = 1.0;       // TODO: set using x070
+        if (alg_id == ALG_ID_DENTS && !emp_plays_black) {
+            temp_opp = 0.3;         // TODO: set using x011
+            value_temp_opp = 0.3;   // TODO: set using x070
+            temp = 0.3;             // TODO: set using w011
+            value_temp = 0.3;       // TODO: set using w070
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); // TODO: set using x004
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);     // TODO: set using w004
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0); // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);     // TODO: set using w011
         }
 
         alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp);
@@ -1768,7 +1875,7 @@ int main(int argc, char* argv[]) {
             25,                 // num games
             7.5,                // komi
             true,
-            10.0,               // time per move
+            5.0,               // time per move
             32,                 // num threads
             true,     // running "hps" -> i.e. two runs would have same folder names => folder names need to use params
             alg_params,
@@ -1790,10 +1897,10 @@ int main(int argc, char* argv[]) {
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN, 1.0);
         alg_params->insert_or_assign(PARAM_USE_AVG_RETURN_OPP, 1.0);
 
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.0);                  // TODO: set using x020        
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 1.0);                  // TODO: set using x020        
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.001);              // TODO: set using x030 
         alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.001);                   // TODO: set using x030
-        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.0);              // TODO: set using x020                
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 1.0);              // TODO: set using x020                
         alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.001);          // TODO: set using x030 
         alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.001);               // TODO: set using x030
         
@@ -1806,58 +1913,58 @@ int main(int argc, char* argv[]) {
 
         if (algo1 == ALG_ID_MENTS) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);     // TODO: set using x042
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x042
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x042
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);   
         }
         if (algo2 == ALG_ID_MENTS) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3); // TODO: set using x042
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x042
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x042
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); 
         }
 
         if (algo1 == ALG_ID_RENTS) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 110.0);     // TODO: set using x052
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);     // TODO: set using x052
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x052
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);   
         }
         if (algo2 == ALG_ID_RENTS) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0); // TODO: set using x052
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3); // TODO: set using x052
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x052
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); 
         }
 
         if (algo1 == ALG_ID_TENTS) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 110.0);     // TODO: set using x062
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 3.0);     // TODO: set using x062
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x062
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);   
         }
         if (algo2 == ALG_ID_TENTS) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0); // TODO: set using x062
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 3.0); // TODO: set using x062
             alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x062
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); 
         }
 
         if (algo1 == ALG_ID_DENTS) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);     // TODO: set using x011
-            alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, 1.0);               // TODO: set using x070                
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);     // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, 0.3);               // TODO: set using x070                
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x011
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x004
         }
         if (algo2 == ALG_ID_DENTS) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0); // TODO: set using x011
-            alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, 1.0);       // TODO: set using x070
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3); // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, 0.3);       // TODO: set using x070
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x011
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using x004
         }
 
         if (algo1 == ALG_ID_EST) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);     // TODO: set using x011
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);     // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using x011
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x004
         }
         if (algo2 == ALG_ID_EST) {
-            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0); // TODO: set using x011
-            // alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3); // TODO: set using x011
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using x011
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using x004
         }
 
@@ -1872,7 +1979,106 @@ int main(int argc, char* argv[]) {
             50,                 // num games
             7.5,                // komi
             true,
-            10.0,               // time per move
+            5.0,               // time per move
+            32,                 // num threads
+            false,              // NOT running ments hps
+            alg_params);        
+        return 0;
+    }
+
+    //
+    // z021_dp_round_robin_with_rand
+    // z031_dp_round_robin
+    // Round robins (with and without random search - with random search only tests against some)
+    //
+    if (expr_id == EXPR_ID_Z021_DP_RR_WITH_RAND || expr_id == EXPR_ID_Z031_DP_RR) {
+        string algo1(argv[2]);
+        string algo2(argv[3]);
+
+        shared_ptr<thts::GoAlgParams> alg_params = make_shared<thts::GoAlgParams>();
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF, 2.0);                  // TODO: set using w020        
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS, 0.003);              // TODO: set using w030 
+        alg_params->insert_or_assign(PARAM_MENTS_EPS, 0.003);                   // TODO: set using w030
+        alg_params->insert_or_assign(PARAM_PRIOR_COEFF_OPP, 2.0);              // TODO: set using w020                
+        alg_params->insert_or_assign(PARAM_MENTS_ROOT_EPS_OPP, 0.003);          // TODO: set using w030 
+        alg_params->insert_or_assign(PARAM_MENTS_EPS_OPP, 0.003);               // TODO: set using w030
+        
+        if (algo1 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 110.0);  
+        }
+        if (algo2 == ALG_ID_KATA) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 110.0); 
+        }
+
+        if (algo1 == ALG_ID_MENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);     // TODO: set using w042
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using w042
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);   
+        }
+        if (algo2 == ALG_ID_MENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0); // TODO: set using w042
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using w042
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); 
+        }
+
+        if (algo1 == ALG_ID_RENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 1.0);     // TODO: set using w052
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using w052
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);   
+        }
+        if (algo2 == ALG_ID_RENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 1.0); // TODO: set using w052
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using w052
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); 
+        }
+
+        if (algo1 == ALG_ID_TENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 300.0);     // TODO: set using w062
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using w062
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);   
+        }
+        if (algo2 == ALG_ID_TENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 300.0); // TODO: set using w062
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using w062
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0); 
+        }
+
+        if (algo1 == ALG_ID_DENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);     // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP, 0.3);               // TODO: set using w070                
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using w004
+        }
+        if (algo2 == ALG_ID_DENTS) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3); // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_INIT_DECAY_TEMP_OPP, 0.3);       // TODO: set using w070
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  // TODO: set using w004
+        }
+
+        if (algo1 == ALG_ID_EST) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, 0.3);     // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED, 1.0);    // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using w004
+        }
+        if (algo2 == ALG_ID_EST) {
+            alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, 0.3); // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_RECOMMEND_MOST_VISITED_OPP, 1.0);    // TODO: set using w011
+            alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);      // TODO: set using w004
+        }
+
+        alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS, 1.0);
+        alg_params->insert_or_assign(PARAM_USE_ALIAS_METHODS_OPP, 1.0);
+        
+        thts::run_go_games(
+            expr_id,            // expr id
+            algo1,              // black
+            algo2,              // white
+            19,                  // board size
+            50,                 // num games
+            7.5,                // komi
+            true,
+            5.0,               // time per move
             32,                 // num threads
             false,              // NOT running ments hps
             alg_params);        
