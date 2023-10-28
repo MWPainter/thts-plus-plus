@@ -34,7 +34,7 @@ def make_plot_df(
     y_axis_range=None,
     alpha=1.0,
     use_legend=True,
-    font_scale=1.15):
+    font_scale=1.2):
     """General helper for plotting in our style."""
 
     plt.figure()
@@ -73,6 +73,7 @@ def make_plot_df(
         dashes=dashes, 
         markers=markers,
         markevery=markevery,
+        markersize=14,
         mec=None,
         alpha=alpha)
 
@@ -97,7 +98,7 @@ def make_plot_df(
         plt.close()
 
 
-def read_mc_eval_into_arrays(filename, alg_ids, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs, dents_temps, alg_id=None):
+def read_mc_eval_into_arrays(filename, alg_ids, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs, dents_temps, alg_id=None, num_trials_scale=1):
     with open(filename) as f:
         param_ids = f.readline().strip().split(",")
         param_vals = f.readline().strip().split(",")
@@ -135,12 +136,12 @@ def read_mc_eval_into_arrays(filename, alg_ids, bias_or_temps, replicates, value
             bias_or_temps.append(float(bias_or_temp))
             replicates.append(int(csv_vals[replicate_idx]))
             values.append(float(csv_vals[value_idx]))
-            num_trialss.append(int(csv_vals[num_trials_idx]))
+            num_trialss.append(int(csv_vals[num_trials_idx])/num_trials_scale)
             epsilons.append(float(epsilon))
             hmcts_uct_threshs.append(uct_thresh)
             dents_temps.append(float(dents_temp))
 
-def read_eval_files(filenames):
+def read_eval_files(filenames,num_trials_scale):
     alg_ids, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs, dents_temps = [], [], [], [], [], [], [], []
 
     for filename in filenames:
@@ -160,7 +161,8 @@ def read_eval_files(filenames):
             epsilons=epsilons,
             hmcts_uct_threshs=hmcts_uct_threshs,
             dents_temps=dents_temps,
-            alg_id=alg_id)
+            alg_id=alg_id,
+            num_trials_scale=num_trials_scale)
 
     return alg_ids, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs, dents_temps
 
@@ -182,7 +184,8 @@ def make_plot(
     markevery=1,
     use_legend=True,
     hue_per_algo=True,
-    alpha=1.0):
+    alpha=1.0,
+    num_trials_scale=1):
     """Read in data, preprocess, and then call make plot"""
 
 
@@ -199,7 +202,10 @@ def make_plot(
     if alg_ids_to_add_param_to is None:
         alg_ids_to_add_param_to = []
 
-    alg_ids, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs, dents_temps = read_eval_files(filenames)   
+    if num_trials_scale > 1:
+        xaxis_lab += " (x{scale})".format(scale=num_trials_scale)
+
+    alg_ids, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs, dents_temps = read_eval_files(filenames,num_trials_scale)   
 
     pretty_alg_ids = []
     for i, alg_id in enumerate(alg_ids):
@@ -233,7 +239,7 @@ def make_plot(
         alg_set = set(pretty_alg_ids)
         for alg_id in alg_set:
             dashes[alg_id] = ""
-            if "0.01" in alg_id:
+            if "1.0" in alg_id:
                 dashes[alg_id] = (4,2)
             if "UCT" in alg_id:
                 palette[alg_id] = "tab:green"
@@ -258,9 +264,9 @@ def make_plot(
         for alg_id in alg_set:
             markers[alg_id] = ""
             if "UCT" in alg_id:
-                markers[alg_id] = 4
-            if "MENTS" in alg_id:
                 markers[alg_id] = 5
+            if "MENTS" in alg_id:
+                markers[alg_id] = 7
             if "DENTS" in alg_id:
                 markers[alg_id] = 6
 
@@ -390,8 +396,8 @@ if __name__ == "__main__":
             num_trials_truncate=3000,
             alg_ids_to_add_param_to=["ments"],
             add_markers=True,
-            markevery=10,
-            alpha=0.9)
+            markevery=25,
+            alpha=0.8)
         
     if "000_fig1b" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
         filenames = [
@@ -408,8 +414,8 @@ if __name__ == "__main__":
             num_trials_truncate=3000,
             alg_ids_to_add_param_to=["ments"],
             add_markers=True,
-            markevery=10,
-            alpha=0.9)
+            markevery=25,
+            alpha=0.8)
         
     if "000_fig_fl" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
         filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/uct/eval_*.csv")
@@ -444,7 +450,10 @@ if __name__ == "__main__":
             hue_key="pretty_alg_id",
             num_trials_truncate=1000000,
             y_scale_transform_forward=y_scale_piecwise_linear_forward,
-            y_scale_transform_inverse=y_scale_piecwise_linear_inverse)
+            y_scale_transform_inverse=y_scale_piecwise_linear_inverse,
+            alpha=0.8,
+            use_legend=True,
+            num_trials_scale=1000)
         
     if "000_fig_sail" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
         filenames = glob.glob("results/sailing_env/6_test/092_s6_test/uct/eval_*.csv")
@@ -460,7 +469,9 @@ if __name__ == "__main__":
             hue_key="pretty_alg_id",
             num_trials_truncate=1000000,
             y_scale_transform_forward=get_piecwise_linear_forward_transform(-120.0,-40.0,-90.0,0),
-            y_scale_transform_inverse=get_piecwise_linear_inverse_transform(-120.0,-40.0,-90.0,0))
+            y_scale_transform_inverse=get_piecwise_linear_inverse_transform(-120.0,-40.0,-90.0,0),
+            alpha=0.8,
+            num_trials_scale=1000)
         
 
 

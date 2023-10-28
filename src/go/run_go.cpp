@@ -509,7 +509,7 @@ namespace thts {
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN)) {
                         manager_args.use_max_heap = false;
                         manager_args.use_dp_value = false;
-                        manager_args.temp_decay_fn = decayed_temp_inv_sqrt;//decayed_temp_inv_log;
+                        manager_args.temp_decay_fn = decayed_temp_inv_log;
                     }
                     if (contains_key(alg_params, PARAM_USE_CONST_SEARCH_TEMP)) {
                         manager_args.temp_decay_fn = decayed_temp_no_decay;
@@ -559,7 +559,7 @@ namespace thts {
                     if (contains_key(alg_params, PARAM_USE_AVG_RETURN_OPP)) {
                         manager_args.use_max_heap = false;
                         manager_args.use_dp_value = false;
-                        manager_args.temp_decay_fn = decayed_temp_inv_sqrt;//decayed_temp_inv_log;
+                        manager_args.temp_decay_fn = decayed_temp_inv_log;
                     }
                     if (contains_key(alg_params, PARAM_USE_CONST_SEARCH_TEMP_OPP)) {
                         manager_args.temp_decay_fn = decayed_temp_no_decay;
