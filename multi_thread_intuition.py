@@ -3,7 +3,12 @@
 """
 
 
+import matplotlib as mpl
+from matplotlib import pyplot as plt
+import seaborn as sns
+
 import numpy as np
+import pandas as pd
 
 
 
@@ -66,7 +71,69 @@ def uct_sim_non_stationary():
 
 
 
+def compute_expected_num_pulls_bts(rewards=None, num_trials=10000):
+    rewards = np.array([0.0, 1.0])
+    probs = np.array([np.exp(rewards[j]) / (np.exp(0) + np.exp(1)) for j in range(2)])
+    counts = np.zeros((num_trials+1, len(rewards)))
+    for i in range(1,num_trials+1):
+        counts[i] = counts[i-1] + probs
+    return counts
+
+def compute_expected_num_pulls_uct(rewards=None, bias=10.0, num_trials=10000):
+    rewards = np.array([0.0, 1.0])
+    counts = np.zeros((num_trials+1, len(rewards)))
+    counts[1] = np.array([1.0, 0.0])
+    counts[2] = np.array([1.0, 1.0])
+    for i in range(3,num_trials+1):
+        counts[i] = counts[i-1]
+        total_pulls = counts[i,0] + counts[i,1]
+        ucb = [rewards[j] + bias * np.sqrt(np.log(total_pulls+1) / (counts[i,j]+1)) for j in range(2)]
+        if ucb[0] >= ucb[1]:
+            counts[i,0] += 1
+        else:
+            counts[i,1] += 1
+    return counts
+
+def plot_expected_num_pulls(bts_counts, uct_counts, num_trials=10000):
+    counts = []
+    trials = []
+    algo = []
+    for i in range(num_trials+1):
+        counts.append(bts_counts[i])
+        trials.append(i)
+        algo.append("BTS")
+    for i in range(num_trials+1):
+        counts.append(uct_counts[i])
+        trials.append(i)
+        algo.append("UCT")
+    df = pd.DataFrame({
+        "arm_pulls": counts,
+        "trials": trials,
+        "algo": algo,
+    })
+    sns.lineplot(
+        data=df,
+        x="trials",
+        y="arm_pulls",
+        hue="algo",
+    )
+    # plt.rcParams['text.usetex'] = True
+    plt.xlabel("Trials")
+    # plt.ylabel(r"\mathbb{E}\[N(s,a_0)\]")
+    # plt.ylabel("E[N(s,a_0)]")
+    plt.legend(title="Algorithm")
+    plt.show()
+
+def main_plot():
+    bts_countss = compute_expected_num_pulls_bts()
+    uct_countss = compute_expected_num_pulls_uct()
+    plot_expected_num_pulls(bts_counts=bts_countss[:,0], uct_counts=uct_countss[:,0])
+
+
+
 if __name__ == "__main__":
-    uct_sim()
-    boltz_sim()
-    uct_sim_non_stationary()
+    # uct_sim()
+    # boltz_sim()
+    # uct_sim_non_stationary()
+
+    main_plot()
