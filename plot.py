@@ -486,7 +486,7 @@ if __name__ == "__main__":
         filenames = [
             "results/dchain_env/10-1.0/021_len_10_main_paper/ments/eval_epsilon=0.1,temp=1.csv",
             "results/dchain_env/10-1.0/021_len_10_main_paper/db-ments/eval_epsilon=0.1,temp=1.csv",
-            "results/dchain_env/10-1.0/021_len_10_main_paper/hmcts/eval_uct_budget_threshold=30,hmcts_total_budget=10000,bias=100.csv",
+            # "results/dchain_env/10-1.0/021_len_10_main_paper/hmcts/eval_uct_budget_threshold=30,hmcts_total_budget=10000,bias=100.csv",
         ]
         make_plot(
             filenames=filenames,
@@ -494,20 +494,20 @@ if __name__ == "__main__":
             hue_key="pretty_alg_id",
             title="",
             num_trials_truncate=3000,
-            add_markers=True,
-            markevery=10)
+            add_markers=False,
+            markevery=25)
         
     if "000_rebuttal_two" in sys.argv or "all" in sys.argv:
         filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/ments/eval_*.csv")
         filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/db-ments/eval_*.csv")
-        filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/hmcts/eval_*.csv")
-        filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/uct/eval_*.csv")
+        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/hmcts/eval_*.csv")
+        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/uct/eval_*.csv")
         make_plot(
             filenames=filenames,
             plot_filename="plots/000_rebuttal_fl.png",
             hue_key="pretty_alg_id",
             num_trials_truncate=1000000,
-            add_markers=True,
+            add_markers=False,
             markevery=100)
 
         
