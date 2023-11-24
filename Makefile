@@ -31,7 +31,7 @@ GTEST = external/googletest/build/lib/libgtest_main.a
 INCLUDES = -Iinclude/ -Isrc/ -Iexternal/ -I.
 TEST_INCLUDES = -Iexternal/googletest/build/include
 
-CPPFLAGS = $(INCLUDES) -Wall -std=c++17
+CPPFLAGS = $(INCLUDES) -Wall -std=c++20
 TEST_CPPFLAGS = 
 CPPFLAGS_DEBUG = -g
 
