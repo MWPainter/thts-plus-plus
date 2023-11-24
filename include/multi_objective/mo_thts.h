@@ -24,7 +24,7 @@ namespace thts {
      * 
      * See ThtsPool for a full description of this class
      * 
-     * This multi-objective version just replaces the 'double' reward type with rewards of type 'Eigen::VectorXd' and 
+     * This multi-objective version just replaces the 'double' reward type with rewards of type 'Eigen::ArrayXd' and 
      * makes appropriate type changes to MultiObjective (Mo____) classes where necessary.
      */
     class MoThtsPool : public ThtsPool {
@@ -65,7 +65,7 @@ namespace thts {
              */
             void run_selection_phase(
                 std::vector<std::pair<std::shared_ptr<ThtsDNode>,std::shared_ptr<ThtsCNode>>>& nodes_to_backup, 
-                std::vector<Eigen::VectorXd>& rewards, 
+                std::vector<Eigen::ArrayXd>& rewards, 
                 ThtsEnvContext& context);
 
             /**
@@ -78,7 +78,7 @@ namespace thts {
              */
             void run_backup_phase(
                 std::vector<std::pair<std::shared_ptr<ThtsDNode>,std::shared_ptr<ThtsCNode>>>& nodes_to_backup, 
-                std::vector<Eigen::VectorXd>& rewards, 
+                std::vector<Eigen::ArrayXd>& rewards, 
                 ThtsEnvContext& context);
 
             /**

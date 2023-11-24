@@ -39,7 +39,7 @@ namespace thts {
         friend MoThtsPool;
 
         protected:
-            Eigen::VectorXd mo_heuristic_value;
+            Eigen::ArrayXd mo_heuristic_value;
 
         public: 
             /**
@@ -77,10 +77,10 @@ namespace thts {
              *          Sum of rewards in both of the 'trial_rewards_after_node' and 'trial_rewards_before_node' lists
              */
             virtual void backup_itfc(
-                const std::vector<Eigen::VectorXd>& trial_rewards_before_node, 
-                const std::vector<Eigen::VectorXd>& trial_rewards_after_node, 
-                const Eigen::VectorXd trial_cumulative_return_after_node, 
-                const Eigen::VectorXd trial_cumulative_return,
+                const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 
+                const std::vector<Eigen::ArrayXd>& trial_rewards_after_node, 
+                const Eigen::ArrayXd trial_cumulative_return_after_node, 
+                const Eigen::ArrayXd trial_cumulative_return,
                 ThtsEnvContext& ctx) = 0;
     };
 }

@@ -24,12 +24,12 @@ namespace thts {
     /**
      * See ThtsPool::run_selection_phase
      * 
-     * This is a copy and pase, replacing the reward type from double to Eigen::VectorXd, and calling 
+     * This is a copy and pase, replacing the reward type from double to Eigen::ArrayXd, and calling 
      * 'get_mo_reward_itfc' rather than 'get_reward_itfc', and using mo_heuristic_value instead of heuristic_value
      */
     void MoThtsPool::run_selection_phase(
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>>& nodes_to_backup, 
-        vector<Eigen::VectorXd>& rewards, 
+        vector<Eigen::ArrayXd>& rewards, 
         ThtsEnvContext& context)
     {
         bool new_decision_node_created_this_trial = false;
@@ -59,7 +59,7 @@ namespace thts {
             MoThtsDNode& mo_cur_node = (MoThtsDNode&) *cur_node;
             shared_ptr<const State> state = mo_cur_node.state;
             MoThtsEnv& mo_thts_env = (MoThtsEnv&) *thts_manager->thts_env;
-            Eigen::VectorXd reward = mo_thts_env.get_mo_reward_itfc(state, action, observation);
+            Eigen::ArrayXd reward = mo_thts_env.get_mo_reward_itfc(state, action, observation);
             nodes_to_backup.push_back(make_pair(cur_node, chance_node));
             rewards.push_back(reward);
 
@@ -78,32 +78,32 @@ namespace thts {
     /**
      * See ThtsPool::run_backup_phase
      * 
-     * This is a copy and pase, replacing the reward type from double to Eigen::VectorXd
+     * This is a copy and pase, replacing the reward type from double to Eigen::ArrayXd
      * 
      * Added insta return if nothing to backup, and using rewards[0] to get the dimension of the rewards
      */
     void MoThtsPool::run_backup_phase(
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>>& nodes_to_backup, 
-        vector<Eigen::VectorXd>& rewards, 
+        vector<Eigen::ArrayXd>& rewards, 
         ThtsEnvContext& context)
     {
         if (nodes_to_backup.size() == 0) return;
 
         int dim = rewards[0].rows();
-        Eigen::VectorXd total_return = Eigen::VectorXd::Constant(dim, 0.0);
-        for (Eigen::VectorXd& reward : rewards) total_return += reward;
+        Eigen::ArrayXd total_return = Eigen::ArrayXd::Constant(dim, 0.0);
+        for (Eigen::ArrayXd& reward : rewards) total_return += reward;
 
-        vector<Eigen::VectorXd> rewards_after;
-        vector<Eigen::VectorXd> rewards_before(rewards);
+        vector<Eigen::ArrayXd> rewards_after;
+        vector<Eigen::ArrayXd> rewards_before(rewards);
 
-        Eigen::VectorXd heuristic_val_at_end = rewards_before.back();
+        Eigen::ArrayXd heuristic_val_at_end = rewards_before.back();
         rewards_before.pop_back();
         rewards_after.push_back(heuristic_val_at_end);
 
-        Eigen::VectorXd total_return_after = heuristic_val_at_end;
+        Eigen::ArrayXd total_return_after = heuristic_val_at_end;
 
         while (nodes_to_backup.size() > 0) {
-            Eigen::VectorXd reward = rewards_before.back();
+            Eigen::ArrayXd reward = rewards_before.back();
             rewards_before.pop_back();
             rewards_after.push_back(reward);
             total_return_after += reward;
@@ -126,11 +126,11 @@ namespace thts {
     /**
      * See ThtsPool::run_thts_trial
      * 
-     * This is a copy and pase, replacing the reward type from double to Eigen::VectorXd
+     * This is a copy and pase, replacing the reward type from double to Eigen::ArrayXd
      */
     void MoThtsPool::run_thts_trial(int trials_remaining) {
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>> nodes_to_backup;
-        vector<Eigen::VectorXd> rewards; 
+        vector<Eigen::ArrayXd> rewards; 
         
         MoThtsDNode& mo_root_node = (MoThtsDNode&) *root_node;
         shared_ptr<ThtsEnvContext> context = thts_manager->thts_env->sample_context_itfc(mo_root_node.state);

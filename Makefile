@@ -25,6 +25,7 @@ OBJECTS = $(patsubst src/%.cpp, bin/src/%.o, $(SOURCES))
 TEST_SOURCES = $(wildcard test/*.cpp)
 TEST_SOURCES += $(wildcard test/algorithms/*.cpp)
 TEST_SOURCES += $(wildcard test/distributions/*.cpp)
+TEST_SOURCES += $(wildcard test/multi_objective/*.cpp)
 TEST_OBJECTS = $(patsubst test/%.cpp, bin/test/%.o, $(TEST_SOURCES))
 
 GTEST = external/googletest/build/lib/libgtest_main.a

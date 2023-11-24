@@ -1,275 +1,271 @@
 #pragma once
 
-#include <cassert>
 #include <unordered_set>
-#include <vector>
+#include <utility>
 
 #include <Eigen/Dense>
 
-
-/**
- * A Point in a Pareto Front / Convex Hull
- * 
- * In practise, we want points to be 'tagged'. For example, it will be useful to tag points with the actions that were 
- * used to obtain that value.
- * 
- * Member variables:
- *      value: A vector value (i.e. the point)
- *      tag: A tag associated with this point
-*/
-template <typenmae T>
-struct TaggedPoint {
-    Eigen::VectorXd value;
-    T tag;
-    
+namespace thts {
     /**
-     * Constructor
+     * A Point in a Pareto Front / Convex Hull
+     * 
+     * In practise, we want points to be 'tagged'. For example, it will be useful to tag points with the actions that were 
+     * used to obtain that value.
+     * 
+     * Note that we only really want to use this in ParetoFront's and ConvexHull's. 
+     * TODO: consider moving the struct definition into the ParetoFront declaration
+     * 
+     * Member variables:
+     *      point: A vector value (i.e. the point)
+     *      tag: A tag associated with this point
     */
-    TaggedPoint(Eigen::VectorXd& value, T& tag) :
-        value(value), tag(tag) 
-    {   
-    };
-
-    /**
-     * Copy constructor
-    */
-    TaggedPoint(TaggedPoint& other) :
-        value(other.value), tag(other.tag)
-    {
-    };
-
-    /**
-     * If this point dominates another point
-     * If any index has a lower value than 'other' we don't dominate it
-     * If all indices are greater than or equal, we dominate the other point if we are not equal
-    */
-    bool dominates(TaggedPoint& other) {
-        assert((value.size() == other.value.size()))
-        for (int i=0; i<value.size(); i++) {
-            if (value(i) < other.value(i)) {
-                return false;
-            }
-        }
-        return !equals(other);
-    }
-
-    /**
-     * Equality
-    */
-    friend bool equals(TaggedPoint& other) {
-        assert((value.size() == other.value.size()));
-        for (int i=0; i<value.size(); i++) {
-            if (value(i) != other.value(i)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Equality operator
-    */
-    friend bool operator==(TaggedPoint& a, TaggedPoint& b) {
-        return a.equals(b);
-        assert((a.value.size() == b.value.size()));
-        for (int i=0; i<a.value.size(); i++) {
-            if (a.value(i) != b.value(i)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Lexographical less than ordering of points.
-     * If get to end of loop, then a.value == b.value, so return false.
-    */
-    friend bool operator<(TaggedPoint& a, TaggedPoint& b) {
-        assert((a.value.size() == b.value.size()));
-        for (int i=0; i<a.value.size(); i++) {
-            if (a.value(i) < b.value(i)) {
-                return true;
-            } else if (a.value(i) > b.value(i)) {
-                return false;
-            }
-        }
-        return false;
-    };
-};
-
-/**
- * Logic surrounding an implementation of a Pareto Front
- * 
- * Member variables:
- *      points: 
- *          The set of TaggedPoints in the Pareto Front
- *      ordered_points: 
- *          A vector of TaggedPoints that are lexographically ordered. If nullptr then it needs recomputing.
- *          
-*/
-template <typename T>
-class ParetoFront {
-    protected:
-        std::unordered_set<TaggedPoint> points;
-
-    public:
+    template <typename T>
+    struct TaggedPoint {
+        Eigen::ArrayXd point;
+        T tag;
+        
         /**
-         * Constructor, empty
+         * Constructor
         */
-        ParetoFront() :
-            points()
-        {
-        };
-
-        /**
-         * Constructor, adding points immediately
-        */
-        ParetoFront(std::vector<std::pair<Eigen::VectorXd,T>>& init_points) :
-            points()
-        {  
-            std::unordered_set<TaggedPoint> init_points_set;
-            for (std::pair<Eigen::VectorXd,T> pr : init_points) {
-                init_points_set.emplace(pr.first, pr.second);
-            }
-            add_points(init_points_set); 
-        };
-
-        /**
-         * Constructor, adding points immediately, with one tag
-        */
-        ParetoFront(std::vector<Eigen::VectorXd>& init_points, T tag) :
-            points()
-        {  
-            std::unordered_set<TaggedPoint> init_points_set;
-            for (Eigen::VectorXd value : init_points) {
-                init_points_set.emplace(value, tag);
-            }
-            add_points(init_points_set); 
-        };
+        TaggedPoint(const Eigen::ArrayXd& point, const T& tag);
 
         /**
          * Copy constructor
         */
-        ParetoFront(ParetoFront& pf) :
-            points(pf.points) 
-        {
-        };
-
-    protected:
-        /**
-         * Private constrctor from a set of points
-         * Assumes points are appropriately pruned, hence why it's not a public method
-        */
-        ParetoFront(std::unordered_set<TaggedPoint>& init_points) :
-            points(init_points)
-        {
-        };
+        TaggedPoint(const TaggedPoint<T>& other);
 
         /**
-         * Adds points to 'points'
-         * 
-         * 1 convert input to set
-         * 2 remove any points in 'points_to_add' that are dominated by points also in 'points_to_add'
-         * 3 if 'points' empty, set it to the pruned points and return
-         * 4 remove any points in 'points_to_add' that are dominated by points in 'points'
-         * 5 add new points to 'points'
+         * Move constructor
         */
-        void add_points(std::unordered_set<TaggedPoint>& points_to_add) 
-        {
-            points_to_add = prune(points_to_add, points_to_add);
-            if (points.size() == 0) {
-                points = points_to_add;
-                return;
-            }
-            points_to_add = prune(points, points_to_add);
-            for (TaggedPoint& point : points_to_add) {
-                points.insert(point);
-            }
-        };
+        TaggedPoint(const TaggedPoint<T>&& other);
 
         /**
-         * Returns the set of points from 'points' that are not dominated by any points in 'ref_points'
+         * Copy asignment operator
         */
-        std::unordered_set<TaggedPoint> prune(
-            std::unordered_set<TaggedPoint>& ref_points, std::unordered_set<TaggedPoint>& points) 
-        {
-            std::unordered_set<TaggedPoint> new_set;
-            new_set.reserve(points.size());
-
-            for (TaggedPoint& p_point : points) {
-                bool is_dominated = false;
-                for (TaggedPoint& rp_point : ref_points) {
-                    if (rp_point.dominates(p_point)) {
-                        is_dominated = true;
-                        break;
-                    }
-                }
-                if (!is_dominated) {
-                    new_set.insert(p_point);
-                }
-            }
-            
-            return new_set;
-        };
-
-    public:
-        /**
-         * Scale a pareto front
-        */
-        ParetoFront scale(double scale) 
-        {
-            ParetoFront pf(*this);
-            for (TaggedPoint& point : points) {
-                point.value *= scale;
-            }
-            return pf;
-        };
+        TaggedPoint<T>& operator=(const TaggedPoint<T>& other);
 
         /**
-         * Union of two pareto fronts ('union' is a keyword in c++, so called this combine)
-         * 
-         * If have pfs U and V, then prune({u | u in U or u in V})
+         * Move asignment operator
         */
-        ParetoFront combine(ParetoFront& other) {
-            if (points.size() == 0) {
-                return ParetoFront(other);
-            } else if (other.points.size() == 0) {
-                return ParetoFront(*this);
-            }
-            
-            // as already pareto fronts, only need to check if points dominated by the other pareto front
-            std::unordered_set<TaggedPoint> pruned_points_one = prune(points, other.points);
-            std::unordered_set<TaggedPoint> pruned_points_two = prune(other.points, points);
-            
-            pruned_points_one.reserve(pruned_points_one.size() + pruned_points_two.size());
-            for (TaggedPoint& point : pruned_points_two) {
-                pruned_points_one.insert(point);
-            }
-        };
+        TaggedPoint<T>& operator=(const TaggedPoint<T>&& other);
 
         /**
-         * Add two pareto fronts 
-         * 
-         * TODO: copy description
-         * 
-         * If one of the pareto fronts 
+         * Returns if this TaggedPoint weakly Pareto dominates another TaggedPoint 'other'
+         * Technically vector u (strongly) pareto dominates vector v 
+         *      iff for all i. u[i]>=v[i] and there exists j. u[j]>v[j]
+         * Say u weakly Pareto dominates v 
+         *      iff for all i. u[i] >= v[i]
+         * As we won't really care much for keeping two vectors with the same values in our algorithms, we'll work with 
+         *      weak pareto domination
         */
-        ParetoFront add(ParetoFront& other) 
-        {
-            if (points.size() == 0) {
-                return ParetoFront(other);
-            } else if (other.points.size() == 0) {
-                return ParetoFront(*this);
-            }
+        bool weakly_pareto_dominates(const TaggedPoint<T>& other) const;
 
-            // TODO: add all of the points together
-            // TODO: prune
-        };
+        /**
+         * Returns if this TaggedPoint is equal to another TaggedPoint 'other'
+         * N.B. this ignores the values of the 'tag' members, it only compares equality for the vecxtors
+        */
+        bool equals(const TaggedPoint<T>& other) const;
 
-        // TODO: add vector, no pruning required
+        /**
+         * Equality operator
+        */
+        bool operator==(const TaggedPoint<T>& other) const;
 
-};
+        /**
+         * Returns a hash for this tagged point
+         * N.B. ignores the value of 'tag' members, as if a == b, then need hash(a) == hash(b)
+        */
+        std::size_t hash() const;
+    };
+}
 
-// TODO: make convex hull bit
-// TODO: use linear program lib for convex hull pruning: https://www.alglib.net/download.php
-// https://github.com/ori-goals/rapport-algorithms/blob/mike-thts/rapport_algorithms/thts/utils/pareto_front.py
+namespace thts {
+    /**
+     * Pareto Front implementation
+     * 
+     * Given a set of points, a Pareto Front is the set of points that are not Pareto dominated by any other point in 
+     * the set. A vector u Pareto Dominates vector v iff for all i. u[i]>=v[i] and there exists j. u[j]>v[j]. 
+     * 
+     * Member variables:
+     *      pf_points: 
+     *          The set of TaggedPoints in the Pareto Front
+     *          
+    */
+    template <typename T>
+    class ParetoFront {
+        protected:
+            std::unordered_set<TaggedPoint<T>> pf_points;
+
+        public:
+            /**
+             * Constructor, empty
+            */
+            ParetoFront();
+
+            /**
+             * Constructor, adding points immediately
+            */
+            ParetoFront(const std::vector<std::pair<Eigen::ArrayXd,T>>& init_points);
+
+            /**
+             * Constructor, adding points immediately, with one tag
+            */
+            ParetoFront(const std::vector<Eigen::ArrayXd>& init_points, const T& tag);
+
+            /**
+             * Constructor, set of Tagged points
+             * With an option to say if we know that the set of points is already a pareto front
+            */
+            ParetoFront(const std::unordered_set<TaggedPoint<T>>& init_points, bool already_pareto_front=false);
+
+            /**
+             * Copy constructor
+            */
+            ParetoFront(const ParetoFront<T>& pf);
+
+            /**
+             * Move constructor
+            */
+            ParetoFront(const ParetoFront<T>&& pf);
+
+        protected:
+            // /**
+            //  * Adds points to the ParetoFront (i.e. the pf_points member).
+            //  * 'points_to_add' doesnt have to form a ParetoFront itself
+            //  * This function will prune points appropriately so that the 'pf_points' member will form a ParetoFront
+            // */
+            // void add_points(const std::unordered_set<TaggedPoint<T>>& points_to_add);
+
+            /**
+             * Returns the set of points from 'points' that are not (weakly) dominated by any points in 'ref_points'
+             * N.B. need to be careful using this. If we have Pareto Fronts U and V which both contain a vector v, then 
+             *      v \notin prune(U,V) + prune(V,U)
+             *  This happens because we remove v from V in prune(U,V) and remove v from U in prune() 
+             * So, if v is in 'ref_points' and 'points' then the returned set will *not* contain v.
+            */
+            std::unordered_set<TaggedPoint<T>> prune(
+                const std::unordered_set<TaggedPoint<T>>& ref_points, 
+                const std::unordered_set<TaggedPoint<T>>& points) const;
+
+            /**
+             * Returns the Pareto front of the set of 'points'.
+             * Because we use weak pareto domination, 'prune(points,points)' would return an empty set
+            */
+            std::unordered_set<TaggedPoint<T>> prune(const std::unordered_set<TaggedPoint<T>>& points) const;
+
+        public:
+            /**
+             * Gets the size of the pareto front 
+            */
+            std::size_t size() const;
+
+            /**
+             * Sets the tag of every point in 'pf_points' to have the tag 'new_tag'.
+            */
+            void set_tags(const T& new_tag);
+
+            /**
+             * Scale ParetoFront by a vector
+            */
+            ParetoFront<T> scale(double scale) const;
+
+            /**
+             * Union of two pareto fronts ('union' is a keyword in c++, so called this combine)
+             * If have pfs U and V, then the union is prune({u | u in U or u in V})
+            */
+            ParetoFront<T> combine(const ParetoFront<T>& other) const;
+
+            /**
+             * Add two pareto fronts 
+             * If have pfs U and V, then addition is is prune({u+v | u in U, v in V})
+             * 
+             * The 'tag' member of TaggedPoint is a bit ambiguous with this function. We would only use this in chance 
+             * nodes in CHMCTS, where the tag isn't relevant
+            */
+            ParetoFront<T> add(const ParetoFront<T>& other) const;
+
+            /**
+             * Adds a vector to this pareto front
+             * If have vector v and pareto front U, then U+v = {u+v | u in U}
+            */
+            ParetoFront<T> add(const Eigen::ArrayXd& v) const;
+
+    };
+}
+
+/**
+ * Forward declare hash, equality and output stream function sepcialisations for TaggedPoints
+ * Hash and equals_to needed so that tagged points can be used in unordered_set
+ * Output stream for debugging
+*/
+namespace std {
+    using namespace thts;
+
+    /**
+     * Hash
+    */
+    template <typename T>
+    struct hash<TaggedPoint<T>> {
+        size_t operator()(const TaggedPoint<T>&) const;
+    };
+
+    /**
+     * Equals
+    */
+    template <typename T>
+    struct equal_to<TaggedPoint<T>> {
+        bool operator()(const TaggedPoint<T>&, const TaggedPoint<T>&) const;
+    };
+
+    /**
+     * Output stream
+    */
+    template <typename T>
+    ostream& operator<<(ostream& os, const TaggedPoint<T>& point);
+}
+
+/**
+ * Forward declare operator overloads and output stream function sepcialisations for ParetoFront
+ * Output stream for debugging
+*/
+namespace std {
+    using namespace thts;
+
+    /**
+     * Scale by vector
+    */
+    template <typename T>
+    ParetoFront<T> operator*(const ParetoFront<T>& pf, double s);
+    
+    template <typename T>
+    ParetoFront<T> operator*(double s, const ParetoFront<T>& pf);
+
+    /**
+     * Union of two pareto fronts
+    */
+    template <typename T>
+    ParetoFront<T> operator%(const ParetoFront<T>& pf1, const ParetoFront<T>& pf2);
+
+    /**
+     * Sum of pareto fronts
+    */
+    template <typename T>
+    ParetoFront<T> operator+(const ParetoFront<T>& pf1, const ParetoFront<T>& pf2);
+
+    /**
+     * Add vector to pareto front
+    */
+    template <typename T>
+    ParetoFront<T> operator+(const ParetoFront<T>& pf, const Eigen::ArrayXd& v);
+
+    template <typename T>
+    ParetoFront<T> operator+(const Eigen::ArrayXd& v, const ParetoFront<T>& pf);
+
+    /**
+     * Output stream
+    */
+    template <typename T>
+    ostream& operator<<(ostream& os, const ParetoFront<T>& pf);
+}
+
+#include "multi_objective/pareto_front.cc"
