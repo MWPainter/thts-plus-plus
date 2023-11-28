@@ -53,6 +53,13 @@ namespace thts::test {
 
         /**
          * Checks pareto front doesn't contain any duplicate points
+         * 
+         * Realised at a later date that this is pointless. 'pf_points' is a hashset, so it will never add two points 
+         * that are identical to each other...
+         * 
+         * But can't hurt to run extra stuff when testing if it doesn't take long
+         * 
+         * So keep just in case we ever change backend to a vector instead of a set
         */
         bool contains_duplicate_points() {
             vector<TaggedPoint<T>> pf_points_vec;

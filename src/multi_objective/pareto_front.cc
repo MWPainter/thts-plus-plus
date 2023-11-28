@@ -2,8 +2,8 @@
 
 #include "helper_templates.h"
 
-#include <cassert>
 #include <iostream>
+#include <stdexcept>
 
 using namespace std;
 

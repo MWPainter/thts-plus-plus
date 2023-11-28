@@ -30,14 +30,14 @@ TEST_OBJECTS = $(patsubst test/%.cpp, bin/test/%.o, $(TEST_SOURCES))
 
 GTEST = external/googletest/build/lib/libgtest_main.a
 
-INCLUDES = -I. -Iinclude/ -Isrc/ -Iexternal/ -Iexternal/eigen-3.4.0/
+INCLUDES = -I. -Iinclude/ -Isrc/ -Iexternal/ -Iexternal/eigen-3.4.0/ -Iexternal/qhull/src/
 TEST_INCLUDES = -Iexternal/googletest/build/include
 
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20
 TEST_CPPFLAGS = 
 CPPFLAGS_DEBUG = -g
 
-LDFLAGS = -lpthread
+LDFLAGS = -Lexternal/qhull/lib -lqhullcpp -lqhullstatic_r -lpthread
 TEST_LDFLAGS = -Lexternal/googletest/build/lib -lgtest -lgtest_main -lgmock
 
 TARGET_THTS = thts

@@ -11,10 +11,17 @@
 
 #include <Eigen/Dense>
 
+// #include <qhull>
+#include "libqhullcpp/Qhull.h"
+#include "libqhullcpp/QhullFacetList.h"
+#include "libqhullcpp/QhullVertexSet.h"
+#include "libqhullcpp/RboxPoints.h"
+
 
 using namespace std;
 using namespace thts;
 using namespace thts::test;
+using namespace orgQhull;
 
 
 
@@ -46,6 +53,109 @@ Eigen::ArrayXd make_vec(double a, double b, double c, double d) {
 
 
 
+
+
+TEST(CH, CH1) {    
+    RboxPoints rbox;
+    rbox.appendPoints("100");
+    Qhull qhull;
+    qhull.runQhull(rbox, "");
+    // QhullFacetList facets(qhull);
+    cout << qhull.area() << endl;
+    // cout << qhull.points() << endl;
+    cout << qhull.points().size() << endl;
+    cout << qhull.volume() << endl;
+}
+
+TEST(CH, CH2) {
+    std::vector<std::vector<double>> points{
+        {-6, 0, 0, 0, 0},
+        {-3, 0, -2, 0, 0},
+        {-1, 0, -2, 0, 0},
+        {0, -6, 0, 0, 0},
+        {0, -3, -2, 0, 0},
+        {0, -1, -4, 0, 0},
+        {0, -1, -2, -2, 0},
+        {0, -1, -2, 0, -1},
+        {0, -1, -2, 0, 0},
+        {0, -1, 0, -2, -1},
+        {0, 0, -6, 0, 0},
+        {0, 0, -1, -1, -3},
+        {0, 0, 0, -6, 0},
+        {0, 0, 0, 0, -6},
+    };
+
+    // compute number of dimensions
+    const auto dimensions = std::begin(points)->size();
+
+    // compile input for qhull
+    std::vector<double> flat_input;
+    for (const auto &p : points) {
+        flat_input.insert(std::end(flat_input), std::begin(p), std::end(p));
+    }
+
+    // compute convex hull
+    orgQhull::Qhull qhull;
+    qhull.runQhull("", dimensions, points.size(), flat_input.data(), "Qt Qx");
+    std::set<std::vector<double>> convex_hull;
+
+    for (const auto &facet : qhull.facetList()) {
+        for (const auto &vertex : facet.vertices()) {
+            double *coordinates = vertex.point().coordinates();
+            std::vector<double> p(coordinates, coordinates + dimensions);
+            convex_hull.insert(p);
+        }
+    }
+
+    std::cout << convex_hull.size() << '\n';
+} 
+
+TEST(CH, CH3) {
+    std::vector<std::vector<double>> points{
+        {-3, -3},
+        {-3, 3},
+        {3, -3},
+        {3, 2},
+        {2,3},
+        {0,0},
+        {2,1},
+        {-1,0.5},
+        {-0.5,1},
+        {2.5,2.5},
+    };
+
+    // compute number of dimensions
+    const auto dimensions = std::begin(points)->size();
+
+    // compile input for qhull
+    std::vector<double> flat_input;
+    for (const auto &p : points) {
+        flat_input.insert(std::end(flat_input), std::begin(p), std::end(p));
+    }
+
+    // compute convex hull
+    orgQhull::Qhull qhull;
+    qhull.runQhull("", dimensions, points.size(), flat_input.data(), "Qt Qx");
+    std::set<std::vector<double>> convex_hull;
+
+    for (const auto &facet : qhull.facetList()) {
+        for (const auto &vertex : facet.vertices()) {
+            double *coordinates = vertex.point().coordinates();
+            std::vector<double> p(coordinates, coordinates + dimensions);
+            convex_hull.insert(p);
+        }
+    }
+
+    std::cout << convex_hull.size() << " expect 5" << endl;
+    cout << qhull.area() << endl;
+    cout << qhull.volume() << endl;
+    for (const vector<double>& vec : convex_hull) {
+        for (double d : vec) {
+            cout << d << " ";
+        }
+        cout << endl;
+    }
+} 
 
 
 /**
