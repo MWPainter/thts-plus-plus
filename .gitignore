@@ -18,6 +18,7 @@ external/.DS_Store
 external/KataGo
 external/eigen
 external/eigen-3.4.0
+external/qhull
 
 # External files (other branches)
 external/kata1*
