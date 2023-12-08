@@ -23,7 +23,11 @@ namespace thts {
         int decision_timestep,
         shared_ptr<const MoThtsCNode> parent) :
             ThtsDNode(thts_manager, state, decision_depth, decision_timestep, parent),
+<<<<<<< HEAD
             mo_heuristic_value(Eigen::ArrayXd::Constant(thts_manager->reward_dim, 0.0))
+=======
+            mo_heuristic_value(Eigen::VectorXd::Constant(thts_manager->reward_dim, 0.0))
+>>>>>>> ea559dd96862f49bddc1102d6f908fe2e2755913
     {
         if (thts_manager->mo_heuristic_fn != nullptr && !thts_manager->thts_env->is_sink_state_itfc(state)) {
             mo_heuristic_value = thts_manager->mo_heuristic_fn(state, thts_manager->thts_env);
