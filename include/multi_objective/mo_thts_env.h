@@ -61,11 +61,7 @@ namespace thts {
              * Returns:
              *      The reward for taking 'action' from 'state' (and sampling 'observation')
              */
-<<<<<<< HEAD
             virtual Eigen::ArrayXd get_mo_reward_itfc(
-=======
-            virtual Eigen::VectorXd get_mo_reward_itfc(
->>>>>>> ea559dd96862f49bddc1102d6f908fe2e2755913
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
                 std::shared_ptr<const Observation> observation=nullptr) const = 0;

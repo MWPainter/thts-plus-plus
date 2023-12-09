@@ -19,10 +19,6 @@ namespace thts {
      * First used in thts_decision_node.h and thts_chance_node.h
      * N.B. The & here is to get address as we want function pointers
      */  
-<<<<<<< HEAD
     Eigen::ArrayXd _DummyMoHeuristicFn(std::shared_ptr<const State> s, std::shared_ptr<ThtsEnv> env);
-=======
-    Eigen::VectorXd _DummyMoHeuristicFn(std::shared_ptr<const State> s, std::shared_ptr<ThtsEnv> env);
->>>>>>> ea559dd96862f49bddc1102d6f908fe2e2755913
     typedef decltype(&_DummyMoHeuristicFn) MoHeuristicFnPtr;
 }
