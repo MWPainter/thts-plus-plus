@@ -9,6 +9,7 @@ CXX = g++
 SRC_DIR = src
 TEST_DIR = test
 BIN_DIR = bin
+PY_DIR = py
 
 SOURCES = $(wildcard src/*.cpp)
 SOURCES += $(wildcard src/algorithms/*.cpp)
@@ -26,10 +27,15 @@ TEST_SOURCES += $(wildcard test/algorithms/*.cpp)
 TEST_SOURCES += $(wildcard test/distributions/*.cpp)
 TEST_OBJECTS = $(patsubst test/%.cpp, bin/test/%.o, $(TEST_SOURCES))
 
+PY_MODULE_DEF = py/module/module.cpp
+PY_SOURCES = $(wildcard py/*.cpp)
+PY_OBJECTS = $(patsubst py/%.cpp, bin/py/%.o, $(PY_SOURCES))
+
 GTEST = external/googletest/build/lib/libgtest_main.a
 
-INCLUDES = -Iinclude/ -Isrc/ -Iexternal/ -I.
+INCLUDES = -Iinclude/ -Isrc/ -Iexternal/ -I. 
 TEST_INCLUDES = -Iexternal/googletest/build/include
+PY_INCLUDES = -shared -fPIC -Iexternal/pybind11/include $$(python3 -m pybind11 --includes) -Ipy/
 
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20
 TEST_CPPFLAGS = 
@@ -41,6 +47,8 @@ TEST_LDFLAGS = -Lexternal/googletest/build/lib -lgtest -lgtest_main -lgmock
 TARGET_THTS = thts
 TARGET_THTS_TEST = thts-test
 TARGET_THTS_TEST_DEBUG = thts-test-debug
+TARGET_THTS_PY_LIB = thtspp
+THTS_PY_LIB_FULL_NAME = thts$$(python3-config --extension-suffix)
 
 
 
@@ -98,6 +106,11 @@ $(TARGET_THTS_TEST): $(OBJECTS) $(TEST_OBJECTS)
 $(TARGET_THTS_TEST_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
 $(TARGET_THTS_TEST_DEBUG): $(TARGET_THTS_TEST)
 
+# Building the python library
+$(TARGET_THTS_PY_LIB): INCLUDES += $(PY_INCLUDES)
+$(TARGET_THTS_PY_LIB): $(OBJECTS) $(PY_OBJECTS)
+	$(CXX) $(CPPFLAGS) $(PY_INCLUDES) $(PY_MODULE_DEF) $^ -o $(THTS_PY_LIB_FULL_NAME)
+
 
 
 #####
@@ -116,4 +129,4 @@ clean:
 #####
 # Phony targets, so make knows when a target isn't producing a corresponding output file of same name
 #####
-.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST_DEBUG)
+.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST_DEBUG) $(TARGET_THTS_PY_LIB)
