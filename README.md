@@ -45,6 +45,37 @@ cmake -G "MSYS Makefiles" .. -DCMAKE_INSTALL_PREFIX=.
 
 
 
+## Installing pybind11
+This step should have been done already for gtest, so can be skipped (cloneing submodules):
+```
+git submodule init
+git submodule update
+```
+
+Then we're using Anaconda3 to create a python virtual environment. Assuming we already have Anaconda3 installed, 
+make a new virtual env called `thts++` with:
+```
+conda create -n thts++ python=3.9
+```
+
+And install pybind11 with:
+```
+conda install -c conda-forge pybind11
+conda install pytest
+```
+
+Then check that the C++ library is working as intended by building and running tests (pybind11 is a header only 
+library, so doesn't need to be compiled to be used):
+```
+cd external/pybind11
+mkdir build
+cd build
+cmake ..
+make check -j 4
+```
+
+
+
 ## Changelog
 
 This is a space to say what's included and updated in any versioning happening. I'll create the v0.1 branch when the 

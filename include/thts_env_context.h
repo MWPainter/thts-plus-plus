@@ -13,142 +13,143 @@ namespace thts {
      * map from strings is necessary.
      * 
      * Member variables:
-     *      context: A mapping from string keys to abitrary void* pointers for arbitrary data store.
+     *    context: A mapping from string keys to abitrary void* pointers for arbitrary data store.
+     *    context_const: Same as context, but for const void* pointers.
      */
-    class ThtsEnvContext {
+     class ThtsEnvContext {
 
-        private:
-            std::unordered_map<std::string, std::shared_ptr<void>> context;
-            std::unordered_map<std::string, std::shared_ptr<const void>> context_const;
+          private:
+               std::unordered_map<std::string, std::shared_ptr<void>> context;
+               std::unordered_map<std::string, std::shared_ptr<const void>> context_const;
 
-        public:
-            /**
-             * Mark destructor virtual in case class is inherited from
-             */
-            virtual ~ThtsEnvContext() = default;
+          public:
+               /**
+                * Mark destructor virtual in case class is inherited from
+                */
+               virtual ~ThtsEnvContext() = default;
 
-            /**
-             * Gets a value from this context for a given key string.
-             * 
-             * Args:
-             *      key: A string used to lookup a value in this context
-             * Returns:
-             *      The value (void*) stored in this context for the 'key'
-             */
-            virtual std::shared_ptr<void> get_value_raw(const std::string& key) const;
+               /**
+                * Gets a value from this context for a given key string.
+                * 
+                * Args:
+                *      key: A string used to lookup a value in this context
+                * Returns:
+                *      The value (void*) stored in this context for the 'key'
+                */
+               virtual std::shared_ptr<void> get_value_raw(const std::string& key) const;
 
-            /**
-             * Gets a value from this context for a given key string.
-             * 
-             * Args:
-             *      key: A string used to lookup a value in this context
-             * Returns:
-             *      The value (type T) stored in this context for the 'key'
-            */
-           template <typename T>
-           T& get_value(const std::string& key) const {
-                return *std::static_pointer_cast<T>(get_value_raw(key));
-           }
+               /**
+                * Gets a value from this context for a given key string.
+                * 
+                * Args:
+                *      key: A string used to lookup a value in this context
+                * Returns:
+                *      The value (type T) stored in this context for the 'key'
+                */
+               template <typename T>
+               T& get_value(const std::string& key) const {
+                    return *std::static_pointer_cast<T>(get_value_raw(key));
+               }
 
-            /**
-             * Gets a value pointer from this context for a given key string.
-             * 
-             * Args:
-             *      key: A string used to lookup a value in this context
-             * Returns:
-             *      The value pointer (type T*) stored in this context for the 'key'
-            */
-           template <typename T>
-           std::shared_ptr<T> get_value_ptr(const std::string& key) const {
-                return std::static_pointer_cast<T>(get_value_raw(key));
-           }
+               /**
+                * Gets a value pointer from this context for a given key string.
+                * 
+                * Args:
+                *      key: A string used to lookup a value in this context
+                * Returns:
+                *      The value pointer (type T*) stored in this context for the 'key'
+                */
+               template <typename T>
+               std::shared_ptr<T> get_value_ptr(const std::string& key) const {
+                    return std::static_pointer_cast<T>(get_value_raw(key));
+               }
 
-            /**
-             * (Const version) Gets a value from this context for a given key string.
-             * 
-             * Args:
-             *      key: A string used to lookup a value in this context
-             * Returns:
-             *      The value (void*) stored in this context for the 'key'
-             */
-            virtual std::shared_ptr<const void> get_value_raw_const(const std::string& key) const;
+               /**
+                * (Const version) Gets a value from this context for a given key string.
+                * 
+                * Args:
+                *      key: A string used to lookup a value in this context
+                * Returns:
+                *      The value (void*) stored in this context for the 'key'
+                */
+               virtual std::shared_ptr<const void> get_value_raw_const(const std::string& key) const;
 
-            /**
-             * (Const version) Gets a value from this context for a given key string.
-             * 
-             * Args:
-             *      key: A string used to lookup a value in this context
-             * Returns:
-             *      The value (type T) stored in this context for the 'key'
-            */
-           template <typename T>
-           const T& get_value_const(const std::string& key) const {
-                return *std::static_pointer_cast<const T>(get_value_raw_const(key));
-           }
+               /**
+                * (Const version) Gets a value from this context for a given key string.
+                * 
+                * Args:
+                *      key: A string used to lookup a value in this context
+                * Returns:
+                *      The value (type T) stored in this context for the 'key'
+                */
+               template <typename T>
+               const T& get_value_const(const std::string& key) const {
+                    return *std::static_pointer_cast<const T>(get_value_raw_const(key));
+               }
 
-            /**
-             * Gets a value pointer from this context for a given key string.
-             * 
-             * Args:
-             *      key: A string used to lookup a value in this context
-             * Returns:
-             *      The value pointer (type T*) stored in this context for the 'key'
-            */
-           template <typename T>
-           std::shared_ptr<const T> get_value_ptr_const(const std::string& key) const {
-                return std::static_pointer_cast<const T>(get_value_raw_const(key)) ;
-           }
+               /**
+                * Gets a value pointer from this context for a given key string.
+                * 
+                * Args:
+                *      key: A string used to lookup a value in this context
+                * Returns:
+                *      The value pointer (type T*) stored in this context for the 'key'
+                */
+               template <typename T>
+               std::shared_ptr<const T> get_value_ptr_const(const std::string& key) const {
+                    return std::static_pointer_cast<const T>(get_value_raw_const(key)) ;
+               }
 
-            /**
-             * Puts a value in this context for a given key string.
-             * 
-             * Args:
-             *      key: A string used to lookup a value in this context
-             *      val: A pointer to data correspdoning to 'key'
-             */
-            virtual void put_value_raw(const std::string& key, std::shared_ptr<void> val);
+               /**
+                * Puts a value in this context for a given key string.
+                * 
+                * Args:
+                *      key: A string used to lookup a value in this context
+                *      val: A pointer to data correspdoning to 'key'
+                */
+               virtual void put_value_raw(const std::string& key, std::shared_ptr<void> val);
 
-            /**
-             * Puts a value in this context for a given key string.
-             * 
-             * Args:
-             *      key: A string used to lookup a value in this context
-             *      val: A pointer to data correspdoning to 'key'
-            */
-           template <typename T>
-           void put_value(const std::string& key, std::shared_ptr<T> val) {
-                put_value_raw(key, std::static_pointer_cast<void>(val));
-           }
+               /**
+                * Puts a value in this context for a given key string.
+                * 
+                * Args:
+                *      key: A string used to lookup a value in this context
+                *      val: A pointer to data correspdoning to 'key'
+                */
+               template <typename T>
+               void put_value(const std::string& key, std::shared_ptr<T> val) {
+                    put_value_raw(key, std::static_pointer_cast<void>(val));
+               }
 
-            /**
-             * (Const verson) Puts a value in this context for a given key string.
-             * 
-             * Args:
-             *      key: A string used to lookup a value in this context
-             *      val: A pointer to data correspdoning to 'key'
-             */
-            virtual void put_value_raw_const(const std::string& key, std::shared_ptr<const void> val);
+               /**
+                * (Const verson) Puts a value in this context for a given key string.
+                * 
+                * Args:
+                *      key: A string used to lookup a value in this context
+                *      val: A pointer to data correspdoning to 'key'
+                */
+               virtual void put_value_raw_const(const std::string& key, std::shared_ptr<const void> val);
 
-            /**
-             * (Const version) Puts a value in this context for a given key string.
-             * 
-             * Args:
-             *      key: A string used to lookup a value in this context
-             *      val: A pointer to data correspdoning to 'key'
-            */
-           template <typename T>
-           void put_value_const(const std::string& key, std::shared_ptr<const T> val) {
-                put_value_raw_const(key, std::static_pointer_cast<const void>(val));
-           }
+               /**
+                * (Const version) Puts a value in this context for a given key string.
+                * 
+                * Args:
+                *      key: A string used to lookup a value in this context
+                *      val: A pointer to data correspdoning to 'key'
+                */
+               template <typename T>
+               void put_value_const(const std::string& key, std::shared_ptr<const T> val) {
+                    put_value_raw_const(key, std::static_pointer_cast<const void>(val));
+               }
 
-            /**
-             * Erase a value from the context
-            */
-           virtual void erase(const std::string& key);
+               /**
+                * Erase a value from the context
+                */
+               virtual void erase(const std::string& key);
 
-            /**
-             * (Const version) Erase a value from the context
-            */
-           virtual void erase_const(const std::string& key);
+               /**
+                * (Const version) Erase a value from the context
+                */
+               virtual void erase_const(const std::string& key);
     };
 }
