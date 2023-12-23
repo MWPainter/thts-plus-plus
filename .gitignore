@@ -7,6 +7,8 @@ python/thts.egg-info
 # Externals from branches
 external/KataGo
 external/eigen
+external/eigen-3.4.0
+external/qhull
 
 # Folders in other branches
 python
