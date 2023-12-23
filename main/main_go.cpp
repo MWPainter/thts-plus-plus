@@ -328,29 +328,29 @@ int main(int argc, char* argv[]) {
         if (decay_type_black == 0) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp_const);
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, "const");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, 0.0);  
         } else if (decay_type_black == 1) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp_sqrt_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_SQRT_SEARCH_TEMP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, "sqrt");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, 1.0);  
         } else if (decay_type_black == 2) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp_log_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_LOG_SEARCH_TEMP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, "log");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, 2.0);  
         }
 
         if (decay_type_white == 0) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_const);
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, "const");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, 0.0);  
         } else if (decay_type_white == 1) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_sqrt_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_SQRT_SEARCH_TEMP_OPP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, "sqrt");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, 1.0);  
         } else if (decay_type_white == 2) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_log_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_LOG_SEARCH_TEMP_OPP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, "log");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, 2.0);  
         }
 
         thts::run_go_games(
@@ -555,29 +555,29 @@ int main(int argc, char* argv[]) {
         if (decay_type_black == 0) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp_const);
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, "const");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, 0.0);  
         } else if (decay_type_black == 1) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp_sqrt_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_SQRT_SEARCH_TEMP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, "sqrt");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, 1.0);  
         } else if (decay_type_black == 2) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp_log_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_LOG_SEARCH_TEMP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, "log");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, 2.0);  
         }
 
         if (decay_type_white == 0) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_const);
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, "const");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, 0.0);  
         } else if (decay_type_white == 1) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_sqrt_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_SQRT_SEARCH_TEMP_OPP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, "sqrt");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, 1.0);  
         } else if (decay_type_white == 2) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_log_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_LOG_SEARCH_TEMP_OPP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, "log");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, 2.0);  
         }
 
         thts::run_go_games(
@@ -1145,29 +1145,29 @@ int main(int argc, char* argv[]) {
         if (decay_type_black == 0) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp_const);
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, "const");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, 0.0);  
         } else if (decay_type_black == 1) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp_sqrt_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_SQRT_SEARCH_TEMP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, "sqrt");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, 1.0);  
         } else if (decay_type_black == 2) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp_log_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_LOG_SEARCH_TEMP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, "log");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, 2.0);  
         }
 
         if (decay_type_white == 0) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_const);
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, "const");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, 0.0);  
         } else if (decay_type_white == 1) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_sqrt_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_SQRT_SEARCH_TEMP_OPP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, "sqrt");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, 1.0);  
         } else if (decay_type_white == 2) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_log_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_LOG_SEARCH_TEMP_OPP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, "log");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, 2.0);  
         }
 
         thts::run_go_games(
@@ -1372,29 +1372,29 @@ int main(int argc, char* argv[]) {
         if (decay_type_black == 0) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp_const);
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, "const");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, 0.0);  
         } else if (decay_type_black == 1) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp_sqrt_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_SQRT_SEARCH_TEMP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, "sqrt");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, 1.0);  
         } else if (decay_type_black == 2) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP, temp_log_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_LOG_SEARCH_TEMP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, "log");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE, 2.0);  
         }
 
         if (decay_type_white == 0) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_const);
             alg_params->insert_or_assign(PARAM_USE_CONST_SEARCH_TEMP_OPP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, "const");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, 0.0);  
         } else if (decay_type_white == 1) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_sqrt_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_SQRT_SEARCH_TEMP_OPP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, "sqrt");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, 1.0);  
         } else if (decay_type_white == 2) {
             alg_params->insert_or_assign(PARAM_BIAS_OR_SEARCH_TEMP_OPP, temp_log_decay);
             alg_params->insert_or_assign(PARAM_USE_INV_LOG_SEARCH_TEMP_OPP, 1.0);  
-            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, "log");  
+            alg_params->insert_or_assign(PARAM_SEARCH_TEMP_DECAY_TYPE_OPP, 2.0);  
         }
 
         thts::run_go_games(
