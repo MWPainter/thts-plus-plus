@@ -41,7 +41,7 @@ namespace thts::python {
     }
     
     string PyObservation::get_pretty_print_string() const {
-        return py::str(py_obs);
+        return py_obs.cast<string>();
     }
 
     /**
@@ -71,7 +71,7 @@ namespace thts::python {
     }
     
     string PyState::get_pretty_print_string() const {
-        return py::str(py_state);
+        return py_state.cast<string>();
     }
 
     /**
@@ -101,7 +101,7 @@ namespace thts::python {
     }
     
     string PyAction::get_pretty_print_string() const {
-        return py::str(py_action);
+        return py_action.cast<string>();
     }
 }
 

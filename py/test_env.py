@@ -19,7 +19,7 @@ class PyTestThtsEnv(PyThtsEnv):
         return (0,0)
     
     def is_sink_state(self, state):
-        return state[0] == self.grid_size and state[1] == self.grid_size
+        return (state[0] == self.grid_size and state[1] == self.grid_size)
 
     def get_valid_actions(self, state):
         x,y = state
