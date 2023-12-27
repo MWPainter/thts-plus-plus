@@ -34,7 +34,7 @@ int bts_test(double alpha, bool use_python_env) {
     double stay_prob = 0.1;
     int num_trials = 10000;
     int print_tree_depth = 2;
-    int num_threads = 4;
+    int num_threads = 1;
 
     // Make py env (making a py::object of python thts env, and pass into constructor)
     shared_ptr<ThtsEnv> thts_env;
