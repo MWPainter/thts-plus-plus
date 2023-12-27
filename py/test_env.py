@@ -15,7 +15,7 @@ class PyTestThtsEnv(PyThtsEnv):
         self.grid_size = grid_size
         self.stay_prob = stay_prob
 
-    def get_init_state(self):
+    def get_initial_state(self):
         return (0,0)
     
     def is_sink_state(self, state):
