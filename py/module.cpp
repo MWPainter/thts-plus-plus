@@ -23,7 +23,15 @@ int add(int i, int j) {
     return i + j;
 }
 
-int bts_test(double alpha) {
+int bts_test_cpp_env(double alpha) {
+    return bts_test(alpha, false);
+}
+
+int bts_test_py_env(double alpha) {
+    return bts_test(alpha, true);
+}
+
+int bts_test(double alpha, bool use_python_env) {
     // // startup python interpreter
     // // Only need interpreter object when running a c++ program and need python things
     // // Here we're a function for the python module => interpreter already exists
@@ -37,10 +45,14 @@ int bts_test(double alpha) {
     int num_threads = 4;
 
     // Make py env (making a py::object of python thts env, and pass into constructor)
-    // py::module_ py_thts_env_module = py::module_::import("test_env");
-    // py::object py_thts_env = py_thts_env_module.attr("PyTestThtsEnv")(3, 0.1);
-    // shared_ptr<thts::python::PyThtsEnv> thts_env = make_shared<thts::py::PyThtsEnv>(py_thts_env);
-    shared_ptr<thts::python::TestThtsEnv> thts_env = make_shared<thts::python::TestThtsEnv>(env_size, stay_prob);
+    shared_ptr<ThtsEnv> thts_env;
+    if (use_python_env) {
+        py::module_ py_thts_env_module = py::module_::import("test_env");
+        py::object py_thts_env = py_thts_env_module.attr("PyTestThtsEnv")(3, 0.1);
+        thts_env = make_shared<thts::py::PyThtsEnv>(py_thts_env);
+    } else {
+        thts_env = make_shared<thts::python::TestThtsEnv>(env_size, stay_prob);
+    }
 
     // Make thts manager with the py env (same as c++ (use unit tests))
     DentsManagerArgs manager_args(thts_env);
@@ -78,8 +90,12 @@ PYBIND11_MODULE(thts, m) {
     // TODO: add py::object argument to take pass in a custom env
     // TODO: add custom pybind objects to return (top levels of the) search tree
     m.def("add", &add, "A function that adds two numbers");
-    // m.def("bts_test",
-    //         &bts_test,
-    //         "Function taking only alpha value for bts and running it in small test env",
-    //         py::arg("alpha"));
+    m.def("bts_test_cpp_env",
+            &bts_test_cpp_env,
+            "Function taking only alpha value for bts and running it in small (C++) test env",
+            py::arg("alpha"));
+    m.def("bts_test_py_env",
+            &bts_test_py_env,
+            "Function taking only alpha value for bts and running it in small (python) test env",
+            py::arg("alpha"));
 };
