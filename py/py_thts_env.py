@@ -12,7 +12,7 @@ class PyThtsEnv:
     def is_fully_observable(self):
         return self.fully_observable
 
-    def get_init_state(self):
+    def get_initial_state(self):
         """
         Returns the initial state of the environment
         """
