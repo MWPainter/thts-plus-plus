@@ -42,8 +42,8 @@ class PyTestThtsEnv(PyThtsEnv):
             return (x+1,   y)
         if (action == "down"):
             return (  x, y+1)
-        if (action == "right"):
-            return (x-1, y-1)
+        if (action == "up"):
+            return (x  , y-1)
         raise Exception("Something went wrong in python test env")
     
     def get_transition_distribution(self, state, action):
