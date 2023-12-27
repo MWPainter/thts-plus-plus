@@ -24,6 +24,8 @@ int add(int i, int j) {
 }
 
 int bts_test(double alpha, bool use_python_env) {
+    pybind11::gil_scoped_release release;
+
     // // startup python interpreter
     // // Only need interpreter object when running a c++ program and need python things
     // // Here we're a function for the python module => interpreter already exists
@@ -69,6 +71,8 @@ int bts_test(double alpha, bool use_python_env) {
     } else {
         cout << endl;
     }
+
+    pybind11::gil_scoped_acquire acquire;
 
     // Return success
     return 0;
