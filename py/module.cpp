@@ -40,7 +40,7 @@ int bts_test(double alpha, bool use_python_env) {
     shared_ptr<ThtsEnv> thts_env;
     if (use_python_env) {
         py::module_ py_thts_env_module = py::module_::import("test_env");
-        py::object py_thts_env = py_thts_env_module.attr("PyTestThtsEnv")(3, 0.1);
+        py::object py_thts_env = py_thts_env_module.attr("PyTestThtsEnv")(env_size, stay_prob);
         thts_env = make_shared<thts::python::PyThtsEnv>(py_thts_env);
     } else {
         thts_env = make_shared<thts::python::TestThtsEnv>(env_size, stay_prob);
