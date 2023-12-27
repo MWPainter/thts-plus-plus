@@ -23,14 +23,6 @@ int add(int i, int j) {
     return i + j;
 }
 
-int bts_test_cpp_env(double alpha) {
-    return bts_test(alpha, false);
-}
-
-int bts_test_py_env(double alpha) {
-    return bts_test(alpha, true);
-}
-
 int bts_test(double alpha, bool use_python_env) {
     // // startup python interpreter
     // // Only need interpreter object when running a c++ program and need python things
@@ -49,7 +41,7 @@ int bts_test(double alpha, bool use_python_env) {
     if (use_python_env) {
         py::module_ py_thts_env_module = py::module_::import("test_env");
         py::object py_thts_env = py_thts_env_module.attr("PyTestThtsEnv")(3, 0.1);
-        thts_env = make_shared<thts::py::PyThtsEnv>(py_thts_env);
+        thts_env = make_shared<thts::python::PyThtsEnv>(py_thts_env);
     } else {
         thts_env = make_shared<thts::python::TestThtsEnv>(env_size, stay_prob);
     }
@@ -80,6 +72,14 @@ int bts_test(double alpha, bool use_python_env) {
 
     // Return success
     return 0;
+}
+
+int bts_test_cpp_env(double alpha) {
+    return bts_test(alpha, false);
+}
+
+int bts_test_py_env(double alpha) {
+    return bts_test(alpha, true);
 }
 
 PYBIND11_MODULE(thts, m) {
