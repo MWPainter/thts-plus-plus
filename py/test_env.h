@@ -4,8 +4,6 @@
 #include "thts_manager.h"
 #include "thts_types.h"
 
-#include "test_thts_manager.h"
-
 #include <cstdlib>
 #include <memory>
 #include <string>
@@ -13,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace thts::py{
+namespace thts::python {
     using namespace std;
     using namespace thts;
 

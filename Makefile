@@ -1,4 +1,4 @@
-CXX = g++
+CXX = g++-12
 
 
 
@@ -27,7 +27,7 @@ TEST_SOURCES += $(wildcard test/algorithms/*.cpp)
 TEST_SOURCES += $(wildcard test/distributions/*.cpp)
 TEST_OBJECTS = $(patsubst test/%.cpp, bin/test/%.o, $(TEST_SOURCES))
 
-PY_MODULE_DEF = py/module/module.cpp
+# PY_MODULE_DEF = py/module/module.cpp
 PY_SOURCES = $(wildcard py/*.cpp)
 PY_OBJECTS = $(patsubst py/%.cpp, bin/py/%.o, $(PY_SOURCES))
 
@@ -35,7 +35,7 @@ GTEST = external/googletest/build/lib/libgtest_main.a
 
 INCLUDES = -Iinclude/ -Isrc/ -Iexternal/ -I. 
 TEST_INCLUDES = -Iexternal/googletest/build/include
-PY_INCLUDES = -shared -fPIC -Iexternal/pybind11/include $$(python3 -m pybind11 --includes) -Ipy/
+PY_INCLUDES = -shared -fPIC -fvisibility=hidden -Iexternal/pybind11/include $$(python3 -m pybind11 --includes) -Ipy/
 
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20
 TEST_CPPFLAGS = 
@@ -81,6 +81,11 @@ $(OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
 	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
+# Build python object files rule
+$(PY_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
+	@mkdir -p $(@D)
+	$(CXX) $(CPPFLAGS) -c -o $@ $<
+
 # Build test object files rule
 $(TEST_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
@@ -109,7 +114,8 @@ $(TARGET_THTS_TEST_DEBUG): $(TARGET_THTS_TEST)
 # Building the python library
 $(TARGET_THTS_PY_LIB): INCLUDES += $(PY_INCLUDES)
 $(TARGET_THTS_PY_LIB): $(OBJECTS) $(PY_OBJECTS)
-	$(CXX) $(CPPFLAGS) $(PY_INCLUDES) $(PY_MODULE_DEF) $^ -o $(THTS_PY_LIB_FULL_NAME)
+	# $(CXX) $(CPPFLAGS) $(PY_INCLUDES) $(PY_MODULE_DEF) $^ -o $(THTS_PY_LIB_FULL_NAME) $(LDFLAGS)
+	$(CXX) $(CPPFLAGS) $(PY_INCLUDES) $^ -o $(THTS_PY_LIB_FULL_NAME) $(LDFLAGS)
 
 
 
