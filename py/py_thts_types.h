@@ -10,7 +10,11 @@
  * This file contains wrappers around python objects to be used as States, Actions and Observations.
  */
 
-namespace thts::py {
+namespace thts::python {
+    // forward declares
+    class PyThtsEnv;
+
+    // namespace includes
     namespace py = pybind11;
 
     /**
@@ -18,12 +22,19 @@ namespace thts::py {
      * Wrapper around an arbitrary python object
     */
     class PyObservation : public Observation {
+        friend PyThtsEnv;
+
         protected:
             py::object py_obs;
         
         public:
             PyObservation(py::object obs);
-            bool equals(const PyObservation& other);
+            virtual ~PyObservation() = default;
+            bool equals(const PyObservation& other) const;
+
+            virtual std::size_t hash() const;
+            virtual bool equals_itfc(const Observation& other) const;
+            virtual std::string get_pretty_print_string() const;
     };
 
     /**
@@ -31,12 +42,19 @@ namespace thts::py {
      * Wrapper around an arbitrary python object
     */
     class PyState : public State {
+        friend PyThtsEnv;
+
         protected:
             py::object py_state;
         
         public:
             PyState(py::object state);
-            bool equals(const PyState& other);
+            virtual ~PyState() = default;
+            bool equals(const PyState& other) const;
+            
+            virtual std::size_t hash() const;
+            virtual bool equals_itfc(const State& other) const;
+            virtual std::string get_pretty_print_string() const;
     };
 
     /**
@@ -44,12 +62,19 @@ namespace thts::py {
      * Wrapper around an arbitrary python object
     */
     class PyAction : public Action {
+        friend PyThtsEnv;
+        
         protected:
             py::object py_action;
         
         public:
             PyAction(py::object action);
-            bool equals(const PyAction& other);
+            virtual ~PyAction() = default;
+            bool equals(const PyAction& other) const;
+
+            virtual std::size_t hash() const;
+            virtual bool equals_itfc(const Action& other) const;
+            virtual std::string get_pretty_print_string() const;
     };
 }
 
@@ -58,7 +83,7 @@ namespace thts::py {
  * Needed so other files know to look at thts_types.o to find implementations of these functions.
  */
 namespace std {
-    using namespace thts::py;
+    using namespace thts::python;
 
     /**
      * Hash, equality class and output stream function definitions for PyObservation.

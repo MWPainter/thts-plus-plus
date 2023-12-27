@@ -2,10 +2,11 @@
 
 #include "thts_env.h"
 #include "thts_manager.h"
-#include "py_thts_types.h"
-#include "py_thts_context.h"
+#include "py/py_thts_types.h"
+#include "py/py_thts_context.h"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/embed.h>
 
 #include <memory>
 #include <string>
@@ -13,7 +14,7 @@
 #include <vector>
 
 
-namespace thts::py {
+namespace thts::python {
     // PyBind
     namespace py = pybind11;
 

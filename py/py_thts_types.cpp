@@ -1,4 +1,4 @@
-#include "py_thts_types.h"
+#include "py/py_thts_types.h"
 
 #include <functional> 
 #include <iostream>
@@ -8,15 +8,20 @@
 namespace py = pybind11;
 using namespace std;
 using namespace thts;
+using namespace thts::python;
 
 
 
 
-namespace thts::py {
+namespace thts::python {
     /**
      * Implementation of PyObservation 
      * Just point towards pybind interface for each function
      */
+    PyObservation::PyObservation(py::object py_obs) : py_obs(py_obs) 
+    {
+    }
+
     size_t PyObservation::hash() const {
         return py::hash(py_obs);
     }
@@ -43,6 +48,10 @@ namespace thts::py {
      * Implementation of PyState 
      * Just point towards pybind interface for each function
      */
+    PyState::PyState(py::object py_state) : py_state(py_state) 
+    {
+    }
+
     size_t PyState::hash() const {
         return py::hash(py_state);
     }
@@ -69,6 +78,10 @@ namespace thts::py {
      * Implementation of PyAction
      * Just point towards pybind interface for each function
      */
+    PyAction::PyAction(py::object py_action) : py_action(py_action) 
+    {
+    }
+    
     size_t PyAction::hash() const {
         return py::hash(py_action);
     }

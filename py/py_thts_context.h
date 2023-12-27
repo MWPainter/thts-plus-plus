@@ -4,7 +4,7 @@
 
 #include <pybind11/pybind11.h>
 
-namespace thts::py {
+namespace thts::python {
     namespace py = pybind11;
 
     /**
@@ -14,9 +14,9 @@ namespace thts::py {
      * Member variables:
      *      py_context: A python object to be used as part of the context
      */
-     class PyThtsContext : public ThtsEnvContext {
-            public:
-                py::object py_context;
-                PyThtsContext(py::object init_context);
+    class PyThtsContext : public ThtsEnvContext {
+        public:
+            py::object py_context;
+            PyThtsContext(py::object init_context);
     };
 }
