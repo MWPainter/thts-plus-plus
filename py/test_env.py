@@ -1,4 +1,4 @@
-from .py_thts_env import PyThtsEnv
+from py_thts_env import PyThtsEnv
 
 import random
 
