@@ -6,11 +6,11 @@ class PyThtsEnv:
     A ThtsEnv baseclass defined in python 
     """
 
-    def __init__(self, is_fully_observable=True):
-        self.is_fully_observable=is_fully_observable
+    def __init__(self, fully_observable=True):
+        self.fully_observable=fully_observable
 
     def is_fully_observable(self):
-        return self.is_fully_observable
+        return self.fully_observable
 
     def get_init_state(self):
         """

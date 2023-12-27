@@ -11,7 +11,7 @@ class PyTestThtsEnv(PyThtsEnv):
     """
 
     def __init__(self, grid_size, stay_prob=0.0):
-        super().__init__(is_fully_observable=True)
+        super().__init__(fully_observable=True)
         self.grid_size = grid_size
         self.stay_prob = stay_prob
 
