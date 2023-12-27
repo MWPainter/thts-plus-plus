@@ -24,8 +24,6 @@ int add(int i, int j) {
 }
 
 int bts_test(double alpha, bool use_python_env) {
-    pybind11::gil_scoped_release release;
-
     // // startup python interpreter
     // // Only need interpreter object when running a c++ program and need python things
     // // Here we're a function for the python module => interpreter already exists
@@ -63,6 +61,15 @@ int bts_test(double alpha, bool use_python_env) {
     bts_pool.run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
+    // TODO:
+    // Currently fails at bts_pool.run_trials
+    // pybind11::handle::inc_ref() is being called while the GIL is either not held or invalid. Please see https://pybind11.readthedocs.io/en/stable/advanced/misc.html#common-sources-of-global-interpreter-lock-errors for debugging advice.
+    // Do we need to do gil releasing/acquiring?
+    // If so building a re-enterant lock around that would be nicer
+    // pybind11::gil_scoped_release release;
+    // run_trials(...);
+    // pybind11::gil_scoped_acquire acquire;
+
     // Print out a tree (same as c++)
     cout << "EST with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0){
@@ -71,8 +78,6 @@ int bts_test(double alpha, bool use_python_env) {
     } else {
         cout << endl;
     }
-
-    pybind11::gil_scoped_acquire acquire;
 
     // Return success
     return 0;
