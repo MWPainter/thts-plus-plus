@@ -6,6 +6,9 @@ thts-test
 .DS_Store
 external/.DS_Store
 
+# Python lib ignores
+py/__pycache__
+
 # Folders in other branches want to ignore
 python
 

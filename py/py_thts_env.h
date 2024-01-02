@@ -45,7 +45,7 @@ namespace thts::python {
             /**
              * Constructor
              */
-            PyThtsEnv(py::object py_thts_env);
+            PyThtsEnv(py::object _py_thts_env);
 
             /**
              * Mark destructor as virtual for subclassing.
