@@ -28,7 +28,7 @@ namespace thts::python {
             py::object py_obs;
         
         public:
-            PyObservation(py::object obs);
+            PyObservation(py::object _py_obs);
             virtual ~PyObservation() = default;
             bool equals(const PyObservation& other) const;
 
@@ -48,7 +48,7 @@ namespace thts::python {
             py::object py_state;
         
         public:
-            PyState(py::object state);
+            PyState(py::object _oy_state);
             virtual ~PyState() = default;
             bool equals(const PyState& other) const;
             
@@ -68,7 +68,7 @@ namespace thts::python {
             py::object py_action;
         
         public:
-            PyAction(py::object action);
+            PyAction(py::object _py_action);
             virtual ~PyAction() = default;
             bool equals(const PyAction& other) const;
 

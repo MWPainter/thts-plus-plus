@@ -5,6 +5,12 @@ This folder contains all of the logic to interface between C++ and python. That 
 2. allowing python environments to be used in THTS++
 
 
+
+
+## General coding notes
+
+When a variable begins with `py_` prefix, then it needs the GIL to be used
+
 ## module/module.cpp
 
 The file defining the THTS++ python module

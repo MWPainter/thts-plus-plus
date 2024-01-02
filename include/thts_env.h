@@ -45,7 +45,7 @@ namespace thts {
             /**
              * Constructor
              */
-            ThtsEnv(bool is_fully_observable);
+            ThtsEnv(bool is_fully_observable=true);
 
             /**
              * Mark destructor virtual in case class is inherited from

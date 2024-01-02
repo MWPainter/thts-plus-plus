@@ -17,6 +17,6 @@ namespace thts::python {
     class PyThtsContext : public ThtsEnvContext {
         public:
             py::object py_context;
-            PyThtsContext(py::object init_context);
+            PyThtsContext(py::object _py_context);
     };
 }
