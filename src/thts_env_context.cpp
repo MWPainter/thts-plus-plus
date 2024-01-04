@@ -2,7 +2,7 @@
 
 using namespace std;
 
-namespace thts {
+namespace thts { 
     /**
      * Implementation of 'get_value_for_key'
      * 

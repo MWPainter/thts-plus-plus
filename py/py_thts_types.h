@@ -15,6 +15,7 @@ namespace thts::python {
     class PyThtsEnv;
 
     // namespace includes
+    using namespace thts;
     namespace py = pybind11;
 
     /**
@@ -32,9 +33,9 @@ namespace thts::python {
             virtual ~PyObservation() = default;
             bool equals(const PyObservation& other) const;
 
-            virtual std::size_t hash() const;
-            virtual bool equals_itfc(const Observation& other) const;
-            virtual std::string get_pretty_print_string() const;
+            virtual std::size_t hash() const override;
+            virtual bool equals_itfc(const Observation& other) const override;
+            virtual std::string get_pretty_print_string() const override;
     };
 
     /**
@@ -48,13 +49,13 @@ namespace thts::python {
             py::object py_state;
         
         public:
-            PyState(py::object _oy_state);
+            PyState(py::object _py_state);
             virtual ~PyState() = default;
             bool equals(const PyState& other) const;
             
-            virtual std::size_t hash() const;
-            virtual bool equals_itfc(const State& other) const;
-            virtual std::string get_pretty_print_string() const;
+            virtual std::size_t hash() const override;
+            virtual bool equals_itfc(const Observation& other) const override;
+            virtual std::string get_pretty_print_string() const override;
     };
 
     /**
@@ -72,9 +73,9 @@ namespace thts::python {
             virtual ~PyAction() = default;
             bool equals(const PyAction& other) const;
 
-            virtual std::size_t hash() const;
-            virtual bool equals_itfc(const Action& other) const;
-            virtual std::string get_pretty_print_string() const;
+            virtual std::size_t hash() const override;
+            virtual bool equals_itfc(const Action& other) const override;
+            virtual std::string get_pretty_print_string() const override;
     };
 }
 

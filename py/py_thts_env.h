@@ -16,6 +16,7 @@
 
 namespace thts::python {
     // PyBind
+    using namespace thts;
     namespace py = pybind11;
 
     // Typedef 

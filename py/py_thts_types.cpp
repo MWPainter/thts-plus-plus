@@ -15,24 +15,24 @@ using namespace thts::python;
 
 
 
-namespace thts::python {
+namespace thts::python { 
     /**
      * Implementation of PyObservation 
      * Just point towards pybind interface for each function
      */
     PyObservation::PyObservation(py::object _py_obs) : py_obs() 
     {
-        thts::python::helpers::GilReenterantLockGuard lg();
+        thts::python::helpers::GilReenterantLockGuard lg;
         py_obs = _py_obs;
     }
 
     size_t PyObservation::hash() const {
-        thts::python::helpers::GilReenterantLockGuard lg();
+        thts::python::helpers::GilReenterantLockGuard lg;
         return py::hash(py_obs);
     }
     
     bool PyObservation::equals(const PyObservation& other) const {
-        thts::python::helpers::GilReenterantLockGuard lg();
+        thts::python::helpers::GilReenterantLockGuard lg;
         return py_obs.is(other.py_obs);
     }
 
@@ -47,8 +47,8 @@ namespace thts::python {
     }
     
     string PyObservation::get_pretty_print_string() const {
-        thts::python::helpers::GilReenterantLockGuard lg();
-        return py_obs.cast<string>();
+        thts::python::helpers::GilReenterantLockGuard lg;
+        return py::str(py_obs);
     }
 
     /**
@@ -57,21 +57,21 @@ namespace thts::python {
      */
     PyState::PyState(py::object _py_state) : py_state() 
     {
-        thts::python::helpers::GilReenterantLockGuard lg();
+        thts::python::helpers::GilReenterantLockGuard lg;
         py_state = _py_state;
     }
 
     size_t PyState::hash() const {
-        thts::python::helpers::GilReenterantLockGuard lg();
+        thts::python::helpers::GilReenterantLockGuard lg;
         return py::hash(py_state);
     }
     
     bool PyState::equals(const PyState& other) const {
-        thts::python::helpers::GilReenterantLockGuard lg();
+        thts::python::helpers::GilReenterantLockGuard lg;
         return py_state.is(other.py_state);
     }
 
-    bool PyState::equals_itfc(const State& other) const {
+    bool PyState::equals_itfc(const Observation& other) const {
         try {
             const PyState& oth = dynamic_cast<const PyState&>(other);
             return equals(oth);
@@ -82,8 +82,8 @@ namespace thts::python {
     }
     
     string PyState::get_pretty_print_string() const {
-        thts::python::helpers::GilReenterantLockGuard lg();
-        return py_state.cast<string>();
+        thts::python::helpers::GilReenterantLockGuard lg;
+        return py::str(py_state);
     }
 
     /**
@@ -92,17 +92,17 @@ namespace thts::python {
      */
     PyAction::PyAction(py::object _py_action) : py_action() 
     {
-        thts::python::helpers::GilReenterantLockGuard lg();
+        thts::python::helpers::GilReenterantLockGuard lg;
         py_action = _py_action;
     }
     
     size_t PyAction::hash() const {
-        thts::python::helpers::GilReenterantLockGuard lg();
+        thts::python::helpers::GilReenterantLockGuard lg;
         return py::hash(py_action);
     }
     
     bool PyAction::equals(const PyAction& other) const {
-        thts::python::helpers::GilReenterantLockGuard lg();
+        thts::python::helpers::GilReenterantLockGuard lg;
         return py_action.is(other.py_action);
     }
 
@@ -117,8 +117,8 @@ namespace thts::python {
     }
     
     string PyAction::get_pretty_print_string() const {
-        thts::python::helpers::GilReenterantLockGuard lg();
-        return py_action.cast<string>();
+        thts::python::helpers::GilReenterantLockGuard lg;
+        return py::str(py_action);
     }
 }
 

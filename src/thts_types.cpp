@@ -13,7 +13,7 @@ using namespace thts;
 
 
 
-namespace thts {
+namespace thts { 
     /**
      * Implementation of (null) Observation 
      */

@@ -24,7 +24,9 @@ namespace thts::python::helpers {
 
         public:
             GilReenterantLockGuard();
+            // GilReenterantLockGuard(bool delay_locking_gil=false);
             ~GilReenterantLockGuard();
+            void lock_gil();
             GilReenterantLockGuard(GilReenterantLockGuard&) = delete;
             GilReenterantLockGuard(GilReenterantLockGuard&&) = delete;
     };
