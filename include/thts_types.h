@@ -59,9 +59,9 @@ namespace thts {
     class State : public Observation {
         public:
             virtual ~State() = default;
-            virtual std::size_t hash() const;
-            virtual bool equals_itfc(const Observation& other) const;
-            virtual std::string get_pretty_print_string() const;
+            virtual std::size_t hash() const override;
+            virtual bool equals_itfc(const Observation& other) const override;
+            virtual std::string get_pretty_print_string() const override;
     };
     
 
@@ -95,10 +95,10 @@ namespace thts {
 
             IntState(int state) : state(state) {}
             virtual ~IntState() = default;
-            virtual std::size_t hash() const;
+            virtual std::size_t hash() const override;
             bool equals(const IntState& other) const;
-            virtual bool equals_itfc(const Observation& other) const;
-            virtual std::string get_pretty_print_string() const;
+            virtual bool equals_itfc(const Observation& other) const override;
+            virtual std::string get_pretty_print_string() const override;
     };
 
     /**
@@ -113,8 +113,8 @@ namespace thts {
             virtual ~IntPairState() = default;
             virtual std::size_t hash() const;
             bool equals(const IntPairState& other) const;
-            virtual bool equals_itfc(const Observation& other) const;
-            virtual std::string get_pretty_print_string() const;
+            virtual bool equals_itfc(const Observation& other) const override;
+            virtual std::string get_pretty_print_string() const override;
     };
 
     /**
@@ -127,10 +127,10 @@ namespace thts {
             Int3TupleState(std::tuple<int,int,int> tpl) : state(tpl) {}
             Int3TupleState(int first, int second, int third) : state(std::make_tuple(first,second,third)) {}
             virtual ~Int3TupleState() = default;
-            virtual std::size_t hash() const;
+            virtual std::size_t hash() const override;
             bool equals(const Int3TupleState& other) const;
-            virtual bool equals_itfc(const Observation& other) const;
-            virtual std::string get_pretty_print_string() const;
+            virtual bool equals_itfc(const Observation& other) const override;
+            virtual std::string get_pretty_print_string() const override;
     };
 
 
@@ -144,10 +144,10 @@ namespace thts {
 
             IntAction(int action) : action(action) {}
             virtual ~IntAction() = default;
-            virtual std::size_t hash() const;
+            virtual std::size_t hash() const override;
             bool equals(const IntAction& other) const;
-            virtual bool equals_itfc(const Action& other) const;
-            virtual std::string get_pretty_print_string() const;
+            virtual bool equals_itfc(const Action& other) const override;
+            virtual std::string get_pretty_print_string() const override;
     };
 
     /**
@@ -159,10 +159,10 @@ namespace thts {
 
             StringAction(std::string action) : action(action) {}
             virtual ~StringAction() = default;
-            virtual std::size_t hash() const;
+            virtual std::size_t hash() const override;
             bool equals(const StringAction& other) const;
-            virtual bool equals_itfc(const Action& other) const;
-            virtual std::string get_pretty_print_string() const;
+            virtual bool equals_itfc(const Action& other) const override;
+            virtual std::string get_pretty_print_string() const override;
     };
 
 

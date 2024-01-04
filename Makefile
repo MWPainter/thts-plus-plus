@@ -35,27 +35,33 @@ GTEST = external/googletest/build/lib/libgtest_main.a
 
 INCLUDES = -Iinclude/ -Isrc/ -Iexternal/ -I. 
 TEST_INCLUDES = -Iexternal/googletest/build/include
-PY_INCLUDES = -Iexternal/pybind11/include $$(python3 -m pybind11 --includes) -Ipy/
-PY_INCLUDES += -I/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/x86_64-conda-linux-gnu/include/c++/11.2.0
-PY_INCLUDES += -I/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/x86_64-conda-linux-gnu/sysroot/usr/include/
+PY_INCLUDES = -Iexternal/pybind11/include $$(python3.9 -m pybind11 --includes) -Ipy/
+PY_INCLUDES += -I/home/michael/anaconda3/envs/thts++/include/python3.9
+# PY_INCLUDES += -I/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/x86_64-conda-linux-gnu/include/c++/11.2.0
+# PY_INCLUDES += -I/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/x86_64-conda-linux-gnu/sysroot/usr/include/
 
-CPPFLAGS = $(INCLUDES) -Wall -std=c++2a
-PY_CPPFLAGS = -fPIC -fvisibility=hidden -pie -Wl,-E
+CPPFLAGS = $(INCLUDES) -Wall -std=c++20
+PY_CPPFLAGS = -fPIC -fvisibility=hidden # needed to create shared library
+PY_EX_CPPFLAGS = -pie -fPIE # needed to create executable
 TEST_CPPFLAGS = 
 CPPFLAGS_DEBUG = -g -ggdb
 
 LDFLAGS = -lpthread
-PY_LD_LOCS =  -L/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/lib 
-PY_LD_LOCS += -L/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/x86_64-conda-linux-gnu/lib64
-PY_LDFLAGS = $(PY_LD_LOCS) -lpython3.10
+# PY_LD_LOCS =  -L/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/lib 
+# PY_LD_LOCS += -L/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/x86_64-conda-linux-gnu/lib64
+# PY_LDFLAGS = $(PY_LD_LOCS) -lpython3.10
+PY_LD_LOCS =  -L/home/michael/anaconda3/envs/thts++/lib
+PY_LDFLAGS = $(PY_LD_LOCS) -lpython3.9
 TEST_LDFLAGS = -Lexternal/googletest/build/lib -lgtest -lgtest_main -lgmock
 
 TARGET_THTS = thts
 TARGET_THTS_TEST = thts-test
 TARGET_THTS_TEST_DEBUG = thts-test-debug
 TARGET_THTS_PY_LIB = thtspp
-TARGET_THTS_PY_LIB_DEBUG = thtspp-debug
-THTS_PY_LIB_FULL_NAME = thts$$(python3-config --extension-suffix)
+TARGET_THTS_PY_EX = pyex
+TARGET_THTS_PY_EX_DEBUG = pyex-debug
+
+THTS_PY_LIB_FULL_NAME = thts$$(python3.9-config --extension-suffix)
 
 
 
@@ -125,12 +131,17 @@ $(TARGET_THTS_PY_LIB): LDFLAGS += $(PY_LDFLAGS)
 $(TARGET_THTS_PY_LIB): $(OBJECTS) $(PY_OBJECTS)
 	$(CXX) -shared $(CPPFLAGS) $^ -o $(THTS_PY_LIB_FULL_NAME) $(LDFLAGS)
 
+# C++ entry point
+$(TARGET_THTS_PY_EX): INCLUDES += $(PY_INCLUDES)
+$(TARGET_THTS_PY_EX): CPPFLAGS += $(PY_CPPFLAGS)
+$(TARGET_THTS_PY_EX): CPPFLAGS += $(PY_EX_CPPFLAGS)
+$(TARGET_THTS_PY_EX): LDFLAGS += $(PY_LDFLAGS)
+$(TARGET_THTS_PY_EX): $(OBJECTS) $(PY_OBJECTS)
+	$(CXX) -shared $(CPPFLAGS) $^ -o $(TARGET_THTS_PY_EX) $(LDFLAGS)
+
 # C++ entry point for debugging python library
-# $(TARGET_THTS_PY_LIB_DEBUG): INCLUDES += $(PY_INCLUDES)
-# $(TARGET_THTS_PY_LIB_DEBUG): CPPFLAGS += $(PY_CPPFLAGS)
-# $(TARGET_THTS_PY_LIB_DEBUG): LDFLAGS += $(PY_LDFLAGS)
-$(TARGET_THTS_PY_LIB_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
-$(TARGET_THTS_PY_LIB_DEBUG): $(TARGET_THTS_PY_LIB)
+$(TARGET_THTS_PY_EX_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
+$(TARGET_THTS_PY_EX_DEBUG): $(TARGET_THTS_PY_EX)
 
 
 
@@ -150,4 +161,4 @@ clean:
 #####
 # Phony targets, so make knows when a target isn't producing a corresponding output file of same name
 #####
-.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST_DEBUG) $(TARGET_THTS_PY_LIB) $(TARGET_THTS_PY_LIB_DEBUG)
+.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST_DEBUG) $(TARGET_THTS_PY_LIB) $(TARGET_THTS_PY_EX_DEBUG)

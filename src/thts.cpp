@@ -7,7 +7,6 @@
 
 using namespace std;
 
-
 namespace thts {
     /**
      * Constructor.

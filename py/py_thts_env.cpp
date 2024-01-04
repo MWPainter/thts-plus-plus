@@ -11,30 +11,30 @@ using namespace std;
  */
 namespace thts::python {
     PyThtsEnv::PyThtsEnv(py::object _py_thts_env) :
-        ThtsEnv(), py_thts_env() 
+        ThtsEnv(), py_thts_env()  
     {
-        thts::python::helpers::GilReenterantLockGuard lg();
+        thts::python::helpers::GilReenterantLockGuard lg;
         py_thts_env = _py_thts_env;
         _is_fully_observable = py_thts_env.attr("is_fully_observable")().cast<bool>();
     }
 
     shared_ptr<const PyState> PyThtsEnv::get_initial_state() const {
-        thts::python::helpers::GilReenterantLockGuard lg();
-        py::object py_get_initial_state_fn = py_thts_env.attr("get_initial_state");
+        thts::python::helpers::GilReenterantLockGuard lg;
+        py::handle py_get_initial_state_fn = py_thts_env.attr("get_initial_state");
         py::object py_init_state = py_get_initial_state_fn();
         return make_shared<const PyState>(py_init_state);
     }
 
     bool PyThtsEnv::is_sink_state(shared_ptr<const PyState> state) const {
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
-        thts::python::helpers::GilReenterantLockGuard lg();
-        py::object py_is_sink_state_fn = py_thts_env.attr("is_sink_state");
+        thts::python::helpers::GilReenterantLockGuard lg;
+        py::handle py_is_sink_state_fn = py_thts_env.attr("is_sink_state");
         return py_is_sink_state_fn(state_non_const_ref.py_state).cast<bool>();
     }
 
     shared_ptr<PyActionVector> PyThtsEnv::get_valid_actions(shared_ptr<const PyState> state) const {
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
-        thts::python::helpers::GilReenterantLockGuard lg();
+        thts::python::helpers::GilReenterantLockGuard lg;
         py::object py_get_valid_actions_fn = py_thts_env.attr("get_valid_actions");
         py::list py_valid_actions_list = py_get_valid_actions_fn(state_non_const_ref.py_state);
         shared_ptr<PyActionVector> action_vector = make_shared<PyActionVector>();
@@ -50,7 +50,7 @@ namespace thts::python {
     {
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
         PyAction& action_non_const_ref = const_cast<PyAction&>(*action);
-        thts::python::helpers::GilReenterantLockGuard lg();
+        thts::python::helpers::GilReenterantLockGuard lg;
         py::object py_get_transition_distribution_fn = py_thts_env.attr("get_transition_distribution");
         py::dict py_transition_prob_map = py_get_transition_distribution_fn(
             state_non_const_ref.py_state, action_non_const_ref.py_action);
@@ -69,8 +69,8 @@ namespace thts::python {
     {
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
         PyAction& action_non_const_ref = const_cast<PyAction&>(*action);
-        thts::python::helpers::GilReenterantLockGuard lg();
-        py::object py_sample_transition_distribution_fn = py_thts_env.attr("sample_transition_distribution");
+        thts::python::helpers::GilReenterantLockGuard lg;
+        py::handle py_sample_transition_distribution_fn = py_thts_env.attr("sample_transition_distribution");
         py::object py_next_state = py_sample_transition_distribution_fn(
             state_non_const_ref.py_state, action_non_const_ref.py_action);
         return make_shared<const PyState>(py_next_state);
@@ -84,18 +84,21 @@ namespace thts::python {
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
         PyAction& action_non_const_ref = const_cast<PyAction&>(*action);
         PyObservation& observation_non_const_ref = const_cast<PyObservation&>(*observation);
-        thts::python::helpers::GilReenterantLockGuard lg();
+        thts::python::helpers::GilReenterantLockGuard lg;
         py::object py_get_reward_fn = py_thts_env.attr("get_reward");
-        return py_get_reward_fn(
-            state_non_const_ref.py_state, 
-            action_non_const_ref.py_action, 
-            observation_non_const_ref.py_obs).cast<double>();
+        py::handle py_state = py::cast<py::handle>(state_non_const_ref.py_state);
+        py::handle py_action = py::cast<py::handle>(action_non_const_ref.py_action);
+        py::handle py_obs = Py_None;
+        if (observation != nullptr) {
+            py_obs = py::cast<py::handle>(observation_non_const_ref.py_obs);
+        }
+        return py_get_reward_fn(py_state, py_action, py_obs).cast<double>();
     }
 
     // TODO: change this to use a pybind11 python object too for the context
     shared_ptr<PyThtsContext> PyThtsEnv::sample_context(shared_ptr<const PyState> state) const
     {
-        // thts::python::helpers::GilReenterantLockGuard lg();
+        // thts::python::helpers::GilReenterantLockGuard lg;
         shared_ptr<const State> state_itfc = static_pointer_cast<const State>(state);
         shared_ptr<ThtsEnvContext> context = ThtsEnv::sample_context_itfc(state_itfc);
         return static_pointer_cast<PyThtsContext>(context);
@@ -228,7 +231,7 @@ namespace thts::python {
         shared_ptr<const PyState> state_itfc = static_pointer_cast<const PyState>(state);
         shared_ptr<const PyAction> action_itfc = static_pointer_cast<const PyAction>(action);
         shared_ptr<const PyObservation> obsv_itfc = static_pointer_cast<const PyObservation>(observation);
-        return get_reward(state_itfc, action_itfc, obsv_itfc);
+        return get_reward(state_itfc, action_itfc, obsv_itfc); 
     }
 
     shared_ptr<ThtsEnvContext> PyThtsEnv::sample_context_itfc(shared_ptr<const State> state) const
