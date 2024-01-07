@@ -33,16 +33,15 @@ PY_OBJECTS = $(patsubst py/%.cpp, bin/py/%.o, $(PY_SOURCES))
 
 GTEST = external/googletest/build/lib/libgtest_main.a
 
+# ANACONDA_ENVS_HOME = /home/michael/anaconda3/envs
+ANACONDA_ENVS_HOME = /jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs
+
 INCLUDES = -Iinclude/ -Isrc/ -Iexternal/ -I. 
 TEST_INCLUDES = -Iexternal/googletest/build/include
 PY_INCLUDES = -Iexternal/pybind11/include $$(python3.12 -m pybind11 --includes) -Ipy/
-# PY_INCLUDES = -Iexternal/pybind11/include $$(python3.9 -m pybind11 --includes) -Ipy/
-# PY_INCLUDES = -Iexternal/pybind11/include $$(python3.10 -m pybind11 --includes) -Ipy/
-PY_INCLUDES += -I/home/michael/anaconda3/envs/thts3.12/include/python3.12
-# PY_INCLUDES += -I/home/michael/anaconda3/envs/thts++/include/python3.9
-# PY_INCLUDES += -I/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/include/python3.10
+PY_INCLUDES += -I$(ANACONDA_ENVS_HOME)/thts3.12/include/python3.12
 
-CPPFLAGS = $(INCLUDES) -Wall -std=c++20
+CPPFLAGS = $(INCLUDES) -Wall -std=c++2a
 # CPPFLAGS = $(INCLUDES) -Wall -W -pedantic -std=c++20
 PY_CPPFLAGS = -fPIC -fvisibility=hidden # needed to create shared library
 PY_EX_CPPFLAGS = -pie -fPIE # needed to create executable
@@ -50,12 +49,8 @@ TEST_CPPFLAGS =
 CPPFLAGS_DEBUG = -g -ggdb
 
 LDFLAGS = -lpthread
-PY_LD_LOCS =  -L/home/michael/anaconda3/envs/thts3.12/lib
-# PY_LD_LOCS =  -L/home/michael/anaconda3/envs/thts++/lib
-# PY_LD_LOCS =  -L/jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs/thts++/include/python3.10
+PY_LD_LOCS =  -L$(ANACONDA_ENVS_HOME)/thts3.12/lib
 PY_LDFLAGS = $(PY_LD_LOCS) -lpython3.12
-# PY_LDFLAGS = $(PY_LD_LOCS) -lpython3.9
-# PY_LDFLAGS = $(PY_LD_LOCS) -lpython3.10
 TEST_LDFLAGS = -Lexternal/googletest/build/lib -lgtest -lgtest_main -lgmock
 
 TARGET_THTS = thts
@@ -66,8 +61,6 @@ TARGET_THTS_PY_EX = pyex
 TARGET_THTS_PY_EX_DEBUG = pyex-debug
 
 THTS_PY_LIB_FULL_NAME = thts$$(python3.12-config --extension-suffix)
-# THTS_PY_LIB_FULL_NAME = thts$$(python3.9-config --extension-suffix)
-# THTS_PY_LIB_FULL_NAME = thts$$(python3.10-config --extension-suffix)
 
 
 
