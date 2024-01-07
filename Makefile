@@ -33,15 +33,15 @@ PY_OBJECTS = $(patsubst py/%.cpp, bin/py/%.o, $(PY_SOURCES))
 
 GTEST = external/googletest/build/lib/libgtest_main.a
 
-# ANACONDA_ENVS_HOME = /home/michael/anaconda3/envs
-ANACONDA_ENVS_HOME = /jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs
+ANACONDA_ENVS_HOME = /home/michael/anaconda3/envs
+# ANACONDA_ENVS_HOME = /jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs
 
 INCLUDES = -Iinclude/ -Isrc/ -Iexternal/ -I. 
 TEST_INCLUDES = -Iexternal/googletest/build/include
 PY_INCLUDES = -Iexternal/pybind11/include $$(python3.12 -m pybind11 --includes) -Ipy/
 PY_INCLUDES += -I$(ANACONDA_ENVS_HOME)/thts3.12/include/python3.12
 
-CPPFLAGS = $(INCLUDES) -Wall -std=c++2a
+CPPFLAGS = $(INCLUDES) -Wall -std=c++20
 # CPPFLAGS = $(INCLUDES) -Wall -W -pedantic -std=c++20
 PY_CPPFLAGS = -fPIC -fvisibility=hidden # needed to create shared library
 PY_EX_CPPFLAGS = -pie -fPIE # needed to create executable
