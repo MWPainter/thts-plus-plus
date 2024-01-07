@@ -2,12 +2,12 @@
 
 #include "test_env.h"
 
-#include "py/gil_helpers.h"
 #include "py/py_thts_env.h"
+#include "py/py_helper.h"
+#include "py/py_thts.h"
 
 #include "algorithms/est/est_decision_node.h"
 #include "thts_decision_node.h"
-#include "py/py_thts.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/embed.h>
@@ -68,40 +68,37 @@ void pybind11_testing() {
     py::print("g");
     py::gil_scoped_release rel4;
 
-    // test 7 - check my lock guard works as intended
-    {
-        thts::python::helper::GilReenterantLockGuard lg;
-        py::print("h");
+    // // test 7 - check my lock guard works as intended
+    // {
+    //     thts::python::helper::GilReenterantLockGuard lg;
+    //     py::print("h");
 
-        // text 8 - check it's re-enterant
-        {
-            thts::python::helper::GilReenterantLockGuard lg;
-            py::print("i");
-        }
-    }
-    // py::print("j");
-    // // This print j causes a segfault, because don't have lockguard anymore
+    //     // text 8 - check it's re-enterant
+    //     {
+    //         thts::python::helper::GilReenterantLockGuard lg;
+    //         py::print("i");
+    //     }
+    // }
+    // // py::print("j");
+    // // // This print j causes a segfault, because don't have lockguard anymore
 }
 
-void bts_test(double alpha, bool use_python_env, bool use_subinterpreters=false) {
-    // Assume we already have an interpreter, and need to release gil
-    // release gil and use lockguard to protect ourselves
-    py::gil_scoped_release rel;
+void bts_test(double alpha, bool use_python_env) {
 
     // params
-    int env_size = 1;
+    int env_size = 3;
     double stay_prob = 0.0;
-    int num_trials = 1000;
-    int print_tree_depth = 100;
-    int num_threads = 1;
+    int num_trials = 100000;
+    int print_tree_depth = 2;
+    int num_threads = 4;
 
     // Make py env (making a py::object of python thts env, and pass into constructor)
     shared_ptr<ThtsEnv> thts_env;
     if (use_python_env) {
-        thts::python::helper::GilReenterantLockGuard lg(true);
+        py::gil_scoped_acquire acq;
         py::module_ py_thts_env_module = py::module_::import("test_env");
         py::object py_thts_env = py_thts_env_module.attr("PyTestThtsEnv")(env_size, stay_prob);
-        thts_env = make_shared<thts::python::PyThtsEnv>(py_thts_env);
+        thts_env = make_shared<thts::python::PyThtsEnv>(make_shared<py::object>(py_thts_env), false);
     } else {
         thts_env = make_shared<thts::python::TestThtsEnv>(env_size, stay_prob);
     }
@@ -113,9 +110,11 @@ void bts_test(double alpha, bool use_python_env, bool use_subinterpreters=false)
     manager_args->mcts_mode = false;
     manager_args->temp = alpha;
     shared_ptr<DentsManager> manager = make_shared<DentsManager>(*manager_args);
+    auto gstate = thts::python::helper::lock_gil();
     shared_ptr<EstDNode> root_node = make_shared<EstDNode>(manager, thts_env->get_initial_state_itfc(), 0, 0);
-    shared_ptr<ThtsPool> bts_pool; 
-    if (use_subinterpreters) {
+    thts::python::helper::unlock_gil(gstate);
+    shared_ptr<ThtsPool> bts_pool;
+    if (use_python_env) {
         bts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
     } else {
         bts_pool = make_shared<ThtsPool>(manager, root_node, num_threads);
@@ -127,8 +126,10 @@ void bts_test(double alpha, bool use_python_env, bool use_subinterpreters=false)
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree (same as c++)
+    // Make sure have gil, because getting pretty print string using python objects
+    py::gil_scoped_acquire acq;
     cout << "EST with " << num_threads << " threads (took " << dur.count() << ")";
-    if (print_tree_depth > 0){
+    if (print_tree_depth > 0) {
         cout << " and looks like:\n";
         cout << root_node->get_pretty_print_string(print_tree_depth) << endl;
     } else {
@@ -138,7 +139,6 @@ void bts_test(double alpha, bool use_python_env, bool use_subinterpreters=false)
     // Force tree destructors to be called (to clean up python objects with the gil)
     // resetting smart pointers should refcount to zero and call destructor
     // A bit annoying having to make everything a smart pointer to call destructors with gil, but mech
-    thts::python::helper::GilReenterantLockGuard lg(true);
     bts_pool.reset();
     root_node.reset();
     manager.reset();
@@ -147,51 +147,57 @@ void bts_test(double alpha, bool use_python_env, bool use_subinterpreters=false)
 }
 
 void bts_test_cpp_env(double alpha) {
+    // Assume we already have an interpreter, and need to release gil
+    // release gil and use lockguard to protect ourselves
+    py::gil_scoped_release rel;
     bts_test(alpha, false);
 }
 
 void bts_test_py_env(double alpha) {
+    // Assume we already have an interpreter, and need to release gil
+    // release gil and use lockguard to protect ourselves
+    py::gil_scoped_release rel;
     bts_test(alpha, true);
 }
 
-// Setup python interpreter in CPython
-// UNUSED, doesn't work in current state either, but didnt want to get rid of it
-void setup_python_interpreter() {
-    PyStatus status;
+// // Setup python interpreter in CPython
+// // UNUSED, doesn't work in current state either, but didnt want to get rid of it
+// void setup_python_interpreter() {
+//     PyStatus status;
 
-    // config
-    // get default python config
-    // run in an isolated environment (seems like a good idea)
-    // add <working_directory>/thts-plus-plus/py into search paths
-    PyConfig config;
-    PyConfig_InitPythonConfig(&config);
+//     // config
+//     // get default python config
+//     // run in an isolated environment (seems like a good idea)
+//     // add <working_directory>/thts-plus-plus/py into search paths
+//     PyConfig config;
+//     PyConfig_InitPythonConfig(&config);
 
-    status = PyConfig_Read(&config);
-    if (PyStatus_Exception(status)) {
-        throw runtime_error(status.err_msg);
-    }
+//     status = PyConfig_Read(&config);
+//     if (PyStatus_Exception(status)) {
+//         throw runtime_error(status.err_msg);
+//     }
 
-    config.isolated = 1;    
+//     config.isolated = 1;    
 
-    config.module_search_paths_set = 1;
-    std::string py_dir_path = std::filesystem::current_path().string() + "/py";
-    std::wstring wstring_py_dir_path = std::wstring(py_dir_path.begin(), py_dir_path.end());
-    status = PyWideStringList_Append(&config.module_search_paths, wstring_py_dir_path.c_str());
+//     config.module_search_paths_set = 1;
+//     std::string py_dir_path = std::filesystem::current_path().string() + "/py";
+//     std::wstring wstring_py_dir_path = std::wstring(py_dir_path.begin(), py_dir_path.end());
+//     status = PyWideStringList_Append(&config.module_search_paths, wstring_py_dir_path.c_str());
 
-    // error handling in C is annoying
-    if (PyStatus_Exception(status)) {
-        throw runtime_error(status.err_msg);
-    }
+//     // error handling in C is annoying
+//     if (PyStatus_Exception(status)) {
+//         throw runtime_error(status.err_msg);
+//     }
     
-    // make interpreter with config
-    status = Py_InitializeFromConfig(&config);
+//     // make interpreter with config
+//     status = Py_InitializeFromConfig(&config);
 
-    // error handling in C is annoying
-    if (PyStatus_Exception(status)) {
-        throw runtime_error(status.err_msg);
-    }
-    PyConfig_Clear(&config);
-}
+//     // error handling in C is annoying
+//     if (PyStatus_Exception(status)) {
+//         throw runtime_error(status.err_msg);
+//     }
+//     PyConfig_Clear(&config);
+// }
 
 struct MorePybindPlay {
     shared_ptr<thts::python::PyThtsEnv> thts_env;
@@ -200,19 +206,24 @@ struct MorePybindPlay {
     bool stop;
 
     MorePybindPlay() {
-        thts::python::helper::GilReenterantLockGuard lg;
+        py::gil_scoped_acquire acq;
         py::module_ py_thts_env_module = py::module_::import("test_env");
         py::object py_thts_env = py_thts_env_module.attr("PyTestThtsEnv")(2, 0.0);
-        thts_env = make_shared<thts::python::PyThtsEnv>(py_thts_env);
+        thts_env = make_shared<thts::python::PyThtsEnv>(make_shared<py::object>(py_thts_env), false);
 
         workers[0] = thread(&MorePybindPlay::run_thread, this, 0);
         workers[1] = thread(&MorePybindPlay::run_thread, this, 1);
 
         stop = false;
-    };
+    }
+
+    virtual ~MorePybindPlay() {
+        py::gil_scoped_acquire acq;
+        thts_env.reset();
+    }
 
     void run_thread(int tid) {
-        thts::python::helper::GilReenterantLockGuard::lock_gil();
+        thts::python::helper::lock_gil();
         PyInterpreterConfig config = {
             .use_main_obmalloc = 0,
             .allow_fork = 0,
@@ -239,6 +250,7 @@ struct MorePybindPlay {
             std::shared_ptr<const PyAction> action = actions->at(0);
             state = thts_env->sample_transition_distribution(state, action, rand);
             cout << thts_env->get_reward(state, action) << " frm " << tid << endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
 
@@ -254,21 +266,20 @@ int main(int argc, char *argv[]) {
     // Make python interpreter
     py::scoped_interpreter guard;
     py::gil_scoped_release rel;
+    // TODO: setup env variables so dont need the setup_python_dev.sh
 
     // // testing pybind out
     // pybind11_testing(); // change this to call want to debug, or make own main if making C++ ex and not making py lib
-    
-    // // testing bts with python env with c++ entrypoint for debugging
-    // bool bts_alpha = 1.0;
-    // bool use_python_env = true;
-    // bool use_subinterpreters = true;
-    // thts::python::helper::GilReenterantLockGuard::using_subinterpreters = use_subinterpreters;
-    // bts_test(bts_alpha, use_python_env, use_subinterpreters); 
 
-    // testing python subinterpreters
-    MorePybindPlay play;
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-    play.stahp();
+    // // testing python subinterpreters
+    // MorePybindPlay play;
+    // std::this_thread::sleep_for(std::chrono::seconds(1));
+    // play.stahp();
+    
+    // testing bts with python env with c++ entrypoint for debugging
+    bool bts_alpha = 1.0;
+    bool use_python_env = true;
+    bts_test(bts_alpha, use_python_env); 
 
     return 0;
 }
@@ -277,6 +288,8 @@ PYBIND11_MODULE(thts, m) {
 
     // Module docstring
     m.doc() = "python module to access the THTS++ library";
+
+    // TODO: find some way to add env variables at the beginning of any thts module calls
 
     // This is an example module call for BTS
     // TODO: add py::object argument to take pass in a custom env

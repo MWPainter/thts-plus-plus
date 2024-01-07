@@ -1,6 +1,6 @@
 #include "py/py_thts_env.h"
 
-#include "py/gil_helpers.h"
+#include "py/py_helper.h"
 #include "py/py_thts_types.h"
 
 #include <mutex>
@@ -14,44 +14,73 @@ using namespace std;
  * 
  */
 namespace thts::python { 
-    PyThtsEnv::PyThtsEnv(py::object _py_thts_env) :
+    PyThtsEnv::PyThtsEnv(shared_ptr<py::object> _py_thts_env, bool _py_env_may_return_shared_py_obj) :
         ThtsEnv(), py_thts_env()  
     {
-        thts::python::helper::GilReenterantLockGuard gil_lg;
+        lock_guard<mutex> lg(py_thts_env_lock);
         py_thts_env = _py_thts_env;
-        _is_fully_observable = py_thts_env.attr("is_fully_observable")().cast<bool>();
+        py_env_may_return_shared_py_obj = _py_env_may_return_shared_py_obj;
+        _is_fully_observable = py_thts_env->attr("is_fully_observable")().cast<bool>();
+    }
+
+    PyThtsEnv::~PyThtsEnv() {
+        lock_guard<mutex> lg(py_thts_env_lock);
+        py_thts_env.reset();
     }
 
     shared_ptr<const PyState> PyThtsEnv::get_initial_state() const {
-        lock_guard<mutex> lg(init_lock);
-        thts::python::helper::GilReenterantLockGuard gil_lg;
+        if (py_env_may_return_shared_py_obj) {
+            lock_guard<mutex> lg(init_lock);
+            return get_initial_state_impl();
+        }
+        return get_initial_state_impl();
+    }
+
+    shared_ptr<const PyState> PyThtsEnv::get_initial_state_impl() const {
         lock_guard<mutex> py_env_lg(py_thts_env_lock);
-        py::handle py_get_initial_state_fn = py_thts_env.attr("get_initial_state");
+        py::handle py_get_initial_state_fn = py_thts_env->attr("get_initial_state");
         py::object py_init_state = py_get_initial_state_fn();
-        return make_shared<const PyState>(py_init_state);
+        return make_shared<const PyState>(make_shared<py::object>(py_init_state));
     }
 
     bool PyThtsEnv::is_sink_state(shared_ptr<const PyState> state) const {
-        lock_guard<mutex> lg(sink_lock);
+        if (py_env_may_return_shared_py_obj) {
+            lock_guard<mutex> lg(sink_lock);
+            return is_sink_state_impl(state);
+        }
+        return is_sink_state_impl(state);
+    }
+
+    bool PyThtsEnv::is_sink_state_impl(shared_ptr<const PyState> state) const {
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
-        thts::python::helper::GilReenterantLockGuard gil_lg;
+        lock_guard<recursive_mutex> state_lg(state->lock);
+
         lock_guard<mutex> py_env_lg(py_thts_env_lock);
-        py::handle py_is_sink_state_fn = py_thts_env.attr("is_sink_state");
-        return py_is_sink_state_fn(state_non_const_ref.py_state).cast<bool>();
+        py::handle py_is_sink_state_fn = py_thts_env->attr("is_sink_state");
+        return py_is_sink_state_fn(*state_non_const_ref.py_state).cast<bool>();
     }
 
     shared_ptr<PyActionVector> PyThtsEnv::get_valid_actions(shared_ptr<const PyState> state) const {
-        lock_guard<mutex> lg(valid_lock);
+        if (py_env_may_return_shared_py_obj) {
+            lock_guard<mutex> lg(valid_lock);
+            return get_valid_actions_impl(state);
+        }
+        return get_valid_actions_impl(state);
+    }
+
+    shared_ptr<PyActionVector> PyThtsEnv::get_valid_actions_impl(shared_ptr<const PyState> state) const {
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
-        thts::python::helper::GilReenterantLockGuard gil_lg;
+        lock_guard<recursive_mutex> state_lg(state_non_const_ref.lock);
+
         py_thts_env_lock.lock();
-        py::object py_get_valid_actions_fn = py_thts_env.attr("get_valid_actions");
-        py::list py_valid_actions_list = py_get_valid_actions_fn(state_non_const_ref.py_state);
+        py::handle py_get_valid_actions_fn = py_thts_env->attr("get_valid_actions");
+        py::list py_valid_actions_list = py_get_valid_actions_fn(*state_non_const_ref.py_state);
         py_thts_env_lock.unlock();
+
         shared_ptr<PyActionVector> action_vector = make_shared<PyActionVector>();
         for (py::handle py_action : py_valid_actions_list) {
             py::object py_action_object = py::cast<py::object>(py_action);
-            action_vector->push_back(make_shared<const PyAction>(py_action_object));
+            action_vector->push_back(make_shared<const PyAction>(make_shared<py::object>(py_action_object)));
         }
         return action_vector;
     }
@@ -59,21 +88,33 @@ namespace thts::python {
     shared_ptr<PyStateDistr> PyThtsEnv::get_transition_distribution(
         shared_ptr<const PyState> state, shared_ptr<const PyAction> action) const 
     {
-        lock_guard<mutex> lg(distr_lock);
+        if (py_env_may_return_shared_py_obj) {
+            lock_guard<mutex> lg(distr_lock);
+            return get_transition_distribution_impl(state,action);
+        }
+        return get_transition_distribution_impl(state,action);
+    }
+
+    shared_ptr<PyStateDistr> PyThtsEnv::get_transition_distribution_impl(
+        shared_ptr<const PyState> state, shared_ptr<const PyAction> action) const 
+    {
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
         PyAction& action_non_const_ref = const_cast<PyAction&>(*action);
-        thts::python::helper::GilReenterantLockGuard gil_lg;
+        lock_guard<recursive_mutex> state_lg(state_non_const_ref.lock);
+        lock_guard<recursive_mutex> action_lg(action_non_const_ref.lock);
+
         py_thts_env_lock.lock();
-        py::object py_get_transition_distribution_fn = py_thts_env.attr("get_transition_distribution");
+        py::handle py_get_transition_distribution_fn = py_thts_env->attr("get_transition_distribution");
         py::dict py_transition_prob_map = py_get_transition_distribution_fn(
-            state_non_const_ref.py_state, action_non_const_ref.py_action);
+            *state_non_const_ref.py_state, *action_non_const_ref.py_action);
         py_thts_env_lock.unlock();
+
         shared_ptr<PyStateDistr> transition_prob_map = make_shared<PyStateDistr>();
         for (pair<py::handle,py::handle> py_state_prob_pair : py_transition_prob_map) {
             py::object py_next_state = py::cast<py::object>(py_state_prob_pair.first);
-            py::object py_prob_double = py::cast<py::object>(py_state_prob_pair.second);
+            py::handle py_prob_double = py_state_prob_pair.second;
             transition_prob_map->insert_or_assign(
-                make_shared<const PyState>(py_next_state), py_prob_double.cast<double>());
+                make_shared<const PyState>(make_shared<py::object>(py_next_state)), py_prob_double.cast<double>());
         }
         return transition_prob_map;
     }
@@ -81,15 +122,28 @@ namespace thts::python {
     shared_ptr<const PyState> PyThtsEnv::sample_transition_distribution(
         shared_ptr<const PyState> state, shared_ptr<const PyAction> action, RandManager& rand_manager) const 
     {
-        lock_guard<mutex> lg(sampl_lock);
+        if (py_env_may_return_shared_py_obj) {
+            lock_guard<mutex> lg(sampl_lock);
+            return sample_transition_distribution_impl(state,action,rand_manager);
+        }
+        return sample_transition_distribution_impl(state,action,rand_manager);
+    }
+
+    shared_ptr<const PyState> PyThtsEnv::sample_transition_distribution_impl(
+        shared_ptr<const PyState> state, shared_ptr<const PyAction> action, RandManager& rand_manager) const 
+    {
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
         PyAction& action_non_const_ref = const_cast<PyAction&>(*action);
-        thts::python::helper::GilReenterantLockGuard gil_lg;
-        lock_guard<mutex> py_env_lg(py_thts_env_lock);
-        py::handle py_sample_transition_distribution_fn = py_thts_env.attr("sample_transition_distribution");
+        lock_guard<recursive_mutex> state_lg(state_non_const_ref.lock);
+        lock_guard<recursive_mutex> action_lg(action_non_const_ref.lock);
+        
+        py_thts_env_lock.lock();
+        py::handle py_sample_transition_distribution_fn = py_thts_env->attr("sample_transition_distribution");
         py::object py_next_state = py_sample_transition_distribution_fn(
-            state_non_const_ref.py_state, action_non_const_ref.py_action);
-        return make_shared<const PyState>(py_next_state);
+            *state_non_const_ref.py_state, *action_non_const_ref.py_action);
+        py_thts_env_lock.unlock();
+
+        return make_shared<const PyState>(make_shared<py::object>(py_next_state));
     }
 
     double PyThtsEnv::get_reward(
@@ -97,21 +151,36 @@ namespace thts::python {
         shared_ptr<const PyAction> action, 
         shared_ptr<const PyObservation> observation) const 
     {
-        lock_guard<mutex> lg(rewrd_lock);
+        if (py_env_may_return_shared_py_obj) {
+            lock_guard<mutex> lg(rewrd_lock);
+            return get_reward_impl(state,action,observation);
+        }
+        return get_reward_impl(state,action,observation);
+    }
+
+    double PyThtsEnv::get_reward_impl(
+        shared_ptr<const PyState> state, 
+        shared_ptr<const PyAction> action, 
+        shared_ptr<const PyObservation> observation) const 
+    {
+        // return -1.0;
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
         PyAction& action_non_const_ref = const_cast<PyAction&>(*action);
         PyObservation& observation_non_const_ref = const_cast<PyObservation&>(*observation);
-        thts::python::helper::GilReenterantLockGuard gil_lg;
-        py_thts_env_lock.lock();
-        py::object py_get_reward_fn = py_thts_env.attr("get_reward");
-        py_thts_env_lock.unlock();
-        py::handle py_state = py::cast<py::handle>(state_non_const_ref.py_state);
-        py::handle py_action = py::cast<py::handle>(action_non_const_ref.py_action);
+        lock_guard<recursive_mutex> state_lg(state_non_const_ref.lock);
+        lock_guard<recursive_mutex> action_lg(action_non_const_ref.lock);
+        unique_lock<recursive_mutex> obs_lg;
+
+        py::handle py_state = py::cast<py::handle>(*state_non_const_ref.py_state);
+        py::handle py_action = py::cast<py::handle>(*action_non_const_ref.py_action);
         py::handle py_obs = py::none();
         if (observation != nullptr) {
-            py_obs = py::cast<py::handle>(observation_non_const_ref.py_obs);
+            obs_lg = unique_lock<recursive_mutex>(observation_non_const_ref.lock);
+            py_obs = py::cast<py::handle>(*observation_non_const_ref.py_obs);
         }
+        
         lock_guard<mutex> py_env_lg(py_thts_env_lock);
+        py::handle py_get_reward_fn = py_thts_env->attr("get_reward");
         return py_get_reward_fn(py_state, py_action, py_obs).cast<double>();
     }
 
