@@ -29,8 +29,19 @@ namespace thts::python {
      * A ThtsEnv subclass used as a wrapper around an environment defined in python
      * Assumes that the python environment is a subclass the 'PyThtsEnv' (python class defined in py_thts_env.py
      * 
+     * Protecting python variables:
+     * - py_thts_env needs to be protected by a lock
+     * - if py_thts_env may return the same objects between different function calls then those objects need to be 
+     *      protected from concurrent accesses (so we have a lock per function)
+     * - if not, then we only need to proect using py_thts_env object
+     * 
      * Member variables:
-     *      py_thts_env: A pybind11 py::object pointing to the python implementation an environment
+     *      py_thts_env: 
+     *          A pybind11 py::object pointing to the python implementation an environment
+     *      py_env_may_return_shared_py_obj: 
+     *          If the py_thts_env pybind object might return the same object between different calls
+     *      lock: 
+     *          For protecting the python objects we're touching
      */
     class PyThtsEnv : public ThtsEnv {
 
@@ -38,7 +49,8 @@ namespace thts::python {
          * Core PyThtsEnv implementaion.
          */
         protected:
-            py::object py_thts_env;
+            std::shared_ptr<py::object> py_thts_env;
+            bool py_env_may_return_shared_py_obj;
 
             mutable std::mutex py_thts_env_lock;
             mutable std::mutex init_lock;
@@ -55,12 +67,12 @@ namespace thts::python {
             /**
              * Constructor
              */
-            PyThtsEnv(py::object _py_thts_env);
+            PyThtsEnv(std::shared_ptr<py::object> _py_thts_env, bool _py_env_may_return_shared_py_obj);
 
             /**
              * Mark destructor as virtual for subclassing.
              */
-            virtual ~PyThtsEnv() = default;
+            virtual ~PyThtsEnv();
 
             /**
              * Returns the initial state for the environment.
@@ -68,7 +80,10 @@ namespace thts::python {
              * Returns:
              *      Initial state for this environment instance
              */
+        public:
             std::shared_ptr<const PyState> get_initial_state() const;
+        private:
+            std::shared_ptr<const PyState> get_initial_state_impl() const;
 
             /**
              * Returns if a state is a sink state.
@@ -79,7 +94,10 @@ namespace thts::python {
              * Returns:
              *      True if 'state' is a sink state and false otherwise
              */
+        public:
             bool is_sink_state(std::shared_ptr<const PyState> state) const;
+        private:
+            bool is_sink_state_impl(std::shared_ptr<const PyState> state) const;
 
             /**
              * Returns a list of actions that are valid in a given state.
@@ -90,7 +108,10 @@ namespace thts::python {
              * Returns:
              *      Returns a list of actions available from 'state'
              */
+        public:
             std::shared_ptr<PyActionVector> get_valid_actions(std::shared_ptr<const PyState> state) const;
+        private:
+            std::shared_ptr<PyActionVector> get_valid_actions_impl(std::shared_ptr<const PyState> state) const;
 
             /**
              * Returns a distribution over successor states from a state action pair.
@@ -106,7 +127,11 @@ namespace thts::python {
              * Returns:
              *      Returns a successor state distribution from taking 'action' in state 'state'.
              */
+        public:
             std::shared_ptr<PyStateDistr> get_transition_distribution(
+                std::shared_ptr<const PyState> state, std::shared_ptr<const PyAction> action) const;
+        private:
+            std::shared_ptr<PyStateDistr> get_transition_distribution_impl(
                 std::shared_ptr<const PyState> state, std::shared_ptr<const PyAction> action) const;
 
             /**
@@ -122,7 +147,13 @@ namespace thts::python {
              * Returns:
              *      Returns an successor state sampled from taking 'action' from 'state'
              */
+        public:
             std::shared_ptr<const PyState> sample_transition_distribution(
+                std::shared_ptr<const PyState> state, 
+                std::shared_ptr<const PyAction> action, 
+                RandManager& rand_manager) const;
+        private:
+            std::shared_ptr<const PyState> sample_transition_distribution_impl(
                 std::shared_ptr<const PyState> state, 
                 std::shared_ptr<const PyAction> action, 
                 RandManager& rand_manager) const;
@@ -143,7 +174,12 @@ namespace thts::python {
              * Returns:
              *      The reward for taking 'action' from 'state' (and sampling 'observation')
              */
+        public:
             double get_reward(
+                std::shared_ptr<const PyState> state, 
+                std::shared_ptr<const PyAction> action, 
+                std::shared_ptr<const PyObservation> observation=nullptr) const;
+            double get_reward_impl(
                 std::shared_ptr<const PyState> state, 
                 std::shared_ptr<const PyAction> action, 
                 std::shared_ptr<const PyObservation> observation=nullptr) const;

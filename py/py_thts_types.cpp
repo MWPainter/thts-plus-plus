@@ -1,6 +1,6 @@
 #include "py/py_thts_types.h"
 
-#include "py/gil_helpers.h"
+#include "py/py_helper_templates.h"
 
 #include <functional> 
 #include <iostream>
@@ -20,20 +20,28 @@ namespace thts::python {
      * Implementation of PyObservation 
      * Just point towards pybind interface for each function
      */
-    PyObservation::PyObservation(py::object _py_obs) : py_obs() 
+    PyObservation::PyObservation(shared_ptr<py::object> _py_obs) : py_obs(), lock()
     {
-        thts::python::helper::GilReenterantLockGuard lg;
+        lock_guard<recursive_mutex> lg(lock);
         py_obs = _py_obs;
     }
 
+    PyObservation::~PyObservation() {
+        lock_guard<recursive_mutex> lg(lock);
+        py_obs.reset();
+    }
+
     size_t PyObservation::hash() const {
-        thts::python::helper::GilReenterantLockGuard lg;
-        return py::hash(py_obs);
+        lock_guard<recursive_mutex> lg(lock);
+        return py::hash(*py_obs);
     }
     
     bool PyObservation::equals(const PyObservation& other) const {
-        thts::python::helper::GilReenterantLockGuard lg;
-        return py_obs.is(other.py_obs);
+        thts::python::helper::ordered_lock(py_obs, lock, other.py_obs, other.lock);
+        bool result = py_obs->is(*other.py_obs);
+        lock.unlock();
+        other.lock.unlock();
+        return result;
     }
 
     bool PyObservation::equals_itfc(const Observation& other) const {
@@ -47,28 +55,36 @@ namespace thts::python {
     }
     
     string PyObservation::get_pretty_print_string() const {
-        thts::python::helper::GilReenterantLockGuard lg;
-        return py::str(py_obs);
+        lock_guard<recursive_mutex> lg(lock);
+        return py::str(*py_obs);
     }
 
     /**
      * Implementation of PyState 
      * Just point towards pybind interface for each function
      */
-    PyState::PyState(py::object _py_state) : py_state() 
+    PyState::PyState(shared_ptr<py::object> _py_state) : py_state(), lock()
     {
-        thts::python::helper::GilReenterantLockGuard lg;
+        lock_guard<recursive_mutex> lg(lock);
         py_state = _py_state;
     }
 
+    PyState::~PyState() {
+        lock_guard<recursive_mutex> lg(lock);
+        py_state.reset();
+    }
+
     size_t PyState::hash() const {
-        thts::python::helper::GilReenterantLockGuard lg;
-        return py::hash(py_state);
+        lock_guard<recursive_mutex> lg(lock);
+        return py::hash(*py_state);
     } 
     
     bool PyState::equals(const PyState& other) const {
-        thts::python::helper::GilReenterantLockGuard lg;
-        return py_state.is(other.py_state);
+        thts::python::helper::ordered_lock(py_state, lock, other.py_state, other.lock);
+        bool result = py_state->is(*other.py_state);
+        lock.unlock();
+        other.lock.unlock();
+        return result;
     }
 
     bool PyState::equals_itfc(const Observation& other) const {
@@ -82,28 +98,36 @@ namespace thts::python {
     }
     
     string PyState::get_pretty_print_string() const {
-        thts::python::helper::GilReenterantLockGuard lg;
-        return py::str(py_state);
+        lock_guard<recursive_mutex> lg(lock);
+        return py::str(*py_state);
     }
 
     /**
      * Implementation of PyAction
      * Just point towards pybind interface for each function
      */
-    PyAction::PyAction(py::object _py_action) : py_action() 
+    PyAction::PyAction(shared_ptr<py::object> _py_action) : py_action(), lock()
     {
-        thts::python::helper::GilReenterantLockGuard lg;
+        lock_guard<recursive_mutex> lg(lock);
         py_action = _py_action;
+    }
+
+    PyAction::~PyAction() {
+        lock_guard<recursive_mutex> lg(lock);
+        py_action.reset();
     }
     
     size_t PyAction::hash() const {
-        thts::python::helper::GilReenterantLockGuard lg;
-        return py::hash(py_action);
+        lock_guard<recursive_mutex> lg(lock);
+        return py::hash(*py_action);
     }
     
     bool PyAction::equals(const PyAction& other) const {
-        thts::python::helper::GilReenterantLockGuard lg;
-        return py_action.is(other.py_action);
+        thts::python::helper::ordered_lock(py_action, lock, other.py_action, other.lock);
+        bool result = py_action->is(*other.py_action);
+        lock.unlock();
+        other.lock.unlock();
+        return result;
     }
 
     bool PyAction::equals_itfc(const Action& other) const {
@@ -117,8 +141,8 @@ namespace thts::python {
     }
     
     string PyAction::get_pretty_print_string() const {
-        thts::python::helper::GilReenterantLockGuard lg;
-        return py::str(py_action);
+        lock_guard<recursive_mutex> lg(lock);
+        return py::str(*py_action);
     }
 }
 

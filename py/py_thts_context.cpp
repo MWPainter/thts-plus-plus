@@ -2,15 +2,17 @@
 
 #include "py/py_thts_context.h"
 
-#include "py/gil_helpers.h"
-
+using namespace std;
 namespace py = pybind11;
 
 namespace thts::python {
 
-    PyThtsContext::PyThtsContext(py::object _py_context) : py_context() 
+    PyThtsContext::PyThtsContext(shared_ptr<py::object> _py_context) : py_context(_py_context) 
     {
-        thts::python::helper::GilReenterantLockGuard lg;
-        py_context = _py_context;
+    } 
+
+    PyThtsContext::~PyThtsContext()
+    {
+        py_context.reset();
     } 
 }

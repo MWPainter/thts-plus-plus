@@ -50,6 +50,38 @@ namespace thts {
         }
     }
 
+    ThtsPool::ThtsPool(
+        shared_ptr<ThtsManager> thts_manager, 
+        shared_ptr<ThtsDNode> root_node, 
+        int num_threads, 
+        shared_ptr<ThtsLogger> logger,
+        bool spawn_threads_immediately) :
+            workers(num_threads),
+            work_left_cv(),
+            work_left_lock(),
+            logging_lock(),
+            thread_pool_alive(true),
+            num_threads(num_threads),
+            num_trials(0),
+            start_time(std::chrono::system_clock::now()),
+            max_run_time(0.0),
+            trials_remaining(0),
+            num_threads_working(num_threads),
+            trials_completed(0),
+            logger(logger),
+            thts_manager(thts_manager),
+            root_node(root_node)
+    {
+        if (thts_manager == nullptr || root_node == nullptr) {
+            throw runtime_error("Cannot make ThtsPool without a thts manager, or root node");
+        }
+        if (spawn_threads_immediately) {
+            for (int i=0; i<num_threads; i++) {
+                workers[i] = thread(&ThtsPool::worker_fn, this);
+            }
+        }
+    }
+
     /**
      * Destructor
      * 

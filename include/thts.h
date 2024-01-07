@@ -94,6 +94,7 @@ namespace thts {
              *          NULL, then a default root node construction is attempted using the initial state from 
              *          thts_manager->thts_env.
              *      num_threads: The number of worker threads to spawn
+             *      spawn_threads_immediately: If should spawn threads in this constructor
              */
             ThtsPool(
                 std::shared_ptr<ThtsManager> thts_manager=nullptr, 
@@ -101,6 +102,19 @@ namespace thts {
                 int num_threads=1,
                 std::shared_ptr<ThtsLogger> logger=nullptr);
 
+        protected:
+            /**
+             * Protected constructor where we dont spawn threads immediately
+            */
+            ThtsPool(
+                std::shared_ptr<ThtsManager> thts_manager, 
+                std::shared_ptr<ThtsDNode> root_node, 
+                int num_threads,
+                std::shared_ptr<ThtsLogger> logger,
+                bool spawn_threads_immediately);
+
+
+        public:
             /**
              * Destructor. Required to allow the thread pool to exit gracefully.
              */

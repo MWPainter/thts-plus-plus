@@ -4,6 +4,9 @@
 
 #include <pybind11/pybind11.h>
 
+#include <memory>
+#include <mutex>
+
 /**
  * py_thts_types.h
  * 
@@ -26,11 +29,12 @@ namespace thts::python {
         friend PyThtsEnv;
 
         protected:
-            py::object py_obs;
+            std::shared_ptr<py::object> py_obs;
+            mutable std::recursive_mutex lock;
         
         public:
-            PyObservation(py::object _py_obs);
-            virtual ~PyObservation() = default;
+            PyObservation(std::shared_ptr<py::object> _py_obs);
+            virtual ~PyObservation();
             bool equals(const PyObservation& other) const;
 
             virtual std::size_t hash() const override;
@@ -46,11 +50,12 @@ namespace thts::python {
         friend PyThtsEnv;
 
         protected:
-            py::object py_state;
+            std::shared_ptr<py::object> py_state;
+            mutable std::recursive_mutex lock;
         
         public:
-            PyState(py::object _py_state);
-            virtual ~PyState() = default;
+            PyState(std::shared_ptr<py::object> _py_state);
+            virtual ~PyState();
             bool equals(const PyState& other) const;
             
             virtual std::size_t hash() const override;
@@ -66,11 +71,12 @@ namespace thts::python {
         friend PyThtsEnv;
         
         protected:
-            py::object py_action;
+            std::shared_ptr<py::object> py_action;
+            mutable std::recursive_mutex lock;
         
         public:
-            PyAction(py::object _py_action);
-            virtual ~PyAction() = default;
+            PyAction(std::shared_ptr<py::object> _py_action);
+            virtual ~PyAction();
             bool equals(const PyAction& other) const;
 
             virtual std::size_t hash() const override;

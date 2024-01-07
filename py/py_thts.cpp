@@ -1,12 +1,13 @@
 #include "py/py_thts.h"
 
-#include "py/gil_helpers.h"
+#include "py/py_helper.h"
 
 #include <Python.h>
 #include <pybind11/pybind11.h>
 
 using namespace std;
 using namespace thts;
+namespace py = pybind11;
 
 namespace thts::python {
     /**
@@ -27,8 +28,11 @@ namespace thts::python {
         shared_ptr<ThtsDNode> root_node, 
         int num_threads, 
         shared_ptr<ThtsLogger> logger) :
-            ThtsPool(thts_manager, root_node, num_threads, logger) 
+            ThtsPool(thts_manager, root_node, num_threads, logger, false) 
     {
+        for (int i=0; i<num_threads; i++) {
+            workers[i] = thread(&PyThtsPool::worker_fn, this);
+        }
     }
 
     /**
@@ -37,7 +41,8 @@ namespace thts::python {
      */
     void PyThtsPool::worker_fn() {
         // Make new interpreter
-        thts::python::helper::GilReenterantLockGuard::lock_gil();
+        // Need to lock with CPython API because pybind11 gil interface not built to work with it
+        thts::python::helper::lock_gil();
         PyInterpreterConfig config = {
             .use_main_obmalloc = 0,
             .allow_fork = 0,
@@ -54,13 +59,6 @@ namespace thts::python {
         }
 
         // Do work
-        thts::python::helper::GilReenterantLockGuard::lock_gil();
         ThtsPool::worker_fn();
-
-        // Clean up interpreter
-        // TODO: handle errors with tstate 
-        // TODO: clean up interpreter in this block
-        // TODO: rework gil_helpers.cpp to handle (use std::thread::id this_id = std::this_thread::get_id();)
-        // TODO: have a map for each other the same variables
     }
 }
