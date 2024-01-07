@@ -9,6 +9,7 @@
 #include <pybind11/embed.h>
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -38,6 +39,14 @@ namespace thts::python {
          */
         protected:
             py::object py_thts_env;
+
+            mutable std::mutex py_thts_env_lock;
+            mutable std::mutex init_lock;
+            mutable std::mutex sink_lock;
+            mutable std::mutex valid_lock;
+            mutable std::mutex distr_lock;
+            mutable std::mutex sampl_lock;
+            mutable std::mutex rewrd_lock;
 
         /**
          * Core ThtsEnv implementation functinos.
