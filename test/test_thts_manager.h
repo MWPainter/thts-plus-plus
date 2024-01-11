@@ -13,6 +13,7 @@ namespace thts::test {
             MockThtsManager(std::shared_ptr<thts::ThtsEnv> thts_env=nullptr) : 
                 thts::ThtsManager(thts::ThtsManagerArgs(thts_env)) {};
 
+            // Mock RNG so dont have RNG in tests
             MOCK_METHOD(int, get_rand_int, (int min_included, int max_excluded), (override));
             MOCK_METHOD(double, get_rand_uniform, (), (override));
     };

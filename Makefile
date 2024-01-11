@@ -22,10 +22,15 @@ SOURCES += $(wildcard src/algorithms/ments/tents/*.cpp)
 SOURCES += $(wildcard src/algorithms/uct/*.cpp)
 SOURCES += $(wildcard src/distributions/*.cpp)
 OBJECTS = $(patsubst src/%.cpp, bin/src/%.o, $(SOURCES))
+
 TEST_SOURCES = $(wildcard test/*.cpp)
 TEST_SOURCES += $(wildcard test/algorithms/*.cpp)
 TEST_SOURCES += $(wildcard test/distributions/*.cpp)
+TEST_SOURCES += $(wildcard test/mo/*.cpp)
 TEST_OBJECTS = $(patsubst test/%.cpp, bin/test/%.o, $(TEST_SOURCES))
+
+MO_SOURCES = $(wildcard mo/*.cpp)
+MO_OBJECTS = $(patsubst mo/%.cpp, bin/mo/%.o, $(MO_SOURCES))
 
 # PY_MODULE_DEF = py/module/module.cpp
 PY_SOURCES = $(wildcard py/*.cpp)
@@ -36,19 +41,19 @@ GTEST = external/googletest/build/lib/libgtest_main.a
 ANACONDA_ENVS_HOME = /home/michael/anaconda3/envs
 # ANACONDA_ENVS_HOME = /jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs
 
-INCLUDES = -Iinclude/ -Isrc/ -Iexternal/ -I. 
+
+INCLUDES = -I. -Iinclude/ -Isrc/ -Iexternal/ -Iexternal/eigen/ -Iexternal/qhull/src/
 TEST_INCLUDES = -Iexternal/googletest/build/include
-PY_INCLUDES = -Iexternal/pybind11/include $$(python3.12 -m pybind11 --includes) -Ipy/
-PY_INCLUDES += -I$(ANACONDA_ENVS_HOME)/thts3.12/include/python3.12
+INCLUDES += -Iexternal/pybind11/include $$(python3.12 -m pybind11 --includes) -Ipy/
+INCLUDES += -I$(ANACONDA_ENVS_HOME)/thts3.12/include/python3.12
 
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20
-# CPPFLAGS = $(INCLUDES) -Wall -W -pedantic -std=c++20
-PY_CPPFLAGS = -fPIC -fvisibility=hidden # needed to create shared library
-PY_EX_CPPFLAGS = -pie -fPIE # needed to create executable
+CPPFLAGS += -fPIC -fvisibility=hidden # needed to create shared library
+CPPFLAGS += -pie -fPIE # needed to create executable
 TEST_CPPFLAGS = 
 CPPFLAGS_DEBUG = -g -ggdb
 
-LDFLAGS = -lpthread
+LDFLAGS = -Lexternal/qhull/lib -lqhullcpp -lqhullstatic_r -lpthread
 PY_LD_LOCS =  -L$(ANACONDA_ENVS_HOME)/thts3.12/lib
 PY_LDFLAGS = $(PY_LD_LOCS) -lpython3.12
 TEST_LDFLAGS = -Lexternal/googletest/build/lib -lgtest -lgtest_main -lgmock
@@ -69,7 +74,7 @@ THTS_PY_LIB_FULL_NAME = thts$$(python3.12-config --extension-suffix)
 #####
 
 # Default, build everything
-all: $(TARGET_THTS_TEST)
+all: $(TARGET_THTS_TEST) $(TARGET_THTS_PY_EX)
 
 
 
@@ -98,6 +103,11 @@ $(PY_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
 	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
+# Build multi-objective object files rule
+$(MO_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
+	@mkdir -p $(@D)
+	$(CXX) $(CPPFLAGS) -c -o $@ $<
+
 # Build test object files rule
 $(TEST_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
@@ -116,7 +126,7 @@ $(TARGET_THTS): $(OBJECTS)
 $(TARGET_THTS_TEST): INCLUDES += $(TEST_INCLUDES)
 $(TARGET_THTS_TEST): CPPFLAGS += $(TEST_CPPFLAGS)
 $(TARGET_THTS_TEST): LDFLAGS += $(TEST_LDFLAGS)
-$(TARGET_THTS_TEST): $(OBJECTS) $(TEST_OBJECTS)
+$(TARGET_THTS_TEST): $(OBJECTS) $(MO_OBJECTS) $(TEST_OBJECTS)
 	$(CXX) $(CPPFLAGS) -o $@ $^ $(GTEST) $(LDFLAGS)
 
 # Add a debug tests target. Adds -g to flags for debug info, and then just runs tests target
@@ -124,16 +134,11 @@ $(TARGET_THTS_TEST_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
 $(TARGET_THTS_TEST_DEBUG): $(TARGET_THTS_TEST)
 
 # Building the python library
-$(TARGET_THTS_PY_LIB): INCLUDES += $(PY_INCLUDES)
-$(TARGET_THTS_PY_LIB): CPPFLAGS += $(PY_CPPFLAGS)
 $(TARGET_THTS_PY_LIB): LDFLAGS += $(PY_LDFLAGS)
 $(TARGET_THTS_PY_LIB): $(OBJECTS) $(PY_OBJECTS)
 	$(CXX) -shared $(CPPFLAGS) $^ -o $(THTS_PY_LIB_FULL_NAME) $(LDFLAGS)
 
 # C++ entry point
-$(TARGET_THTS_PY_EX): INCLUDES += $(PY_INCLUDES)
-$(TARGET_THTS_PY_EX): CPPFLAGS += $(PY_CPPFLAGS)
-$(TARGET_THTS_PY_EX): CPPFLAGS += $(PY_EX_CPPFLAGS)
 $(TARGET_THTS_PY_EX): LDFLAGS += $(PY_LDFLAGS)
 $(TARGET_THTS_PY_EX): $(OBJECTS) $(PY_OBJECTS)
 	$(CXX) -shared $(CPPFLAGS) $^ -o $(TARGET_THTS_PY_EX) $(LDFLAGS)

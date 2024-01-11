@@ -35,6 +35,8 @@ namespace thts {
      *          A mutex protecting any logging performed by thts.
      *      thread_pool_alive: 
      *          A boolean stating if the workers thread pool is running. Set to false at destruction.
+     *      thread_setup_cv:
+     *          CV for main thread to wait on, waiting for worker threads to run their setup_thread function call
      *      num_threads: 
      *          The number of threads used in the workers thread pool.
      *      num_trials: 
@@ -62,6 +64,10 @@ namespace thts {
             std::mutex work_left_lock;
             std::mutex logging_lock;
             bool thread_pool_alive;
+
+            std::condition_variable_any thread_setup_cv;
+            std::mutex thread_setup_lock;
+            int threads_setup;
 
             // constant after init
             int num_threads;
@@ -94,24 +100,16 @@ namespace thts {
              *          NULL, then a default root node construction is attempted using the initial state from 
              *          thts_manager->thts_env.
              *      num_threads: The number of worker threads to spawn
-             *      spawn_threads_immediately: If should spawn threads in this constructor
+             *      start_threads_in_this_constructor: 
+             *          If should spawn threads in this constructor. This is for use in initialiser lists of subclasses 
+             *          that want to run their own worker_fn threads (see PyThtsPool for example)
              */
             ThtsPool(
                 std::shared_ptr<ThtsManager> thts_manager=nullptr, 
                 std::shared_ptr<ThtsDNode> root_node=nullptr, 
                 int num_threads=1,
-                std::shared_ptr<ThtsLogger> logger=nullptr);
-
-        protected:
-            /**
-             * Protected constructor where we dont spawn threads immediately
-            */
-            ThtsPool(
-                std::shared_ptr<ThtsManager> thts_manager, 
-                std::shared_ptr<ThtsDNode> root_node, 
-                int num_threads,
-                std::shared_ptr<ThtsLogger> logger,
-                bool spawn_threads_immediately);
+                std::shared_ptr<ThtsLogger> logger=nullptr,
+                bool start_threads_in_this_constructor=true);
 
 
         public:
@@ -123,7 +121,7 @@ namespace thts {
             /**
              * Setter for new search environment, so thread pool can be reused
             */
-            void set_new_env(
+            void reset(
                 std::shared_ptr<ThtsManager> new_thts_manager, 
                 std::shared_ptr<ThtsDNode> new_root_node,
                 std::shared_ptr<ThtsLogger> new_logger=nullptr);
@@ -171,7 +169,8 @@ namespace thts {
             void run_selection_phase(
                 std::vector<std::pair<std::shared_ptr<ThtsDNode>,std::shared_ptr<ThtsCNode>>>& nodes_to_backup, 
                 std::vector<double>& rewards, 
-                ThtsEnvContext& context);
+                ThtsEnvContext& context,
+                int tid);
 
             /**
              * Runs the backup phase of a trial, called by worker threads.
@@ -196,21 +195,26 @@ namespace thts {
              *      trials_remaining: 
              *          The number of trials remaining at the time of calling (not including the one about to be run by 
              *          this function)
+             *      tid:
+             *          Thread id
              */
-            virtual void run_thts_trial(int trials_remaining);
+            virtual void run_thts_trial(int trials_remaining, int tid);
 
             /**
             * Checks if we need to perform logging, and if so, will write a log to the logger
             */
             void try_log();
 
-
             /**
              * The worker thread thnuk.
              * 
              * Waits for work, and calls 'run_thts_trial' until there is no more work to do.
+             * 
+             * Args:
+             *      tid:
+             *          Thread id
              */
-            virtual void worker_fn();
+            virtual void worker_fn(int tid);
 
         public:
             /**

@@ -15,14 +15,17 @@ class PyTestThtsEnv(PyThtsEnv):
         self.grid_size = grid_size
         self.stay_prob = stay_prob
 
+    def clone(self):
+        return PyTestThtsEnv(grid_size=self.grid_size,stay_prob=self.stay_prob)
+
     def get_initial_state(self):
         return (0,0)
     
-    def is_sink_state(self, state):
+    def is_sink_state(self, state, ctx):
         return (state[0] == self.grid_size and state[1] == self.grid_size)
 
-    def get_valid_actions(self, state):
-        if (self.is_sink_state(state)):
+    def get_valid_actions(self, state, ctx):
+        if (self.is_sink_state(state, ctx)):
             return []
         
         x,y = state
@@ -49,14 +52,14 @@ class PyTestThtsEnv(PyThtsEnv):
             return (x  , y-1)
         raise Exception("Something went wrong in python test env")
     
-    def get_transition_distribution(self, state, action):
+    def get_transition_distribution(self, state, action, ctx):
         cand_next_state = self.candidate_next_state(state, action)
         distr = {cand_next_state: 1.0 - self.stay_prob}
         if (self.stay_prob > 0.0):
             distr[state] = self.stay_prob
         return distr
     
-    def sample_transition_distribution(self, state, action):
+    def sample_transition_distribution(self, state, action, ctx):
         if (self.stay_prob == 0.0):
             return self.candidate_next_state(state,action)
         
@@ -66,5 +69,5 @@ class PyTestThtsEnv(PyThtsEnv):
         else:
             return state
         
-    def get_reward(self, state, action, observation=None):
+    def get_reward(self, state, action, ctx):
         return -1.0

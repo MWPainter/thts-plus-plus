@@ -50,9 +50,10 @@ void run_tents_integration_test(
     manager_args.mcts_mode = false;
     manager_args.temp = temp;
     shared_ptr<MentsManager> manager = make_shared<MentsManager>(manager_args);
-    shared_ptr<TentsDNode> root_node = make_shared<TentsDNode>(manager, grid_env->get_initial_state_itfc(), 0, 0);
-    ThtsPool uct_pool(manager, root_node, num_threads);
-    uct_pool.run_trials(num_trials);
+    shared_ptr<TentsDNode> root_node = make_shared<TentsDNode>(
+        manager, grid_env->get_initial_state_itfc(), 0, 0);
+    ThtsPool thts_pool(manager, root_node, num_threads);
+    thts_pool.run_trials(num_trials);
 
     if (stay_prob == 0.0) {
         // TODO add asserts
@@ -101,8 +102,8 @@ void run_tents_game_integration_test(int env_size, int num_trials, int print_tre
     shared_ptr<MentsManager> manager = make_shared<MentsManager>(manager_args);
     shared_ptr<TentsDNode> root_node = make_shared<TentsDNode>(
         manager, game_env->get_initial_state_itfc(), 0, decision_timestep);
-    ThtsPool uct_pool(manager, root_node, 1);
-    uct_pool.run_trials(num_trials);
+    ThtsPool thts_pool(manager, root_node, 1);
+    thts_pool.run_trials(num_trials);
 
     if (print_tree_depth > 0){
         cout << "TENTS with starting decision_timestep of " << decision_timestep << " looks like:\n";

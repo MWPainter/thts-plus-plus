@@ -36,6 +36,7 @@ namespace thts::python {
      * - if not, then we only need to proect using py_thts_env object
      * 
      * Member variables:
+     *      multiple_threads_using_this_env:
      *      py_thts_env: 
      *          A pybind11 py::object pointing to the python implementation an environment
      *      py_env_may_return_shared_py_obj: 
@@ -49,16 +50,9 @@ namespace thts::python {
          * Core PyThtsEnv implementaion.
          */
         protected:
-            std::shared_ptr<py::object> py_thts_env;
-            bool py_env_may_return_shared_py_obj;
-
+            bool multiple_threads_using_this_env;
             mutable std::mutex py_thts_env_lock;
-            mutable std::mutex init_lock;
-            mutable std::mutex sink_lock;
-            mutable std::mutex valid_lock;
-            mutable std::mutex distr_lock;
-            mutable std::mutex sampl_lock;
-            mutable std::mutex rewrd_lock;
+            std::shared_ptr<py::object> py_thts_env;
 
         /**
          * Core ThtsEnv implementation functinos.
@@ -67,12 +61,31 @@ namespace thts::python {
             /**
              * Constructor
              */
-            PyThtsEnv(std::shared_ptr<py::object> _py_thts_env, bool _py_env_may_return_shared_py_obj);
+            PyThtsEnv(
+                std::shared_ptr<py::object> py_thts_env, 
+                bool multiple_threads_using_this_env);
+
+            /**
+             * Private copy constructor to implement 
+            */
+            PyThtsEnv(PyThtsEnv& other);
+
+            /**
+             * Clone - virtual copy constructor idiom
+            */
+            virtual std::shared_ptr<ThtsEnv> clone() override;
 
             /**
              * Mark destructor as virtual for subclassing.
              */
             virtual ~PyThtsEnv();
+
+        private:
+            /**
+             * Locking to protect underlying py
+            */
+            std::unique_lock<std::mutex> maybe_lock_for_py_thts_env() const;
+            void ensure_py_thts_env_unlocked(std::unique_lock<std::mutex>& ul) const;
 
             /**
              * Returns the initial state for the environment.
@@ -82,8 +95,6 @@ namespace thts::python {
              */
         public:
             std::shared_ptr<const PyState> get_initial_state() const;
-        private:
-            std::shared_ptr<const PyState> get_initial_state_impl() const;
 
             /**
              * Returns if a state is a sink state.
@@ -94,10 +105,7 @@ namespace thts::python {
              * Returns:
              *      True if 'state' is a sink state and false otherwise
              */
-        public:
-            bool is_sink_state(std::shared_ptr<const PyState> state) const;
-        private:
-            bool is_sink_state_impl(std::shared_ptr<const PyState> state) const;
+            bool is_sink_state(std::shared_ptr<const PyState> state, PyThtsContext& ctx) const;
 
             /**
              * Returns a list of actions that are valid in a given state.
@@ -108,10 +116,8 @@ namespace thts::python {
              * Returns:
              *      Returns a list of actions available from 'state'
              */
-        public:
-            std::shared_ptr<PyActionVector> get_valid_actions(std::shared_ptr<const PyState> state) const;
-        private:
-            std::shared_ptr<PyActionVector> get_valid_actions_impl(std::shared_ptr<const PyState> state) const;
+            std::shared_ptr<PyActionVector> get_valid_actions(
+                std::shared_ptr<const PyState> state, PyThtsContext& ctx) const;
 
             /**
              * Returns a distribution over successor states from a state action pair.
@@ -127,12 +133,10 @@ namespace thts::python {
              * Returns:
              *      Returns a successor state distribution from taking 'action' in state 'state'.
              */
-        public:
             std::shared_ptr<PyStateDistr> get_transition_distribution(
-                std::shared_ptr<const PyState> state, std::shared_ptr<const PyAction> action) const;
-        private:
-            std::shared_ptr<PyStateDistr> get_transition_distribution_impl(
-                std::shared_ptr<const PyState> state, std::shared_ptr<const PyAction> action) const;
+                std::shared_ptr<const PyState> state, 
+                std::shared_ptr<const PyAction> action, 
+                PyThtsContext& ctx) const;
 
             /**
              * Samples an successor state when taking an action from a state.
@@ -147,16 +151,11 @@ namespace thts::python {
              * Returns:
              *      Returns an successor state sampled from taking 'action' from 'state'
              */
-        public:
             std::shared_ptr<const PyState> sample_transition_distribution(
                 std::shared_ptr<const PyState> state, 
                 std::shared_ptr<const PyAction> action, 
-                RandManager& rand_manager) const;
-        private:
-            std::shared_ptr<const PyState> sample_transition_distribution_impl(
-                std::shared_ptr<const PyState> state, 
-                std::shared_ptr<const PyAction> action, 
-                RandManager& rand_manager) const;
+                RandManager& rand_manager, 
+                PyThtsContext& ctx) const;
             
             /**
              * Returns the reward for a given state, action, observation tuple.
@@ -174,24 +173,32 @@ namespace thts::python {
              * Returns:
              *      The reward for taking 'action' from 'state' (and sampling 'observation')
              */
-        public:
             double get_reward(
                 std::shared_ptr<const PyState> state, 
                 std::shared_ptr<const PyAction> action, 
-                std::shared_ptr<const PyObservation> observation=nullptr) const;
-            double get_reward_impl(
-                std::shared_ptr<const PyState> state, 
-                std::shared_ptr<const PyAction> action, 
-                std::shared_ptr<const PyObservation> observation=nullptr) const;
+                PyThtsContext& ctx) const;
+
+            /**
+             * Samples a context that can be used to store information throughout a single trial.
+             * 
+             * Sometimes it is useful to place each trial in some sort of context, or a context can be used to cache 
+             * information that doesn't need to be stored in the tree search permenantly, but is useful computationally. 
+             * This function generates a context to be used. Most of the time it will be something like an empty map. 
+             * 
+             * Args:
+             *      state: The initial state
+             * 
+             * Returns:
+             *      A PyThtsContext object, that will be passed to the Thts functions for a single trial, used to 
+             *      provide some context or space for caching.
+             */
+            virtual std::shared_ptr<PyThtsContext> sample_context_and_reset(int tid) const;
 
 
 
         /**
          * Boilerplate functinos (defined in thts_env_template.{h,cpp}) using the default implementations provided by 
          * thts_env.{h,cpp}. 
-         * 
-         * TODO: decide if need to override any of these (yes if want a partially observable environment, or want a 
-         * custom ThtsEnvContext object).
          */
         public:
             /**
@@ -211,7 +218,9 @@ namespace thts::python {
              *      Returns a distribution over observations from taking 'action' in state 'state'.
              */
             virtual std::shared_ptr<PyObservationDistr> get_observation_distribution(
-                std::shared_ptr<const PyAction> action, std::shared_ptr<const PyState> next_state) const;
+                std::shared_ptr<const PyAction> action, 
+                std::shared_ptr<const PyState> next_state, 
+                PyThtsContext& ctx) const;
 
             /**
              * Samples an observation when arriving in a (next) state after taking an action.
@@ -231,23 +240,8 @@ namespace thts::python {
             virtual std::shared_ptr<const PyObservation> sample_observation_distribution(
                 std::shared_ptr<const PyAction> action, 
                 std::shared_ptr<const PyState> next_state, 
-                RandManager& rand_manager) const;
-
-            /**
-             * Samples a context that can be used to store information throughout a single trial.
-             * 
-             * Sometimes it is useful to place each trial in some sort of context, or a context can be used to cache 
-             * information that doesn't need to be stored in the tree search permenantly, but is useful computationally. 
-             * This function generates a context to be used. Most of the time it will be something like an empty map. 
-             * 
-             * Args:
-             *      state: The initial state
-             * 
-             * Returns:
-             *      A ThtsEnvContext object, that will be passed to the Thts functions for a single trial, used to 
-             *      provide some context or space for caching.
-             */
-            virtual std::shared_ptr<PyThtsContext> sample_context(std::shared_ptr<const PyState> state) const;
+                RandManager& rand_manager, 
+                PyThtsContext& ctx) const;
 
 
 
@@ -255,26 +249,34 @@ namespace thts::python {
          * ThtsEnv interface function definitions. Boilerplate implementations provided from thts_env_template.h
          */
         public:
-            virtual std::shared_ptr<const State> get_initial_state_itfc() const;
-            virtual bool is_sink_state_itfc(std::shared_ptr<const State> state) const;
-            virtual std::shared_ptr<ActionVector> get_valid_actions_itfc(std::shared_ptr<const State> state) const;
+            virtual std::shared_ptr<const State> get_initial_state_itfc() const override;
+            virtual bool is_sink_state_itfc(std::shared_ptr<const State> state, ThtsEnvContext& ctx) const override;
+            virtual std::shared_ptr<ActionVector> get_valid_actions_itfc(
+                std::shared_ptr<const State> state, ThtsEnvContext& ctx) const override;
             virtual std::shared_ptr<StateDistr> get_transition_distribution_itfc(
-                std::shared_ptr<const State> state, std::shared_ptr<const Action> action) const;
+                std::shared_ptr<const State> state, 
+                std::shared_ptr<const Action> action, 
+                ThtsEnvContext& ctx) const override;
             virtual std::shared_ptr<const State> sample_transition_distribution_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
-                 RandManager& rand_manager) const;
+                 RandManager& rand_manager, 
+                 ThtsEnvContext& ctx) const override;
             virtual std::shared_ptr<ObservationDistr> get_observation_distribution_itfc(
-                std::shared_ptr<const Action> action, std::shared_ptr<const State> next_state) const;
+                std::shared_ptr<const Action> action, 
+                std::shared_ptr<const State> next_state, 
+                ThtsEnvContext& ctx) const override;
             virtual std::shared_ptr<const Observation> sample_observation_distribution_itfc(
                 std::shared_ptr<const Action> action, 
                 std::shared_ptr<const State> next_state, 
-                 RandManager& rand_manager) const;
+                 RandManager& rand_manager, 
+                 ThtsEnvContext& ctx) const override;
             virtual double get_reward_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
-                std::shared_ptr<const Observation> observation=nullptr) const;
-            virtual std::shared_ptr<ThtsEnvContext> sample_context_itfc(std::shared_ptr<const State> state) const;
+                ThtsEnvContext& ctx) const override;
+            virtual std::shared_ptr<ThtsEnvContext> sample_context_and_reset_itfc(
+                int tid) const override;
         
         /**
          * Implemented in thts_env.{h,cpp}

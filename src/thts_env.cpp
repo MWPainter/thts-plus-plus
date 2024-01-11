@@ -12,6 +12,10 @@ namespace thts {
      */
     ThtsEnv::ThtsEnv(bool is_fully_observable) : _is_fully_observable(is_fully_observable) {}
 
+    ThtsEnv::ThtsEnv(ThtsEnv& other) : _is_fully_observable(other._is_fully_observable) 
+    {
+    }
+
     /**
      * Is fully observable getter
      */
@@ -25,7 +29,9 @@ namespace thts {
      * Just casts the next_state into an observation object, and returns it as a delta distribution.
      */
     shared_ptr<ObservationDistr> ThtsEnv::get_observation_distribution_itfc(
-        shared_ptr<const Action> action, shared_ptr<const State> next_state) const 
+        shared_ptr<const Action> action, 
+        shared_ptr<const State> next_state,
+        ThtsEnvContext& ctx) const 
     {
         if (_is_fully_observable) {
             shared_ptr<ObservationDistr> distr = make_shared<ObservationDistr>();
@@ -46,12 +52,13 @@ namespace thts {
     shared_ptr<const Observation> ThtsEnv::sample_observation_distribution_itfc(
         shared_ptr<const Action> action, 
         shared_ptr<const State> next_state, 
-        RandManager& rand_manager) const 
+        RandManager& rand_manager,
+        ThtsEnvContext& ctx) const 
     {
         if (_is_fully_observable) {
             return static_pointer_cast<const Observation>(next_state);
         }
-        shared_ptr<ObservationDistr> distr = get_observation_distribution_itfc(action, next_state);
+        shared_ptr<ObservationDistr> distr = get_observation_distribution_itfc(action, next_state, ctx);
         return helper::sample_from_distribution(*distr, rand_manager);
     }
 
@@ -62,7 +69,7 @@ namespace thts {
      * to return this type so we can subclass it, rather than forcing Thts algorithms to use a specific map for a 
      * context.
      */
-    shared_ptr<ThtsEnvContext> ThtsEnv::sample_context_itfc(shared_ptr<const State> state) const {
+    shared_ptr<ThtsEnvContext> ThtsEnv::sample_context_and_reset_itfc(int tid) const {
         return make_shared<ThtsEnvContext>();
     }
 } 

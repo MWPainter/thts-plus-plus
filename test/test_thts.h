@@ -27,7 +27,7 @@ namespace thts::test {
                 int num_threads=1) :
                     ThtsPool(thts_manager, root_node, num_threads)  {};
 
-            MOCK_METHOD(void, run_thts_trial, (int), (override));
+            MOCK_METHOD(void, run_thts_trial, (int,int), (override));
 
             // Setup for being able to test 'work_left'
             void mock_work_left_scenario(
@@ -63,7 +63,7 @@ namespace thts::test {
             /**
              * Mock running a trial by sleeping for 'trial_duration' seconds.
              */
-            void run_thts_trial(int num_trials_remaining) override {
+            virtual void run_thts_trial(int num_trials_remaining, int tid) override {
                 this_thread::sleep_for(chrono::milliseconds(trial_duration_ms));
             }
 
@@ -86,18 +86,19 @@ namespace thts::test {
                 int num_threads=1) :
                     ThtsPool(thts_manager, root_node, num_threads) {};
             virtual ~PublicThtsPool() = default;
-            virtual bool work_left() { return ThtsPool::work_left(); };
+            virtual bool work_left() override { return ThtsPool::work_left(); };
             virtual bool should_continue_selection_phase(
-                shared_ptr<ThtsDNode> cur_node, bool new_decision_node_created_this_trial) 
+                shared_ptr<ThtsDNode> cur_node, bool new_decision_node_created_this_trial) override
             {
                 return ThtsPool::should_continue_selection_phase(cur_node, new_decision_node_created_this_trial);
             }
             void run_selection_phase(
                 vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>>& nodes_to_backup, 
                 vector<double>& rewards, 
-                ThtsEnvContext& context)
+                ThtsEnvContext& context,
+                int tid)
             {
-                ThtsPool::run_selection_phase(nodes_to_backup, rewards, context);
+                ThtsPool::run_selection_phase(nodes_to_backup, rewards, context, tid);
             }
             void run_backup_phase(
                 vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>>& nodes_to_backup, 
@@ -106,11 +107,11 @@ namespace thts::test {
             {
                 ThtsPool::run_backup_phase(nodes_to_backup, rewards, context);
             }
-            virtual void run_thts_trial(int num_trials_remaining) 
+            virtual void run_thts_trial(int num_trials_remaining, int tid) override
             {
-                ThtsPool::run_thts_trial(num_trials_remaining); 
+                ThtsPool::run_thts_trial(num_trials_remaining,tid); 
             };
-            virtual void worker_fn() { ThtsPool::worker_fn(); };
+            virtual void worker_fn(int tid) override { ThtsPool::worker_fn(tid); };
 
             // public anyway:
             // virtual void join();
@@ -189,9 +190,7 @@ namespace thts::test {
             MOCK_METHOD(
                 double, 
                 get_reward_itfc, 
-                (shared_ptr<const State>,
-                    shared_ptr<const Action>,
-                    shared_ptr<const Observation>),
+                (shared_ptr<const State>,shared_ptr<const Action>,ThtsEnvContext&),
                 (const, override));
     };
 

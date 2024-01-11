@@ -58,7 +58,8 @@ void run_dents_integration_test(
     manager_args.temp = temp;
     manager_args.use_dp_value = !use_avg_returns;
     shared_ptr<DentsManager> manager = make_shared<DentsManager>(manager_args);
-    shared_ptr<DentsDNode> root_node = make_shared<DentsDNode>(manager, grid_env->get_initial_state_itfc(), 0, 0);
+    shared_ptr<DentsDNode> root_node = make_shared<DentsDNode>(
+        manager, grid_env->get_initial_state_itfc(), 0, 0);
     ThtsPool thts_pool(manager, root_node, num_threads);
     thts_pool.run_trials(num_trials);
 
@@ -128,8 +129,8 @@ void run_dents_game_integration_test(
     shared_ptr<DentsManager> manager = make_shared<DentsManager>(manager_args);
     shared_ptr<DentsDNode> root_node = make_shared<DentsDNode>(
         manager, game_env->get_initial_state_itfc(), 0, decision_timestep);
-    ThtsPool uct_pool(manager, root_node, 1);
-    uct_pool.run_trials(num_trials);
+    ThtsPool thts_pool(manager, root_node, 1);
+    thts_pool.run_trials(num_trials);
 
     if (print_tree_depth > 0){
         cout << "DENTS with starting decision_timestep of " << decision_timestep << " looks like:\n";
@@ -175,7 +176,8 @@ TEST(Dents_IntegrationTest, dents_env) {
     manager_args.mcts_mode = false;
     manager_args.temp = 5.0;
     shared_ptr<DentsManager> manager = make_shared<DentsManager>(manager_args);
-    shared_ptr<DentsDNode> root_node = make_shared<DentsDNode>(manager, dents_env->get_initial_state_itfc(), 0, 0);
+    shared_ptr<DentsDNode> root_node = make_shared<DentsDNode>(
+        manager, dents_env->get_initial_state_itfc(), 0, 0);
     ThtsPool thts_pool(manager, root_node, 1);
     thts_pool.run_trials(num_trials);
 

@@ -76,6 +76,24 @@ make check -j 4
 
 
 
+## Installing eigen
+
+Header only library, nothing to be done
+
+
+
+
+## Installing qhull
+
+run `make` in `external/qhull`
+
+
+
+
+## Installing 
+
+
+
 ## Changelog
 
 This is a space to say what's included and updated in any versioning happening. I'll create the v0.1 branch when the 

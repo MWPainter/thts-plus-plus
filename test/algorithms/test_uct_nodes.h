@@ -26,33 +26,55 @@ namespace thts::test {
         public:
             MockThtsEnv_ForUct() : ThtsEnv(true) {};
 
-            MOCK_METHOD(shared_ptr<const State>, get_initial_state_itfc, (), (const, override));
-            MOCK_METHOD(bool, is_sink_state_itfc, (shared_ptr<const State>), (const, override));
-            MOCK_METHOD(shared_ptr<ActionVector>, get_valid_actions_itfc, (shared_ptr<const State>), (const, override));
+            MOCK_METHOD(
+                shared_ptr<ThtsEnv>,
+                clone,
+                (),
+                (override));
+            MOCK_METHOD(
+                shared_ptr<const State>, 
+                get_initial_state_itfc, 
+                (), 
+                (const, override));
+            MOCK_METHOD(
+                bool, 
+                is_sink_state_itfc, 
+                (shared_ptr<const State>,ThtsEnvContext&), 
+                (const, override));
+            MOCK_METHOD(
+                shared_ptr<ActionVector>, 
+                get_valid_actions_itfc, 
+                (shared_ptr<const State>,ThtsEnvContext&), 
+                (const, override));
             MOCK_METHOD(
                 shared_ptr<StateDistr>, 
                 get_transition_distribution_itfc, 
-                (shared_ptr<const State>,shared_ptr<const Action>), 
+                (shared_ptr<const State>,shared_ptr<const Action>,ThtsEnvContext&), 
                 (const,override));
             MOCK_METHOD(
                 shared_ptr<const State>, 
                 sample_transition_distribution_itfc, 
-                (shared_ptr<const State>,shared_ptr<const Action>,RandManager&), 
+                (shared_ptr<const State>,shared_ptr<const Action>,RandManager&,ThtsEnvContext&), 
                 (const,override));
             MOCK_METHOD(
                 shared_ptr<ObservationDistr>, 
                 get_observation_distribution_itfc, 
-                (shared_ptr<const Action>,shared_ptr<const State>), 
+                (shared_ptr<const Action>,shared_ptr<const State>,ThtsEnvContext&), 
                 (const,override));
             MOCK_METHOD(
                 shared_ptr<const Observation>, 
                 sample_observation_distribution_itfc, 
-                (shared_ptr<const Action>,shared_ptr<const State>,RandManager&), 
+                (shared_ptr<const Action>,shared_ptr<const State>,RandManager&,ThtsEnvContext&), 
                 (const,override));
             MOCK_METHOD(
                 double, 
                 get_reward_itfc, 
-                (shared_ptr<const State>,shared_ptr<const Action>,shared_ptr<const Observation>),
+                (shared_ptr<const State>,shared_ptr<const Action>,ThtsEnvContext&),
+                (const, override));
+            MOCK_METHOD(
+                shared_ptr<ThtsEnvContext>, 
+                sample_context_and_reset_itfc, 
+                (int),
                 (const, override));
     };
 

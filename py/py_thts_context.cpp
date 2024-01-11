@@ -1,5 +1,3 @@
-
-
 #include "py/py_thts_context.h"
 
 using namespace std;
