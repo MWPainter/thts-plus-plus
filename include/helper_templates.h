@@ -76,7 +76,7 @@ namespace thts::helper {
      *      A string representing a pretty printed version of the vector.
      */
     template <typename K, typename V>
-    std::string unordered_map_pretty_print_string(const std::unordered_map<K,V>& mp, std::string delimiter=":");
+    std::string unordered_map_pretty_print_string(const std::unordered_map<K,V>& mp, std::string delimiter=":"); 
 }
 
 #include "helper_templates.cc"

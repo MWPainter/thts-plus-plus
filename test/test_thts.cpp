@@ -452,9 +452,9 @@ TEST(ThtsPool_TestRunTrial, test_selection_phase) {
     // Run a selection phase
     vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>> nodes_to_backup;
     vector<double> rewards;
-    shared_ptr<ThtsEnvContext> context = env_ptr->sample_context_itfc(nullptr);
+    shared_ptr<ThtsEnvContext> context = env_ptr->sample_context_and_reset_itfc(0);
 
-    thts_pool.run_selection_phase(nodes_to_backup, rewards, *context);
+    thts_pool.run_selection_phase(nodes_to_backup, rewards, *context, 0);
 
     // Check lengths, rewards should include the heuristic value of dnode4 too
     EXPECT_EQ(nodes_to_backup.size(), 4u);
@@ -631,7 +631,7 @@ TEST(ThtsPool_TestRunTrial, test_backup_phase) {
     nodes_to_backup.push_back(make_pair(dnode3, cnode3));
 
     vector<double> rewards = {-2.0, -4.0, -8.0, -16.0, 1.0};
-    shared_ptr<ThtsEnvContext> context = env_ptr->sample_context_itfc(nullptr);
+    shared_ptr<ThtsEnvContext> context = env_ptr->sample_context_and_reset_itfc(0);
 
     thts_pool.run_backup_phase(nodes_to_backup, rewards, *context);
 }

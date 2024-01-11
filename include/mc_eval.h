@@ -58,7 +58,7 @@ namespace thts {
             /**
              * Gets a uniform random action.
             */
-            std::shared_ptr<const Action> get_random_action(std::shared_ptr<const State> state);
+            std::shared_ptr<const Action> get_random_action(std::shared_ptr<const State> state, ThtsEnvContext& ctx);
 
             /**
              * Gets the best recommendation from the current node.
@@ -79,6 +79,8 @@ namespace thts {
      * we're going to make an MCEvaluator, call run rollouts, and then throw it away).
      * 
      * Member variables:
+     *      num_envs:
+     *          The number of envs to use for evaluation
      *      thts_env: 
      *          The env that we want to evaluate in
      *      policy: 
@@ -94,7 +96,8 @@ namespace thts {
     */
     class MCEvaluator {
         protected:
-            std::shared_ptr<const ThtsEnv> thts_env;
+            int num_envs;
+            std::vector<std::shared_ptr<ThtsEnv>> thts_envs;
             EvalPolicy& policy;
             int max_trial_length;
             std::vector<double> sampled_returns;
@@ -102,9 +105,19 @@ namespace thts {
             std::mutex lock;
 
             /**
+             * Get env for thread id
+            */
+            std::shared_ptr<ThtsEnv> get_env(int thread_id);
+
+            /**
+             * Function to do any setup per thread
+            */
+            virtual void setup_thread(int thread_id);
+
+            /**
              * Runs a single rollout and stores the result in 'sampled_returns'.
             */
-            void run_rollout(EvalPolicy& thread_policy);
+            void run_rollout(int thread_id, EvalPolicy& thread_policy);
 
             /**
              * Runs rollouts as a worker thread
@@ -116,7 +129,8 @@ namespace thts {
 
         public:
             MCEvaluator(
-                std::shared_ptr<const ThtsEnv> thts_env,
+                int num_envs,
+                std::shared_ptr<ThtsEnv> thts_env,
                 EvalPolicy& eval_policy,
                 int max_trial_length,
                 RandManager& rand_manager);

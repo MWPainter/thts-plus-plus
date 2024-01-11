@@ -31,7 +31,7 @@ namespace thts {
                 static_pointer_cast<const ThtsCNode>(parent)),
             num_backups(0),
             soft_value(0.0),
-            actions(thts_manager->thts_env->get_valid_actions_itfc(state)),
+            actions(thts_manager->thts_env()->get_valid_actions_itfc(state,*thts_manager->get_thts_context())),
             policy_prior(),
             psuedo_q_value_offset(0.0)
     {
@@ -40,7 +40,7 @@ namespace thts {
         }
 
         if (thts_manager->prior_fn != nullptr) {
-            policy_prior = thts_manager->prior_fn(state, thts_manager->thts_env);
+            policy_prior = thts_manager->prior_fn(state, thts_manager->thts_env());
 
             if (thts_manager->shift_pseudo_q_values) {
                 double mean_log_weight = 0.0;

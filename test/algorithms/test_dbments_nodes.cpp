@@ -57,9 +57,10 @@ void run_dbments_integration_test(
     manager_args.temp = temp;
     manager_args.temp_decay_fn = use_temp_decay ? decayed_temp_inv_sqrt : nullptr;
     shared_ptr<MentsManager> manager = make_shared<MentsManager>(manager_args);
-    shared_ptr<DBMentsDNode> root_node = make_shared<DBMentsDNode>(manager, grid_env->get_initial_state_itfc(), 0, 0);
-    ThtsPool uct_pool(manager, root_node, num_threads);
-    uct_pool.run_trials(num_trials);
+    shared_ptr<DBMentsDNode> root_node = make_shared<DBMentsDNode>(
+        manager, grid_env->get_initial_state_itfc(), 0, 0);
+    ThtsPool thts_pool(manager, root_node, num_threads);
+    thts_pool.run_trials(num_trials);
 
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
@@ -127,8 +128,8 @@ void run_dbments_game_integration_test(
     shared_ptr<MentsManager> manager = make_shared<MentsManager>(manager_args);
     shared_ptr<DBMentsDNode> root_node = make_shared<DBMentsDNode>(
         manager, game_env->get_initial_state_itfc(), 0, decision_timestep);
-    ThtsPool uct_pool(manager, root_node, 1);
-    uct_pool.run_trials(num_trials);
+    ThtsPool thts_pool(manager, root_node, 1);
+    thts_pool.run_trials(num_trials);
 
     if (print_tree_depth > 0){
         cout << "DB-MENTS with starting decision_timestep of " << decision_timestep << " looks like:\n";

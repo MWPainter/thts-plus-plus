@@ -107,23 +107,20 @@ namespace thts {
 
         DNodeTable& dmap = thts_manager->dmap;
         DNodeIdTuple dnode_id = make_tuple(decision_timestep, observation);
-
-        int mutex_indx = 0;
-        if (thts_manager->dmap_mutexes.size() > 1) {
-            size_t tpl_hash = hash<DNodeIdTuple>()(dnode_id);
-            mutex_indx = tpl_hash % thts_manager->dmap_mutexes.size();
-        }
-
-        lock_guard<mutex> lg(thts_manager->dmap_mutexes[mutex_indx]);
-
+        
+        // reading from dnode table
+        shared_lock<shared_mutex> reader_lock(thts_manager->dmap_lock);
         auto iter = dmap.find(dnode_id);
         if (iter != dmap.end()) {
             shared_ptr<ThtsDNode> child_node = shared_ptr<ThtsDNode>(dmap[dnode_id]);
             children[observation] = child_node;
             return child_node;
         }
+        reader_lock.unlock();
 
+        // writing to dnode table
         shared_ptr<ThtsDNode> child_node = create_child_node_helper_itfc(observation, next_state);
+        unique_lock<shared_mutex> writer_lock(thts_manager->dmap_lock);
         children[observation] = child_node;
         dmap[dnode_id] = child_node;
         return child_node;

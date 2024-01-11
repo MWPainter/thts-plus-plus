@@ -46,6 +46,7 @@ TEST(ThtsNode_CreateChild, test_normal_usage)
     int mock_decision_timestep = 21;
 
     //Make env and root node
+    ThtsEnvContext ctx;
     shared_ptr<TestThtsDNode> root_node = make_shared<TestThtsDNode>(
         manager_ptr,
         thts_env->get_initial_state_itfc(),
@@ -87,7 +88,6 @@ TEST(ThtsNode_CreateChild, test_normal_usage)
     shared_ptr<TestThtsDNode> dr_node = static_pointer_cast<TestThtsDNode>(dr_cnode->create_child_node_itfc(obsv));
 
     // visit each of the nodes created
-    ThtsEnvContext ctx;
     r_cnode->visit_itfc(ctx);
     r_node->visit_itfc(ctx);
     rd_cnode->visit_itfc(ctx);
@@ -153,6 +153,7 @@ TEST(ThtsNode_CreateChild, test_transposition_table)
     int mock_decision_timestep = 21;
 
     //Make env and root node
+    ThtsEnvContext ctx;
     shared_ptr<TestThtsDNode> root_node = make_shared<TestThtsDNode>(
         manager_ptr,
         thts_env->get_initial_state_itfc(),
@@ -194,7 +195,6 @@ TEST(ThtsNode_CreateChild, test_transposition_table)
     shared_ptr<TestThtsDNode> dr_node = static_pointer_cast<TestThtsDNode>(dr_cnode->create_child_node_itfc(obsv));
 
     // visit each of the nodes created
-    ThtsEnvContext ctx;
     r_cnode->visit_itfc(ctx);
     r_node->visit_itfc(ctx);
     rd_cnode->visit_itfc(ctx);
@@ -279,6 +279,7 @@ TEST(ThtsNode_PrettyPrint, test_no_transposition)
     int mock_decision_timestep = 21;
 
     //Make env and root node
+    ThtsEnvContext ctx;
     shared_ptr<TestThtsDNode> root_node = make_shared<TestThtsDNode>(
         manager_ptr,
         thts_env->get_initial_state_itfc(),
@@ -320,7 +321,6 @@ TEST(ThtsNode_PrettyPrint, test_no_transposition)
     shared_ptr<TestThtsDNode> dr_node = static_pointer_cast<TestThtsDNode>(dr_cnode->create_child_node_itfc(obsv));
 
     // visit each of the nodes created
-    ThtsEnvContext ctx;
     r_cnode->visit_itfc(ctx);
     r_node->visit_itfc(ctx);
     rd_cnode->visit_itfc(ctx);
@@ -375,6 +375,7 @@ TEST(ThtsNode_PrettyPrint, test_transposition_table)
     int mock_decision_timestep = 21;
 
     //Make env and root node
+    ThtsEnvContext ctx;
     shared_ptr<TestThtsDNode> root_node = make_shared<TestThtsDNode>(
         manager_ptr,
         thts_env->get_initial_state_itfc(),
@@ -416,7 +417,6 @@ TEST(ThtsNode_PrettyPrint, test_transposition_table)
     shared_ptr<TestThtsDNode> dr_node = static_pointer_cast<TestThtsDNode>(dr_cnode->create_child_node_itfc(obsv));
 
     // visit each of the nodes created
-    ThtsEnvContext ctx;
     r_cnode->visit_itfc(ctx);
     r_node->visit_itfc(ctx);
     rd_cnode->visit_itfc(ctx);

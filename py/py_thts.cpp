@@ -27,19 +27,28 @@ namespace thts::python {
         shared_ptr<ThtsManager> thts_manager, 
         shared_ptr<ThtsDNode> root_node, 
         int num_threads, 
-        shared_ptr<ThtsLogger> logger) :
+        shared_ptr<ThtsLogger> logger,
+        bool start_threads_in_this_constructor) :
             ThtsPool(thts_manager, root_node, num_threads, logger, false) 
     {
-        for (int i=0; i<num_threads; i++) {
-            workers[i] = thread(&PyThtsPool::worker_fn, this);
+        if (start_threads_in_this_constructor) {
+            for (int i=0; i<num_threads; i++) {
+                workers[i] = thread(&PyThtsPool::worker_fn, this, i);
+            }
         }
     }
 
+
     /**
-     * Initialised a python subinterpreter for this thread, and then run the normal worker_fn
-     * Note that new interpreter will release the global gil, and then acquire its local gil in Py_NewInterpreterFromConfig
+     * The worker thread function.
+     * 
+     * Copied from thts.cpp
+     * 
+     * Added setting up python interpreter in 'setup thread'
      */
-    void PyThtsPool::worker_fn() {
+    void PyThtsPool::worker_fn(int tid) {
+        // setup thread
+        thts_manager->register_thread_id(tid);
         // Make new interpreter
         // Need to lock with CPython API because pybind11 gil interface not built to work with it
         thts::python::helper::lock_gil();
@@ -58,7 +67,26 @@ namespace thts::python {
             throw runtime_error("Error starting subinterpreter");
         }
 
-        // Do work
-        ThtsPool::worker_fn();
+        // main work loop
+        lock_guard<mutex> lg(work_left_lock);
+        while (thread_pool_alive) {
+            num_threads_working--;
+
+            if (!work_left()) {
+                work_left_cv.notify_all();
+            }
+            while (!work_left()) {
+                work_left_cv.wait(work_left_lock);
+                if (!thread_pool_alive) return;
+            }
+
+            num_threads_working++;
+            trials_remaining--;
+            int trials_remaining_copy = trials_remaining;
+
+            work_left_lock.unlock();
+            run_thts_trial(trials_remaining_copy, tid);
+            work_left_lock.lock();
+        }
     }
 }

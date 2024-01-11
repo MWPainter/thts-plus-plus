@@ -50,7 +50,8 @@ namespace thts::python {
                 std::shared_ptr<ThtsManager> thts_manager=nullptr, 
                 std::shared_ptr<ThtsDNode> root_node=nullptr, 
                 int num_threads=1,
-                std::shared_ptr<ThtsLogger> logger=nullptr);
+                std::shared_ptr<ThtsLogger> logger=nullptr,
+                bool start_threads_in_this_constructor=true);
 
             /**
              * Destructor. Required to allow the thread pool to exit gracefully.
@@ -59,10 +60,8 @@ namespace thts::python {
 
         protected:
             /**
-             * The worker thread thnuk.
-             * 
-             * Waits for work, and calls 'run_thts_trial' until there is no more work to do.
+             * Setup the python env
              */
-            virtual void worker_fn() override;           
+            virtual void worker_fn(int tid) override;           
     };
 }

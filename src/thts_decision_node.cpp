@@ -32,8 +32,10 @@ namespace thts {
             num_visits(0),
             heuristic_value(0.0)
     {
-        if (thts_manager->heuristic_fn != nullptr && !thts_manager->thts_env->is_sink_state_itfc(state)) {
-            heuristic_value = thts_manager->heuristic_fn(state, thts_manager->thts_env);
+        if (thts_manager->heuristic_fn != nullptr 
+            && !thts_manager->thts_env()->is_sink_state_itfc(state,*thts_manager->get_thts_context())) 
+        {
+            heuristic_value = thts_manager->heuristic_fn(state, thts_manager->thts_env());
         }
     }
 
@@ -90,7 +92,7 @@ namespace thts {
      * This node is a sink node iff the state corresponds to a sink state
      */
     bool ThtsDNode::is_sink() const {
-        return thts_manager->thts_env->is_sink_state_itfc(state);
+        return thts_manager->thts_env()->is_sink_state_itfc(state, *thts_manager->get_thts_context());
     }
 
     /**

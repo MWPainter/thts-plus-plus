@@ -46,9 +46,10 @@ void run_puct_integration_test(int env_size, int num_threads, int num_trials, do
     manager_args.max_depth = env_size * 4;
     manager_args.mcts_mode = false;
     shared_ptr<PuctManager> manager = make_shared<PuctManager>(manager_args);
-    shared_ptr<PuctDNode> root_node = make_shared<PuctDNode>(manager, grid_env->get_initial_state_itfc(), 0, 0);
-    ThtsPool uct_pool(manager, root_node, num_threads);
-    uct_pool.run_trials(num_trials);
+    shared_ptr<PuctDNode> root_node = make_shared<PuctDNode>(
+        manager, grid_env->get_initial_state_itfc(), 0, 0);
+    ThtsPool thts_pool(manager, root_node, num_threads);
+    thts_pool.run_trials(num_trials);
 
     if (stay_prob == 0.0) {
         // TODO add asserts
@@ -96,8 +97,8 @@ void run_puct_game_integration_test(int env_size, int num_trials, int print_tree
     shared_ptr<PuctManager> manager = make_shared<PuctManager>(manager_args);
     shared_ptr<PuctDNode> root_node = make_shared<PuctDNode>(
         manager, game_env->get_initial_state_itfc(), 0, decision_timestep);
-    ThtsPool uct_pool(manager, root_node, 1);
-    uct_pool.run_trials(num_trials);
+    ThtsPool thts_pool(manager, root_node, 1);
+    thts_pool.run_trials(num_trials);
 
     if (print_tree_depth > 0){
         cout << "PUCT with starting decision_timestep of " << decision_timestep << " looks like:\n";

@@ -29,8 +29,8 @@ namespace thts {
     /**
      * Gets a uniform random action.
     */
-    shared_ptr<const Action> EvalPolicy::get_random_action(shared_ptr<const State> state) {
-        shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(state);
+    shared_ptr<const Action> EvalPolicy::get_random_action(shared_ptr<const State> state, ThtsEnvContext& ctx) {
+        shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(state, ctx);
         int indx = rand_manager.get_rand_int(0, actions->size());
         return actions->at(indx);
     }
@@ -39,7 +39,7 @@ namespace thts {
      * Gets the best recommendation from the current node.
     */
     shared_ptr<const Action> EvalPolicy::get_action(shared_ptr<const State> state, ThtsEnvContext& context) {
-        if (cur_node == nullptr) return get_random_action(state);
+        if (cur_node == nullptr) return get_random_action(state,context);
         return cur_node->recommend_action_itfc(context);
     }
 
@@ -66,38 +66,65 @@ namespace thts {
 */
 namespace thts {
     MCEvaluator::MCEvaluator(
-        shared_ptr<const ThtsEnv> thts_env, 
+        int num_envs,
+        shared_ptr<ThtsEnv> thts_env, 
         EvalPolicy& policy, 
         int max_trial_length, 
         RandManager& rand_manager) :
-            thts_env(thts_env), 
+            num_envs(num_envs),
+            thts_envs(), 
             policy(policy), 
             max_trial_length(max_trial_length), 
             sampled_returns(), 
-            rand_manager(rand_manager) {}
+            rand_manager(rand_manager),
+            lock() 
+    {
+        if (num_envs < 1) {
+            throw runtime_error("Shouldnt try to run an MCEvaluator with < 1 env");
+        }
+        thts_envs.push_back(thts_env);
+        for (int i=1; i<num_envs; i++) {
+            thts_envs.push_back(thts_env->clone());
+        }
+    }
+    
+    /**
+     * Gets appropriate thts env for this thread
+    */
+    shared_ptr<ThtsEnv> MCEvaluator::get_env(int thread_id) {
+        return thts_envs[thread_id % num_envs];
+    }
+
+    /**
+     * Empty setup thread method, it's for subclasses really
+    */
+    void MCEvaluator::setup_thread(int thread_id) 
+    {
+    }
 
     /**
      * Runs a single rollout and stores the result in 'sampled_returns'.
     */
-    void MCEvaluator::run_rollout(EvalPolicy& thread_policy) {
+    void MCEvaluator::run_rollout(int thread_id, EvalPolicy& thread_policy) {
         // Reset
         thread_policy.reset();
 
         // Bookkeeping
         int num_actions_taken = 0;
         double sample_return = 0.0;
+        shared_ptr<ThtsEnv> thts_env = get_env(thread_id);
+        ThtsEnvContext& context = *thts_env->sample_context_and_reset_itfc(thread_id);
         shared_ptr<const State> state = thts_env->get_initial_state_itfc();
-        ThtsEnvContext& context = *thts_env->sample_context_itfc(state);
 
         // Run trial
-        while (num_actions_taken < max_trial_length && !thts_env->is_sink_state_itfc(state)) {
+        while (num_actions_taken < max_trial_length && !thts_env->is_sink_state_itfc(state, context)) {
             shared_ptr<const Action> action = thread_policy.get_action(state, context);
             shared_ptr<const State> next_state = thts_env->sample_transition_distribution_itfc(
-                state, action, rand_manager);
+                state, action, rand_manager, context);
             shared_ptr<const Observation> obsv = thts_env->sample_observation_distribution_itfc(
-                action, next_state, rand_manager);
+                action, next_state, rand_manager, context);
             
-            sample_return += thts_env->get_reward_itfc(state, action, obsv);
+            sample_return += thts_env->get_reward_itfc(state, action, context);
 
             thread_policy.update_step(action, obsv);
             state = next_state;
@@ -116,8 +143,9 @@ namespace thts {
     void MCEvaluator::thread_run_rollouts(
         int total_rollouts, int thread_id, int num_threads, unique_ptr<EvalPolicy> thread_policy) 
     {
+        setup_thread(thread_id);
         for (int i=thread_id; i < total_rollouts; i+=num_threads) {
-            run_rollout(*thread_policy);
+            run_rollout(thread_id, *thread_policy);
         }
     }
 

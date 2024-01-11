@@ -21,41 +21,17 @@ namespace thts {
      *      (subtle note: becausse workers hold work_left_lock when they call notify_all, the thread running this 
      *          constructor will not be able to grab the lock until it waits on the work_left_cv)
      */
-    ThtsPool::ThtsPool(
-        shared_ptr<ThtsManager> thts_manager, 
-        shared_ptr<ThtsDNode> root_node, 
-        int num_threads, 
-        shared_ptr<ThtsLogger> logger) :
-            workers(num_threads),
-            work_left_cv(),
-            work_left_lock(),
-            logging_lock(),
-            thread_pool_alive(true),
-            num_threads(num_threads),
-            num_trials(0),
-            start_time(std::chrono::system_clock::now()),
-            max_run_time(0.0),
-            trials_remaining(0),
-            num_threads_working(num_threads),
-            trials_completed(0),
-            logger(logger),
-            thts_manager(thts_manager),
-            root_node(root_node)
-    {
-        if (thts_manager == nullptr || root_node == nullptr) {
-            throw runtime_error("Cannot make ThtsPool without a thts manager, or root node");
-        }
-        for (int i=0; i<num_threads; i++) {
-            workers[i] = thread(&ThtsPool::worker_fn, this);
-        }
-    }
-
+    /**
+     * CConstructor for ThtsPool for subclasses to use in their initialisation
+     * For example, if override worker_fn to add setup to a thread (e.g. PyThtsPool), then would want to 
+     * make threads that call PyThtsPool::worker_fn rather than ThtsPool::worker_fn
+     */
     ThtsPool::ThtsPool(
         shared_ptr<ThtsManager> thts_manager, 
         shared_ptr<ThtsDNode> root_node, 
         int num_threads, 
         shared_ptr<ThtsLogger> logger,
-        bool spawn_threads_immediately) :
+        bool start_threads_in_this_constructor) :
             workers(num_threads),
             work_left_cv(),
             work_left_lock(),
@@ -75,9 +51,9 @@ namespace thts {
         if (thts_manager == nullptr || root_node == nullptr) {
             throw runtime_error("Cannot make ThtsPool without a thts manager, or root node");
         }
-        if (spawn_threads_immediately) {
+        if (start_threads_in_this_constructor) {
             for (int i=0; i<num_threads; i++) {
-                workers[i] = thread(&ThtsPool::worker_fn, this);
+                workers[i] = thread(&ThtsPool::worker_fn, this, i);
             }
         }
     }
@@ -104,7 +80,7 @@ namespace thts {
     /**
      * Setter for root node, so thread pool can be reused
     */
-    void ThtsPool::set_new_env(
+    void ThtsPool::reset(
         shared_ptr<ThtsManager> new_thts_manager, 
         shared_ptr<ThtsDNode> new_root_node,
         shared_ptr<ThtsLogger> new_logger) 
@@ -155,7 +131,8 @@ namespace thts {
     void ThtsPool::run_selection_phase(
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>>& nodes_to_backup, 
         vector<double>& rewards, 
-        ThtsEnvContext& context)
+        ThtsEnvContext& context,
+        int tid)
     {
         bool new_decision_node_created_this_trial = false;
         shared_ptr<ThtsDNode> cur_node = root_node;
@@ -182,7 +159,7 @@ namespace thts {
 
             // push onto 'nodes_to_backup' and 'rewards'
             shared_ptr<const State> state = cur_node->state;
-            double reward = thts_manager->thts_env->get_reward_itfc(state, action, observation);
+            double reward = thts_manager->thts_env(tid)->get_reward_itfc(state, action, context);
             nodes_to_backup.push_back(make_pair(cur_node, chance_node));
             rewards.push_back(reward);
 
@@ -277,12 +254,14 @@ namespace thts {
      * 
      * Trys to perform logging at the end of this trial (if there is a logger and is time to log)
      */
-    void ThtsPool::run_thts_trial(int trials_remaining) {
+    void ThtsPool::run_thts_trial(int trials_remaining, int tid) {
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>> nodes_to_backup;
         vector<double> rewards; 
         
-        shared_ptr<ThtsEnvContext> context = thts_manager->thts_env->sample_context_itfc(root_node->state);
-        run_selection_phase(nodes_to_backup, rewards, *context);
+        shared_ptr<ThtsEnvContext> context = 
+            thts_manager->thts_env(tid)->sample_context_and_reset_itfc(tid);
+        thts_manager->register_thts_context(tid,context);
+        run_selection_phase(nodes_to_backup, rewards, *context, tid);
         run_backup_phase(nodes_to_backup, rewards, *context);
 
         try_log();
@@ -311,9 +290,10 @@ namespace thts {
         }
     }
 
-
     /**
      * The worker thread function.
+     * 
+     * - first waiot
      * 
      * while this thts pool is 'alive' work threads perform the following (description of code from top to bottom):
      * - indicate that they have completed a trial/unit of work, by decrementing num_threads_working
@@ -330,7 +310,11 @@ namespace thts {
      * A lock_guard is used to make sure that the work_left_lock is locked throughout the routine, except while waiting 
      * on work_left_cv, and when unlocked around running a trial.
      */
-    void ThtsPool::worker_fn() {
+    void ThtsPool::worker_fn(int tid) {
+        // setup thread
+        thts_manager->register_thread_id(tid);
+
+        // main work loop
         lock_guard<mutex> lg(work_left_lock);
         while (thread_pool_alive) {
             num_threads_working--;
@@ -348,7 +332,7 @@ namespace thts {
             int trials_remaining_copy = trials_remaining;
 
             work_left_lock.unlock();
-            run_thts_trial(trials_remaining_copy);
+            run_thts_trial(trials_remaining_copy, tid);
             work_left_lock.lock();
         }
     }

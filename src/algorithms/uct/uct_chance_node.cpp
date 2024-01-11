@@ -24,7 +24,8 @@ namespace thts {
                 static_pointer_cast<const ThtsDNode>(parent)),
             num_backups(0),
             avg_return(0.0),
-            next_state_distr(thts_manager->thts_env->get_transition_distribution_itfc(state,action))
+            next_state_distr(thts_manager->thts_env()->get_transition_distribution_itfc(
+                state,action,*thts_manager->get_thts_context()))
     {  
     }
 
