@@ -635,3 +635,9 @@ TEST(ThtsPool_TestRunTrial, test_backup_phase) {
 
     thts_pool.run_backup_phase(nodes_to_backup, rewards, *context);
 }
+
+
+
+TEST(ThtsPool, todo_add_tests_for_sample_context_and_reset_itfc_and_register_thts_context_and_register_thread_id) {
+    FAIL();
+}

@@ -12,16 +12,20 @@ namespace py = pybind11;
 using namespace std; 
 
 /**
+ * Wrapper around Python 'PyThtsEnv' object, and providing a thts 'ThtsEnv' interface for it
  * 
+ * TODO: get python contexts working
  */
 namespace thts::python { 
     PyThtsEnv::PyThtsEnv(
         shared_ptr<py::object> py_thts_env, 
-        bool multiple_threads_using_this_env) :
+        bool multiple_threads_using_this_env,
+        shared_ptr<PickleWrapper> pickle_wrapper) :
             ThtsEnv(true), 
             multiple_threads_using_this_env(multiple_threads_using_this_env), 
             py_thts_env_lock(), 
-            py_thts_env(py_thts_env)  
+            py_thts_env(py_thts_env),
+            pickle_wrapper(pickle_wrapper) 
     {
         unique_lock<mutex> lg = maybe_lock_for_py_thts_env();
         _is_fully_observable = py_thts_env->attr("is_fully_observable")().cast<bool>();
@@ -31,11 +35,13 @@ namespace thts::python {
         ThtsEnv(other._is_fully_observable),
         multiple_threads_using_this_env(other.multiple_threads_using_this_env),
         py_thts_env_lock(),
-        py_thts_env() 
+        py_thts_env(),
+        pickle_wrapper(other.pickle_wrapper)
     {
         unique_lock<mutex> this_py_env_lg = maybe_lock_for_py_thts_env();
         unique_lock<mutex> other_py_env_lg = other.maybe_lock_for_py_thts_env();
-        py_thts_env = make_shared<py::object>(other.py_thts_env->attr("clone")());
+        py::object py_thts_env_object = other.py_thts_env->attr("clone")();
+        py_thts_env = make_shared<py::object>(py_thts_env_object);
     }
 
     shared_ptr<ThtsEnv> PyThtsEnv::clone() {
@@ -64,38 +70,42 @@ namespace thts::python {
         unique_lock<mutex> py_env_lg = maybe_lock_for_py_thts_env();
         py::handle py_get_initial_state_fn = py_thts_env->attr("get_initial_state");
         py::object py_init_state = py_get_initial_state_fn();
-        return make_shared<const PyState>(make_shared<py::object>(py_init_state));
+        return make_shared<const PyState>(pickle_wrapper, make_shared<py::object>(py_init_state));
     }
 
     bool PyThtsEnv::is_sink_state(shared_ptr<const PyState> state, PyThtsContext& ctx) const {
-        return false;
-        // py::handle py_ctx = *ctx.py_context;
-        // PyState& state_non_const_ref = const_cast<PyState&>(*state);
-        // lock_guard<recursive_mutex> state_lg(state->lock);
+        PyState& state_non_const_ref = const_cast<PyState&>(*state);
+        lock_guard<recursive_mutex> state_lg(state->lock);
 
-        // unique_lock<mutex> py_env_lg = maybe_lock_for_py_thts_env();
-        // py::handle py_is_sink_state_fn = py_thts_env->attr("is_sink_state");
-        // return py_is_sink_state_fn(*state_non_const_ref.py_state, py_ctx).cast<bool>();
+        // py::handle py_ctx = *ctx.py_context;
+        py::handle py_state = *state_non_const_ref.py_state;
+
+        unique_lock<mutex> py_env_lg = maybe_lock_for_py_thts_env();
+        py::handle py_is_sink_state_fn = py_thts_env->attr("is_sink_state");
+        // return py_is_sink_state_fn(py_state, py_ctx).cast<bool>();
+        return py_is_sink_state_fn(py_state).cast<bool>();
     }
 
     shared_ptr<PyActionVector> PyThtsEnv::get_valid_actions(
         shared_ptr<const PyState> state, PyThtsContext& ctx) const 
     {
-        py::handle py_ctx = *ctx.py_context;
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
         lock_guard<recursive_mutex> state_lg(state_non_const_ref.lock);
 
+        // py::handle py_ctx = *ctx.py_context;
+        py::handle py_state = *state_non_const_ref.py_state;
+
         unique_lock<mutex> py_env_lg = maybe_lock_for_py_thts_env();
         py::handle py_get_valid_actions_fn = py_thts_env->attr("get_valid_actions");
-        py::print(*state_non_const_ref.py_state);
-        py::print(py_ctx);
-        py::list py_valid_actions_list = py_get_valid_actions_fn(*state_non_const_ref.py_state, py_ctx);
+        // py::list py_valid_actions_list = py_get_valid_actions_fn(*state_non_const_ref.py_state, py_ctx);
+        py::list py_valid_actions_list = py_get_valid_actions_fn(py_state);
         ensure_py_thts_env_unlocked(py_env_lg);
 
         shared_ptr<PyActionVector> action_vector = make_shared<PyActionVector>();
         for (py::handle py_action : py_valid_actions_list) {
             py::object py_action_object = py::cast<py::object>(py_action);
-            action_vector->push_back(make_shared<const PyAction>(make_shared<py::object>(py_action_object)));
+            action_vector->push_back(
+                make_shared<const PyAction>(pickle_wrapper, make_shared<py::object>(py_action_object)));
         }
         return action_vector; 
     }
@@ -103,16 +113,19 @@ namespace thts::python {
     shared_ptr<PyStateDistr> PyThtsEnv::get_transition_distribution(
         shared_ptr<const PyState> state, shared_ptr<const PyAction> action, PyThtsContext& ctx) const 
     {
-        py::handle py_ctx = *ctx.py_context;
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
         PyAction& action_non_const_ref = const_cast<PyAction&>(*action);
         lock_guard<recursive_mutex> state_lg(state_non_const_ref.lock);
         lock_guard<recursive_mutex> action_lg(action_non_const_ref.lock);
 
+        // py::handle py_ctx = *ctx.py_context;
+        py::handle py_state = *state_non_const_ref.py_state;
+        py::handle py_action =*action_non_const_ref.py_action;
+
         unique_lock<mutex> py_env_lg = maybe_lock_for_py_thts_env();
         py::handle py_get_transition_distribution_fn = py_thts_env->attr("get_transition_distribution");
-        py::dict py_transition_prob_map = py_get_transition_distribution_fn(
-            *state_non_const_ref.py_state, *action_non_const_ref.py_action, py_ctx);
+        // py::dict py_transition_prob_map = py_get_transition_distribution_fn(py_state, py_action, py_ctx);
+        py::dict py_transition_prob_map = py_get_transition_distribution_fn(py_state, py_action);
         ensure_py_thts_env_unlocked(py_env_lg);
 
         shared_ptr<PyStateDistr> transition_prob_map = make_shared<PyStateDistr>();
@@ -120,7 +133,8 @@ namespace thts::python {
             py::object py_next_state = py::cast<py::object>(py_state_prob_pair.first);
             py::handle py_prob_double = py_state_prob_pair.second;
             transition_prob_map->insert_or_assign(
-                make_shared<const PyState>(make_shared<py::object>(py_next_state)), py_prob_double.cast<double>());
+                make_shared<const PyState>(pickle_wrapper, make_shared<py::object>(py_next_state)), 
+                py_prob_double.cast<double>());
         }
         return transition_prob_map;
     }
@@ -131,19 +145,22 @@ namespace thts::python {
         RandManager& rand_manager, 
         PyThtsContext& ctx) const 
     {
-        py::handle py_ctx = *ctx.py_context;
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
         PyAction& action_non_const_ref = const_cast<PyAction&>(*action);
         lock_guard<recursive_mutex> state_lg(state_non_const_ref.lock);
         lock_guard<recursive_mutex> action_lg(action_non_const_ref.lock);
+
+        // py::handle py_ctx = *ctx.py_context;
+        py::handle py_state = *state_non_const_ref.py_state;
+        py::handle py_action =*action_non_const_ref.py_action;
         
         unique_lock<mutex> py_env_lg = maybe_lock_for_py_thts_env();
         py::handle py_sample_transition_distribution_fn = py_thts_env->attr("sample_transition_distribution");
-        py::object py_next_state = py_sample_transition_distribution_fn(
-            *state_non_const_ref.py_state, *action_non_const_ref.py_action, py_ctx);
+        // py::object py_next_state = py_sample_transition_distribution_fn(py_state, py_action, py_ctx);
+        py::object py_next_state = py_sample_transition_distribution_fn(py_state, py_action);
         ensure_py_thts_env_unlocked(py_env_lg);
 
-        return make_shared<const PyState>(make_shared<py::object>(py_next_state));
+        return make_shared<const PyState>(pickle_wrapper, make_shared<py::object>(py_next_state));
     }
 
     double PyThtsEnv::get_reward(
@@ -151,29 +168,29 @@ namespace thts::python {
         shared_ptr<const PyAction> action, 
         PyThtsContext& ctx) const 
     {
-        py::handle py_ctx = *ctx.py_context;
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
         PyAction& action_non_const_ref = const_cast<PyAction&>(*action);
         lock_guard<recursive_mutex> state_lg(state_non_const_ref.lock);
         lock_guard<recursive_mutex> action_lg(action_non_const_ref.lock);
 
-        py::handle py_state = (py::handle) *state_non_const_ref.py_state;
-        py::handle py_action = (py::handle) *action_non_const_ref.py_action;
+        // py::handle py_ctx = *ctx.py_context;
+        py::handle py_state = *state_non_const_ref.py_state;
+        py::handle py_action =*action_non_const_ref.py_action;
         
         unique_lock<mutex> py_env_lg = maybe_lock_for_py_thts_env();
         py::handle py_get_reward_fn = py_thts_env->attr("get_reward");
-        return py_get_reward_fn(py_state, py_action, py_ctx).cast<double>();
+        // return py_get_reward_fn(py_state, py_action, py_ctx).cast<double>();
+        return py_get_reward_fn(py_state, py_action).cast<double>();
     }
 
-    // TODO: change this to use a pybind11 python object too for the context
     shared_ptr<PyThtsContext> PyThtsEnv::sample_context_and_reset(int tid) const
     {
         unique_lock<mutex> py_env_lg = maybe_lock_for_py_thts_env();
-        py::object py_sample_context_and_reset_fn = py::cast<py::object>(py_thts_env->attr("sample_context_and_reset"));
-        shared_ptr<py::object> py_context = make_shared<py::object>(py_sample_context_and_reset_fn(tid));
-        ensure_py_thts_env_unlocked(py_env_lg);
+        py::handle py_sample_context_and_reset_fn = py_thts_env->attr("sample_context_and_reset");
+        py::object py_context = py_sample_context_and_reset_fn(tid);
+        ensure_py_thts_env_unlocked(py_env_lg); 
 
-        return make_shared<PyThtsContext>(py_context);
+        return make_shared<PyThtsContext>(make_shared<py::object>(py_context));
     }
 }
 

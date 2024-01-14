@@ -10,9 +10,6 @@ external/.DS_Store
 # Python lib ignores
 py/__pycache__
 
-# Folders in other branches want to ignore
-python
-
 # Hidden files
 .vscode
 .DS_Store
@@ -20,7 +17,6 @@ external/.DS_Store
 
 # Externals (from other branches)
 external/KataGo
-external/qhull
 
 # External files (other branches)
 external/kata1*

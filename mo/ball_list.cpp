@@ -6,6 +6,8 @@
 
 using namespace std;
 
+const double E = exp(1.0);
+
 namespace thts {
     CZ_Ball::CZ_Ball(double radius, Eigen::ArrayXd& center) :
         _radius(radius),
@@ -52,7 +54,7 @@ namespace thts {
 
     double CZ_Ball::confidence_radius(int total_backups_across_all_balls) const {
         lock_guard<mutex> lg(stats_lock);
-        return log(total_backups_across_all_balls + std::numbers::e) / (1 + num_backups);
+        return log(total_backups_across_all_balls + E) / (1 + num_backups);
     }
 
     double CZ_Ball::get_num_backups() const {

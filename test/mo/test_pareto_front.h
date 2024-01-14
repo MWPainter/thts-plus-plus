@@ -52,6 +52,46 @@ namespace thts::test {
         using ParetoFront<T>::pf_points;
 
         /**
+         * Constructor, empty
+        */
+        TestableParetoFront() : ParetoFront<T>() {}; 
+
+        /**
+         * Constructor, adding points immediately
+        */
+        TestableParetoFront(const std::vector<std::pair<Eigen::ArrayXd,T>>& init_points) :
+            ParetoFront<T>(init_points) {};
+
+        /**
+         * Constructor, adding points immediately, with one tag
+        */
+        TestableParetoFront(const std::vector<Eigen::ArrayXd>& init_points, const T& tag) :
+            ParetoFront<T>(init_points, tag) {};
+
+        /**
+         * Constructor, set of Tagged points
+         * With an option to say if we know that the set of points is already a pareto front
+        */
+        TestableParetoFront(const std::unordered_set<TaggedPoint<T>>& init_points, bool already_pareto_front=false) :
+            ParetoFront<T>(init_points, already_pareto_front) {};
+
+        /**
+         * Copy constructor
+        */
+        TestableParetoFront(const ParetoFront<T>& pf) : 
+            ParetoFront<T>(pf) {};
+        TestableParetoFront(const TestableParetoFront<T>& pf) : 
+            ParetoFront<T>(pf) {};
+
+        /**
+         * Move constructor
+        */
+        TestableParetoFront(const ParetoFront<T>&& pf) :
+            ParetoFront<T>(pf) {};
+        TestableParetoFront(const TestableParetoFront<T>&& pf) :
+            ParetoFront<T>(pf) {};
+
+        /**
          * Checks pareto front doesn't contain any duplicate points
          * 
          * Realised at a later date that this is pointless. 'pf_points' is a hashset, so it will never add two points 

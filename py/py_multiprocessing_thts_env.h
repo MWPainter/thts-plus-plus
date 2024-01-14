@@ -5,6 +5,7 @@
 #include "py/pickle_wrapper.h"
 #include "py/py_thts_types.h"
 #include "py/py_thts_context.h"
+#include "py/shared_mem_wrapper.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/embed.h>
@@ -20,6 +21,18 @@ namespace thts::python {
     // PyBind
     using namespace thts;
     namespace py = pybind11;
+
+    // Enum for function calls
+    enum ThtsEnvRpcFn {
+        RPC_kill_server = 0,
+        RPC_get_initial_state = 1,
+        RPC_is_sink_state = 2,
+        RPC_get_valid_actions = 3,
+        RPC_get_transition_distribution = 4,
+        RPC_sample_transition_distribution = 5,
+        RPC_get_reward = 6,
+        RPC_sample_context_and_reset = 7,
+    };
 
     // Typedef 
     typedef std::unordered_map<std::shared_ptr<const PyState>,double> PyStateDistr;
@@ -45,16 +58,15 @@ namespace thts::python {
      *      lock: 
      *          For protecting the python objects we're touching
      */
-    class PyThtsEnv : public ThtsEnv {
+    class PyMultiprocessingThtsEnv : public ThtsEnv {
 
         /**
-         * Core PyThtsEnv implementaion.
+         * Core PyMultiprocessingThtsEnv implementaion.
          */
         protected:
-            bool multiple_threads_using_this_env;
-            mutable std::mutex py_thts_env_lock;
             std::shared_ptr<py::object> py_thts_env;
             std::shared_ptr<PickleWrapper> pickle_wrapper;
+            std::shared_ptr<SharedMemWrapper> shared_mem_wrapper;
 
         /**
          * Core ThtsEnv implementation functinos.
@@ -63,15 +75,14 @@ namespace thts::python {
             /**
              * Constructor
              */
-            PyThtsEnv(
-                std::shared_ptr<py::object> py_thts_env, 
-                bool multiple_threads_using_this_env,
-                std::shared_ptr<PickleWrapper> pickle_wrapper);
+            PyMultiprocessingThtsEnv(
+                std::shared_ptr<PickleWrapper> pickle_wrapper,
+                std::shared_ptr<py::object> py_thts_env);
 
             /**
              * Private copy constructor to implement 
             */
-            PyThtsEnv(PyThtsEnv& other);
+            PyMultiprocessingThtsEnv(PyMultiprocessingThtsEnv& other);
 
             /**
              * Clone - virtual copy constructor idiom
@@ -81,22 +92,28 @@ namespace thts::python {
             /**
              * Mark destructor as virtual for subclassing.
              */
-            virtual ~PyThtsEnv();
+            virtual ~PyMultiprocessingThtsEnv();
+
+            /**
+             * Starts python server process and sets up 'shared_mem_wrapper'
+             * 'tid' for the thread that will use this env
+            */
+            void start_python_server(int tid);
 
         private:
             /**
-             * Locking to protect underlying py
+             * Main function for python server process
             */
-            std::unique_lock<std::mutex> maybe_lock_for_py_thts_env() const;
-            void ensure_py_thts_env_unlocked(std::unique_lock<std::mutex>& ul) const;
-
+            void server_main();
+        
+        public:
             /**
              * Returns the initial state for the environment.
              * 
              * Returns:
              *      Initial state for this environment instance
              */
-        public:
+            std::string get_initial_state_py_server() const;
             std::shared_ptr<const PyState> get_initial_state() const;
 
             /**
@@ -108,6 +125,7 @@ namespace thts::python {
              * Returns:
              *      True if 'state' is a sink state and false otherwise
              */
+            std::string is_sink_state_py_server(std::string& state) const;
             bool is_sink_state(std::shared_ptr<const PyState> state, PyThtsContext& ctx) const;
 
             /**
@@ -119,6 +137,7 @@ namespace thts::python {
              * Returns:
              *      Returns a list of actions available from 'state'
              */
+            std::string get_valid_actions_py_server(std::string& state) const;
             std::shared_ptr<PyActionVector> get_valid_actions(
                 std::shared_ptr<const PyState> state, PyThtsContext& ctx) const;
 
@@ -136,6 +155,8 @@ namespace thts::python {
              * Returns:
              *      Returns a successor state distribution from taking 'action' in state 'state'.
              */
+            std::string get_transition_distribution_py_server(
+                std::string& state, std::string& action) const;
             std::shared_ptr<PyStateDistr> get_transition_distribution(
                 std::shared_ptr<const PyState> state, 
                 std::shared_ptr<const PyAction> action, 
@@ -154,6 +175,8 @@ namespace thts::python {
              * Returns:
              *      Returns an successor state sampled from taking 'action' from 'state'
              */
+            std::string sample_transition_distribution_py_server(
+                std::string& state, std::string& action) const;
             std::shared_ptr<const PyState> sample_transition_distribution(
                 std::shared_ptr<const PyState> state, 
                 std::shared_ptr<const PyAction> action, 
@@ -176,6 +199,7 @@ namespace thts::python {
              * Returns:
              *      The reward for taking 'action' from 'state' (and sampling 'observation')
              */
+            std::string get_reward_py_server(std::string& state, std::string& action) const;
             double get_reward(
                 std::shared_ptr<const PyState> state, 
                 std::shared_ptr<const PyAction> action, 
@@ -195,6 +219,7 @@ namespace thts::python {
              *      A PyThtsContext object, that will be passed to the Thts functions for a single trial, used to 
              *      provide some context or space for caching.
              */
+            std::string sample_context_and_reset_py_server(int tid) const;
             virtual std::shared_ptr<PyThtsContext> sample_context_and_reset(int tid) const;
 
 

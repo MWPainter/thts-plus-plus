@@ -1,6 +1,7 @@
 #pragma once
 
 #include "thts_types.h"
+#include "py/pickle_wrapper.h"
 
 #include <pybind11/pybind11.h>
 
@@ -16,6 +17,7 @@
 namespace thts::python {
     // forward declares
     class PyThtsEnv;
+    class PyMultiprocessingThtsEnv;
 
     // namespace includes
     using namespace thts;
@@ -26,16 +28,22 @@ namespace thts::python {
      * Wrapper around an arbitrary python object
     */
     class PyObservation : public Observation {
-        friend PyThtsEnv;
 
         protected:
-            std::shared_ptr<py::object> py_obs;
             mutable std::recursive_mutex lock;
+            mutable std::shared_ptr<py::object> py_obs;
+            std::shared_ptr<PickleWrapper> py_pickle_wrapper;
+            mutable std::shared_ptr<std::string> serialised_obs;
         
         public:
-            PyObservation(std::shared_ptr<py::object> _py_obs);
+            PyObservation(std::shared_ptr<PickleWrapper> py_pickle_wrapper, std::shared_ptr<py::object> _py_obs);
+            PyObservation(
+                std::shared_ptr<PickleWrapper> py_pickle_wrapper, std::shared_ptr<std::string> serialised_obs);
             virtual ~PyObservation();
             bool equals(const PyObservation& other) const;
+
+            std::shared_ptr<py::object> get_py_obs() const;
+            std::shared_ptr<std::string> get_serialised_obs() const;
 
             virtual std::size_t hash() const override;
             virtual bool equals_itfc(const Observation& other) const override;
@@ -48,15 +56,22 @@ namespace thts::python {
     */
     class PyState : public State {
         friend PyThtsEnv;
+        friend PyMultiprocessingThtsEnv;
 
         protected:
-            std::shared_ptr<py::object> py_state;
             mutable std::recursive_mutex lock;
+            mutable std::shared_ptr<py::object> py_state;
+            std::shared_ptr<PickleWrapper> py_pickle_wrapper;
+            mutable std::shared_ptr<std::string> serialised_state;
         
         public:
-            PyState(std::shared_ptr<py::object> _py_state);
+            PyState(std::shared_ptr<PickleWrapper> py_pickle_wrapper, std::shared_ptr<py::object> _py_state);
+            PyState(std::shared_ptr<PickleWrapper> py_pickle_wrapper, std::shared_ptr<std::string> serialised_state);
             virtual ~PyState();
             bool equals(const PyState& other) const;
+
+            std::shared_ptr<py::object> get_py_state() const;
+            std::shared_ptr<std::string> get_serialised_state() const;
             
             virtual std::size_t hash() const override;
             virtual bool equals_itfc(const Observation& other) const override;
@@ -69,15 +84,22 @@ namespace thts::python {
     */
     class PyAction : public Action {
         friend PyThtsEnv;
+        friend PyMultiprocessingThtsEnv;
         
         protected:
-            std::shared_ptr<py::object> py_action;
             mutable std::recursive_mutex lock;
+            mutable std::shared_ptr<py::object> py_action;
+            std::shared_ptr<PickleWrapper> py_pickle_wrapper;
+            mutable std::shared_ptr<std::string> serialised_action;
         
         public:
-            PyAction(std::shared_ptr<py::object> _py_action);
+            PyAction(std::shared_ptr<PickleWrapper> py_pickle_wrapper, std::shared_ptr<py::object> _py_action);
+            PyAction(std::shared_ptr<PickleWrapper> py_pickle_wrapper, std::shared_ptr<std::string> serialised_action);
             virtual ~PyAction();
             bool equals(const PyAction& other) const;
+
+            std::shared_ptr<py::object> get_py_action() const;
+            std::shared_ptr<std::string> get_serialised_action() const;
 
             virtual std::size_t hash() const override;
             virtual bool equals_itfc(const Action& other) const override;
