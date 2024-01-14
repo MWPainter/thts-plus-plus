@@ -24,7 +24,7 @@ namespace thts {
         thread_id_map_lock(),
         thread_id_map(),
         thts_context_map_lock(),
-        thts_context_map(args.thts_env->sample_context_and_reset_itfc(0)) 
+        thts_context_map((args.thts_env != nullptr) ? args.thts_env->sample_context_and_reset_itfc(0) : make_shared<ThtsEnvContext>()) 
     {
         thts_envs.push_back(args.thts_env);
         for (int i=1; i<num_envs; i++) {
