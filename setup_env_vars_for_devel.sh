@@ -1,5 +1,4 @@
-this_filename=$( realpath "$0" )
-dirname=$( dirname "$this_filename" )
+dirname=$(readlink -f -- $(dirname "${BASH_SOURCE[0]}"))
 export PYTHONPATH=$dirname:$dirname/py:$PYTHONPATH
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$dirname
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$dirname/external/qhull/lib
