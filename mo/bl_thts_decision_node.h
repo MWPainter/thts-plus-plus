@@ -28,8 +28,8 @@ namespace thts {
             virtual ~BL_MoThtsDNode() = default;
             
             virtual void visit(MoThtsEnvContext& ctx);
-            virtual std::shared_ptr<const Action> select_action(MoThtsEnvContext& ctx);
-            virtual std::shared_ptr<const Action> recommend_action(MoThtsEnvContext& ctx) const;
+            virtual std::shared_ptr<const Action> select_action(MoThtsEnvContext& ctx) = 0;
+            virtual std::shared_ptr<const Action> recommend_action(MoThtsEnvContext& ctx) const = 0;
             virtual void backup(
                 const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 
                 const std::vector<Eigen::ArrayXd>& trial_rewards_after_node, 
@@ -38,8 +38,8 @@ namespace thts {
                 MoThtsEnvContext& ctx) = 0;
 
         protected:
-            std::shared_ptr<BL_MoThtsCNode> create_child_node_helper(std::shared_ptr<const Action> action) const;
-            virtual std::string get_pretty_print_val() const override;
+            // std::shared_ptr<BL_MoThtsCNode> create_child_node_helper(std::shared_ptr<const Action> action) const;
+            // virtual std::string get_pretty_print_val() const override;
         
 
 
@@ -70,7 +70,7 @@ namespace thts {
              * Returns:
              *      A pointer to a new child chance node
              */
-            std::shared_ptr<BL_MoThtsDNode> create_child_node(std::shared_ptr<const Action> action);
+            std::shared_ptr<BL_MoThtsCNode> create_child_node(std::shared_ptr<const Action> action);
 
             /**
              * Retrieves a child node from the children map.
@@ -83,7 +83,7 @@ namespace thts {
              * Returns:
              *      A pointer to the child node corresponding to 'action'
              */
-            std::shared_ptr<BL_MoThtsDNode> get_child_node(std::shared_ptr<const Action> action) const;
+            std::shared_ptr<BL_MoThtsCNode> get_child_node(std::shared_ptr<const Action> action) const;
 
 
 
@@ -106,6 +106,6 @@ namespace thts {
                 ThtsEnvContext& ctx) override;
 
             virtual std::shared_ptr<ThtsCNode> create_child_node_helper_itfc(
-                std::shared_ptr<const Action> action) const override
+                std::shared_ptr<const Action> action) const override;
     }
 }
