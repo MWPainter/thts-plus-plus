@@ -94,6 +94,7 @@ namespace thts {
             
 
         private:
+            // Called by 'avg_return_update_ball_list' and 'set_value_update_ball_list'
             std::shared_ptr<CZ_Ball> activate_new_ball_if_needed(
                 Eigen::ArrayXd& weight, 
                 std::shared_ptr<CZ_Ball> chosen_ball);
