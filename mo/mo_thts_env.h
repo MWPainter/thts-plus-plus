@@ -3,6 +3,7 @@
 #include "thts_env.h"
 #include "thts_env_context.h"
 #include "thts_types.h"
+#include "mo/mo_thts_context.h"
 
 #include <memory>
 #include <string>
@@ -22,7 +23,7 @@ namespace thts {
      * Member variables:
      *      reward_dim: 
      */
-    class MoThtsEnv : public ThtsEnv {
+    class MoThtsEnv : virtual public ThtsEnv {
         protected:
             int reward_dim;
 
@@ -32,13 +33,11 @@ namespace thts {
              */
             MoThtsEnv(int reward_dim, bool is_fully_observable);
 
-        private:
             /**
-             * Private copy constructor to implement clone
+             * copy constructor to implement clone
             */
             MoThtsEnv(MoThtsEnv& other);
         
-        public:
             /**
              * Reward dim getter
             */
@@ -71,5 +70,11 @@ namespace thts {
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action,
                 ThtsEnvContext& ctx) const = 0;
+
+            /**
+             * Override sample context itfc to return a MoThtsContext
+             */
+            virtual std::shared_ptr<ThtsEnvContext> sample_context_itfc(
+                int tid, RandManager& rand_manager) const override;
     };
 }

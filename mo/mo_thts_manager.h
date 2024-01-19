@@ -21,7 +21,7 @@ namespace thts {
         MoHeuristicFnPtr mo_heuristic_fn;
 
         MoThtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env) :
-            ThtsManagerArgs(thts_env),
+            ThtsManagerArgs(std::static_pointer_cast<ThtsEnv>(thts_env)),
             reward_dim(MoThtsManagerArgs::reward_dim_default),
             mo_heuristic_fn(nullptr) {}
 
@@ -51,22 +51,7 @@ namespace thts {
              * needs to be done in the body of the constructor to allow for custom heuristics to be supplied, but also 
              * allow the default zero heuristic to match the reward_dim given
              */    
-            MoThtsManager(const MoThtsManagerArgs& args) : 
-                ThtsManager(args),
-                reward_dim(args.reward_dim),
-                mo_heuristic_fn(args.mo_heuristic_fn)
-            {
-                MoThtsEnv& mo_thts_env = (MoThtsEnv&) *thts_env(); 
-                if (reward_dim == MoThtsManagerArgs::reward_dim_default) {
-                    reward_dim = mo_thts_env.get_reward_dim();
-                } else if (reward_dim != mo_thts_env.get_reward_dim()) {
-                    throw std::runtime_error("Reward dim in MoThtsManager doesn't match reward dim of env.");
-                }
-
-                if (mo_heuristic_fn == nullptr) {
-                    mo_heuristic_fn = get_default_mo_zero_heuristic_fn();
-                }
-            }
+            MoThtsManager(const MoThtsManagerArgs& args);
 
             /**
              * Any classes intended to be inherited from should make destructor virtual
@@ -78,22 +63,6 @@ namespace thts {
              * Work around to get a default heuristic using a dynamic value (as template parameters need to be 
              * specified at compile time).
             */
-            MoHeuristicFnPtr get_default_mo_zero_heuristic_fn() {
-                switch (reward_dim) {
-                    case 2: return helper::mo_zero_heuristic_fn<2>;
-                    case 3: return helper::mo_zero_heuristic_fn<3>;
-                    case 4: return helper::mo_zero_heuristic_fn<4>;
-                    case 5: return helper::mo_zero_heuristic_fn<5>;
-                    case 6: return helper::mo_zero_heuristic_fn<6>;
-                    case 7: return helper::mo_zero_heuristic_fn<7>;
-                    case 8: return helper::mo_zero_heuristic_fn<8>;
-                    case 9: return helper::mo_zero_heuristic_fn<9>;
-                    default: throw std::runtime_error(
-                                "get_default_mo_zero_heuristic_fn doesnt contain the reward dimension you're trying to "
-                                "use in include/multi_objective/mo_thts_manager, add a case to the switch block so the "
-                                "compiler will generate the zero heuristic function with appropriate dimension you are "
-                                "trying to use.");
-                }
-            }
+            MoHeuristicFnPtr get_default_mo_zero_heuristic_fn();
     };
 }

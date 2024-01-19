@@ -44,6 +44,16 @@ namespace thts {
             virtual ~MoThtsCNode() = default;
 
             /**
+             * OVerride final the old backup fn (throws error if try to call)
+            */
+            virtual void backup_itfc(
+                const std::vector<double>& trial_rewards_before_node, 
+                const std::vector<double>& trial_rewards_after_node, 
+                const double trial_cumulative_return_after_node, 
+                const double trial_cumulative_return,
+                ThtsEnvContext& ctx) override final;
+
+            /**
              * Override of thts backup function for multi objective.
              * 
              * Updates the Sinformation in this node in the backup phase of the thts routine.

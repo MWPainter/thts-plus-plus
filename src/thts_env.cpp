@@ -69,7 +69,14 @@ namespace thts {
      * to return this type so we can subclass it, rather than forcing Thts algorithms to use a specific map for a 
      * context.
      */
-    shared_ptr<ThtsEnvContext> ThtsEnv::sample_context_and_reset_itfc(int tid) const {
+    shared_ptr<ThtsEnvContext> ThtsEnv::sample_context_itfc(int tid, RandManager& rand_manager) const {
         return make_shared<ThtsEnvContext>();
+    }
+
+    /**
+     * Default reset is nothing, we are stateless
+     */
+    void ThtsEnv::reset_itfc() const 
+    {
     }
 } 

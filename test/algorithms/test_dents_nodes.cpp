@@ -183,4 +183,4 @@ TEST(Dents_IntegrationTest, dents_env) {
 
     cout << "DENTS tree looks like this on dents env:" << endl;
     cout << root_node->get_pretty_print_string(1) << endl;
-}
+} 

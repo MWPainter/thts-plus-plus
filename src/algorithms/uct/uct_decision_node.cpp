@@ -337,7 +337,7 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsEnvContext& ctx)
     {
         backup(
             trial_rewards_before_node, 

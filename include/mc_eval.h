@@ -14,6 +14,7 @@
 namespace thts {
     // Forward declare
     class MCEvaluator;
+    class MoMCEvaluator;
 
     /**
      * Converts a thts tree into a complete policy that can be used for evaluation.
@@ -35,40 +36,43 @@ namespace thts {
     */
     class EvalPolicy {
         friend MCEvaluator;
+        friend MoMCEvaluator;
 
         protected:
             std::shared_ptr<const ThtsDNode> root_node;
             std::shared_ptr<const ThtsDNode> cur_node;
-            std::shared_ptr<const ThtsEnv> thts_env;
-            RandManager& rand_manager;
+            std::shared_ptr<ThtsEnv> thts_env;
+            std::shared_ptr<ThtsManager> manager;
 
         public:
             EvalPolicy(
                 std::shared_ptr<const ThtsDNode> root_node, 
-                std::shared_ptr<const ThtsEnv> thts_env, 
-                RandManager& rand_manager);
+                std::shared_ptr<ThtsEnv> thts_env,
+                std::shared_ptr<ThtsManager> manager);
 
-            EvalPolicy(const EvalPolicy& policy);
+            EvalPolicy(const EvalPolicy& policy, std::shared_ptr<ThtsEnv> thts_env);
 
             /**
-             * Resets cur_node back to root node.
+             * Resets cur_node back to root node
             */
             void reset();
 
             /**
              * Gets a uniform random action.
             */
-            std::shared_ptr<const Action> get_random_action(std::shared_ptr<const State> state, ThtsEnvContext& ctx);
+            std::shared_ptr<const Action> get_random_action(
+                std::shared_ptr<const State> state, ThtsEnvContext& ctx);
 
             /**
              * Gets the best recommendation from the current node.
             */
-            std::shared_ptr<const Action> get_action(std::shared_ptr<const State> state, ThtsEnvContext& context);
+            std::shared_ptr<const Action> get_action(
+                std::shared_ptr<const State> state, ThtsEnvContext& context);
 
             /**
              * Updates 'cur_node' for the last step taken in a trial.
             */
-           void update_step(std::shared_ptr<const Action> action, std::shared_ptr<const Observation> obsv);
+            void update_step(std::shared_ptr<const Action> action, std::shared_ptr<const Observation> obsv);
     };
 
     /**
@@ -89,20 +93,22 @@ namespace thts {
      *          The maximum trial length to use in MC evaluations
      *      sampled_returns: 
      *          A list of sampled returns 
-     *      rand_manager: 
-     *          Manager for rng
+     *      manager: 
+     *          Manager 
      *      lock: 
      *          A lock to protect access to class variables (i.e. sampled_returns in 'run_rollout')
     */
     class MCEvaluator {
         protected:
-            int num_envs;
-            std::vector<std::shared_ptr<ThtsEnv>> thts_envs;
-            EvalPolicy& policy;
+            std::shared_ptr<EvalPolicy> policy;
             int max_trial_length;
             std::vector<double> sampled_returns;
-            RandManager& rand_manager;
+            std::shared_ptr<ThtsManager> manager;
             std::mutex lock;
+
+            int num_rollouts_to_run;
+            int num_rollouts_started;
+            std::mutex rollouts_lock;
 
             /**
              * Get env for thread id
@@ -117,23 +123,23 @@ namespace thts {
             /**
              * Runs a single rollout and stores the result in 'sampled_returns'.
             */
-            void run_rollout(int thread_id, EvalPolicy& thread_policy);
+            virtual void run_rollout(int thread_id, EvalPolicy& thread_policy);
 
             /**
              * Runs rollouts as a worker thread
             */
-            void thread_run_rollouts(
-                int total_rollouts, int thread_id, int num_threads, std::unique_ptr<EvalPolicy> thread_policy);
+            virtual void thread_run_rollouts(
+                int total_rollouts, int thread_id, int num_threads, std::shared_ptr<EvalPolicy> thread_policy);
 
 
 
         public:
             MCEvaluator(
-                int num_envs,
-                std::shared_ptr<ThtsEnv> thts_env,
-                EvalPolicy& eval_policy,
+                std::shared_ptr<EvalPolicy> eval_policy,
                 int max_trial_length,
-                RandManager& rand_manager);
+                std::shared_ptr<ThtsManager> manager);
+            
+            virtual ~MCEvaluator() = default;
 
             /**
              * Run 'num_rollout' many rollouts to gather stats. Does so by spawning 'num_threads' many threads and 
@@ -141,16 +147,16 @@ namespace thts {
              * 
              * Assumes that the tree is static during this call, so does not lock the nodes of the tree.
             */
-            void run_rollouts(int num_rollouts, int num_threads);
+            virtual void run_rollouts(int num_rollouts, int num_threads);
 
             /**
              * Returns the mean return of 'sampled_returns'
             */
-           double get_mean_return();
+            virtual double get_mean_return();
 
-           /**
-            * Returns the stddev of 'sampled_returns'
-           */
-          double get_stddev_return();
+            /**
+                * Returns the stddev of 'sampled_returns'
+            */
+            virtual double get_stddev_return();
     };
 }

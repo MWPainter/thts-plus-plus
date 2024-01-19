@@ -1,7 +1,6 @@
 #include "py/py_multiprocessing_thts_env.h"
 
 #include "py/py_helper.h"
-#include "py/py_thts_context.h"
 #include "py/py_thts_types.h"
 
 #include <mutex>
@@ -21,9 +20,9 @@ using namespace std;
 namespace thts::python { 
 
     PyMultiprocessingThtsEnv::PyMultiprocessingThtsEnv(
-        std::shared_ptr<PickleWrapper> pickle_wrapper,
-        std::shared_ptr<py::object> py_thts_env) :
-            ThtsEnv(py_thts_env->attr("is_fully_observable")().cast<bool>()),
+        shared_ptr<PickleWrapper> pickle_wrapper,
+        shared_ptr<py::object> py_thts_env) :
+            ThtsEnv((py_thts_env != nullptr) ? py_thts_env->attr("is_fully_observable")().cast<bool>() : true),
             py_thts_env(py_thts_env),
             pickle_wrapper(pickle_wrapper),
             shared_mem_wrapper()
@@ -40,6 +39,10 @@ namespace thts::python {
 
     shared_ptr<ThtsEnv> PyMultiprocessingThtsEnv::clone() {
         return make_shared<PyMultiprocessingThtsEnv>(*this);
+    }
+
+    void PyMultiprocessingThtsEnv::clear_unix_sem_and_shm() {
+        shared_mem_wrapper.reset();
     }
 
     PyMultiprocessingThtsEnv::~PyMultiprocessingThtsEnv() {
@@ -84,10 +87,10 @@ namespace thts::python {
                 string& state = shared_mem_wrapper->args[0];
                 string& action = shared_mem_wrapper->args[1];
                 shared_mem_wrapper->args[0] = get_reward_py_server(state, action);
-            } else if (rpc_id == RPC_sample_context_and_reset) {
-                int tid = std::stoi(shared_mem_wrapper->args[0]);
-                shared_mem_wrapper->args[0] = sample_context_and_reset_py_server(tid);
-            }
+            } else if (rpc_id == RPC_reset) {
+                reset_py_server();
+                shared_mem_wrapper->args[0] = "\n\n";
+            } 
 
             shared_mem_wrapper->rpc_id = 0;
             shared_mem_wrapper->num_args = 1;
@@ -118,7 +121,7 @@ namespace thts::python {
         return is_sink_state ? "T" : "F";
     }
 
-    bool PyMultiprocessingThtsEnv::is_sink_state(shared_ptr<const PyState> state, PyThtsContext& ctx) const 
+    bool PyMultiprocessingThtsEnv::is_sink_state(shared_ptr<const PyState> state, ThtsEnvContext& ctx) const 
     {
         shared_mem_wrapper->rpc_id = RPC_is_sink_state;
         shared_mem_wrapper->num_args = 1;
@@ -136,7 +139,7 @@ namespace thts::python {
     }
     
     shared_ptr<PyActionVector> PyMultiprocessingThtsEnv::get_valid_actions(
-        shared_ptr<const PyState> state, PyThtsContext& ctx) const 
+        shared_ptr<const PyState> state, ThtsEnvContext& ctx) const 
     { 
         shared_mem_wrapper->rpc_id = RPC_get_valid_actions;
         shared_mem_wrapper->num_args = 1;
@@ -163,7 +166,7 @@ namespace thts::python {
     }
 
     shared_ptr<PyStateDistr> PyMultiprocessingThtsEnv::get_transition_distribution(
-        shared_ptr<const PyState> state, shared_ptr<const PyAction> action, PyThtsContext& ctx) const 
+        shared_ptr<const PyState> state, shared_ptr<const PyAction> action, ThtsEnvContext& ctx) const 
     {
         shared_mem_wrapper->rpc_id = RPC_get_transition_distribution;
         shared_mem_wrapper->num_args = 2;
@@ -196,7 +199,7 @@ namespace thts::python {
         shared_ptr<const PyState> state, 
         shared_ptr<const PyAction> action, 
         RandManager& rand_manager, 
-        PyThtsContext& ctx) const 
+        ThtsEnvContext& ctx) const 
     {
         shared_mem_wrapper->rpc_id = RPC_sample_transition_distribution;
         shared_mem_wrapper->num_args = 2;
@@ -217,7 +220,7 @@ namespace thts::python {
     double PyMultiprocessingThtsEnv::get_reward(
         shared_ptr<const PyState> state, 
         shared_ptr<const PyAction> action, 
-        PyThtsContext& ctx) const 
+        ThtsEnvContext& ctx) const 
     {
         shared_mem_wrapper->rpc_id = RPC_get_reward;
         shared_mem_wrapper->num_args = 2;
@@ -227,25 +230,17 @@ namespace thts::python {
         return pickle_wrapper->deserialise(shared_mem_wrapper->args[0]).cast<double>();
     }
 
-    string PyMultiprocessingThtsEnv::sample_context_and_reset_py_server(int tid) const 
+    void PyMultiprocessingThtsEnv::reset_py_server() const 
     {
-        py::handle py_sample_context_and_reset_fn = py_thts_env->attr("sample_context_and_reset");
-        py::object py_context = py_sample_context_and_reset_fn(tid);
-        return pickle_wrapper->serialise(py_context);
+        py::handle py_reset_fn = py_thts_env->attr("reset");
+        py_reset_fn();
     }
 
-    shared_ptr<PyThtsContext> PyMultiprocessingThtsEnv::sample_context_and_reset(int tid) const
+    void PyMultiprocessingThtsEnv::reset() const
     {
-        // TODO: make implementation cleaner, would like to have cleaner init of ThtsManager
-        // Actually dont think we need the default context anymore?
-        // Or seperate sample context and reset or something?
-        if (shared_mem_wrapper != nullptr) {
-            shared_mem_wrapper->rpc_id = RPC_sample_context_and_reset;
-            shared_mem_wrapper->num_args = 1;
-            shared_mem_wrapper->args[0] = std::to_string(tid);
-            shared_mem_wrapper->make_rpc_call();
-        }
-        return make_shared<PyThtsContext>(nullptr);
+        shared_mem_wrapper->rpc_id = RPC_reset;
+        shared_mem_wrapper->num_args = 0;
+        shared_mem_wrapper->make_rpc_call();
     }
 }
 
@@ -259,7 +254,7 @@ namespace thts::python {
  */
 namespace thts::python {
     shared_ptr<PyObservationDistr> PyMultiprocessingThtsEnv::get_observation_distribution(
-        shared_ptr<const PyAction> action, shared_ptr<const PyState> next_state, PyThtsContext& ctx) const 
+        shared_ptr<const PyAction> action, shared_ptr<const PyState> next_state, ThtsEnvContext& ctx) const 
     {
         shared_ptr<const Action> act_itfc = static_pointer_cast<const Action>(action);
         shared_ptr<const State> next_state_itfc = static_pointer_cast<const State>(next_state);
@@ -277,7 +272,7 @@ namespace thts::python {
         shared_ptr<const PyAction> action, 
         shared_ptr<const PyState> next_state, 
         RandManager& rand_manager, 
-        PyThtsContext& ctx) const 
+        ThtsEnvContext& ctx) const 
     {
         shared_ptr<const Action> act_itfc = static_pointer_cast<const Action>(action);
         shared_ptr<const State> next_state_itfc = static_pointer_cast<const State>(next_state);
@@ -301,13 +296,13 @@ namespace thts::python {
     }
 
     bool PyMultiprocessingThtsEnv::is_sink_state_itfc(shared_ptr<const State> state, ThtsEnvContext& ctx) const {
-        PyThtsContext& py_ctx = (PyThtsContext&) ctx;
+        ThtsEnvContext& py_ctx = (ThtsEnvContext&) ctx;
         shared_ptr<const PyState> state_itfc = static_pointer_cast<const PyState>(state);
         return is_sink_state(state_itfc, py_ctx);
     }
 
     shared_ptr<ActionVector> PyMultiprocessingThtsEnv::get_valid_actions_itfc(shared_ptr<const State> state, ThtsEnvContext& ctx) const {
-        PyThtsContext& py_ctx = (PyThtsContext&) ctx;
+        ThtsEnvContext& py_ctx = (ThtsEnvContext&) ctx;
         shared_ptr<const PyState> state_itfc = static_pointer_cast<const PyState>(state);
         shared_ptr<vector<shared_ptr<const PyAction>>> valid_actions_itfc = get_valid_actions(state_itfc, py_ctx);
 
@@ -321,7 +316,7 @@ namespace thts::python {
     shared_ptr<StateDistr> PyMultiprocessingThtsEnv::get_transition_distribution_itfc(
         shared_ptr<const State> state, shared_ptr<const Action> action, ThtsEnvContext& ctx) const 
     {
-        PyThtsContext& py_ctx = (PyThtsContext&) ctx;
+        ThtsEnvContext& py_ctx = (ThtsEnvContext&) ctx;
         shared_ptr<const PyState> state_itfc = static_pointer_cast<const PyState>(state);
         shared_ptr<const PyAction> action_itfc = static_pointer_cast<const PyAction>(action);
         shared_ptr<PyStateDistr> distr_itfc = get_transition_distribution(state_itfc, action_itfc, py_ctx);
@@ -341,7 +336,7 @@ namespace thts::python {
        RandManager& rand_manager, 
        ThtsEnvContext& ctx) const 
     {
-        PyThtsContext& py_ctx = (PyThtsContext&) ctx;
+        ThtsEnvContext& py_ctx = (ThtsEnvContext&) ctx;
         shared_ptr<const PyState> state_itfc = static_pointer_cast<const PyState>(state);
         shared_ptr<const PyAction> action_itfc = static_pointer_cast<const PyAction>(action);
         shared_ptr<const PyState> obsv = sample_transition_distribution(state_itfc, action_itfc, rand_manager, py_ctx);
@@ -351,7 +346,7 @@ namespace thts::python {
     shared_ptr<ObservationDistr> PyMultiprocessingThtsEnv::get_observation_distribution_itfc(
         shared_ptr<const Action> action, shared_ptr<const State> next_state, ThtsEnvContext& ctx) const
     {
-        PyThtsContext& py_ctx = (PyThtsContext&) ctx;
+        ThtsEnvContext& py_ctx = (ThtsEnvContext&) ctx;
         shared_ptr<const PyAction> act_itfc = static_pointer_cast<const PyAction>(action);
         shared_ptr<const PyState> next_state_itfc = static_pointer_cast<const PyState>(next_state);
         shared_ptr<PyObservationDistr> distr_itfc = get_observation_distribution(
@@ -370,7 +365,7 @@ namespace thts::python {
          RandManager& rand_manager, 
          ThtsEnvContext& ctx) const
     {
-        PyThtsContext& py_ctx = (PyThtsContext&) ctx;
+        ThtsEnvContext& py_ctx = (ThtsEnvContext&) ctx;
         shared_ptr<const PyAction> act_itfc = static_pointer_cast<const PyAction>(action);
         shared_ptr<const PyState> next_state_itfc = static_pointer_cast<const PyState>(next_state);
         shared_ptr<const PyObservation> obsv_itfc = sample_observation_distribution(
@@ -383,15 +378,14 @@ namespace thts::python {
         shared_ptr<const Action> action, 
         ThtsEnvContext& ctx) const
     {
-        PyThtsContext& py_ctx = (PyThtsContext&) ctx;
+        ThtsEnvContext& py_ctx = (ThtsEnvContext&) ctx;
         shared_ptr<const PyState> state_itfc = static_pointer_cast<const PyState>(state);
         shared_ptr<const PyAction> action_itfc = static_pointer_cast<const PyAction>(action);
         return get_reward(state_itfc, action_itfc, py_ctx); 
     }
 
-    shared_ptr<ThtsEnvContext> PyMultiprocessingThtsEnv::sample_context_and_reset_itfc(int tid) const
+    void PyMultiprocessingThtsEnv::reset_itfc() const
     {
-        shared_ptr<PyThtsContext> context = sample_context_and_reset(tid);
-        return static_pointer_cast<ThtsEnvContext>(context);
+        reset();
     }
 }

@@ -258,8 +258,9 @@ namespace thts {
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>> nodes_to_backup;
         vector<double> rewards; 
         
+        thts_manager->thts_env(tid)->reset_itfc();
         shared_ptr<ThtsEnvContext> context = 
-            thts_manager->thts_env(tid)->sample_context_and_reset_itfc(tid);
+            thts_manager->thts_env(tid)->sample_context_itfc(tid, *thts_manager);
         thts_manager->register_thts_context(tid,context);
         run_selection_phase(nodes_to_backup, rewards, *context, tid);
         run_backup_phase(nodes_to_backup, rewards, *context);

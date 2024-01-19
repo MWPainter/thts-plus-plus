@@ -1,5 +1,9 @@
 #pragma once
 
+#include "mo/bl_thts_chance_node.h"
+
+#include "mo/ball_list.h"
+#include "mo/bl_thts_manager.h"
 #include "mo/mo_thts_decision_node.h"
 
 
@@ -8,18 +12,21 @@
 namespace thts {
     // forward declare 
     class BL_MoThtsCNode;
+    class BL_MoThtsManager;
+    class MoThtsContext;
 
     /**
      * Base class for decision nodes that use CZ_BallList objects for their state
     */
     class BL_MoThtsDNode : public MoThtsDNode {
+        friend BL_MoThtsCNode;
 
         protected:
             CZ_BallList ball_list;
 
         public:
             BL_MoThtsDNode(
-                std::shared_ptr<MoThtsManager> thts_manager,
+                std::shared_ptr<BL_MoThtsManager> thts_manager,
                 std::shared_ptr<const State> state,
                 int decision_depth,
                 int decision_timestep,
@@ -27,19 +34,22 @@ namespace thts {
 
             virtual ~BL_MoThtsDNode() = default;
             
-            virtual void visit(MoThtsEnvContext& ctx);
-            virtual std::shared_ptr<const Action> select_action(MoThtsEnvContext& ctx) = 0;
-            virtual std::shared_ptr<const Action> recommend_action(MoThtsEnvContext& ctx) const = 0;
+            virtual void visit(MoThtsContext& ctx);
+            virtual std::shared_ptr<const Action> select_action(MoThtsContext& ctx) = 0;
+            virtual std::shared_ptr<const Action> recommend_action(MoThtsContext& ctx) const = 0;
             virtual void backup(
                 const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 
                 const std::vector<Eigen::ArrayXd>& trial_rewards_after_node, 
                 const Eigen::ArrayXd trial_cumulative_return_after_node, 
                 const Eigen::ArrayXd trial_cumulative_return,
-                MoThtsEnvContext& ctx) = 0;
+                MoThtsContext& ctx) = 0;
+
+            std::string get_ball_list_pretty_print_string() const;
 
         protected:
-            // std::shared_ptr<BL_MoThtsCNode> create_child_node_helper(std::shared_ptr<const Action> action) const;
-            // virtual std::string get_pretty_print_val() const override;
+            virtual std::shared_ptr<BL_MoThtsCNode> create_child_node_helper(
+                std::shared_ptr<const Action> action) const = 0;
+            virtual std::string get_pretty_print_val() const override = 0;
         
 
 
@@ -52,37 +62,7 @@ namespace thts {
          * Boilerplate implementations provided in thts_decision_node_template.h
          */
         public:
-            /**
-             * Creates a child node, handles the internal management of the creation and returns a pointer to it.
-             * 
-             * This funciton is a wrapper for the create_child_node_itfc function definted in thts_decision_node.cpp, 
-             * and handles the casting required to use it.
-             * 
-             * - If the child already exists in children, it returns a pointer to that child.
-             * - (If using transposition table) If the child already exists in the transposition table, but not in 
-             *      children, it adds the child to children and then returns a pointer to it.
-             * - If the child hasn't been created before, it makes the child (using 'create_child_node_helper'), and 
-             *      inserts it appropriately into children (and the transposition table if relevant).
-             * 
-             * Args:
-             *      action: An action to create a child node for
-             * 
-             * Returns:
-             *      A pointer to a new child chance node
-             */
             std::shared_ptr<BL_MoThtsCNode> create_child_node(std::shared_ptr<const Action> action);
-
-            /**
-             * Retrieves a child node from the children map.
-             * 
-             * If a child doesn't exist for the action, an exception will be thrown.
-             * 
-             * Args:
-             *      action: The action to get the corresponding child of
-             * 
-             * Returns:
-             *      A pointer to the child node corresponding to 'action'
-             */
             std::shared_ptr<BL_MoThtsCNode> get_child_node(std::shared_ptr<const Action> action) const;
 
 
@@ -107,5 +87,5 @@ namespace thts {
 
             virtual std::shared_ptr<ThtsCNode> create_child_node_helper_itfc(
                 std::shared_ptr<const Action> action) const override;
-    }
+    };
 }

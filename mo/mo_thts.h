@@ -27,7 +27,7 @@ namespace thts {
      * This multi-objective version just replaces the 'double' reward type with rewards of type 'Eigen::ArrayXd' and 
      * makes appropriate type changes to MultiObjective (Mo____) classes where necessary.
      */
-    class MoThtsPool : public ThtsPool {
+    class MoThtsPool : virtual public ThtsPool {
 
         public:
             /**
@@ -45,7 +45,8 @@ namespace thts {
                 std::shared_ptr<ThtsManager> thts_manager=nullptr, 
                 std::shared_ptr<MoThtsDNode> root_node=nullptr, 
                 int num_threads=1,
-                std::shared_ptr<ThtsLogger> logger=nullptr);
+                std::shared_ptr<ThtsLogger> logger=nullptr,
+                bool start_threads_in_this_constructor=true);
 
             /**
              * Destructor. (Should just call ~ThtsPool()).

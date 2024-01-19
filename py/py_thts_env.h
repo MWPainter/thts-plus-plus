@@ -1,10 +1,10 @@
 #pragma once
 
 #include "thts_env.h"
+#include "thts_env_context.h"
 #include "thts_manager.h"
 #include "py/pickle_wrapper.h"
 #include "py/py_thts_types.h"
-#include "py/py_thts_context.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/embed.h>
@@ -29,6 +29,9 @@ namespace thts::python {
     /** 
      * A ThtsEnv subclass used as a wrapper around an environment defined in python
      * Assumes that the python environment is a subclass the 'PyThtsEnv' (python class defined in py_thts_env.py
+     * 
+     * This class allows for safe use of a single copy of a python env shared between multiple threads
+     * ((ThtsPool) Assumes that python can be run under subinterpreters - numpy code cant!)
      * 
      * Protecting python variables:
      * - py_thts_env needs to be protected by a lock
@@ -108,7 +111,7 @@ namespace thts::python {
              * Returns:
              *      True if 'state' is a sink state and false otherwise
              */
-            bool is_sink_state(std::shared_ptr<const PyState> state, PyThtsContext& ctx) const;
+            bool is_sink_state(std::shared_ptr<const PyState> state, ThtsEnvContext& ctx) const;
 
             /**
              * Returns a list of actions that are valid in a given state.
@@ -120,7 +123,7 @@ namespace thts::python {
              *      Returns a list of actions available from 'state'
              */
             std::shared_ptr<PyActionVector> get_valid_actions(
-                std::shared_ptr<const PyState> state, PyThtsContext& ctx) const;
+                std::shared_ptr<const PyState> state, ThtsEnvContext& ctx) const;
 
             /**
              * Returns a distribution over successor states from a state action pair.
@@ -139,7 +142,7 @@ namespace thts::python {
             std::shared_ptr<PyStateDistr> get_transition_distribution(
                 std::shared_ptr<const PyState> state, 
                 std::shared_ptr<const PyAction> action, 
-                PyThtsContext& ctx) const;
+                ThtsEnvContext& ctx) const;
 
             /**
              * Samples an successor state when taking an action from a state.
@@ -158,7 +161,7 @@ namespace thts::python {
                 std::shared_ptr<const PyState> state, 
                 std::shared_ptr<const PyAction> action, 
                 RandManager& rand_manager, 
-                PyThtsContext& ctx) const;
+                ThtsEnvContext& ctx) const;
             
             /**
              * Returns the reward for a given state, action, observation tuple.
@@ -179,7 +182,7 @@ namespace thts::python {
             double get_reward(
                 std::shared_ptr<const PyState> state, 
                 std::shared_ptr<const PyAction> action, 
-                PyThtsContext& ctx) const;
+                ThtsEnvContext& ctx) const;
 
             /**
              * Samples a context that can be used to store information throughout a single trial.
@@ -192,10 +195,10 @@ namespace thts::python {
              *      state: The initial state
              * 
              * Returns:
-             *      A PyThtsContext object, that will be passed to the Thts functions for a single trial, used to 
+             *      A ThtsEnvContext object, that will be passed to the Thts functions for a single trial, used to 
              *      provide some context or space for caching.
              */
-            virtual std::shared_ptr<PyThtsContext> sample_context_and_reset(int tid) const;
+            virtual void reset() const;
 
 
 
@@ -223,7 +226,7 @@ namespace thts::python {
             virtual std::shared_ptr<PyObservationDistr> get_observation_distribution(
                 std::shared_ptr<const PyAction> action, 
                 std::shared_ptr<const PyState> next_state, 
-                PyThtsContext& ctx) const;
+                ThtsEnvContext& ctx) const;
 
             /**
              * Samples an observation when arriving in a (next) state after taking an action.
@@ -244,7 +247,7 @@ namespace thts::python {
                 std::shared_ptr<const PyAction> action, 
                 std::shared_ptr<const PyState> next_state, 
                 RandManager& rand_manager, 
-                PyThtsContext& ctx) const;
+                ThtsEnvContext& ctx) const;
 
 
 
@@ -278,8 +281,7 @@ namespace thts::python {
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
                 ThtsEnvContext& ctx) const override;
-            virtual std::shared_ptr<ThtsEnvContext> sample_context_and_reset_itfc(
-                int tid) const override;
+            virtual void reset_itfc() const override;
         
         /**
          * Implemented in thts_env.{h,cpp}

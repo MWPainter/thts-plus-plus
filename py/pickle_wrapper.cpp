@@ -31,9 +31,6 @@ namespace thts::python {
         py::object py_serialised_obj = (*py_pickle_dumps_fn)(py_obj);
         pickle_lock.unlock();
         return py_serialised_obj.cast<string>();
-        // const char* bytes_arr_ptr = PyBytes_AsString(py_serialised_obj.ptr());
-        // size_t bytes_arr_len = PyBytes_Size(py_serialised_obj.ptr());
-        // return string(bytes_arr_ptr, bytes_arr_ptr+bytes_arr_len);
     }
 
     py::object PickleWrapper::deserialise(string& serialised_py_obj_str) 

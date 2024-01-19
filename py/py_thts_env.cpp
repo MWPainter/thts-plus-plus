@@ -1,7 +1,6 @@
 #include "py/py_thts_env.h"
 
 #include "py/py_helper.h"
-#include "py/py_thts_context.h"
 #include "py/py_thts_types.h"
 
 #include <mutex>
@@ -73,7 +72,7 @@ namespace thts::python {
         return make_shared<const PyState>(pickle_wrapper, make_shared<py::object>(py_init_state));
     }
 
-    bool PyThtsEnv::is_sink_state(shared_ptr<const PyState> state, PyThtsContext& ctx) const {
+    bool PyThtsEnv::is_sink_state(shared_ptr<const PyState> state, ThtsEnvContext& ctx) const {
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
         lock_guard<recursive_mutex> state_lg(state->lock);
 
@@ -87,7 +86,7 @@ namespace thts::python {
     }
 
     shared_ptr<PyActionVector> PyThtsEnv::get_valid_actions(
-        shared_ptr<const PyState> state, PyThtsContext& ctx) const 
+        shared_ptr<const PyState> state, ThtsEnvContext& ctx) const 
     {
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
         lock_guard<recursive_mutex> state_lg(state_non_const_ref.lock);
@@ -111,7 +110,7 @@ namespace thts::python {
     }
 
     shared_ptr<PyStateDistr> PyThtsEnv::get_transition_distribution(
-        shared_ptr<const PyState> state, shared_ptr<const PyAction> action, PyThtsContext& ctx) const 
+        shared_ptr<const PyState> state, shared_ptr<const PyAction> action, ThtsEnvContext& ctx) const 
     {
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
         PyAction& action_non_const_ref = const_cast<PyAction&>(*action);
@@ -143,7 +142,7 @@ namespace thts::python {
         shared_ptr<const PyState> state, 
         shared_ptr<const PyAction> action, 
         RandManager& rand_manager, 
-        PyThtsContext& ctx) const 
+        ThtsEnvContext& ctx) const 
     {
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
         PyAction& action_non_const_ref = const_cast<PyAction&>(*action);
@@ -166,7 +165,7 @@ namespace thts::python {
     double PyThtsEnv::get_reward(
         shared_ptr<const PyState> state, 
         shared_ptr<const PyAction> action, 
-        PyThtsContext& ctx) const 
+        ThtsEnvContext& ctx) const 
     {
         PyState& state_non_const_ref = const_cast<PyState&>(*state);
         PyAction& action_non_const_ref = const_cast<PyAction&>(*action);
@@ -183,14 +182,10 @@ namespace thts::python {
         return py_get_reward_fn(py_state, py_action).cast<double>();
     }
 
-    shared_ptr<PyThtsContext> PyThtsEnv::sample_context_and_reset(int tid) const
+    void PyThtsEnv::reset() const
     {
         unique_lock<mutex> py_env_lg = maybe_lock_for_py_thts_env();
-        py::handle py_sample_context_and_reset_fn = py_thts_env->attr("sample_context_and_reset");
-        py::object py_context = py_sample_context_and_reset_fn(tid);
-        ensure_py_thts_env_unlocked(py_env_lg); 
-
-        return make_shared<PyThtsContext>(make_shared<py::object>(py_context));
+        py_thts_env->attr("reset")();
     }
 }
 
@@ -204,7 +199,7 @@ namespace thts::python {
  */
 namespace thts::python {
     shared_ptr<PyObservationDistr> PyThtsEnv::get_observation_distribution(
-        shared_ptr<const PyAction> action, shared_ptr<const PyState> next_state, PyThtsContext& ctx) const 
+        shared_ptr<const PyAction> action, shared_ptr<const PyState> next_state, ThtsEnvContext& ctx) const 
     {
         shared_ptr<const Action> act_itfc = static_pointer_cast<const Action>(action);
         shared_ptr<const State> next_state_itfc = static_pointer_cast<const State>(next_state);
@@ -222,7 +217,7 @@ namespace thts::python {
         shared_ptr<const PyAction> action, 
         shared_ptr<const PyState> next_state, 
         RandManager& rand_manager, 
-        PyThtsContext& ctx) const 
+        ThtsEnvContext& ctx) const 
     {
         shared_ptr<const Action> act_itfc = static_pointer_cast<const Action>(action);
         shared_ptr<const State> next_state_itfc = static_pointer_cast<const State>(next_state);
@@ -246,13 +241,13 @@ namespace thts::python {
     }
 
     bool PyThtsEnv::is_sink_state_itfc(shared_ptr<const State> state, ThtsEnvContext& ctx) const {
-        PyThtsContext& py_ctx = (PyThtsContext&) ctx;
+        ThtsEnvContext& py_ctx = (ThtsEnvContext&) ctx;
         shared_ptr<const PyState> state_itfc = static_pointer_cast<const PyState>(state);
         return is_sink_state(state_itfc, py_ctx);
     }
 
     shared_ptr<ActionVector> PyThtsEnv::get_valid_actions_itfc(shared_ptr<const State> state, ThtsEnvContext& ctx) const {
-        PyThtsContext& py_ctx = (PyThtsContext&) ctx;
+        ThtsEnvContext& py_ctx = (ThtsEnvContext&) ctx;
         shared_ptr<const PyState> state_itfc = static_pointer_cast<const PyState>(state);
         shared_ptr<vector<shared_ptr<const PyAction>>> valid_actions_itfc = get_valid_actions(state_itfc, py_ctx);
 
@@ -266,7 +261,7 @@ namespace thts::python {
     shared_ptr<StateDistr> PyThtsEnv::get_transition_distribution_itfc(
         shared_ptr<const State> state, shared_ptr<const Action> action, ThtsEnvContext& ctx) const 
     {
-        PyThtsContext& py_ctx = (PyThtsContext&) ctx;
+        ThtsEnvContext& py_ctx = (ThtsEnvContext&) ctx;
         shared_ptr<const PyState> state_itfc = static_pointer_cast<const PyState>(state);
         shared_ptr<const PyAction> action_itfc = static_pointer_cast<const PyAction>(action);
         shared_ptr<PyStateDistr> distr_itfc = get_transition_distribution(state_itfc, action_itfc, py_ctx);
@@ -286,7 +281,7 @@ namespace thts::python {
        RandManager& rand_manager, 
        ThtsEnvContext& ctx) const 
     {
-        PyThtsContext& py_ctx = (PyThtsContext&) ctx;
+        ThtsEnvContext& py_ctx = (ThtsEnvContext&) ctx;
         shared_ptr<const PyState> state_itfc = static_pointer_cast<const PyState>(state);
         shared_ptr<const PyAction> action_itfc = static_pointer_cast<const PyAction>(action);
         shared_ptr<const PyState> obsv = sample_transition_distribution(state_itfc, action_itfc, rand_manager, py_ctx);
@@ -296,7 +291,7 @@ namespace thts::python {
     shared_ptr<ObservationDistr> PyThtsEnv::get_observation_distribution_itfc(
         shared_ptr<const Action> action, shared_ptr<const State> next_state, ThtsEnvContext& ctx) const
     {
-        PyThtsContext& py_ctx = (PyThtsContext&) ctx;
+        ThtsEnvContext& py_ctx = (ThtsEnvContext&) ctx;
         shared_ptr<const PyAction> act_itfc = static_pointer_cast<const PyAction>(action);
         shared_ptr<const PyState> next_state_itfc = static_pointer_cast<const PyState>(next_state);
         shared_ptr<PyObservationDistr> distr_itfc = get_observation_distribution(
@@ -315,7 +310,7 @@ namespace thts::python {
          RandManager& rand_manager, 
          ThtsEnvContext& ctx) const
     {
-        PyThtsContext& py_ctx = (PyThtsContext&) ctx;
+        ThtsEnvContext& py_ctx = (ThtsEnvContext&) ctx;
         shared_ptr<const PyAction> act_itfc = static_pointer_cast<const PyAction>(action);
         shared_ptr<const PyState> next_state_itfc = static_pointer_cast<const PyState>(next_state);
         shared_ptr<const PyObservation> obsv_itfc = sample_observation_distribution(
@@ -328,15 +323,14 @@ namespace thts::python {
         shared_ptr<const Action> action, 
         ThtsEnvContext& ctx) const
     {
-        PyThtsContext& py_ctx = (PyThtsContext&) ctx;
+        ThtsEnvContext& py_ctx = (ThtsEnvContext&) ctx;
         shared_ptr<const PyState> state_itfc = static_pointer_cast<const PyState>(state);
         shared_ptr<const PyAction> action_itfc = static_pointer_cast<const PyAction>(action);
         return get_reward(state_itfc, action_itfc, py_ctx); 
     }
 
-    shared_ptr<ThtsEnvContext> PyThtsEnv::sample_context_and_reset_itfc(int tid) const
+    void PyThtsEnv::reset_itfc() const
     {
-        shared_ptr<PyThtsContext> context = sample_context_and_reset(tid);
-        return static_pointer_cast<ThtsEnvContext>(context);
+        reset();
     }
 }

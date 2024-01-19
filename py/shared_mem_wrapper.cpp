@@ -1,5 +1,7 @@
 #include "py/shared_mem_wrapper.h"
 
+#include <iostream>
+
 using namespace std;
 namespace py = pybind11;
 
