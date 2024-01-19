@@ -8,8 +8,6 @@
 #include <unordered_map>
 
 
-static double EPS = 1e-12;
-
 
 namespace thts {
 
@@ -26,23 +24,23 @@ namespace thts {
             Eigen::ArrayXd avg_return_or_value;
 
         public:
-            CZ_Ball(double radius, Eigen::ArrayXd& center);
+            CZ_Ball(const double radius, const Eigen::ArrayXd& center);
 
-            bool point_in_domain(Eigen::ArrayXd& point) const;
+            bool point_in_domain(const Eigen::ArrayXd& point) const;
 
-            void update_avg_return(Eigen::ArrayXd& trial_return);
+            void update_avg_return(const Eigen::ArrayXd& trial_return);
 
-            void set_value(Eigen::ArrayXd& new_value);
+            void set_value(const Eigen::ArrayXd& new_value);
 
-            Eigen::ArrayXd get_avg_return_or_value(Eigen::ArrayXd& weight) const;
+            Eigen::ArrayXd get_avg_return_or_value() const;
 
-            double get_scalarised_avg_return_or_value(Eigen::ArrayXd& weight) const;
+            double get_scalarised_avg_return_or_value(const Eigen::ArrayXd& weight) const;
 
             double radius() const;
 
             Eigen::ArrayXd center() const;
 
-            double confidence_radius(int total_backups_across_all_balls) const;
+            double confidence_radius(const int total_backups_across_all_balls) const;
 
             double get_num_backups() const;
     };
@@ -66,6 +64,7 @@ namespace thts {
             double largest_ball_radius;
             double smallest_ball_radius;
             std::unordered_map<double,std::vector<std::shared_ptr<CZ_Ball>>> ball_list;
+            std::shared_ptr<CZ_Ball> init_ball;
 
         public:
             /**
@@ -80,6 +79,16 @@ namespace thts {
             CZ_BallList(int dim, int num_trials_before_allowed_to_split);
 
             /**
+             * Gets the initial ball
+            */
+            std::shared_ptr<CZ_Ball> get_init_ball() const;
+
+            /**
+             * Gets a list of all balls
+            */
+            std::shared_ptr<std::vector<std::shared_ptr<CZ_Ball>>> get_all_balls() const;
+
+            /**
              * Get most relevant balls
              * Recall the domain of larger balls excludes the domain of smaller balls, so can return when we find any 
              * relevant balls
@@ -91,22 +100,32 @@ namespace thts {
              * Get a list of balls with radius above a certain length
             */
             std::shared_ptr<std::vector<std::shared_ptr<CZ_Ball>>> get_balls_with_min_radius(double min_radius) const;
+
+            /**
+             * Returns a pretty print string of the ball list
+            */
+            std::string get_pretty_print_string() const;
+
+            /**
+             * Returns num backups
+            */
+            int get_num_backups() const;
             
 
         private:
             // Called by 'avg_return_update_ball_list' and 'set_value_update_ball_list'
             std::shared_ptr<CZ_Ball> activate_new_ball_if_needed(
-                Eigen::ArrayXd& weight, 
+                const Eigen::ArrayXd& weight, 
                 std::shared_ptr<CZ_Ball> chosen_ball);
 
-        protected:
+        public:
             /**
              * Update ball list
              * Using average returns
             */
             void avg_return_update_ball_list(
-                Eigen::ArrayXd& trial_return, 
-                Eigen::ArrayXd& weight, 
+                const Eigen::ArrayXd& trial_return, 
+                const Eigen::ArrayXd& weight, 
                 std::shared_ptr<CZ_Ball> chosen_ball);
 
             /**
@@ -114,8 +133,8 @@ namespace thts {
              * Using average returns
             */
             void set_value_update_ball_list(
-                Eigen::ArrayXd& value, 
-                Eigen::ArrayXd& weight, 
+                const Eigen::ArrayXd& value, 
+                const Eigen::ArrayXd& weight, 
                 std::shared_ptr<CZ_Ball> chosen_ball);
     };
 }

@@ -51,6 +51,8 @@ namespace thts::python {
             SharedMemWrapper(int tid, int shared_mem_size_in_bytes);
             virtual ~SharedMemWrapper();
 
+            void breakpoint_add();
+
             // Called by server process, waits to be signalled to start rpc call
             // sem[0] used to signal start rpc call
             // After server is signalled, first need to read items from shared mem into member vars

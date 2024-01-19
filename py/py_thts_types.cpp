@@ -69,7 +69,7 @@ namespace thts::python {
         // lock.unlock();
         // other.lock.unlock();
         // return result;
-        return get_serialised_obs() == other.get_serialised_obs();
+        return *get_serialised_obs() == *other.get_serialised_obs();
     }
 
     bool PyObservation::equals_itfc(const Observation& other) const {
@@ -140,7 +140,7 @@ namespace thts::python {
         // lock.unlock();
         // other.lock.unlock();
         // return result;
-        return get_serialised_state() == other.get_serialised_state();
+        return *get_serialised_state() == *other.get_serialised_state();
     }
 
     bool PyState::equals_itfc(const Observation& other) const {
@@ -211,7 +211,7 @@ namespace thts::python {
         // lock.unlock();
         // other.lock.unlock();
         // return result;
-        return get_serialised_action() == other.get_serialised_action();
+        return *get_serialised_action() == *other.get_serialised_action();
     }
 
     bool PyAction::equals_itfc(const Action& other) const {
@@ -230,141 +230,141 @@ namespace thts::python {
     }
 }
 
-/**
- * Implementation of hash, equal_to and << operator functions for PyState/PyAction/PyObservation. 
- */
-namespace std {
-    /**
-     * Implementation of std::hash<PyObservation>, calling the virtual hash function.
-     */
-    size_t hash<PyObservation>::operator()(const PyObservation& observation) const {
-        return observation.hash();
-    }
+// /**
+//  * Implementation of hash, equal_to and << operator functions for PyState/PyAction/PyObservation. 
+//  */
+// namespace std {
+//     /**
+//      * Implementation of std::hash<PyObservation>, calling the virtual hash function.
+//      */
+//     size_t hash<PyObservation>::operator()(const PyObservation& observation) const {
+//         return observation.hash();
+//     }
 
-    size_t hash<shared_ptr<const PyObservation>>::operator()(const shared_ptr<const PyObservation>& observation) const {
-        return observation->hash();
-    }
+//     size_t hash<shared_ptr<const PyObservation>>::operator()(const shared_ptr<const PyObservation>& observation) const {
+//         return observation->hash();
+//     }
 
-    /**
-     * Implementation of std::equal_to<PyObservation>, calling the equals function.
-     */
-    bool operator==(const PyObservation& lhs, const PyObservation& rhs) {
-        return lhs.equals(rhs);
-    }
+//     /**
+//      * Implementation of std::equal_to<PyObservation>, calling the equals function.
+//      */
+//     bool operator==(const PyObservation& lhs, const PyObservation& rhs) {
+//         return lhs.equals_itfc(rhs);
+//     }
 
-    bool operator==(const shared_ptr<const PyObservation>& lhs, const shared_ptr<const PyObservation>& rhs) {
-        return lhs->equals(*rhs);
-    }
+//     bool operator==(const shared_ptr<const PyObservation>& lhs, const shared_ptr<const PyObservation>& rhs) {
+//         return lhs->equals_itfc(*rhs);
+//     }
 
-    bool equal_to<PyObservation>::operator()(const PyObservation& lhs, const PyObservation& rhs) const {
-        return lhs.equals(rhs);
-    }
+//     bool equal_to<PyObservation>::operator()(const PyObservation& lhs, const PyObservation& rhs) const {
+//         return lhs.equals_itfc(rhs);
+//     }
 
-    bool equal_to<shared_ptr<const PyObservation>>::operator()(
-        const shared_ptr<const PyObservation>& lhs, const shared_ptr<const PyObservation>& rhs) const 
-    {
-        return lhs->equals(*rhs);
-    }
+//     bool equal_to<shared_ptr<const PyObservation>>::operator()(
+//         const shared_ptr<const PyObservation>& lhs, const shared_ptr<const PyObservation>& rhs) const 
+//     {
+//         return lhs->equals_itfc(*rhs);
+//     }
 
-    /**
-     * Override output stream << operator for PyObservation, using get_pretty_print_string function.
-     */
-    ostream& operator<<(ostream& os, const PyObservation& observation) {
-        os << observation.get_pretty_print_string();
-        return os;
-    }
+//     /**
+//      * Override output stream << operator for PyObservation, using get_pretty_print_string function.
+//      */
+//     ostream& operator<<(ostream& os, const PyObservation& observation) {
+//         os << observation.get_pretty_print_string();
+//         return os;
+//     }
 
-    ostream& operator<<(ostream& os, const shared_ptr<const PyObservation>& observation) {
-        os << observation->get_pretty_print_string();
-        return os;
-    }
+//     ostream& operator<<(ostream& os, const shared_ptr<const PyObservation>& observation) {
+//         os << observation->get_pretty_print_string();
+//         return os;
+//     }
 
-    /**
-     * Implementation of std::hash<PyState>, calling the virtual hash function.
-     */
-    size_t hash<PyState>::operator()(const PyState& state) const {
-        return state.hash();
-    }
+//     /**
+//      * Implementation of std::hash<PyState>, calling the virtual hash function.
+//      */
+//     size_t hash<PyState>::operator()(const PyState& state) const {
+//         return state.hash();
+//     }
     
-    size_t hash<shared_ptr<const PyState>>::operator()(const shared_ptr<const PyState>& state) const {
-        return state->hash();
-    }
-    /**
-     * Implementation of std::equal_to<PyState>, calling the equals function.
-     */
-    bool operator==(const PyState& lhs, const PyState& rhs) {
-        return lhs.equals(rhs);
-    }
+//     size_t hash<shared_ptr<const PyState>>::operator()(const shared_ptr<const PyState>& state) const {
+//         return state->hash();
+//     }
+//     /**
+//      * Implementation of std::equal_to<PyState>, calling the equals function.
+//      */
+//     bool operator==(const PyState& lhs, const PyState& rhs) {
+//         return lhs.equals_itfc(rhs);
+//     }
 
-    bool operator==(const shared_ptr<const PyState>& lhs, const shared_ptr<const PyState>& rhs) {
-        return lhs->equals(*rhs);
-    }
+//     bool operator==(const shared_ptr<const PyState>& lhs, const shared_ptr<const PyState>& rhs) {
+//         return lhs->equals_itfc(*rhs);
+//     }
 
-    bool equal_to<PyState>::operator()(const PyState& lhs, const PyState& rhs) const {
-        return lhs.equals(rhs);
-    }
+//     bool equal_to<PyState>::operator()(const PyState& lhs, const PyState& rhs) const {
+//         return lhs.equals_itfc(rhs);
+//     }
 
-    bool equal_to<shared_ptr<const PyState>>::operator()(
-        const shared_ptr<const PyState>& lhs, const shared_ptr<const PyState>& rhs) const 
-    {
-        return lhs->equals(*rhs);
-    }
+//     bool equal_to<shared_ptr<const PyState>>::operator()(
+//         const shared_ptr<const PyState>& lhs, const shared_ptr<const PyState>& rhs) const 
+//     {
+//         return lhs->equals_itfc(*rhs);
+//     }
 
-    /**
-     * Override output stream << operator for PyState, using get_pretty_print_string function.
-     */
-    ostream& operator<<(ostream& os, const PyState& state) {
-        os << state.get_pretty_print_string();
-        return os;
-    }
+//     /**
+//      * Override output stream << operator for PyState, using get_pretty_print_string function.
+//      */
+//     ostream& operator<<(ostream& os, const PyState& state) {
+//         os << state.get_pretty_print_string();
+//         return os;
+//     }
 
-    ostream& operator<<(ostream& os, const shared_ptr<const PyState>& state) {
-        os << state->get_pretty_print_string();
-        return os;
-    }
+//     ostream& operator<<(ostream& os, const shared_ptr<const PyState>& state) {
+//         os << state->get_pretty_print_string();
+//         return os;
+//     }
 
-    /**
-     * Implementation of std::hash<PyAction>, calling the virtual hash function.
-     */
-    size_t hash<PyAction>::operator()(const PyAction& action) const {
-        return action.hash();
-    }
+//     /**
+//      * Implementation of std::hash<PyAction>, calling the virtual hash function.
+//      */
+//     size_t hash<PyAction>::operator()(const PyAction& action) const {
+//         return action.hash();
+//     }
 
-    size_t hash<shared_ptr<const PyAction>>::operator()(const shared_ptr<const PyAction>& action) const {
-        return action->hash();
-    }
+//     size_t hash<shared_ptr<const PyAction>>::operator()(const shared_ptr<const PyAction>& action) const {
+//         return action->hash();
+//     }
 
-    /**
-     * Implementation of std::equal_to<PyAction>, calling the equals function.
-     */
-    bool operator==(const PyAction& lhs, const PyAction& rhs) {
-        return lhs.equals(rhs);
-    }
+//     /**
+//      * Implementation of std::equal_to<PyAction>, calling the equals function.
+//      */
+//     bool operator==(const PyAction& lhs, const PyAction& rhs) {
+//         return lhs.equals_itfc(rhs);
+//     }
 
-    bool operator==(const shared_ptr<const PyAction>& lhs, const shared_ptr<const PyAction>& rhs) {
-        return lhs->equals(*rhs);
-    }
+//     bool operator==(const shared_ptr<const PyAction>& lhs, const shared_ptr<const PyAction>& rhs) {
+//         return lhs->equals_itfc(*rhs);
+//     }
 
-    bool equal_to<PyAction>::operator()(const PyAction& lhs, const PyAction& rhs) const {
-        return lhs.equals(rhs);
-    }
+//     bool equal_to<PyAction>::operator()(const PyAction& lhs, const PyAction& rhs) const {
+//         return lhs.equals_itfc(rhs);
+//     }
 
-    bool equal_to<shared_ptr<const PyAction>>::operator()(
-        const shared_ptr<const PyAction>& lhs, const shared_ptr<const PyAction>& rhs) const 
-    {
-        return lhs->equals(*rhs);
-    }
+//     bool equal_to<shared_ptr<const PyAction>>::operator()(
+//         const shared_ptr<const PyAction>& lhs, const shared_ptr<const PyAction>& rhs) const 
+//     {
+//         return lhs->equals_itfc(*rhs);
+//     }
 
-    /**
-     * Override output stream << operator for PyAction, using get_pretty_print_string function.
-     */
-    ostream& operator<<(ostream& os, const PyAction& action) {
-        os << action.get_pretty_print_string();
-        return os;
-    }
+//     /**
+//      * Override output stream << operator for PyAction, using get_pretty_print_string function.
+//      */
+//     ostream& operator<<(ostream& os, const PyAction& action) {
+//         os << action.get_pretty_print_string();
+//         return os;
+//     }
 
-    ostream& operator<<(ostream& os, const shared_ptr<const PyAction>& action) {
-        os << action->get_pretty_print_string();
-        return os;
-    }
-}
+//     ostream& operator<<(ostream& os, const shared_ptr<const PyAction>& action) {
+//         os << action->get_pretty_print_string();
+//         return os;
+//     }
+// }

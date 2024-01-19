@@ -12,6 +12,7 @@
 #include <random>
 #include <shared_mutex>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 
@@ -81,10 +82,14 @@ namespace thts {
      *          A 'mersenne_twister_engine' used to seed the uniform [0,1) random number generation
      *      real_gen:   
      *          A 'mersenne_twister_engine' used to seed the uniform [0,1) random number generation
+     *      real_gen:   
+     *          A 'mersenne_twister_engine' used to seed the exp(1) random number generation
      *      int_distr: 
      *          A random number generator for integer numbers in the range [0,RAND_MAX)
      *      real_distr: 
      *          A random number generator for real numbers in the range [0,1)
+     *      exp_distr:
+     *          A random number generator for exp(1) numbers
      */
     class RandManager { 
         protected:
@@ -92,12 +97,15 @@ namespace thts {
             std::random_device rd;
             std::mt19937 int_gen;
             std::mt19937 real_gen;
+            std::mt19937 exp_gen;
             std::uniform_int_distribution<int> int_distr;
             std::uniform_real_distribution<double> real_distr;
+            std::exponential_distribution<double> exp_distr;
 
             void init_random_seed() {
                 int_gen = std::mt19937(rd());
                 real_gen = std::mt19937(rd());
+                exp_gen = std::mt19937(rd());
             }
         
         public:
@@ -109,8 +117,10 @@ namespace thts {
                 rng_lock(),
                 int_gen(seed),
                 real_gen(seed),
+                exp_gen(seed),
                 int_distr(0,RAND_MAX),
-                real_distr(0.0,1.0) 
+                real_distr(0.0,1.0),
+                exp_distr(1.0) 
             {
                 if (seed == 0) init_random_seed();
             }
@@ -133,6 +143,14 @@ namespace thts {
                 std::lock_guard<std::mutex> lg(rng_lock);
                 return real_distr(real_gen);
             };
+
+            /**
+             * Returns an exp random number with lambda=1
+            */
+            virtual double get_rand_exp() {
+                std::lock_guard<std::mutex> lg(rng_lock);
+                return exp_distr(exp_gen);
+            }
     };
     
     /**
@@ -224,7 +242,7 @@ namespace thts {
      */
     class ThtsManager : public RandManager {
         protected:
-            std::vector<std::shared_ptr<ThtsEnv>> thts_envs;
+            std::shared_ptr<std::vector<std::shared_ptr<ThtsEnv>>> thts_envs;
         public:
             int num_threads;
             int num_envs;
@@ -243,7 +261,7 @@ namespace thts {
             std::unordered_map<std::thread::id, int> thread_id_map;
 
             std::shared_mutex thts_context_map_lock;
-            thts::helper::unordered_map_with_default<int,std::shared_ptr<ThtsEnvContext>> thts_context_map;
+            thts::helper::unordered_map<int,std::shared_ptr<ThtsEnvContext>> thts_context_map;
 
             /**
              * Constructor. Initialises values directly other than random number generation.
@@ -255,6 +273,13 @@ namespace thts {
             */
             std::shared_ptr<ThtsEnv> thts_env();
             std::shared_ptr<ThtsEnv> thts_env(int tid);
+
+            /**
+             * Helper to get a pointer to 
+             * - Might want to do this if we know this manager object will persist, envs are costly 
+             *      to start up (i.e. forking a python interpreter), so can pass env list around
+            */
+            std::shared_ptr<std::vector<std::shared_ptr<ThtsEnv>>> get_thts_envs();
 
             /**
              * Register the thread calling this function with thts thread id 'tid' (called in thts.cpp worker_fn)

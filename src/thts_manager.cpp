@@ -10,7 +10,7 @@ namespace thts {
      */    
     ThtsManager::ThtsManager(const ThtsManagerArgs& args) : 
         RandManager(args.seed),
-        thts_envs(),
+        thts_envs(make_shared<vector<shared_ptr<ThtsEnv>>>()),
         num_threads(args.num_threads),
         num_envs(args.num_envs),
         max_depth(args.max_depth),
@@ -24,26 +24,33 @@ namespace thts {
         thread_id_map_lock(),
         thread_id_map(),
         thts_context_map_lock(),
-        thts_context_map((args.thts_env != nullptr) ? args.thts_env->sample_context_and_reset_itfc(0) : make_shared<ThtsEnvContext>()) 
+        thts_context_map() 
     {
-        thts_envs.push_back(args.thts_env);
+        thts_envs->push_back(args.thts_env);
         for (int i=1; i<num_envs; i++) {
-            thts_envs.push_back(args.thts_env->clone());
+            thts_envs->push_back(args.thts_env->clone());
         }
     }
     
     /**
      * Get a thts env from the vector, without knowing the thread id
     */
-    std::shared_ptr<ThtsEnv> ThtsManager::thts_env() {
+    shared_ptr<ThtsEnv> ThtsManager::thts_env() {
         return thts_env(get_thts_thread_id());
     }
     
     /**
      * Get a thts env from the vector
     */
-    std::shared_ptr<ThtsEnv> ThtsManager::thts_env(int tid) {
-        return thts_envs[tid % num_envs];
+    shared_ptr<ThtsEnv> ThtsManager::thts_env(int tid) {
+        return thts_envs->at(tid % num_envs);
+    }
+
+    /**
+     * Gets a pointer to the vector of thts_envs
+    */
+    shared_ptr<vector<shared_ptr<ThtsEnv>>> ThtsManager::get_thts_envs() {
+        return thts_envs;
     }
 
     /**
@@ -84,6 +91,9 @@ namespace thts {
     */
     std::shared_ptr<ThtsEnvContext> ThtsManager::get_thts_context(int tid) {
         shared_lock<shared_mutex> reader_lg(thts_context_map_lock);
+        if (!thts_context_map.contains(tid)) {
+            return make_shared<ThtsEnvContext>();
+        }
         return thts_context_map[tid];
     }
 }

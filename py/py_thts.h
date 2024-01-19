@@ -30,7 +30,7 @@ namespace thts::python {
      * 
      * Member variables:
      */
-    class PyThtsPool : public ThtsPool {
+    class PyThtsPool : virtual public ThtsPool {
         protected:   
 
 

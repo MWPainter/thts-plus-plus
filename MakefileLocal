@@ -48,8 +48,8 @@ INCLUDES += -Iexternal/pybind11/include $$(python3.12 -m pybind11 --includes) -I
 INCLUDES += -I$(ANACONDA_ENVS_HOME)/thts3.12/include/python3.12
 
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20
-CPPFLAGS += -fPIC -fvisibility=hidden # needed to create shared library
-CPPFLAGS += -pie -fPIE # needed to create executable
+PY_LIB_CPPFLAGS += -fPIC -fvisibility=hidden # needed to create shared library
+PY_EX_CPPFLAGS += -pie -fPIE # needed to create executable
 TEST_CPPFLAGS = 
 CPPFLAGS_DEBUG = -g -ggdb
 
@@ -62,6 +62,7 @@ TARGET_THTS = thts
 TARGET_THTS_TEST = thts-test
 TARGET_THTS_TEST_DEBUG = thts-test-debug
 TARGET_THTS_PY_LIB = thtspp
+TARGET_THTS_PY_LIB_DEBUG = thtspp-debug
 TARGET_THTS_PY_EX = pyex
 TARGET_THTS_PY_EX_DEBUG = pyex-debug
 
@@ -96,22 +97,22 @@ all: $(TARGET_THTS_TEST) $(TARGET_THTS_PY_EX)
 # Build object files rule
 $(OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
-	$(CXX) $(CPPFLAGS) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
 # Build python object files rule
 $(PY_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
-	$(CXX) $(CPPFLAGS) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
 # Build multi-objective object files rule
 $(MO_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
-	$(CXX) $(CPPFLAGS) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
 # Build test object files rule
 $(TEST_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
-	$(CXX) $(CPPFLAGS) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
 
 
@@ -127,7 +128,7 @@ $(TARGET_THTS_TEST): INCLUDES += $(TEST_INCLUDES)
 $(TARGET_THTS_TEST): CPPFLAGS += $(TEST_CPPFLAGS)
 $(TARGET_THTS_TEST): LDFLAGS += $(TEST_LDFLAGS)
 $(TARGET_THTS_TEST): $(OBJECTS) $(MO_OBJECTS) $(TEST_OBJECTS)
-	$(CXX) $(CPPFLAGS) -o $@ $^ $(GTEST) $(LDFLAGS)
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) -o $@ $^ $(GTEST) $(LDFLAGS)
 
 # Add a debug tests target. Adds -g to flags for debug info, and then just runs tests target
 $(TARGET_THTS_TEST_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
@@ -136,14 +137,18 @@ $(TARGET_THTS_TEST_DEBUG): $(TARGET_THTS_TEST)
 # Building the python library
 $(TARGET_THTS_PY_LIB): LDFLAGS += $(PY_LDFLAGS)
 $(TARGET_THTS_PY_LIB): $(OBJECTS) $(PY_OBJECTS)
-	$(CXX) -shared $(CPPFLAGS) $^ -o $(THTS_PY_LIB_FULL_NAME) $(LDFLAGS)
+	$(CXX) -shared $(PY_LIB_CPPFLAGS) $(CPPFLAGS)  $^ -o $(THTS_PY_LIB_FULL_NAME) $(LDFLAGS)
+
+# C++ entry point for debugging python C++ entry point
+$(TARGET_THTS_PY_LIB_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
+$(TARGET_THTS_PY_LIB_DEBUG): $(TARGET_THTS_PY_EX)
 
 # C++ entry point
 $(TARGET_THTS_PY_EX): LDFLAGS += $(PY_LDFLAGS)
 $(TARGET_THTS_PY_EX): $(OBJECTS) $(PY_OBJECTS)
-	$(CXX) -shared $(CPPFLAGS) $^ -o $(TARGET_THTS_PY_EX) $(LDFLAGS)
+	$(CXX) -shared $(PY_EX_CPPFLAGS) $(CPPFLAGS) $^ -o $(TARGET_THTS_PY_EX) $(LDFLAGS)
 
-# C++ entry point for debugging python library
+# C++ entry point for debugging python C++ entry point
 $(TARGET_THTS_PY_EX_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
 $(TARGET_THTS_PY_EX_DEBUG): $(TARGET_THTS_PY_EX)
 

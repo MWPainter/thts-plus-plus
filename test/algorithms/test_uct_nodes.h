@@ -72,9 +72,9 @@ namespace thts::test {
                 (shared_ptr<const State>,shared_ptr<const Action>,ThtsEnvContext&),
                 (const, override));
             MOCK_METHOD(
-                shared_ptr<ThtsEnvContext>, 
-                sample_context_and_reset_itfc, 
-                (int),
+                std::shared_ptr<ThtsEnvContext>, 
+                sample_context_itfc, 
+                (int,RandManager&),
                 (const, override));
     };
 

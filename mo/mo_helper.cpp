@@ -35,4 +35,7 @@ namespace thts::helper {
         Eigen::ArrayXd delta = p1 - p2;
         return sqrt(delta.pow(2.0).sum());
     }
+    double dot(const Eigen::ArrayXd& p1, const Eigen::ArrayXd& p2) {
+        return (p1 * p2).sum();
+    }
 }

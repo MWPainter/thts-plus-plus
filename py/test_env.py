@@ -16,12 +16,12 @@ class PyTestThtsEnv(PyThtsEnv):
     def get_initial_state(self):
         return (0,0)
     
-    def is_sink_state(self, state, ctx=None):
+    def is_sink_state(self, state):
         return (state[0] == self.grid_size and state[1] == self.grid_size)
 
-    def get_valid_actions(self, state, ctx=None):
+    def get_valid_actions(self, state):
         # N.B. MO envs won't require this, but BTS still does right now
-        if (self.is_sink_state(state, ctx)):
+        if (self.is_sink_state(state)):
             return []
         
         x,y = state
@@ -48,14 +48,14 @@ class PyTestThtsEnv(PyThtsEnv):
             return (x  , y-1)
         raise Exception("Something went wrong in python test env")
     
-    def get_transition_distribution(self, state, action, ctx=None):
+    def get_transition_distribution(self, state, action):
         cand_next_state = self.candidate_next_state(state, action)
         distr = {cand_next_state: 1.0 - self.stay_prob}
         if (self.stay_prob > 0.0):
             distr[state] = self.stay_prob
         return distr
     
-    def sample_transition_distribution(self, state, action, ctx=None):
+    def sample_transition_distribution(self, state, action):
         if (self.stay_prob == 0.0):
             return self.candidate_next_state(state,action)
         
@@ -65,5 +65,5 @@ class PyTestThtsEnv(PyThtsEnv):
         else:
             return state
         
-    def get_reward(self, state, action, ctx=None):
+    def get_reward(self, state, action):
         return -1.0

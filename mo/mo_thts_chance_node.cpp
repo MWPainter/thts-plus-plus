@@ -17,4 +17,17 @@ namespace thts {
             ThtsCNode(thts_manager, state, action, decision_depth, decision_timestep, parent)
     {
     }
+
+    /**
+     * Raise error if call wrong backup fn
+    */
+    void MoThtsCNode::backup_itfc(
+        const vector<double>& trial_rewards_before_node, 
+        const vector<double>& trial_rewards_after_node, 
+        const double trial_cumulative_return_after_node, 
+        const double trial_cumulative_return,
+        ThtsEnvContext& ctx) 
+    {
+        throw runtime_error("Called single objective backup function for multi objective node");
+    }
 }

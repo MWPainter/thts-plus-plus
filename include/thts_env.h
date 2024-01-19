@@ -227,6 +227,14 @@ namespace thts {
              *      A ThtsEnvContext object, that will be passed to the Thts functions for a single trial, used to 
              *      provide some context or space for caching.
              */
-            virtual std::shared_ptr<ThtsEnvContext> sample_context_and_reset_itfc(int tid) const;
+            virtual std::shared_ptr<ThtsEnvContext> sample_context_itfc(int tid, RandManager& rand_manager) const;
+
+            /**
+             * Resets any per trial state in this environment
+             * 
+             * Overriding this function would assume that if there are n threads, then thts is running with n copies of 
+             * this environment
+             */
+            virtual void reset_itfc() const;
     };
 }

@@ -16,8 +16,9 @@ namespace thts {
         shared_ptr<ThtsManager> thts_manager, 
         shared_ptr<MoThtsDNode> root_node, 
         int num_threads, 
-        shared_ptr<ThtsLogger> logger) :
-            ThtsPool(thts_manager, root_node, num_threads, logger)
+        shared_ptr<ThtsLogger> logger,
+        bool start_threads_in_this_constructor) :
+            ThtsPool(thts_manager, root_node, num_threads, logger, start_threads_in_this_constructor)
     {
     }
 
@@ -59,7 +60,7 @@ namespace thts {
             // push onto 'nodes_to_backup' and 'rewards'
             MoThtsDNode& mo_cur_node = (MoThtsDNode&) *cur_node;
             shared_ptr<const State> state = mo_cur_node.state;
-            MoThtsEnv& mo_thts_env = (MoThtsEnv&) *thts_manager->thts_env();
+            MoThtsEnv& mo_thts_env = *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());
             Eigen::ArrayXd reward = mo_thts_env.get_mo_reward_itfc(state, action, context);
             nodes_to_backup.push_back(make_pair(cur_node, chance_node));
             rewards.push_back(reward);
@@ -132,9 +133,10 @@ namespace thts {
     void MoThtsPool::run_thts_trial(int trials_remaining, int tid) {
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>> nodes_to_backup;
         vector<Eigen::ArrayXd> rewards; 
-        
+
+        thts_manager->thts_env(tid)->reset_itfc();
         shared_ptr<ThtsEnvContext> context = 
-            thts_manager->thts_env(tid)->sample_context_and_reset_itfc(tid);
+            thts_manager->thts_env(tid)->sample_context_itfc(tid, *thts_manager);
         thts_manager->register_thts_context(tid,context);
         run_selection_phase(nodes_to_backup, rewards, *context, tid);
         run_backup_phase(nodes_to_backup, rewards, *context);

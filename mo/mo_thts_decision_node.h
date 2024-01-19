@@ -20,6 +20,7 @@ namespace thts {
     class MoThtsCNode;
     class ThtsLogger;
     class MoThtsPool;
+    class MoThtsContext;
 
     /**
      * An abstract base class for a multi objective Decision Node.
@@ -38,6 +39,7 @@ namespace thts {
         friend MoThtsCNode;
         friend ThtsLogger;
         friend MoThtsPool;
+        friend MoThtsContext;
 
         protected:
             Eigen::ArrayXd mo_heuristic_value;
@@ -59,6 +61,16 @@ namespace thts {
              * Mark destructor as virtual for subclassing.
              */
             virtual ~MoThtsDNode() = default;
+
+            /**
+             * OVerride final the old backup fn (throws error if try to call)
+            */
+            virtual void backup_itfc(
+                const std::vector<double>& trial_rewards_before_node, 
+                const std::vector<double>& trial_rewards_after_node, 
+                const double trial_cumulative_return_after_node, 
+                const double trial_cumulative_return,
+                ThtsEnvContext& ctx) override final;
 
             /**
              * Override of thts backup function for multi objective.

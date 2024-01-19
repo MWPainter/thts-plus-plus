@@ -3,13 +3,17 @@
 #include "mo/mo_helper.h"
 
 #include <cmath>
+#include <sstream>
+
 
 using namespace std;
 
 const double E = exp(1.0);
+static double EPS = 1e-12;
+
 
 namespace thts {
-    CZ_Ball::CZ_Ball(double radius, Eigen::ArrayXd& center) :
+    CZ_Ball::CZ_Ball(const double radius, const Eigen::ArrayXd& center) :
         _radius(radius),
         _center(center),
         stats_lock(),
@@ -18,28 +22,28 @@ namespace thts {
     {
     }
 
-    bool CZ_Ball::point_in_domain(Eigen::ArrayXd& point) const {
-        return thts::helper::dist(_center, point) <= _radius;
+    bool CZ_Ball::point_in_domain(const Eigen::ArrayXd& point) const {
+        return thts::helper::dist(_center, point) <= _radius + EPS;
     }
 
-    void CZ_Ball::update_avg_return(Eigen::ArrayXd& trial_return) {
+    void CZ_Ball::update_avg_return(const Eigen::ArrayXd& trial_return) {
         lock_guard<mutex> lg(stats_lock);
         num_backups++;
         avg_return_or_value += (trial_return - avg_return_or_value) / (double) num_backups;
     }
 
-    void CZ_Ball::set_value(Eigen::ArrayXd& new_value) {
+    void CZ_Ball::set_value(const Eigen::ArrayXd& new_value) {
         lock_guard<mutex> lg(stats_lock);
         num_backups++;
         avg_return_or_value = new_value;
     }
 
-    Eigen::ArrayXd CZ_Ball::get_avg_return_or_value(Eigen::ArrayXd& weight) const {
+    Eigen::ArrayXd CZ_Ball::get_avg_return_or_value() const {
         lock_guard<mutex> lg(stats_lock);
         return avg_return_or_value;
     }
 
-    double CZ_Ball::get_scalarised_avg_return_or_value(Eigen::ArrayXd& weight) const {
+    double CZ_Ball::get_scalarised_avg_return_or_value(const Eigen::ArrayXd& weight) const {
         lock_guard<mutex> lg(stats_lock);
         return weight.matrix().dot(avg_return_or_value.matrix());
     }
@@ -52,7 +56,7 @@ namespace thts {
         return _center;
     }
 
-    double CZ_Ball::confidence_radius(int total_backups_across_all_balls) const {
+    double CZ_Ball::confidence_radius(const int total_backups_across_all_balls) const {
         lock_guard<mutex> lg(stats_lock);
         return log(total_backups_across_all_balls + E) / (1 + num_backups);
     }
@@ -77,7 +81,8 @@ namespace thts {
         num_backups_before_allowed_to_split(num_backups_before_allowed_to_split),
         largest_ball_radius(0.0),
         smallest_ball_radius(0.0),
-        ball_list() 
+        ball_list(),
+        init_ball(nullptr)
     {
         Eigen::ArrayXd centroid(dim);
         for (int i=0; i<dim; i++) {
@@ -86,14 +91,35 @@ namespace thts {
 
         Eigen::ArrayXd simplex_corner_point = Eigen::ArrayXd::Zero(dim);
         simplex_corner_point[0] = 1.0;
-        double init_ball_radius = thts::helper::dist(centroid,simplex_corner_point) + EPS;
+        double init_ball_radius = thts::helper::dist(centroid,simplex_corner_point);
 
-        shared_ptr<CZ_Ball> init_ball = make_shared<CZ_Ball>(init_ball_radius, centroid);
+        init_ball = make_shared<CZ_Ball>(init_ball_radius, centroid);
         
         lock_guard<mutex> lg(lock);
         largest_ball_radius = init_ball_radius;
         smallest_ball_radius = init_ball_radius;
         ball_list[init_ball_radius].push_back(init_ball);
+    }
+
+    /**
+     * Get init ball
+    */
+    shared_ptr<CZ_Ball> CZ_BallList::get_init_ball() const {
+        return init_ball;
+    }
+
+    /**
+     * Get all balls
+    */
+    shared_ptr<vector<shared_ptr<CZ_Ball>>> CZ_BallList::get_all_balls() const {
+        shared_ptr<vector<shared_ptr<CZ_Ball>>> all_balls;        
+        for (double cur_radius = smallest_ball_radius; cur_radius <= largest_ball_radius; cur_radius *= 2.0) {
+            lock_guard<mutex> lg(lock);
+            for (shared_ptr<CZ_Ball> ball : ball_list.at(cur_radius)) {
+                all_balls->push_back(ball);
+            }
+        }
+        return all_balls;
     }
 
     /**
@@ -141,16 +167,43 @@ namespace thts {
 
         return bigger_balls;
     }
+
+    string CZ_BallList::get_pretty_print_string() const {
+        stringstream ss;
+        ss << "radius // ball_visits // avg_return // center" << endl;
+        for (double cur_radius = largest_ball_radius; cur_radius >= smallest_ball_radius; cur_radius /= 2.0) {
+            lock_guard<mutex> lg(lock);
+            for (shared_ptr<CZ_Ball> ball : ball_list.at(cur_radius)) {
+                ss << ball->radius() << " // " << ball->get_num_backups() << " // [";
+                Eigen::ArrayXd ar = ball->get_avg_return_or_value();
+                for (int i=0; i<ar.size(); i++) {
+                    ss << ar[i] << ",";
+                }
+                ss << "] // [";
+                Eigen::ArrayXd c = ball->center();
+                for (int i=0; i<c.size(); i++) {
+                    ss << c[i] << ",";
+                }
+                ss << "]" << endl;
+            }
+        }
+        return ss.str();
+    }
+
+    int CZ_BallList::get_num_backups() const {
+        lock_guard<mutex> lg(lock);
+        return num_backups;
+    }
     
     shared_ptr<CZ_Ball> CZ_BallList::activate_new_ball_if_needed(
-        Eigen::ArrayXd& weight, 
+        const Eigen::ArrayXd& weight, 
         shared_ptr<CZ_Ball> chosen_ball) 
     {
-        if (chosen_ball->get_num_backups() < num_backups_before_allowed_to_split 
+        if (chosen_ball->get_num_backups() >= num_backups_before_allowed_to_split 
             && chosen_ball->confidence_radius(num_backups) <= chosen_ball->radius())
         {   
             double new_ball_radius = chosen_ball->radius() / 2.0;
-            shared_ptr<CZ_Ball> chosen_ball = make_shared<CZ_Ball>(new_ball_radius, weight);
+            chosen_ball = make_shared<CZ_Ball>(new_ball_radius, weight);
             
             lock_guard<mutex> lg(lock);
             ball_list[new_ball_radius].push_back(chosen_ball);
@@ -166,8 +219,8 @@ namespace thts {
      * Using average returns
     */
     void CZ_BallList::avg_return_update_ball_list(
-        Eigen::ArrayXd& trial_return, 
-        Eigen::ArrayXd& weight, 
+        const Eigen::ArrayXd& trial_return, 
+        const Eigen::ArrayXd& weight, 
         shared_ptr<CZ_Ball> chosen_ball) 
     {
         {
@@ -183,8 +236,8 @@ namespace thts {
      * Using average returns
     */
     void CZ_BallList::set_value_update_ball_list(
-        Eigen::ArrayXd& value, 
-        Eigen::ArrayXd& weight, 
+        const Eigen::ArrayXd& value, 
+        const Eigen::ArrayXd& weight, 
         shared_ptr<CZ_Ball> chosen_ball) 
     {
         {

@@ -30,4 +30,5 @@ namespace std {
 */
 namespace thts::helper {
     double dist(const Eigen::ArrayXd& p1, const Eigen::ArrayXd& p2);
+    double dot(const Eigen::ArrayXd& p1, const Eigen::ArrayXd& p2);
 }
