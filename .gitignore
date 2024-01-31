@@ -8,6 +8,7 @@ pyex
 external/.DS_Store
 
 # Python lib ignores
+__pycache__
 py/__pycache__
 
 # Hidden files
