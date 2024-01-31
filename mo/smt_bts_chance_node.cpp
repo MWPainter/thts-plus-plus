@@ -27,13 +27,7 @@ namespace thts {
 
     shared_ptr<const State> SmtBtsCNode::sample_observation(MoThtsContext& ctx) 
     {
-        shared_ptr<const Observation> obs = thts_manager->thts_env()->sample_transition_distribution_itfc(
-            state, action, *thts_manager, ctx); 
-        shared_ptr<const State> next_state = static_pointer_cast<const State>(obs);
-        if (!has_child_node_itfc(obs)) {
-            create_child_node(next_state);
-        }
-        return next_state;
+        // todotodo
     }
 
     void SmtBtsCNode::backup(
@@ -43,7 +37,7 @@ namespace thts {
         const Eigen::ArrayXd trial_cumulative_return,
         MoThtsContext& ctx) 
     {  
-        // Backup handled in decision nodes
+        // todotodo
     }
 
     string SmtBtsCNode::get_pretty_print_val() const 
