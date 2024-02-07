@@ -24,6 +24,14 @@ namespace thts::helper {
     std::size_t hash_combine(const std::size_t cur_hash, const T& v);
 
     /**
+     * Hashes two objects in an unordered pair
+     * 
+     * I.e. unordered_hash(A,B) == unordered_hash(B,A)
+    */
+    template <typename T, typename U>
+    std::size_t unordered_hash(const T& t, const U& u);
+
+    /**
      * Helper for selecting the maximum key from a map of values, breaking ties randomly.
      * 
      * Args:

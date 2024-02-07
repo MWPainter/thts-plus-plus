@@ -1,0 +1,22 @@
+# first line is the number of vertices
+d+e-1
+# second line is the number of simplices in the triangulation
+<num_simplices>
+# Example d dimensional triangulation file (format)
+# First is the d indices for the outer simplex points
+0
+1
+...
+d-1 
+# Let e = 0.5 * d * (d-1)
+# Now we have e edge points
+# these are stored as <edge_point_index> <simplex_point_1> <simplex_point_2> <ratio>
+# where the edge point will be equal to simplex_point_1 * ratio + simplex_point_2 * (1-ratio)
+d 0 1 0.443209
+d+1 0 2 0.555432
+...
+d+e-1 d-2 d-1 0.519328
+# Finally, we output lists of vertices that form the simplices
+0 d d+1 ... 2d-2
+1 d 2d-1 ... 3d-4
+...

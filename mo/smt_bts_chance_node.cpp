@@ -28,6 +28,7 @@ namespace thts {
     shared_ptr<const State> SmtBtsCNode::sample_observation(MoThtsContext& ctx) 
     {
         // todotodo
+        return nullptr;
     }
 
     void SmtBtsCNode::backup(
