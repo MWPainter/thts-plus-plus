@@ -41,11 +41,13 @@ namespace thts {
     shared_ptr<const Action> SmtBtsDNode::select_action(MoThtsContext& ctx) 
     {
         // todotodo
+        return nullptr;
     }
 
     shared_ptr<const Action> SmtBtsDNode::recommend_action(MoThtsContext& ctx) const 
     { 
         // todotodo
+        return nullptr;
     }
 
     void SmtBtsDNode::backup(

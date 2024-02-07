@@ -302,11 +302,13 @@ namespace std {
     bool operator==(const Action& lhs, const Action& rhs);
     bool operator==(const shared_ptr<const Action>& lhs, const shared_ptr<const Action>& rhs);
 
-    template <> struct equal_to<Action> {
+    template <> 
+    struct equal_to<Action> {
         bool operator()(const Action&, const Action&) const;
     };
 
-    template <> struct equal_to<shared_ptr<const Action>> {
+    template <> 
+    struct equal_to<shared_ptr<const Action>> {
         bool operator()(const shared_ptr<const Action>&, const shared_ptr<const Action>&) const;
     };
 

@@ -27,6 +27,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/embed.h>
 
+#include <Eigen/Dense>
+#include <Eigen/SVD>
+
 #include <chrono>
 #include <filesystem>
 #include <iostream>
@@ -596,6 +599,41 @@ void mo_gym_env_test() {
     root_node.reset();
 }
 
+void eigen_svd_test() {
+    // Eigen is really annoting sometimes... 
+    // 3 points
+    // Eigen::VectorXd v0 {1.0, 1.0, 1.0};
+    // Eigen::VectorXd v1 {1.0, 2.0, 1.0};
+    // Eigen::VectorXd v2 {2.0, 1.0, 1.0};
+
+    // // Make matrix of vectors in the plane (want to compute a normal)
+    // Eigen::MatrixXd mat(3,2);
+    // mat.col(0) = v1 - v0;
+    // mat.col(1) = v2 - v0;
+
+    Eigen::MatrixXd mat 
+    {
+        {0.0, 1.0},
+        {1.0, 0.0},
+        {0.0, 0.0},
+    };
+
+    cout << "mat is:" << endl << mat << endl;
+    cout << "mat.col(0) is:" << endl << mat.col(0) << endl;
+    cout << "mat(0,0) is:" << endl << mat(0,0) << endl;
+
+    // Compute SVD
+    Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::ComputeFullU | Eigen::ComputeThinV> svd(mat);
+
+    cout << "svd.singularValues() is:" << endl << svd.singularValues() << endl;
+    cout << "svd.matrixU() is:" << endl << svd.matrixU() << endl;
+    cout << "svd.matrixV() is:" << endl << svd.matrixV() << endl;
+
+    // Check that we can cast back to an array
+    Eigen::ArrayXd normal = svd.matrixU().col(2).array();
+    cout << "Normal vector as an array is:" << endl << normal << endl;
+}
+
 // C++ entry point for debugging
 int main(int argc, char *argv[]) {
     py::scoped_interpreter guard;
@@ -632,7 +670,12 @@ int main(int argc, char *argv[]) {
     /**
      * Testing python mo gym envs
     */
-    mo_gym_env_test();
+    // mo_gym_env_test();
+
+    /**
+     * Testing Eigen SVD
+    */
+    eigen_svd_test();
 
     return 0;
 }

@@ -16,7 +16,7 @@ namespace thts {
     /**
      * CZT impl
     */
-    class SmtBtsCNode : public BL_MoThtsCNode {
+    class SmtBtsCNode : public SmtThtsCNode {
         friend SmtBtsDNode;
 
         public:
@@ -41,7 +41,7 @@ namespace thts {
 
         protected:
             virtual std::string get_pretty_print_val() const override;
-            virtual std::shared_ptr<BL_MoThtsDNode> create_child_node_helper(
+            virtual std::shared_ptr<SmtThtsDNode> create_child_node_helper(
                 std::shared_ptr<const State> next_state) const override;
         
 

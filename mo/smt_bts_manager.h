@@ -12,7 +12,7 @@ namespace thts {
     /**
      * Args object so that params can be set in a more named args way
      */
-    struct SmtBtsManagerArgs : public SmtManagerArgs {
+    struct SmtBtsManagerArgs : public SmtThtsManagerArgs {
         static constexpr double temp_default=1.0;
         static constexpr double epsilon_default=0.5;
 
@@ -50,7 +50,7 @@ namespace thts {
      *      bias:
      *          The CZT bias
      */
-    class SmtBtsManager : public SmtManager {
+    class SmtBtsManager : public SmtThtsManager {
         public:
             double temp; 
             double epsilon;
