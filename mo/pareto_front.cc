@@ -5,12 +5,12 @@
 #include <iostream>
 #include <stdexcept>
 
-using namespace std;
 
 /**
  * TaggedPoint implementation
  */
 namespace thts {
+    using namespace std;
     
     /**
      * TaggedPoint Constructor
@@ -109,6 +109,8 @@ namespace thts {
  * ParetoFront implementation
  */
 namespace thts {
+    using namespace std;
+
     /**
      * Constructor, empty
     */
@@ -449,7 +451,7 @@ namespace std {
      * Union of two pareto fronts
     */
     template <typename T>
-    ParetoFront<T> operator%(const ParetoFront<T>& pf1, const ParetoFront<T>& pf2) {
+    ParetoFront<T> operator|(const ParetoFront<T>& pf1, const ParetoFront<T>& pf2) {
         return pf1.combine(pf2);
     }
 

@@ -244,7 +244,7 @@ namespace std {
      * Union of two pareto fronts
     */
     template <typename T>
-    ParetoFront<T> operator%(const ParetoFront<T>& pf1, const ParetoFront<T>& pf2);
+    ParetoFront<T> operator|(const ParetoFront<T>& pf1, const ParetoFront<T>& pf2);
 
     /**
      * Sum of pareto fronts
