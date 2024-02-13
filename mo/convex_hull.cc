@@ -65,6 +65,11 @@ namespace thts {
     };
 
     /**
+     * Constructor initialising from a heuristic val
+    */
+    ConvexHull(const Eigenn::ArrayXd& heuristic_val);
+
+    /**
      * Copy constructor
     */
     template <typename T>
