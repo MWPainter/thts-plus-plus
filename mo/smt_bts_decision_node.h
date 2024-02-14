@@ -15,14 +15,13 @@ namespace thts {
     class MoThtsContext;
 
     /**
-     * CZT impl
+     * SM-BTS impl
     */
     class SmtBtsDNode : public SmtThtsDNode {
         friend SmtBtsCNode;
 
-        private:
-            std::string _action_ctx_key;
-            std::string _ball_ctx_key;
+        protected:
+            int num_backups;
 
         public:
             SmtBtsDNode(
@@ -43,6 +42,79 @@ namespace thts {
                 const Eigen::ArrayXd trial_cumulative_return_after_node, 
                 const Eigen::ArrayXd trial_cumulative_return,
                 MoThtsContext& ctx)  override;
+
+            /**
+             * BTS code - get search temp
+             */
+            virtual double get_temp() const;
+
+            /**
+             * BTS code - Helper to get the q-value of an action. 
+             * 
+             * TODO: cleaner entropy interface
+             * 
+             * Args:
+             *      action: 
+             *          The action to get the corresponding q value for
+             *      opponent_coeff: 
+             *          A value of -1.0 or 1.0 for if we are acting as the opponent in a two player game or not 
+             *          respectively
+             *      q_val_map:
+             *          A map of q values to be filled
+             */
+            virtual Eigen::ArrayXd get_q_value(
+                std::shared_ptr<const Action> action, 
+                double opponent_coeff, 
+                MoThtsContext& ctx,
+                double& entropy) const;
+            void get_child_q_values(
+                ActionVector& actions,
+                std::unordered_map<std::shared_ptr<const Action>,Eigen::ArrayXd>& q_val_map, 
+                std::unordered_map<std::shared_ptr<const Action>,double>& entropy_map, 
+                MoThtsContext& ctx) const;
+
+            /**
+             * BTS code - computes the weights for each action.
+             * 
+             * Args:
+             *      q_val_map:
+             *          The q 
+             *      action_weights: 
+             *          An ActionDistr to be filled with values of the form exp(q_value/temp - C), where C is equal to
+             *          max(q_value/temp)
+             *      normalisation_term:
+             *          A double reference to be filled with the value of C from 'action_weights' description.
+             *      context:
+             *          A thts env context
+             */
+            virtual void compute_action_weights(
+                ActionVector& actions,
+                std::unordered_map<std::shared_ptr<const Action>,Eigen::ArrayXd>& q_val_map,
+                std::unordered_map<std::shared_ptr<const Action>,double>& entropy_map, 
+                ActionDistr& action_weights, 
+                double& sum_action_weights, 
+                double& normalisation_term, 
+                MoThtsContext& context) const;
+
+            /**
+             * BTS code - computes the action distribution
+             * 
+             * TODO: add ability for prior policy here at later date
+             * 
+             * Args:
+             *      action_distr:
+             *          An ActionDistr to be filled with a normalised probability distribution to select actions with
+             *      context:
+             *          A thts env context
+             */
+            void compute_action_distribution(
+                ActionVector& actions,
+                std::unordered_map<std::shared_ptr<const Action>,Eigen::ArrayXd>& q_val_map,
+                std::unordered_map<std::shared_ptr<const Action>,double>& entropy_map, 
+                ActionDistr& action_distr, 
+                MoThtsContext& context) const;
+
+            std::string get_simplex_map_pretty_print_string() const;
 
         protected:
             virtual std::string get_pretty_print_val() const override;

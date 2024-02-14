@@ -146,9 +146,10 @@ class Simplex:
         self.edge_points = np.zeros((self.D, num_edge_points))
         self.edge_point_to_edge = {}
         self.vertex_to_edge_points = defaultdict(list)
-        self.ratios = np.linspace(0.4, 0.6, num=num_edge_points)
-        if random_joggling:
-            self.ratios = 0.4 + 0.2 * np.random.rand(num_edge_points)
+        self.ratios = np.ones(num_edge_points) * 0.5
+        # self.ratios = np.linspace(0.4, 0.6, num=num_edge_points)
+        # if random_joggling:
+        #     self.ratios = 0.4 + 0.2 * np.random.rand(num_edge_points)
         i = 0
         for j in range(self.D):
             for k in range(j+1, self.D):
@@ -206,7 +207,7 @@ class Simplex:
             face_points[:,self.D-1] = self.points[:,0] + self.normal
             hyperplanes.append(Hyperplane(face_points, perform_checks=self.perform_checks))
         
-        centroid = np.mean(self.points, axis=0)
+        centroid = np.mean(self.points, axis=1)
 
         for i in range(self.D):
             centroid_normal_side = hyperplanes[i].point_is_normal_side(centroid)
@@ -279,7 +280,10 @@ def t_split_points(points, hyperplane_indices, normal):
     for j in range(num_points):
         if j in hyperplane_indices:
             continue
-        if hyperplane.point_is_normal_side(points[:,j]):
+        if hyperplane.point_in_plane(points[:,j]):
+            normal_side_indices.append(j)
+            opp_side_indices.append(j)
+        elif hyperplane.point_is_normal_side(points[:,j]):
             normal_side_indices.append(j)
         else:
             opp_side_indices.append(j)
@@ -293,6 +297,8 @@ def t(points, simplex_list, D, normal, perform_checks=True):
     - really we find a D-1 dimensional hyperplane that splits the points
     - this D-1 plane is the D-2 plane, with a psuedo point added, using the normal vector to the simplex plane
     """
+    print("t call")
+    print(points)
     num_points = points.shape[1]
 
     # base case, we're a simplex already
@@ -322,6 +328,10 @@ def t(points, simplex_list, D, normal, perform_checks=True):
     for hyperplane_indices in hyperplane_indices_to_try:
         normal_side_indices, opp_side_indices = t_split_points(points, hyperplane_indices, normal)
         
+        # ensure that not subset of each other
+        if set(normal_side_indices).issubset(opp_side_indices) or set(opp_side_indices).issubset(normal_side_indices):
+            continue
+
         # update if this splitting of points is the most balanced so far
         # also dont want a hyperplane that contains all of the points because that doesnt seperate the points at all 
         #   (numpoints - D-2 taken at start - 1 taken as index 'i')
@@ -337,6 +347,10 @@ def t(points, simplex_list, D, normal, perform_checks=True):
         if best_min_points_either_side <= 0:
             raise "Something went wrong in triangulation"
     
+    print(best_hyperplane_indices)
+    print(best_normal_side_indices)
+    print(best_opp_side_indices)
+
     # Recursive calls
     normal_side_indices = best_normal_side_indices
     normal_side_indices.extend(best_hyperplane_indices)
@@ -360,7 +374,8 @@ def triangulation(points, normal, perform_checks=True):
     returns a list of Simplex objects that partition the D-1 dimensional shape defined by 'points'
     """
     D = points.shape[0]
-    return t(points, [], D, normal, perform_checks)
+    # return t(points, [], D, normal, perform_checks)
+    return triangulation_scipy(points, normal, perform_checks)
 
 def triangulation_scipy(points, normal, perform_checks=True):
     """
@@ -429,13 +444,26 @@ if __name__ == "__main__":
     # for sub_simplex in three_d_simplex.triangulation:
     #     print(sub_simplex.points)
     
-    # four_d_simplex = UnitSimplex(4)
+    # four_d_simplex = UnitSimplex(4,random_joggle=True)
     # four_d_simplex.compute_triangulation()
     # print("Printing subsimplices for unit 4d simplex:")
     # for sub_simplex in four_d_simplex.triangulation:
     #     print(sub_simplex.points)
 
-    # five_d_simplex = UnitSimplex(5)
+    # print("Testing 4d simplex (if no fail output then passed)")
+    # for i in range(100000):
+    #     simplex_point = generate_point_in_simplex(4)
+    #     found_triangle_containing_point = False
+    #     for triangle in four_d_simplex.triangulation:
+    #         if triangle.contains_point_in_simplex(simplex_point):
+    #             found_triangle_containing_point = True
+    #             break
+    #     if not found_triangle_containing_point:
+    #         print("Failed test with point:")
+    #         print(simplex_point)
+    #         break
+
+    # five_d_simplex = UnitSimplex(5, random_joggle=True)
     # five_d_simplex.compute_triangulation()
     # print("Expecting 5+0.5*5*4-(5-1)=11 simplices in 5d triangulation, got: {n}".format(n=len(five_d_simplex.triangulation)))
     # # for sub_simplex in five_d_simplex.triangulation:
@@ -590,10 +618,7 @@ if __name__ == "__main__":
     ##########
 
     # NOTE: the 2d and 3d cases we hand wrote
-    for i in range(4,26):
-        random_joggle = False
-        if i in [13,18,23]:
-            random_joggle = True
-        simplex = UnitSimplex(i, random_joggle=random_joggle)
+    for i in range(4,11):
+        simplex = UnitSimplex(i)
         simplex.compute_triangulation()
         simplex.write_triangulation_to_file(".cache/{i}_triangulation.txt".format(i=i))

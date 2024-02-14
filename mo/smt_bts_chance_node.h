@@ -14,10 +14,14 @@ namespace thts {
     class MoThtsContext;
 
     /**
-     * CZT impl
+     * SM-BTS impl
     */
     class SmtBtsCNode : public SmtThtsCNode {
         friend SmtBtsDNode;
+
+        protected:
+            int num_backups;
+            Eigen::ArrayXd local_reward;
 
         public:
             SmtBtsCNode(
@@ -38,6 +42,8 @@ namespace thts {
                 const Eigen::ArrayXd trial_cumulative_return_after_node, 
                 const Eigen::ArrayXd trial_cumulative_return,
                 MoThtsContext& ctx) override;
+
+            std::string get_simplex_map_pretty_print_string() const;
 
         protected:
             virtual std::string get_pretty_print_val() const override;

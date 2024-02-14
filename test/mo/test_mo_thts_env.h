@@ -20,30 +20,42 @@ namespace thts::test{
         private:
             int walk_len;
             double stay_prob;
+            bool add_extra_rewards;
             double new_dir_bonus;
             double same_dir_bonus;
+            double gamma;
 
         /**
          * Node implementation
          */
         public:
-            TestMoThtsEnv(int walk_len, double stay_prob=0.0, double new_dir_bonus=0.5, double same_dir_bonus=0.1) : 
-                ThtsEnv(true),
-                MoThtsEnv(2,true), 
-                walk_len(walk_len), 
-                stay_prob(stay_prob), 
-                new_dir_bonus(new_dir_bonus), 
-                same_dir_bonus(same_dir_bonus) 
+            TestMoThtsEnv(
+                int walk_len, 
+                double stay_prob=0.0, 
+                bool add_extra_rewards=false, 
+                double new_dir_bonus=0.5, 
+                double same_dir_bonus=0.3,
+                double gamma=0.5) : 
+                    ThtsEnv(true),
+                    MoThtsEnv(add_extra_rewards ? 4 : 2,true), 
+                    walk_len(walk_len), 
+                    stay_prob(stay_prob), 
+                    add_extra_rewards(add_extra_rewards),
+                    new_dir_bonus(new_dir_bonus), 
+                    same_dir_bonus(same_dir_bonus),
+                    gamma(gamma)
             {
             } 
 
             TestMoThtsEnv(TestMoThtsEnv& other) : 
                 ThtsEnv(true),
-                MoThtsEnv(2,true), 
+                MoThtsEnv(other.add_extra_rewards ? 4 : 2,true), 
                 walk_len(other.walk_len), 
                 stay_prob(other.stay_prob), 
-                new_dir_bonus(other.new_dir_bonus), 
-                same_dir_bonus(other.same_dir_bonus) 
+                add_extra_rewards(other.add_extra_rewards),
+                new_dir_bonus(other.new_dir_bonus),
+                same_dir_bonus(other.same_dir_bonus),
+                gamma(other.gamma)
             {
             }
 
@@ -51,6 +63,10 @@ namespace thts::test{
 
             virtual std::shared_ptr<ThtsEnv> clone() override {
                 return std::dynamic_pointer_cast<ThtsEnv>(std::make_shared<TestMoThtsEnv>(*this));
+            }
+
+            double get_gamma() const {
+                return gamma;
             }
 
             shared_ptr<const Int3TupleState> get_initial_state() const {
@@ -123,11 +139,23 @@ namespace thts::test{
                 shared_ptr<const IntAction> action,
                 ThtsEnvContext& ctx) const 
             {
-                Eigen::ArrayXd r(2);
+                Eigen::ArrayXd r = Eigen::ArrayXd::Zero(2);
+                if (add_extra_rewards) {
+                    r = Eigen::ArrayXd::Zero(4);
+                }
                 r[RIGHT] = -1.0; 
                 r[DOWN] = -1.0; 
                 // add bonus in r[dir], and add more if dir is different to last action
                 r[action->action] += (std::get<2>(state->state) == action->action) ? same_dir_bonus : new_dir_bonus;
+                if (!add_extra_rewards) {
+                    return r;
+                }
+                
+                if (action->action == RIGHT) {
+                    r[2] = pow(gamma,std::get<0>(state->state));
+                } else if (action->action == DOWN) {
+                    r[3] = pow(gamma,std::get<1>(state->state));
+                }
                 return r;
             }
 

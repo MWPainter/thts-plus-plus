@@ -91,7 +91,6 @@ namespace thts {
      *      entropy: Entropy estimate
      *      weight: The weight/context for this node/vertex
      *      neighbours: A set of neighbour NGV vertices
-     *      sm_lock: A reference to the (recursive) simplex map lock
     */
     struct NGV : public std::enable_shared_from_this<NGV> {
         Eigen::ArrayXd value_estimate;
@@ -100,10 +99,8 @@ namespace thts {
         Eigen::ArrayXd weight;
         std::shared_ptr<std::unordered_set<std::shared_ptr<NGV>>> neighbours;
 
-        std::recursive_mutex& sm_lock;
-
-        NGV(Eigen::ArrayXd weight, Eigen::ArrayXd init_val_estimate, double init_entr_estimate, std::recursive_mutex& sm_lock);
-        NGV(NGV& v0, NGV& v1, double ratio, std::recursive_mutex& sm_lock);
+        NGV(Eigen::ArrayXd weight, Eigen::ArrayXd init_val_estimate, double init_entr_estimate);
+        NGV(NGV& v0, NGV& v1, double ratio);
 
         size_t hash() const;
         bool equals(const NGV& other) const;
@@ -126,8 +123,9 @@ namespace thts {
         void erase_connection(std::shared_ptr<NGV> other);
 
         /**
-         * Get the contextual value of weighting 'ctx' from this node
+         * Get the contextual value of weighting 'ctx' from this node (or with ctx=weight)
         */
+        double contextual_value_estimate();
         double contextual_value_estimate(Eigen::ArrayXd& ctx);
     };
 
@@ -156,8 +154,6 @@ namespace thts {
      *          A map from NGV to ratios. If r = ratios[ngv] then ngv = r * v0 + (1-r) * v1
      *      interpolated_vertex_tree:
      *          A tree of interpolated vertices
-     *      sm_lock: 
-     *          A reference to the (recursive) simplex map lock
     */
     struct LSE : public std::enable_shared_from_this<LSE> {
         std::shared_ptr<NGV> v0;
@@ -165,9 +161,7 @@ namespace thts {
         std::unordered_map<std::shared_ptr<NGV>,double> ratios;
         std::shared_ptr<LSE_BT> interpolated_vertex_tree;
 
-        std::recursive_mutex& sm_lock;
-
-        LSE(std::shared_ptr<NGV> v0, std::shared_ptr<NGV> v1, std::recursive_mutex& sm_lock);
+        LSE(std::shared_ptr<NGV> v0, std::shared_ptr<NGV> v1);
 
         size_t hash() const;
         bool equals(const LSE& other) const;
@@ -244,8 +238,6 @@ namespace thts {
      *          hyperplane_normals[v] is the normal to the hyperplane containing the points simplex_vertices - {v} 
      *      children: 
      *          Child nodes
-     *      sm_lock: 
-     *          A reference to the (recursive) simplex map lock
     */
     struct TN {
         int dim;
@@ -256,13 +248,8 @@ namespace thts {
         mutable std::shared_ptr<std::vector<std::shared_ptr<NGV>>> simplex_vertices;
         std::shared_ptr<std::unordered_map<std::shared_ptr<NGV>,Eigen::ArrayXd>> hyperplane_normals;
         std::shared_ptr<std::unordered_set<std::shared_ptr<TN>>> children;
-        std::recursive_mutex& sm_lock;
 
-        TN(
-            int dim, 
-            int depth, 
-            std::shared_ptr<std::vector<std::shared_ptr<NGV>>> simplex_vertices, 
-            std::recursive_mutex& sm_lock);
+        TN(int dim, int depth, std::shared_ptr<std::vector<std::shared_ptr<NGV>>> simplex_vertices);
 
         /**
          * On construction want to ensure that all of the simplex_vertices are (fully) connected 
@@ -303,7 +290,8 @@ namespace thts {
          * 'weight' is inside the (D-1) simplex iff it is the same side of the (D-2) plane defined by each of the D 
          * many (D-2) face's as 'centroid'
         */
-        bool contains_weight(const Eigen::ArrayXd& weight) const;
+        // bool contains_weight(const Eigen::ArrayXd& weight) const;
+        bool contains_weight(const Eigen::ArrayXd& weight, bool debug=false) const;
         bool contains_weight_2d(const Eigen::ArrayXd& weight) const;
 
         /**
@@ -349,8 +337,8 @@ namespace thts {
     /**
      * SimplexMap
      * 
-     * TODO long term: use finer grained locking to protect simplex map? Not sure that its too possible though. Maybe 
-     *      if we make all of the NGV and LSE objects synchronised (lock guards at the start of functions)
+     * Not thread safe, classes using this should protect use of this simplex map and any datastructures they get from 
+     * it (i.e. TN, NGV)
      * 
      * Args:
      *      dim:
@@ -361,8 +349,6 @@ namespace thts {
      *          The set of all NGV vertices forming the neighbourhood graph
      *      lse_map:
      *          A map from NGV pair's to the LSE edge that the vertices lie on
-     *      lock:
-     *          A mutex to protect accesses 
     */
     class SimplexMap {
         friend SmtThtsCNode;
@@ -379,7 +365,6 @@ namespace thts {
             std::shared_ptr<TN> root_node;
             std::shared_ptr<std::vector<std::shared_ptr<NGV>>> n_graph_vertices;
             std::unordered_map<UnorderedNGVPair,std::shared_ptr<LSE>> lse_map;
-            mutable std::recursive_mutex lock;
 
         public:
             /**
@@ -416,42 +401,5 @@ namespace thts {
              * Prett print
             */
             std::string get_pretty_print_string() const;
-
-
-
-
-
-
-
-
-
-
-        // protected:
-        //     Eigen::ArrayXd default_val;
-        //     std::shared_ptr<TN> root_node;
-        //     std::shared_ptr<std::vector<std::shared_ptr<TN>>> tree_nodes;
-        //     std::shared_ptr<std::unordered_set<std::shared_ptr<NGV>>> n_graph_vertices;
-        //     // std::unordered_set<std::shared_ptr<NGE>> n_graph_edges;
-        //     std::mutex lock;
-
-        // public:
-
-        //     SimplexMap(int reward_dim, Eigen::ArrayXd default_val);
-
-        //     /**
-        //      * Lookup closest tree node
-        //     */
-        //     std::shared_ptr<TN> operator[](const Eigen::ArrayXd& ctx) const;
-        //     std::shared_ptr<TN> lookup_node_closest_to_context(const Eigen::ArrayXd& ctx) const;
-
-        //     /**
-        //      * Splitting
-        //     */
-        //     void split_at(std::shared_ptr<TN> tn_ptr);
-
-        //     /**
-        //      * Sample a random node
-        //     */
-        //     std::shared_ptr<TN> get_random_node(RandManager& rand_manager);
     };
 }
