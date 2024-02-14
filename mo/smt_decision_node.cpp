@@ -3,6 +3,14 @@
 using namespace std; 
 
 namespace thts {
+    /**
+     * TODO: would like to set initial q values using heuristic value in simplex map, rather than 'default_q_value'
+     *      - make the default heuristic function return the default q value though (and default q value is zero)
+     *      - should make prior_policy and heuristic_fn objects, that both implement 'operator()' rather than using pointer types
+     *      - then we can have heuristic fn's with state as we want
+     *      - this needs more editing through the entire library though
+     *      - but will be nice to seperate those two things out into seperate files at least
+    */
     SmtThtsDNode::SmtThtsDNode(
         shared_ptr<SmtThtsManager> thts_manager,
         shared_ptr<const State> state,
@@ -15,7 +23,7 @@ namespace thts {
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const MoThtsCNode>(parent)),
-            simplex_map(thts_manager->reward_dim, mo_heuristic_value)
+            simplex_map(thts_manager->reward_dim, thts_manager->default_q_value)
     {
     }
     

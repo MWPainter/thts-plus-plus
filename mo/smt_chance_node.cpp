@@ -3,6 +3,10 @@
 using namespace std; 
 
 namespace thts {
+    /**
+     * TODO: feels like it should be zeros here (for initial value of simplex map), but was having issues with costs
+     *  - can reproduce it being a bit weird by setting value to be zeros again in the test env in module.py
+    */
     SmtThtsCNode::SmtThtsCNode(
         shared_ptr<SmtThtsManager> thts_manager,
         shared_ptr<const State> state,
@@ -17,7 +21,8 @@ namespace thts {
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const MoThtsDNode>(parent)),
-            simplex_map(thts_manager->reward_dim, Eigen::ArrayXd::Zero(thts_manager->reward_dim))
+            // simplex_map(thts_manager->reward_dim, Eigen::ArrayXd::Zero(thts_manager->reward_dim))
+            simplex_map(thts_manager->reward_dim, thts_manager->default_q_value)
     {
     }
     

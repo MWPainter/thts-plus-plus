@@ -38,4 +38,14 @@ namespace thts::helper {
     double dot(const Eigen::ArrayXd& p1, const Eigen::ArrayXd& p2) {
         return (p1 * p2).sum();
     }
+
+    
+    ConstHeuristicFn::ConstHeuristicFn(Eigen::ArrayXd& const_val) : const_val(const_val)
+    {
+    };
+    
+    Eigen::ArrayXd ConstHeuristicFn::heuristic_fn(std::shared_ptr<const State> s, std::shared_ptr<ThtsEnv> env) 
+    {
+        return const_val;
+    }
 }

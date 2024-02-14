@@ -2,6 +2,10 @@
 
 #include "mo/mo_thts_manager.h"
 
+#include "mo/simplex_map.h"
+
+#include <limits>
+
 
 namespace thts {
     
@@ -14,13 +18,22 @@ namespace thts {
     struct SmtThtsManagerArgs : public MoThtsManagerArgs {
         static const int num_backups_before_allowed_to_split_default = -1;
 
-        int num_backups_before_allowed_to_split;
+        static constexpr double simplex_node_l_inf_thresh_default = 0.05; 
+        static const int simplex_node_split_visit_thresh_default = 10;
+        static const int simplex_node_max_depth_default = std::numeric_limits<int>::max();
+
         Eigen::ArrayXd default_q_value;
+
+        double simplex_node_l_inf_thresh;
+        int simplex_node_split_visit_thresh;
+        int simplex_node_max_depth;
 
         SmtThtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env, Eigen::ArrayXd default_q_value) :
             MoThtsManagerArgs(thts_env),
-            num_backups_before_allowed_to_split(num_backups_before_allowed_to_split_default), 
-            default_q_value(default_q_value)
+            default_q_value(default_q_value),
+            simplex_node_l_inf_thresh(simplex_node_l_inf_thresh_default),
+            simplex_node_split_visit_thresh(simplex_node_split_visit_thresh_default),
+            simplex_node_max_depth(simplex_node_max_depth_default)
         {
         }
 
@@ -37,16 +50,24 @@ namespace thts {
      */
     class SmtThtsManager : public MoThtsManager {
         public:
-            int num_backups_before_allowed_to_split;
             Eigen::ArrayXd default_q_value;
+
+            double simplex_node_l_inf_thresh;
+            int simplex_node_split_visit_thresh;
+            int simplex_node_max_depth;
+
+            Triangulation triangulation;
 
             /**
              * Constructor.
              */    
             SmtThtsManager(const SmtThtsManagerArgs& args) : 
                 MoThtsManager(args),
-                num_backups_before_allowed_to_split(args.num_backups_before_allowed_to_split),
-                default_q_value(args.default_q_value)
+                default_q_value(args.default_q_value),
+                simplex_node_l_inf_thresh(args.simplex_node_l_inf_thresh),
+                simplex_node_split_visit_thresh(args.simplex_node_split_visit_thresh),
+                simplex_node_max_depth(args.simplex_node_max_depth),
+                triangulation(reward_dim)
             {
             }
 

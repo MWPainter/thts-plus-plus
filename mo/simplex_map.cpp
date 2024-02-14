@@ -31,21 +31,19 @@ namespace thts {
      * 
     */
 
-    NGV::NGV(Eigen::ArrayXd weight, Eigen::ArrayXd init_val_estimate, double init_entr_estimate, recursive_mutex& sm_lock) : 
+    NGV::NGV(Eigen::ArrayXd weight, Eigen::ArrayXd init_val_estimate, double init_entr_estimate) : 
         value_estimate(init_val_estimate), 
         entropy(init_entr_estimate),
         weight(weight),
-        neighbours(make_shared<unordered_set<shared_ptr<NGV>>>()),
-        sm_lock(sm_lock)
+        neighbours(make_shared<unordered_set<shared_ptr<NGV>>>())
     {
     };
 
-    NGV::NGV(NGV& v0, NGV& v1, double ratio, recursive_mutex& sm_lock) :
+    NGV::NGV(NGV& v0, NGV& v1, double ratio) :
         value_estimate(),
         entropy(),
         weight(),
-        neighbours(make_shared<unordered_set<shared_ptr<NGV>>>()),
-        sm_lock(sm_lock)
+        neighbours(make_shared<unordered_set<shared_ptr<NGV>>>())
     {
         // Weight interpolated
         weight = ratio * v0.weight + (1.0-ratio) * v1.weight;
@@ -95,7 +93,6 @@ namespace thts {
     
     void NGV::share_values_message_passing_push() 
     {
-        lock_guard<recursive_mutex> lg(sm_lock);
         for (shared_ptr<NGV> other_ptr : *neighbours) {
             share_values_message_passing_helper_push(*other_ptr);
         }
@@ -103,7 +100,6 @@ namespace thts {
     
     void NGV::share_values_message_passing_pull() 
     {
-        lock_guard<recursive_mutex> lg(sm_lock);
         for (shared_ptr<NGV> other_ptr : *neighbours) {
             share_values_message_passing_helper_pull(*other_ptr);
         }
@@ -113,6 +109,7 @@ namespace thts {
     {
         if (thts::helper::dot(other.weight,value_estimate) > thts::helper::dot(other.weight,other.value_estimate)) {
             other.value_estimate = value_estimate;
+            other.entropy = entropy;
         }
     }
 
@@ -120,26 +117,29 @@ namespace thts {
     {
         if (thts::helper::dot(weight,other.value_estimate) > thts::helper::dot(weight,value_estimate)) {
             value_estimate = other.value_estimate;
+            entropy = other.entropy;
         }
     }
 
     void NGV::add_connection(shared_ptr<NGV> other)
     {
-        lock_guard<recursive_mutex> lg(sm_lock);
         neighbours->insert(other);
         other->neighbours->insert(shared_from_this());
     }
 
     void NGV::erase_connection(shared_ptr<NGV> other)
     {
-        lock_guard<recursive_mutex> lg(sm_lock);
         neighbours->erase(other);
         other->neighbours->erase(shared_from_this());
     }
 
+    double NGV::contextual_value_estimate() 
+    {
+        return thts::helper::dot(weight, value_estimate);
+    }
+
     double NGV::contextual_value_estimate(Eigen::ArrayXd& ctx) 
     {
-        lock_guard<recursive_mutex> lg(sm_lock);
         return thts::helper::dot(ctx, value_estimate);
     }
     
@@ -152,12 +152,11 @@ namespace thts {
      * 
     */
 
-    LSE::LSE(shared_ptr<NGV> v0, shared_ptr<NGV> v1, recursive_mutex& sm_lock) : 
+    LSE::LSE(shared_ptr<NGV> v0, shared_ptr<NGV> v1) : 
         v0(v0), 
         v1(v1), 
         ratios(), 
-        interpolated_vertex_tree(make_shared<LSE_BT>()),
-        sm_lock(sm_lock)
+        interpolated_vertex_tree(make_shared<LSE_BT>())
     {
         ratios[v0] = 0.0;
         ratios[v1] = 1.0;
@@ -198,8 +197,6 @@ namespace thts {
     */
     void LSE::insert(shared_ptr<NGV> v, shared_ptr<NGV> x0, shared_ptr<NGV> x1, double r, SimplexMap& simplex_map) 
     {
-        lock_guard<recursive_mutex> lg(sm_lock);
-
         double x0_ratio = ratios.at(x0);
         double x1_ratio = ratios.at(x1);
         
@@ -218,11 +215,11 @@ namespace thts {
         shared_ptr<NGV> right_vertex = v1;
         while (bt_node->vertex != nullptr) {
             if (v_ratio < bt_node->ratio) {
-                bt_node = bt_node->left;
                 right_vertex = bt_node->vertex;
+                bt_node = bt_node->left;
             } else { // if (v_ratio > bt_node->ratio)
-                bt_node = bt_node->right;
                 left_vertex = bt_node->vertex;
+                bt_node = bt_node->right;
             }
         }
 
@@ -257,17 +254,21 @@ namespace thts {
         vector<string> vec;;
         size_t last = 0; 
         size_t next = 0; 
-        while ((next = s.find(delimiter, last)) != string::npos) {   
+        while ((next = s.find(delimiter, last)) != string::npos) { 
             vec.push_back(s.substr(last, next-last));
+            last = next+1;
         } 
         vec.push_back(s.substr(last));
         return vec;
     }
 
-    Triangulation::Triangulation(int dim) : d(dim), e((int) 0.5 * d * (d-1)), edge_points(), simplices()
+    /**
+     * TODO: do some more robust file stuff? Feels a bit off having hard coded dir from root dir
+    */
+    Triangulation::Triangulation(int dim) : d(dim), e(dim * (dim-1) / 2), edge_points(), simplices()
     {
         stringstream ss;
-        ss << ".cache/" << dim << "_triangulation.txt";
+        ss << "mo/.cache/" << dim << "_triangulation.txt";
         ifstream file(ss.str());
         if (!file.is_open()) {
             throw runtime_error("Error opening precomputed triangulation text file");
@@ -323,7 +324,7 @@ namespace thts {
      * 
      * 
     */
-    TN::TN(int dim, int depth, shared_ptr<vector<shared_ptr<NGV>>> simplex_vertices, recursive_mutex& sm_lock) :
+    TN::TN(int dim, int depth, shared_ptr<vector<shared_ptr<NGV>>> simplex_vertices) :
         dim(dim),
         depth(depth),
         centroid(Eigen::ArrayXd::Zero(dim)),
@@ -331,8 +332,7 @@ namespace thts {
         split_counter(0),
         simplex_vertices(simplex_vertices),
         hyperplane_normals(make_shared<unordered_map<shared_ptr<NGV>,Eigen::ArrayXd>>()),
-        children(),
-        sm_lock(sm_lock)
+        children(make_shared<unordered_set<shared_ptr<TN>>>())
     {
         // Compute centroid
         for (shared_ptr<NGV> vertex : *simplex_vertices) {
@@ -403,8 +403,6 @@ namespace thts {
             return;
         }
 
-        lock_guard<recursive_mutex> lg(sm_lock);
-
         for (shared_ptr<NGV> opposing_vertex : *simplex_vertices) {
             // Get D-1 opposing face vertices
             vector<shared_ptr<NGV>> opposing_face_vertices;
@@ -420,6 +418,7 @@ namespace thts {
             // Fill remaining collumns with the D-2 values of opposing_face_vertices[i] - oppositing_face_vertices[0]
             Eigen::MatrixXd hyperplane_matrix(dim,dim-1);
             hyperplane_matrix.col(0).setOnes();
+            hyperplane_matrix.col(0) /= dim;
             Eigen::VectorXd v_0 = opposing_face_vertices[0]->weight.matrix();
             for (size_t i=1; i<opposing_face_vertices.size(); i++) {
                 Eigen::VectorXd v_i = opposing_face_vertices[i]->weight.matrix();
@@ -432,7 +431,15 @@ namespace thts {
             // If SVD is M=USV^T, then we want U.col(d-1), so read that out
             // Note that S(i,i) >= S(i+1,i+1), as singular values computed in order from largest to smallest
             // Also convert back to ArrayXd type, done doing lin alg stuff
-            hyperplane_normals->insert_or_assign(opposing_vertex, svd.matrixU().col(dim-1).array());
+            Eigen::ArrayXd normal = svd.matrixU().col(dim-1).array();
+
+            // Make sure that normal points towards centroid
+            if (thts::helper::dot(centroid - opposing_face_vertices[0]->weight, normal) < 0.0) {
+                normal *= -1.0;
+            }
+
+            // Insert
+            hyperplane_normals->insert_or_assign(opposing_vertex, normal);
         }
     }
 
@@ -482,7 +489,7 @@ namespace thts {
             shared_ptr<NGV> v1 = vertices[get<1>(edge_point_spec)];
             double ratio = get<2>(edge_point_spec);
 
-            shared_ptr<NGV> new_vertex = make_shared<NGV>(*v0, *v1, ratio, sm_lock);
+            shared_ptr<NGV> new_vertex = make_shared<NGV>(*v0, *v1, ratio);
             vertices.push_back(new_vertex);
             simplex_map.n_graph_vertices->push_back(new_vertex);
 
@@ -496,44 +503,38 @@ namespace thts {
             for (int& i : simplex_indices) {
                 child_simplex_vertices->push_back(vertices[i]);
             }
-            shared_ptr<TN> child_tn = make_shared<TN>(dim, depth+1, child_simplex_vertices, sm_lock);
+            shared_ptr<TN> child_tn = make_shared<TN>(dim, depth+1, child_simplex_vertices);
             children->insert(child_tn);
         }
     }
 
     shared_ptr<TN> TN::get_child(const Eigen::ArrayXd& weight) const
-    {
+    {  
         for (shared_ptr<TN> child : *children) {
             if (child->contains_weight(weight)) {
                 return child;
             }
         }
+        cout << weight << endl;
         throw runtime_error("Either called get child without children, or probably called with weight with vals not "
             "summing to one");
     }
 
-    bool TN::contains_weight(const Eigen::ArrayXd& weight) const 
+    bool TN::contains_weight(const Eigen::ArrayXd& weight, bool debug) const 
     {
         if (dim == 2) {
             return contains_weight_2d(weight);
         }
 
-        lock_guard<recursive_mutex> lg(sm_lock);
-
         // Ensure hyperplane normals are computed
         lazy_compute_hyperplane_normals();
 
         // Perform halfplane checks
+        // if we fail any halfplane check, then 'weight' isnt in this simplex
         for (size_t i=0; i<simplex_vertices->size(); i++) {
             Eigen::ArrayXd halfplane_normal = hyperplane_normals->at(simplex_vertices->at(i));
-            Eigen::ArrayXd halfplane_point;
-            if (i > 0) {
-                halfplane_point = simplex_vertices->at(i-1)->weight;
-            } else {
-                halfplane_point = simplex_vertices->at(1)->weight;
-            }
-
-            // if we fail any halfplane check, then 'weight' isnt in this simplex
+            Eigen::ArrayXd halfplane_point = simplex_vertices->at(0)->weight;
+            if (i==0) halfplane_point = simplex_vertices->at(1)->weight;
             if (!halfplane_check(halfplane_point, halfplane_normal, weight)) {
                 return false;
             }
@@ -550,7 +551,6 @@ namespace thts {
     */
     bool TN::contains_weight_2d(const Eigen::ArrayXd& weight) const 
     {
-        lock_guard<recursive_mutex> lg(sm_lock);
         shared_ptr<NGV> beg = simplex_vertices->at(0);
         shared_ptr<NGV> end = simplex_vertices->at(1);
         if (beg->weight[0] > end->weight[0]) {
@@ -571,25 +571,20 @@ namespace thts {
      * use approx == 0 for numerical errors
      * aprox== 0 will only be satisfied if plane is in point, shouldn't really be getting to simplices so small that 
      *      values below abs(EPS) are relevant
+     * 
+     * Note that we ensured while computing hyperplane normals that the normal points towards the centroid
     */
     bool TN::halfplane_check(
         const Eigen::ArrayXd& halfplane_point, 
         const Eigen::ArrayXd& halfplane_normal, 
         const Eigen::ArrayXd& weight) const 
     {
-        double weight_dot = thts::helper::dot(weight-halfplane_point, halfplane_normal);
-        if (is_approx_zero(weight_dot)) {
-            return true;
-        }
-        bool weight_dot_pos = (weight_dot > 0.0);
-        double centroid_dot = thts::helper::dot(centroid-halfplane_point, halfplane_normal);
-        bool centroid_dot_pos = (centroid_dot > 0.0);
-        return (weight_dot_pos == centroid_dot_pos);
+        double dot_prod = thts::helper::dot(weight-halfplane_point, halfplane_normal);
+        return dot_prod >= 0 || is_approx_zero(dot_prod);
     }
 
     shared_ptr<NGV> TN::get_closest_ngv_vertex(const Eigen::ArrayXd& ctx) const
     {
-        lock_guard<recursive_mutex> lg(sm_lock);
         double closest_dist = std::numeric_limits<double>::max();
         shared_ptr<NGV> closest_vertex;
         for (shared_ptr<NGV> vertex : *simplex_vertices) {
@@ -615,7 +610,6 @@ namespace thts {
     */
     Eigen::ArrayXd TN::get_best_value_estimate(const Eigen::ArrayXd& ctx) const 
     {
-        lock_guard<recursive_mutex> lg(sm_lock);
         double max_ctx_val = numeric_limits<double>::lowest();
         Eigen::ArrayXd max_val;
         for (shared_ptr<NGV> ngv_ptr : *simplex_vertices) {
@@ -635,8 +629,6 @@ namespace thts {
         SimplexMap& simplex_map, 
         Triangulation& triangulation)
     {
-        lock_guard<recursive_mutex> lg(sm_lock);
-
         // If already subdivided, no need
         if (has_children()) {
             return;
@@ -687,8 +679,7 @@ namespace thts {
         dim(reward_dim),
         root_node(),
         n_graph_vertices(make_shared<vector<shared_ptr<NGV>>>()),
-        lse_map(),
-        lock()
+        lse_map()
     {
         // Make neighbourhood graph vertices for unit basis vectors (unit simplex)
         // Register in n_graph_vertices
@@ -696,35 +687,32 @@ namespace thts {
         for (int i=0; i<dim; i++) {
             Eigen::ArrayXd basis_vector = Eigen::ArrayXd::Zero(dim);
             basis_vector[i] = 1.0;
-            shared_ptr<NGV> simplex_vertex = make_shared<NGV>(basis_vector, default_val, 0.0, lock);
+            shared_ptr<NGV> simplex_vertex = make_shared<NGV>(basis_vector, default_val, 0.0);
             n_graph_vertices->push_back(simplex_vertex);
             unit_simplex_vertices->push_back(simplex_vertex);
         }    
 
         // Make root TN node with unit simplex
-        root_node = make_shared<TN>(dim, 0, unit_simplex_vertices, lock);
+        root_node = make_shared<TN>(dim, 0, unit_simplex_vertices);
     }
     
     shared_ptr<LSE> SimplexMap::get_or_create_lse(shared_ptr<NGV> v0, shared_ptr<NGV> v1) 
     {
-        lock_guard<recursive_mutex> lg(lock);
         UnorderedNGVPair lse_map_key = UnorderedNGVPair(v0,v1);
-        if (lse_map.contains(lse_map_key)) {
-            lse_map[lse_map_key] = make_shared<LSE>(v0,v1,lock);
+        if (!lse_map.contains(lse_map_key)) {
+            lse_map[lse_map_key] = make_shared<LSE>(v0,v1);
         }
         return lse_map[lse_map_key];
     }
     
     void SimplexMap::register_vertices_with_lse(shared_ptr<NGV> v0, shared_ptr<NGV> v1, shared_ptr<LSE> edge) 
     {
-        lock_guard<recursive_mutex> lg(lock);
         UnorderedNGVPair lse_map_key = UnorderedNGVPair(v0,v1);
         lse_map[lse_map_key] = edge;
     }
 
     shared_ptr<TN> SimplexMap::get_leaf_tn_node(const Eigen::ArrayXd& ctx) const 
     {
-        lock_guard<recursive_mutex> lg(lock);
         shared_ptr<TN> cur = root_node;
         while (cur->has_children()) {
             cur = cur->get_child(ctx);
@@ -751,7 +739,6 @@ namespace thts {
         stringstream ss;
         ss << "Simplex map pretty print: {" << endl;
         ss << "Weight // Value" << endl;
-        lock_guard<recursive_mutex> lg(lock);
         for (shared_ptr<NGV> v : *n_graph_vertices) {
             ss << "[";
             for (int i=0; i<v->weight.size(); i++) {
