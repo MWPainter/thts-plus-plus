@@ -72,12 +72,8 @@ namespace thts {
 
         closest_vertex->value_estimate = avg_val + local_reward;
 
-        simplex->maybe_subdivide(
-            manager.simplex_node_l_inf_thresh, 
-            manager.simplex_node_split_visit_thresh, 
-            manager.simplex_node_max_depth, 
-            simplex_map,
-            manager.triangulation);
+        simplex->maybe_subdivide(simplex_map, manager);
+        
         // should be safe to push, because if value better, the child decision nodes would pick it
         // dont want to pull outdated value estimates though
         closest_vertex->share_values_message_passing_push();

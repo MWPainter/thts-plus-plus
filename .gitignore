@@ -1,3 +1,7 @@
+# Build and doc folders dont need to add to repo
+external/lemon-1.3.1/build
+external/lemon-1.3.1/doc
+
 # Outputs
 thts-test
 pyex

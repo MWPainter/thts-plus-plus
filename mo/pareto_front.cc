@@ -162,6 +162,16 @@ namespace thts {
     };
 
     /**
+     * Constructor that initialises it with a single tagged point
+    */
+    template <typename T>
+    ParetoFront<T>::ParetoFront(const Eigen::ArrayXd& heuristic_val, const T& tag) :
+        pf_points()
+    {
+        pf_points.insert(TaggedPoint<T>(heuristic_val, tag));
+    };
+
+    /**
      * Copy constructor
     */
     template <typename T>
@@ -175,7 +185,7 @@ namespace thts {
     */
     template <typename T>
     ParetoFront<T>::ParetoFront(const ParetoFront<T>&& pf) :
-        pf_points(move(pf.pf_points)) 
+        pf_points(std::move(pf.pf_points)) 
     {
     };
 
@@ -295,12 +305,9 @@ namespace thts {
     */
     template<typename T>
     void ParetoFront<T>::set_tags(const T& new_tag) {
-        unordered_set<TaggedPoint<T>> new_pf_points;
-        new_pf_points.reserve(size());
         for (const TaggedPoint<T>& point : pf_points) {
-            new_pf_points.insert(TaggedPoint<T>(point.point, new_tag));
+            point.tag = new_tag;
         }
-        pf_points = move(new_pf_points);
     }
 
     /**
@@ -449,7 +456,7 @@ namespace std {
      * Union of two pareto fronts
     */
     template <typename T>
-    ParetoFront<T> operator%(const ParetoFront<T>& pf1, const ParetoFront<T>& pf2) {
+    ParetoFront<T> operator|(const ParetoFront<T>& pf1, const ParetoFront<T>& pf2) {
         return pf1.combine(pf2);
     }
 

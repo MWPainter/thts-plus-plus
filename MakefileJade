@@ -36,34 +36,39 @@ MO_OBJECTS = $(patsubst mo/%.cpp, bin/mo/%.o, $(MO_SOURCES))
 PY_SOURCES = $(wildcard py/*.cpp)
 PY_OBJECTS = $(patsubst py/%.cpp, bin/py/%.o, $(PY_SOURCES))
 
+PY_MAIN = py/main/module.cpp
+PY_MAIN_OBJ = bin/py/main/module.o
+
 GTEST = external/googletest/build/lib/libgtest_main.a
 
 # ANACONDA_ENVS_HOME = /home/michael/anaconda3/envs
 ANACONDA_ENVS_HOME = /jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs
 
 
-INCLUDES = -I. -Iinclude/ -Isrc/ -Iexternal/ -Iexternal/eigen/ -Iexternal/qhull/src/
+INCLUDES = -I. -Iinclude/ -Isrc/ -Iexternal/ -Iexternal/eigen/ -Iexternal/qhull/src/ -Iexternal/lemon-1.3.1/
 TEST_INCLUDES = -Iexternal/googletest/build/include
 INCLUDES += -Iexternal/pybind11/include $$(python3.12 -m pybind11 --includes) -Ipy/
 INCLUDES += -I$(ANACONDA_ENVS_HOME)/thts3.12/include/python3.12
 
 CPPFLAGS = $(INCLUDES) -Wall -std=c++2a
-PY_CPPFLAGS = -fPIC -fvisibility=hidden # needed to create shared library
-PY_CPPFLAGS += -pie -fPIE # needed to create executable
+PY_LIB_CPPFLAGS += -fPIC -fvisibility=hidden # needed to create shared library
+PY_EX_CPPFLAGS += -pie -fPIE # needed to create executable
 TEST_CPPFLAGS = 
 CPPFLAGS_DEBUG = -g -ggdb
 
-LDFLAGS = -Lexternal/qhull/lib -lqhullcpp -lqhullstatic_r -lpthread
+# TODO: add where glpk would be installed with -L
+LDFLAGS = -Lexternal/qhull/lib -Lexternal/lemon-1.3.1/build/lemon/lib -lqhullcpp -lqhullstatic_r -lemon -lglpk -lpthread
 PY_LD_LOCS =  -L$(ANACONDA_ENVS_HOME)/thts3.12/lib
 PY_LDFLAGS = $(PY_LD_LOCS) -lpython3.12
 TEST_LDFLAGS = -Lexternal/googletest/build/lib -lgtest -lgtest_main -lgmock
 
-TARGET_THTS = thts							# empty target that just compiles core library files
-TARGET_THTS_TEST = thts-test				# compiles unit tests
-TARGET_THTS_TEST_DEBUG = thts-test-debug 	# compiles unit tests with debug flags
-TARGET_THTS_PY_LIB = thtspp 				# compiles python thts library
-TARGET_THTS_PY_EX = pyex 					# compiles C++ executable with embedded python
-TARGET_THTS_PY_EX_DEBUG = pyex-debug 		# compiles C++ executable with embedded python with debug flags
+TARGET_THTS = thts
+TARGET_THTS_TEST = thts-test
+TARGET_THTS_TEST_DEBUG = thts-test-debug
+TARGET_THTS_PY_LIB = thtspp
+TARGET_THTS_PY_LIB_DEBUG = thtspp-debug
+TARGET_THTS_PY_EX = pyex
+TARGET_THTS_PY_EX_DEBUG = pyex-debug
 
 THTS_PY_LIB_FULL_NAME = thts$$(python3.12-config --extension-suffix)
 
@@ -74,8 +79,6 @@ THTS_PY_LIB_FULL_NAME = thts$$(python3.12-config --extension-suffix)
 #####
 
 # Default, build everything
-# On JADE gcc doesn't like allowing -fPIC flag when compiling executables
-# So build tests seperately when need
 all: $(TARGET_THTS_TEST) $(TARGET_THTS_PY_EX)
 
 
@@ -96,26 +99,28 @@ all: $(TARGET_THTS_TEST) $(TARGET_THTS_PY_EX)
 #	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
 # Build object files rule
-# Add PY_CPPFLAGS so can compile everything in one go
-# On jade need to not include PY_CPPFLAGS when compiling $(TARGET_THTS_TEST) target
 $(OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
-	$(CXX) $(CPPFLAGS) $(PY_CPPFLAGS) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
 # Build python object files rule
 $(PY_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
-	$(CXX) $(CPPFLAGS) $(PY_CPPFLAGS) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
 # Build multi-objective object files rule
 $(MO_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
-	$(CXX) $(CPPFLAGS) $(PY_CPPFLAGS) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
 # Build test object files rule
 $(TEST_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
-	$(CXX) $(CPPFLAGS) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
+
+$(PY_MAIN_OBJ) : $(PY_MAIN)
+	@mkdir -p bin/py/main
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
 
 
@@ -129,27 +134,30 @@ $(TARGET_THTS): $(OBJECTS)
 # Build test program
 $(TARGET_THTS_TEST): INCLUDES += $(TEST_INCLUDES)
 $(TARGET_THTS_TEST): CPPFLAGS += $(TEST_CPPFLAGS)
+$(TARGET_THTS_TEST): LDFLAGS += $(PY_LDFLAGS)
 $(TARGET_THTS_TEST): LDFLAGS += $(TEST_LDFLAGS)
-$(TARGET_THTS_TEST): $(OBJECTS) $(MO_OBJECTS) $(TEST_OBJECTS)
-	$(CXX) $(CPPFLAGS) -o $@ $^ $(GTEST) $(LDFLAGS)
+$(TARGET_THTS_TEST): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(TEST_OBJECTS)
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) -o $@ $^ $(GTEST) $(LDFLAGS)
 
 # Add a debug tests target. Adds -g to flags for debug info, and then just runs tests target
 $(TARGET_THTS_TEST_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
 $(TARGET_THTS_TEST_DEBUG): $(TARGET_THTS_TEST)
 
 # Building the python library
-$(TARGET_THTS_PY_LIB): CPPFLAGS += $(PY_CPPFLAGS)
 $(TARGET_THTS_PY_LIB): LDFLAGS += $(PY_LDFLAGS)
-$(TARGET_THTS_PY_LIB): $(OBJECTS) $(PY_OBJECTS)
-	$(CXX) -shared $(CPPFLAGS) $(PY_CPPFLAGS) $^ -o $(THTS_PY_LIB_FULL_NAME) $(LDFLAGS)
+$(TARGET_THTS_PY_LIB): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(PY_MAIN_OBJ)
+	$(CXX) -shared $(PY_LIB_CPPFLAGS) $(CPPFLAGS) $^ -o $(THTS_PY_LIB_FULL_NAME) $(LDFLAGS)
+
+# C++ entry point for debugging python C++ entry point
+$(TARGET_THTS_PY_LIB_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
+$(TARGET_THTS_PY_LIB_DEBUG): $(TARGET_THTS_PY_EX)
 
 # C++ entry point
 $(TARGET_THTS_PY_EX): LDFLAGS += $(PY_LDFLAGS)
-$(TARGET_THTS_PY_EX): $(OBJECTS) $(PY_OBJECTS)
-	$(CXX) -shared $(CPPFLAGS) $(PY_CPPFLAGS) $^ -o $(TARGET_THTS_PY_EX) $(LDFLAGS)
+$(TARGET_THTS_PY_EX): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(PY_MAIN_OBJ)
+	$(CXX) -shared $(PY_EX_CPPFLAGS) $(CPPFLAGS) $^ -o $(TARGET_THTS_PY_EX) $(LDFLAGS)
 
-# C++ entry point for debugging python library
-$(TARGET_THTS_PY_EX_DEBUG): CPPFLAGS += $(PY_CPPFLAGS)
+# C++ entry point for debugging python C++ entry point
 $(TARGET_THTS_PY_EX_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
 $(TARGET_THTS_PY_EX_DEBUG): $(TARGET_THTS_PY_EX)
 
