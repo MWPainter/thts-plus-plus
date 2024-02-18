@@ -15,6 +15,9 @@ namespace thts {
      * Note that we only really want to use this in ParetoFront's and ConvexHull's. 
      * TODO: consider moving the struct definition into the ParetoFront declaration
      * 
+     * N.B. mark tag as mutable, as equality/hash will only depend on 'point'. So it's valid to edit the tag when in an 
+     * unordered_set/unordered_map
+     * 
      * Member variables:
      *      point: A vector value (i.e. the point)
      *      tag: A tag associated with this point
@@ -22,7 +25,7 @@ namespace thts {
     template <typename T>
     struct TaggedPoint {
         Eigen::ArrayXd point;
-        T tag;
+        mutable T tag;
         
         /**
          * Constructor
@@ -117,6 +120,11 @@ namespace thts {
              * With an option to say if we know that the set of points is already a pareto front
             */
             ParetoFront(const std::unordered_set<TaggedPoint<T>>& init_points, bool already_pareto_front=false);
+
+            /**
+             * Constructor, with a single point
+            */
+            ParetoFront(const Eigen::ArrayXd& heuristic_val, const T& tag);
 
             /**
              * Copy constructor
@@ -244,7 +252,7 @@ namespace std {
      * Union of two pareto fronts
     */
     template <typename T>
-    ParetoFront<T> operator%(const ParetoFront<T>& pf1, const ParetoFront<T>& pf2);
+    ParetoFront<T> operator|(const ParetoFront<T>& pf1, const ParetoFront<T>& pf2);
 
     /**
      * Sum of pareto fronts

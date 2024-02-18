@@ -267,6 +267,12 @@ namespace thts {
     */
     Triangulation::Triangulation(int dim) : d(dim), e(dim * (dim-1) / 2), edge_points(), simplices()
     {
+        // If passed zero, then not using triangulation
+        if (dim == 0) {
+            return;
+        }
+
+        // Filename for this triangulation
         stringstream ss;
         ss << "mo/.cache/" << dim << "_triangulation.txt";
         ifstream file(ss.str());
@@ -332,7 +338,13 @@ namespace thts {
         split_counter(0),
         simplex_vertices(simplex_vertices),
         hyperplane_normals(make_shared<unordered_map<shared_ptr<NGV>,Eigen::ArrayXd>>()),
-        children(make_shared<unordered_set<shared_ptr<TN>>>())
+        children(make_shared<unordered_set<shared_ptr<TN>>>()),
+        splitting_edge_normal_side_vertex(),
+        splitting_edge_opposite_side_vertex(),
+        splitting_edge_new_vertex(),
+        splitting_hyperplane_normal(Eigen::ArrayXd::Zero(dim)),
+        normal_side_child(),
+        opposite_side_child()
     {
         // Compute centroid
         for (shared_ptr<NGV> vertex : *simplex_vertices) {
@@ -347,6 +359,8 @@ namespace thts {
                 double diff_l_inf_norm = diff.abs().maxCoeff();
                 if (diff_l_inf_norm > l_inf_norm) {
                     l_inf_norm = diff_l_inf_norm;
+                    splitting_edge_normal_side_vertex = simplex_vertices->at(i);
+                    splitting_edge_opposite_side_vertex = simplex_vertices->at(j);
                 }
             }
         }
@@ -362,6 +376,36 @@ namespace thts {
                 simplex_vertices->at(i)->add_connection(simplex_vertices->at(j));
             }
         }
+    }
+
+    /**
+     * TODO: move relevant docstring from 'lazy_compute_hyperplane_noamrls' to here
+     * 
+     * hyperplane_points contains 'dim-1' many points defining a 'dim-2' hyperplane
+    */
+    Eigen::ArrayXd TN::compute_hyperplane_normal(vector<shared_ptr<NGV>>& hyperplane_points) const
+    {
+        // Construct the (D,D-1) matrix we want to SVD
+        // Fill the first collumn with 1's (as described in above comment)
+        // Fill remaining collumns with the D-2 values of opposing_face_vertices[i] - oppositing_face_vertices[0]
+        Eigen::MatrixXd hyperplane_matrix(dim,dim-1);
+        hyperplane_matrix.col(0).setOnes();
+        hyperplane_matrix.col(0) /= dim;
+        if (hyperplane_points.size() > 1) {
+            Eigen::VectorXd v_0 = hyperplane_points[0]->weight.matrix();
+            for (size_t i=1; i<hyperplane_points.size(); i++) {
+                Eigen::VectorXd v_i = hyperplane_points[i]->weight.matrix();
+                hyperplane_matrix.col(i) = v_i - v_0;
+            }
+        }
+
+        // Compute SVD
+        Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::ComputeFullU | Eigen::ComputeThinV> svd(hyperplane_matrix);
+
+        // If SVD is M=USV^T, then we want U.col(d-1), so read that out
+        // Note that S(i,i) >= S(i+1,i+1), as singular values computed in order from largest to smallest
+        // Also convert back to ArrayXd type, done doing lin alg stuff
+        return svd.matrixU().col(dim-1).array();
     }
 
     /**
@@ -413,25 +457,8 @@ namespace thts {
                 opposing_face_vertices.push_back(vertex);
             }
 
-            // Construct the (D,D-1) matrix we want to SVD
-            // Fill the first collumn with 1's (as described in above comment)
-            // Fill remaining collumns with the D-2 values of opposing_face_vertices[i] - oppositing_face_vertices[0]
-            Eigen::MatrixXd hyperplane_matrix(dim,dim-1);
-            hyperplane_matrix.col(0).setOnes();
-            hyperplane_matrix.col(0) /= dim;
-            Eigen::VectorXd v_0 = opposing_face_vertices[0]->weight.matrix();
-            for (size_t i=1; i<opposing_face_vertices.size(); i++) {
-                Eigen::VectorXd v_i = opposing_face_vertices[i]->weight.matrix();
-                hyperplane_matrix.col(i) = v_i - v_0;
-            }
-
-            // Compute SVD
-            Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::ComputeFullU | Eigen::ComputeThinV> svd(hyperplane_matrix);
-
-            // If SVD is M=USV^T, then we want U.col(d-1), so read that out
-            // Note that S(i,i) >= S(i+1,i+1), as singular values computed in order from largest to smallest
-            // Also convert back to ArrayXd type, done doing lin alg stuff
-            Eigen::ArrayXd normal = svd.matrixU().col(dim-1).array();
+            // Compute hyperplane normal
+            Eigen::ArrayXd normal = compute_hyperplane_normal(opposing_face_vertices);
 
             // Make sure that normal points towards centroid
             if (thts::helper::dot(centroid - opposing_face_vertices[0]->weight, normal) < 0.0) {
@@ -465,7 +492,77 @@ namespace thts {
 
     bool TN::has_children() const 
     {  
-        return children->size() > 0;
+        return children->size() > 0 || normal_side_child != nullptr;
+    }
+
+    void TN::create_children(SimplexMap& simplex_map, SmtThtsManager& sm_manager) 
+    {
+        if (sm_manager.use_triangulation) {
+            return create_children_triangulation(simplex_map, sm_manager);
+        } else {
+            return create_children_binary_tree(simplex_map, sm_manager);
+        }
+    }
+    
+    /**
+     * TODO: document a bit better generally
+     * TODO: 
+    */
+    void TN::create_children_binary_tree(SimplexMap& simplex_map, SmtThtsManager& sm_manager) 
+    {
+        // create the new vertex on the splitting edge (halfway between the two)
+        // avoid making a duplicate vertex, and add it to simplex map structures if made a novel vertex
+        splitting_edge_new_vertex = make_shared<NGV>(
+            *splitting_edge_normal_side_vertex, *splitting_edge_opposite_side_vertex, 0.5);
+        if (simplex_map.n_graph_vertex_set->contains(splitting_edge_new_vertex)) {
+            splitting_edge_new_vertex = *simplex_map.n_graph_vertex_set->find(splitting_edge_new_vertex);
+        } else {
+            simplex_map.n_graph_vertices->push_back(splitting_edge_new_vertex);
+            simplex_map.n_graph_vertex_set->insert(splitting_edge_new_vertex);
+        }
+
+        // Insert it on the LSE
+        shared_ptr<LSE> simplex_edge = simplex_map.get_or_create_lse(
+            splitting_edge_normal_side_vertex, splitting_edge_opposite_side_vertex);
+        simplex_edge->insert(
+            splitting_edge_new_vertex, 
+            splitting_edge_normal_side_vertex, 
+            splitting_edge_opposite_side_vertex,
+            0.5,
+            simplex_map);
+        
+        // Create vector of all vertices common to both children
+        vector<shared_ptr<NGV>> child_common_simplex_vertices;
+        for (shared_ptr<NGV> simplex_vertex : *simplex_vertices) {
+            if ((*simplex_vertex != *splitting_edge_normal_side_vertex) 
+                && (*simplex_vertex != *splitting_edge_opposite_side_vertex))
+            {
+                child_common_simplex_vertices.push_back(simplex_vertex);
+            }
+        }
+        child_common_simplex_vertices.push_back(splitting_edge_new_vertex);
+
+        // Normal side child simplex
+        shared_ptr<vector<shared_ptr<NGV>>> normal_side_child_vertices = make_shared<vector<shared_ptr<NGV>>>(
+            child_common_simplex_vertices);
+        normal_side_child_vertices->push_back(splitting_edge_normal_side_vertex);
+        normal_side_child = make_shared<TN>(dim, depth+1, normal_side_child_vertices);
+
+        // Opposite side child simplex
+        shared_ptr<vector<shared_ptr<NGV>>> opposite_side_child_vertices = make_shared<vector<shared_ptr<NGV>>>(
+            child_common_simplex_vertices);
+        opposite_side_child_vertices->push_back(splitting_edge_opposite_side_vertex);
+        opposite_side_child = make_shared<TN>(dim, depth+1, opposite_side_child_vertices);
+
+        // Compute normal (using the dim-1 many common points of the child simplices)
+        splitting_hyperplane_normal = compute_hyperplane_normal(child_common_simplex_vertices);
+
+        // and make sure that the normal points towards the normal side child
+        Eigen::ArrayXd splitting_edge_normal_dir = (splitting_edge_normal_side_vertex->weight 
+                                                    - splitting_edge_new_vertex->weight);
+        if (thts::helper::dot(splitting_edge_normal_dir, splitting_hyperplane_normal) < 0.0) {
+            splitting_hyperplane_normal *= -1.0;
+        }
     }
 
     /**
@@ -479,26 +576,33 @@ namespace thts {
      *      being created
      * 2. For each simplex (list of vertices) make a new TN
      * 2.1. The TN constructor will ensure that the vertices are connected
+     * 
+     * Note that we need to take care to not make any duplicate vertices in the neighbourhood graph
     */
-    void TN::create_children(SimplexMap& simplex_map, Triangulation& triangulation) 
+    void TN::create_children_triangulation(SimplexMap& simplex_map, SmtThtsManager& sm_manager) 
     {
         // 0+1: make the list of vertices to triangulate over
         vector<shared_ptr<NGV>> vertices(*simplex_vertices);
-        for (tuple<int,int,double>& edge_point_spec : triangulation.edge_points) {
+        for (tuple<int,int,double>& edge_point_spec : sm_manager.triangulation_ptr->edge_points) {
             shared_ptr<NGV> v0 = vertices[get<0>(edge_point_spec)];
             shared_ptr<NGV> v1 = vertices[get<1>(edge_point_spec)];
             double ratio = get<2>(edge_point_spec);
 
             shared_ptr<NGV> new_vertex = make_shared<NGV>(*v0, *v1, ratio);
+            if (simplex_map.n_graph_vertex_set->contains(new_vertex)) {
+                new_vertex = *simplex_map.n_graph_vertex_set->find(new_vertex);
+            } else {
+                simplex_map.n_graph_vertices->push_back(new_vertex);
+                simplex_map.n_graph_vertex_set->insert(new_vertex);
+            }
             vertices.push_back(new_vertex);
-            simplex_map.n_graph_vertices->push_back(new_vertex);
 
             shared_ptr<LSE> simplex_edge = simplex_map.get_or_create_lse(v0,v1);
             simplex_edge->insert(new_vertex, v0, v1, ratio, simplex_map);
         }
 
         // 2: make child simplices
-        for (vector<int>& simplex_indices : triangulation.simplices) {
+        for (vector<int>& simplex_indices : sm_manager.triangulation_ptr->simplices) {
             shared_ptr<vector<shared_ptr<NGV>>> child_simplex_vertices = make_shared<vector<shared_ptr<NGV>>>();
             for (int& i : simplex_indices) {
                 child_simplex_vertices->push_back(vertices[i]);
@@ -508,7 +612,40 @@ namespace thts {
         }
     }
 
+    /**
+     * We can tell if this TN node is a binary tree or used triangulation depending on if any of the following 
+     * pointers are nullptr or not:
+     * - splitting_edge_new_vertex
+     * - normal_side_child
+     * - opposite_side_child
+    */
     shared_ptr<TN> TN::get_child(const Eigen::ArrayXd& weight) const
+    {
+        if (normal_side_child == nullptr) {
+            return get_child_triangulation(weight);
+        } else {
+            return get_child_binary_tree(weight);
+        }
+    }
+
+    shared_ptr<TN> TN::get_child_binary_tree(const Eigen::ArrayXd& weight) const 
+    {
+        // if (dim == 2) {
+        //     if (normal_side_child->contains_weight_2d(weight)) {
+        //         return normal_side_child;
+        //     } else {
+        //         return opposite_side_child;
+        //     }
+        // }
+
+        if (halfplane_check(splitting_edge_new_vertex->weight, splitting_hyperplane_normal, weight)) {
+            return normal_side_child;
+        } else {
+            return opposite_side_child;
+        }
+    }
+
+    shared_ptr<TN> TN::get_child_triangulation(const Eigen::ArrayXd& weight) const
     {  
         for (shared_ptr<TN> child : *children) {
             if (child->contains_weight(weight)) {
@@ -520,6 +657,10 @@ namespace thts {
             "summing to one");
     }
 
+    /**
+     * Only called by triangulation version of the code at the moment
+     * But chould generally 
+    */
     bool TN::contains_weight(const Eigen::ArrayXd& weight, bool debug) const 
     {
         if (dim == 2) {
@@ -622,12 +763,7 @@ namespace thts {
         return max_val;
     }
 
-    void TN::maybe_subdivide(
-        double l_inf_thresh, 
-        int visit_thresh, 
-        int max_depth,
-        SimplexMap& simplex_map, 
-        Triangulation& triangulation)
+    void TN::maybe_subdivide(SimplexMap& simplex_map, SmtThtsManager& sm_manager)
     {
         // If already subdivided, no need
         if (has_children()) {
@@ -635,10 +771,10 @@ namespace thts {
         }
 
         // If past a threshold, then we should forever remain a leaf node
-        if (depth >= max_depth) {
+        if (depth >= sm_manager.simplex_node_max_depth) {
             return;
         }
-        if (l_inf_norm <= l_inf_thresh) {
+        if (l_inf_norm <= sm_manager.simplex_node_l_inf_thresh) {
             return;
         }
 
@@ -660,8 +796,8 @@ namespace thts {
             split_counter = 0;
         }
 
-        if (split_counter >= visit_thresh) {
-            create_children(simplex_map, triangulation);
+        if (split_counter >= sm_manager.simplex_node_split_visit_thresh) {
+            create_children(simplex_map, sm_manager);
         }
     }
 
@@ -679,6 +815,7 @@ namespace thts {
         dim(reward_dim),
         root_node(),
         n_graph_vertices(make_shared<vector<shared_ptr<NGV>>>()),
+        n_graph_vertex_set(make_shared<unordered_set<shared_ptr<NGV>>>()),
         lse_map()
     {
         // Make neighbourhood graph vertices for unit basis vectors (unit simplex)
@@ -689,6 +826,7 @@ namespace thts {
             basis_vector[i] = 1.0;
             shared_ptr<NGV> simplex_vertex = make_shared<NGV>(basis_vector, default_val, 0.0);
             n_graph_vertices->push_back(simplex_vertex);
+            n_graph_vertex_set->insert(simplex_vertex);
             unit_simplex_vertices->push_back(simplex_vertex);
         }    
 

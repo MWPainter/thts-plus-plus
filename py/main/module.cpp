@@ -755,6 +755,7 @@ void sm_bts_test() {
     args->mcts_mode = false;
     args->num_threads = num_threads;
     args->num_envs = num_threads; 
+    args->use_triangulation = true;
     shared_ptr<SmtBtsManager> manager = make_shared<SmtBtsManager>(*args);
  
     // // Setup python servers
@@ -806,7 +807,7 @@ void sm_bts_test() {
     // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
-    cout << "CZT evaluations from MoMCEval." << endl;
+    cout << "SM-BTS evaluations from MoMCEval." << endl;
     cout << "Mean MO return." << endl;
     cout << mo_mc_eval.get_mean_mo_return() << endl;
     cout << "Mean MO ctx return." << endl;
@@ -848,6 +849,7 @@ void sm_bts_4d_test() {
     args->num_threads = num_threads;
     args->num_envs = num_threads; 
     args->simplex_node_max_depth = 3;
+    args->use_triangulation = true;
     shared_ptr<SmtBtsManager> manager = make_shared<SmtBtsManager>(*args);
  
     // // Setup python servers
@@ -899,7 +901,7 @@ void sm_bts_4d_test() {
     // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
-    cout << "CZT evaluations from MoMCEval." << endl;
+    cout << "SM-BTS evaluations from MoMCEval." << endl;
     cout << "Mean MO return." << endl;
     cout << mo_mc_eval.get_mean_mo_return() << endl;
     cout << "Mean MO ctx return." << endl;
@@ -991,7 +993,192 @@ void sm_dents_test() {
     // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
-    cout << "CZT evaluations from MoMCEval." << endl;
+    cout << "SM-DENTS evaluations from MoMCEval." << endl;
+    cout << "Mean MO return." << endl;
+    cout << mo_mc_eval.get_mean_mo_return() << endl;
+    cout << "Mean MO ctx return." << endl;
+    cout << mo_mc_eval.get_mean_mo_ctx_return() << endl;
+    cout << "Mean MO normalised ctx return." << endl;
+    cout << mo_mc_eval.get_mean_mo_normalised_ctx_return() << endl;
+
+    // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
+    // for (int i=0; i<num_threads; i++) {
+    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
+    //     py_mp_env.clear_unix_sem_and_shm();
+    // }
+    // manager.reset();
+    // manager_args.reset();
+    // thts_env.reset();
+    // thts_pool.reset();
+    // root_node.reset();
+}
+
+void sm_bts_bin_tree_test() {
+
+    // params
+    int walk_len = 5;
+    double stay_prob = 0.0;
+
+    int num_trials = 10000;
+    int print_tree_depth = 2;
+    int num_threads = 4;
+
+    // Setup env 
+    shared_ptr<thts::test::TestMoThtsEnv> thts_env = make_shared<thts::test::TestMoThtsEnv>(walk_len, stay_prob);
+
+    // Make thts manager 
+    Eigen::ArrayXd default_val = Eigen::ArrayXd::Zero(2) - walk_len * 4;
+    shared_ptr<SmtBtsManagerArgs> args = make_shared<SmtBtsManagerArgs>(thts_env, default_val);
+    args->seed = 60415;
+    args->max_depth = walk_len * 4;
+    args->mcts_mode = false;
+    args->num_threads = num_threads;
+    args->num_envs = num_threads; 
+    shared_ptr<SmtBtsManager> manager = make_shared<SmtBtsManager>(*args);
+ 
+    // // Setup python servers
+    // for (int i=0; i<args.num_envs; i++) {
+    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
+    //     py_mp_env.start_python_server(i);
+    // }
+
+    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
+    // subinterpreters
+    shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
+    shared_ptr<SmtBtsDNode> root_node = make_shared<SmtBtsDNode>(manager, init_state, 0, 0);
+    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
+    shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
+    chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
+    // py::gil_scoped_release rel;
+    thts_pool->run_trials(num_trials);
+    std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
+
+    // Print out a tree
+    // Make sure have gil again if using python objects
+    // py::gil_scoped_acquire acq;
+    cout << "SM-BTS with " << num_threads << " threads (took " << dur.count() << ")";
+    if (print_tree_depth > 0) {
+        cout << " and looks like:\n";
+        cout << root_node->get_pretty_print_string(print_tree_depth);
+    } 
+    cout << endl << endl; 
+
+    // Pretty ball lists
+    cout << "Printing SM-BTS simplex map at root node ball lists for first decision." << endl;
+    cout << root_node->get_simplex_map_pretty_print_string() << endl << endl;
+    ThtsEnvContext ctx;
+    shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
+    for (shared_ptr<const Action> action : *actions) {
+        cout << "Simplex map ball list for action " << *action << ":" << endl;
+        cout << root_node->get_child_node(action)->get_simplex_map_pretty_print_string() << endl << endl;
+    }
+    
+    // Test out Mo MC Eval
+    int num_eval_rollouts = 250;
+    shared_ptr<EvalPolicy> policy = make_shared<EvalPolicy>(root_node, thts_env, manager);
+    MoMCEvaluator mo_mc_eval(
+        policy,  
+        manager->max_depth,
+        manager,
+        Eigen::ArrayXd::Zero(2)-walk_len,
+        Eigen::ArrayXd::Zero(2)-0.5*walk_len); 
+    // py::gil_scoped_release rel2;
+    mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
+
+    cout << "SM-BTS evaluations from MoMCEval." << endl;
+    cout << "Mean MO return." << endl;
+    cout << mo_mc_eval.get_mean_mo_return() << endl;
+    cout << "Mean MO ctx return." << endl;
+    cout << mo_mc_eval.get_mean_mo_ctx_return() << endl;
+    cout << "Mean MO normalised ctx return." << endl;
+    cout << mo_mc_eval.get_mean_mo_normalised_ctx_return() << endl;
+
+    // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
+    // for (int i=0; i<num_threads; i++) {
+    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
+    //     py_mp_env.clear_unix_sem_and_shm();
+    // }
+    // manager.reset();
+    // manager_args.reset();
+    // thts_env.reset();
+    // thts_pool.reset();
+    // root_node.reset();
+}
+
+void sm_bts_bin_tree_4d_test() {
+
+    // params
+    int walk_len = 5;
+    double stay_prob = 0.0;
+
+    int num_trials = 10000;
+    int print_tree_depth = 2;
+    int num_threads = 4;
+
+    // Setup env 
+    shared_ptr<thts::test::TestMoThtsEnv> thts_env = make_shared<thts::test::TestMoThtsEnv>(walk_len, stay_prob, true);
+
+    // Make thts manager 
+    Eigen::ArrayXd default_val = Eigen::ArrayXd::Zero(4) - walk_len * 4;
+    shared_ptr<SmtBtsManagerArgs> args = make_shared<SmtBtsManagerArgs>(thts_env, default_val);
+    // args->seed = 60415;
+    args->max_depth = walk_len * 4;
+    args->mcts_mode = false;
+    args->num_threads = num_threads;
+    args->num_envs = num_threads; 
+    args->simplex_node_max_depth = 3;
+    shared_ptr<SmtBtsManager> manager = make_shared<SmtBtsManager>(*args);
+ 
+    // // Setup python servers
+    // for (int i=0; i<args.num_envs; i++) {
+    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
+    //     py_mp_env.start_python_server(i);
+    // }
+
+    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
+    // subinterpreters
+    shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
+    shared_ptr<SmtBtsDNode> root_node = make_shared<SmtBtsDNode>(manager, init_state, 0, 0);
+    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
+    shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
+    chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
+    // py::gil_scoped_release rel;
+    thts_pool->run_trials(num_trials);
+    std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
+
+    // Print out a tree
+    // Make sure have gil again if using python objects
+    // py::gil_scoped_acquire acq;
+    cout << "SM-BTS with " << num_threads << " threads (took " << dur.count() << ")";
+    if (print_tree_depth > 0) {
+        cout << " and looks like:\n";
+        cout << root_node->get_pretty_print_string(print_tree_depth);
+    } 
+    cout << endl << endl; 
+
+    // Pretty ball lists
+    cout << "Printing SM-BTS simplex map at root node ball lists for first decision." << endl;
+    cout << root_node->get_simplex_map_pretty_print_string() << endl << endl;
+    // ThtsEnvContext ctx;
+    // shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
+    // for (shared_ptr<const Action> action : *actions) {
+    //     cout << "Simplex map ball list for action " << *action << ":" << endl;
+    //     cout << root_node->get_child_node(action)->get_simplex_map_pretty_print_string() << endl << endl;
+    // }
+    
+    // Test out Mo MC Eval
+    int num_eval_rollouts = 250;
+    shared_ptr<EvalPolicy> policy = make_shared<EvalPolicy>(root_node, thts_env, manager);
+    MoMCEvaluator mo_mc_eval(
+        policy,  
+        manager->max_depth,
+        manager,
+        Eigen::ArrayXd::Zero(4)-walk_len,
+        Eigen::ArrayXd::Ones(4)/(1.0-thts_env->get_gamma())); 
+    // py::gil_scoped_release rel2;
+    mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
+
+    cout << "SM-BTS evaluations from MoMCEval." << endl;
     cout << "Mean MO return." << endl;
     cout << mo_mc_eval.get_mean_mo_return() << endl;
     cout << "Mean MO ctx return." << endl;
@@ -1058,9 +1245,11 @@ int main(int argc, char *argv[]) {
     /**
      * Test simplex map
     */
-    // sm_bts_test();
-    // sm_bts_4d_test();
+    sm_bts_test();
+    sm_bts_4d_test();
     sm_dents_test();
+    sm_bts_bin_tree_test();
+    sm_bts_bin_tree_4d_test();
 
     return 0;
 }

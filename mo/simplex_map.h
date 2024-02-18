@@ -2,6 +2,8 @@
 
 #include "thts_manager.h"
 
+#include "mo/smt_manager.h"
+
 #include <Eigen/Dense>
 
 #include <memory>
@@ -220,6 +222,8 @@ namespace thts {
      * - if we are working in D dim space (i.e. D rewards), then we are making a "D-1 simplex" using D points
      * - this D-1 simplex lies in a D-1 subspace, and the vector (1,1,...,1) is normal to this D-1 subspace
      * 
+     * TODO: renamde this to a simplex node (SN)
+     * 
      * Args:
      *      dim:
      *          The dimension we are working in (dimension of the reward)
@@ -238,6 +242,20 @@ namespace thts {
      *          hyperplane_normals[v] is the normal to the hyperplane containing the points simplex_vertices - {v} 
      *      children: 
      *          Child nodes
+     * 
+     * If sm_manager.use_triangulation == false, then we build a binary tree:
+     *      splitting_edge_normal_side_vertex:
+     *          The vertex at the end of the splitting edge which is the side that the normal vertex points
+     *      splitting_edge_opposite_side_vertex:
+     *          The vertex at the end of the splitting edge which is oppositve the side that the normal vertex points
+     *      splitting_edge_new_vertex:
+     *          The new vertex added to split this simplex into two child simplices
+     *      splitting_hyperplane_normal:
+     *          The normal to the hyperplane that splits the simplex in two
+     *      normal_side_child:
+     *          The TN child on the normal side of the splitting hyperplane
+     *      opposite_side_child:
+     *          The TN child on the opposite side of the splitting hyperplane
     */
     struct TN {
         int dim;
@@ -249,12 +267,24 @@ namespace thts {
         std::shared_ptr<std::unordered_map<std::shared_ptr<NGV>,Eigen::ArrayXd>> hyperplane_normals;
         std::shared_ptr<std::unordered_set<std::shared_ptr<TN>>> children;
 
+        std::shared_ptr<NGV> splitting_edge_normal_side_vertex;
+        std::shared_ptr<NGV> splitting_edge_opposite_side_vertex;
+        std::shared_ptr<NGV> splitting_edge_new_vertex;
+        Eigen::ArrayXd splitting_hyperplane_normal;
+        std::shared_ptr<TN> normal_side_child;
+        std::shared_ptr<TN> opposite_side_child;
+
         TN(int dim, int depth, std::shared_ptr<std::vector<std::shared_ptr<NGV>>> simplex_vertices);
 
         /**
          * On construction want to ensure that all of the simplex_vertices are (fully) connected 
         */
         void _ensure_neighbourhood_graph_connected();
+
+        /**
+         * Helper to compute a normal to a set of hyperplane points
+        */
+        Eigen::ArrayXd compute_hyperplane_normal(std::vector<std::shared_ptr<NGV>>& hyperplane_points) const;
 
         /**
          * Lazy init hyperplane normals
@@ -275,7 +305,9 @@ namespace thts {
         /**
          * Create child TN's using the triangulation
         */
-        void create_children(SimplexMap& simplex_map, Triangulation& triangulation);
+        void create_children(SimplexMap& simplex_map, SmtThtsManager& sm_manager);
+        void create_children_binary_tree(SimplexMap& simplex_map, SmtThtsManager& sm_manager);
+        void create_children_triangulation(SimplexMap& simplex_map, SmtThtsManager& sm_manager);
 
         /**
          * Get child
@@ -283,6 +315,8 @@ namespace thts {
          * Returns a child node (simplex) that contains 'weight'
         */
         std::shared_ptr<TN> get_child(const Eigen::ArrayXd& weight) const;
+        std::shared_ptr<TN> get_child_binary_tree(const Eigen::ArrayXd& weight) const;
+        std::shared_ptr<TN> get_child_triangulation(const Eigen::ArrayXd& weight) const;
 
         /**
          * Returns true if 'weight' is contained in this simplex
@@ -297,6 +331,15 @@ namespace thts {
         /**
          * Returns if 'weight' is the same side of the hyperplane (defined by a point in the halfplane and the normal 
          * to the halfplane) as the 'centroid' of the simplex
+         * 
+         * halfplane_point:
+         *      a point in the halfplane
+         * halfplane_normal:
+         *      the normal to the halfplane
+         * weight:
+         *      the weight we want to check what side of the halfplane we are on
+         * 
+         * Returns if 'weight' is on the normal side of the halfplane
         */
         bool halfplane_check(
             const Eigen::ArrayXd& halfplane_point, 
@@ -326,12 +369,7 @@ namespace thts {
          *      value_estimate's being different) to allow for a split
          * max_depth is the threshold for the maximum depth of the TN tree
         */
-        void maybe_subdivide(
-            double l_inf_thresh, 
-            int visit_thresh, 
-            int max_depth,
-            SimplexMap& simplex_map, 
-            Triangulation& triangulation);
+        void maybe_subdivide(SimplexMap& simplex_map, SmtThtsManager& sm_manager);
     };
 
     /**
@@ -339,6 +377,10 @@ namespace thts {
      * 
      * Not thread safe, classes using this should protect use of this simplex map and any datastructures they get from 
      * it (i.e. TN, NGV)
+     * 
+     * TODO: would like to make unordered_set_vector and replace n_graph_vertices and n_graph_vertex_set with this
+     *      - i.e. can index like a vector
+     *      - can check contains in O(1) from the set etc
      * 
      * Args:
      *      dim:
@@ -364,6 +406,7 @@ namespace thts {
             int dim;
             std::shared_ptr<TN> root_node;
             std::shared_ptr<std::vector<std::shared_ptr<NGV>>> n_graph_vertices;
+            std::shared_ptr<std::unordered_set<std::shared_ptr<NGV>>> n_graph_vertex_set;
             std::unordered_map<UnorderedNGVPair,std::shared_ptr<LSE>> lse_map;
 
         public:

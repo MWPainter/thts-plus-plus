@@ -36,15 +36,18 @@ MO_OBJECTS = $(patsubst mo/%.cpp, bin/mo/%.o, $(MO_SOURCES))
 PY_SOURCES = $(wildcard py/*.cpp)
 PY_OBJECTS = $(patsubst py/%.cpp, bin/py/%.o, $(PY_SOURCES))
 
+PY_MAIN = py/main/module.cpp
+PY_MAIN_OBJ = bin/py/main/module.o
+
 GTEST = external/googletest/build/lib/libgtest_main.a
 
 ANACONDA_ENVS_HOME = /home/michael/anaconda3/envs
 # ANACONDA_ENVS_HOME = /jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs
 
 
-INCLUDES = -I. -Iinclude/ -Isrc/ -Iexternal/ -Iexternal/eigen/ -Iexternal/qhull/src/
+INCLUDES = -I. -Iinclude -Isrc -Iexternal -Iexternal/eigen -Iexternal/qhull/src -Iexternal/lemon-1.3.1/build/lemon/include
 TEST_INCLUDES = -Iexternal/googletest/build/include
-INCLUDES += -Iexternal/pybind11/include $$(python3.12 -m pybind11 --includes) -Ipy/
+INCLUDES += -Iexternal/pybind11/include $$(python3.12 -m pybind11 --includes) -Ipy
 INCLUDES += -I$(ANACONDA_ENVS_HOME)/thts3.12/include/python3.12
 
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20
@@ -53,7 +56,7 @@ PY_EX_CPPFLAGS += -pie -fPIE # needed to create executable
 TEST_CPPFLAGS = 
 CPPFLAGS_DEBUG = -g -ggdb
 
-LDFLAGS = -Lexternal/qhull/lib -lqhullcpp -lqhullstatic_r -lpthread
+LDFLAGS = -Lexternal/qhull/lib -L/usr/lib/x86_64-linux-gnu -Lexternal/lemon-1.3.1/build/lemon/lib -lqhullcpp -lqhullstatic_r -lemon -lglpk -lpthread
 PY_LD_LOCS =  -L$(ANACONDA_ENVS_HOME)/thts3.12/lib
 PY_LDFLAGS = $(PY_LD_LOCS) -lpython3.12
 TEST_LDFLAGS = -Lexternal/googletest/build/lib -lgtest -lgtest_main -lgmock
@@ -114,6 +117,10 @@ $(TEST_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
 	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
+$(PY_MAIN_OBJ) : $(PY_MAIN)
+	@mkdir -p bin/py/main
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
+
 
 
 #####
@@ -126,8 +133,9 @@ $(TARGET_THTS): $(OBJECTS)
 # Build test program
 $(TARGET_THTS_TEST): INCLUDES += $(TEST_INCLUDES)
 $(TARGET_THTS_TEST): CPPFLAGS += $(TEST_CPPFLAGS)
+$(TARGET_THTS_TEST): LDFLAGS += $(PY_LDFLAGS)
 $(TARGET_THTS_TEST): LDFLAGS += $(TEST_LDFLAGS)
-$(TARGET_THTS_TEST): $(OBJECTS) $(MO_OBJECTS) $(TEST_OBJECTS)
+$(TARGET_THTS_TEST): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(TEST_OBJECTS)
 	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) -o $@ $^ $(GTEST) $(LDFLAGS)
 
 # Add a debug tests target. Adds -g to flags for debug info, and then just runs tests target
@@ -136,8 +144,8 @@ $(TARGET_THTS_TEST_DEBUG): $(TARGET_THTS_TEST)
 
 # Building the python library
 $(TARGET_THTS_PY_LIB): LDFLAGS += $(PY_LDFLAGS)
-$(TARGET_THTS_PY_LIB): $(OBJECTS) $(PY_OBJECTS)
-	$(CXX) -shared $(PY_LIB_CPPFLAGS) $(CPPFLAGS)  $^ -o $(THTS_PY_LIB_FULL_NAME) $(LDFLAGS)
+$(TARGET_THTS_PY_LIB): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(PY_MAIN_OBJ)
+	$(CXX) -shared $(PY_LIB_CPPFLAGS) $(CPPFLAGS) $^ -o $(THTS_PY_LIB_FULL_NAME) $(LDFLAGS)
 
 # C++ entry point for debugging python C++ entry point
 $(TARGET_THTS_PY_LIB_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
@@ -145,7 +153,7 @@ $(TARGET_THTS_PY_LIB_DEBUG): $(TARGET_THTS_PY_EX)
 
 # C++ entry point
 $(TARGET_THTS_PY_EX): LDFLAGS += $(PY_LDFLAGS)
-$(TARGET_THTS_PY_EX): $(OBJECTS) $(PY_OBJECTS)
+$(TARGET_THTS_PY_EX): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(PY_MAIN_OBJ)
 	$(CXX) -shared $(PY_EX_CPPFLAGS) $(CPPFLAGS) $^ -o $(TARGET_THTS_PY_EX) $(LDFLAGS)
 
 # C++ entry point for debugging python C++ entry point
