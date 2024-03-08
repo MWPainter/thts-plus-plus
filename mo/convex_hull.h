@@ -85,6 +85,12 @@ namespace thts {
             ConvexHull<T> add(const Eigen::ArrayXd& v) const;
 
             /**
+             * Get the best tag for a context weight
+            */
+            TaggedPoint<T>& get_best_point(Eigen::ArrayXd& context_weight, RandManager& rand_manager);
+            T& get_best_point_tag(Eigen::ArrayXd& context_weight, RandManager& rand_manager);
+
+            /**
              * TODO: want this directly implemented in operator<<
              * But declaring operator<< as friend wasnt working because I couldnt work out how to declare a templated 
              * function as a friend hmph
