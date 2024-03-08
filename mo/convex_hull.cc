@@ -1,6 +1,7 @@
 #include "mo/convex_hull.h"
 
 #include "helper_templates.h"
+#include "mo/mo_helper.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -397,6 +398,25 @@ namespace thts {
         }
         return ConvexHull<T>(summed_points, true);
     };
+
+    /**
+     * Get best action for recomnmending
+    */
+    template <typename T>
+    TaggedPoint<T>& ConvexHull<T>::get_best_point(Eigen::ArrayXd& context_weight, RandManager& rand_manager) 
+    {
+        unordered_map<TaggedPoint<T>, double> scalarised_values;
+        for (const TaggedPoint<T>& tagged_point : ch_points) {
+            scalarised_values[tagged_point] = thts::helper::dot(tagged_point.point, context_weight);
+        }
+        return thts::helper::get_max_key_break_ties_randomly(scalarised_values, rand_manager);
+    }
+
+    template <typename T>
+    T& ConvexHull<T>::get_best_point_tag(Eigen::ArrayXd& context_weight, RandManager& rand_manager) 
+    {
+        return get_best_point(context_weight,rand_manager).tag;
+    }
 
     /**
      * Pretty printing

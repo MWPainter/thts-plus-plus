@@ -25,6 +25,11 @@ namespace thts {
         num_visits += 1;
     } 
 
+    shared_ptr<const Action> CH_MoThtsDNode::recommend_action(MoThtsContext& ctx) const 
+    {
+        return convex_hull.get_best_point_tag(ctx.context_weight, *thts_manager);
+    }
+
     void CH_MoThtsDNode::backup(
         const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 
         const std::vector<Eigen::ArrayXd>& trial_rewards_after_node, 
