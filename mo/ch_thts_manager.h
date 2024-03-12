@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mo/mo_thts_manager.h"
+#include "mo/czt_manager.h"
 
 
 namespace thts {
@@ -10,11 +10,14 @@ namespace thts {
 
     /**
      * Args object so that params can be set in a more named args way
+     * 
+     * Make this subclass CztManager for CHMCTS, any ball list / contextual zooming args can just be ignored by an CH 
+     * algorithm that doesnt use contextual zooming for trees
      */
-    struct CH_MoThtsManagerArgs : public MoThtsManagerArgs {
+    struct CH_MoThtsManagerArgs : public CztManagerArgs {
 
         CH_MoThtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env) :
-            MoThtsManagerArgs(thts_env)
+            CztManagerArgs(thts_env)
         {
         }
 
@@ -24,16 +27,19 @@ namespace thts {
     /**
      * ThtsManager for algorithms using convex hulls
      * 
+     * Make this subclass CztManager for CHMCTS, any ball list / contextual zooming args can just be ignored by an CH 
+     * algorithm that doesnt use contextual zooming for trees
+     * 
      * Member variables (environment):
      */
-    class CH_MoThtsManager : public MoThtsManager {
+    class CH_MoThtsManager : public CztManager {
         public:
 
             /**
              * Constructor.
              */    
             CH_MoThtsManager(const CH_MoThtsManagerArgs& args) : 
-                MoThtsManager(args)
+                CztManager(args)
             {
             }
 

@@ -87,8 +87,8 @@ namespace thts {
             /**
              * Get the best tag for a context weight
             */
-            TaggedPoint<T>& get_best_point(Eigen::ArrayXd& context_weight, RandManager& rand_manager);
-            T& get_best_point_tag(Eigen::ArrayXd& context_weight, RandManager& rand_manager);
+            TaggedPoint<T> get_best_point(Eigen::ArrayXd& context_weight, RandManager& rand_manager) const;
+            T get_best_point_tag(Eigen::ArrayXd& context_weight, RandManager& rand_manager) const;
 
             /**
              * TODO: want this directly implemented in operator<<

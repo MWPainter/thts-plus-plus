@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mo/ch_thts_chance_node.h"
+#include "mo/ch_thts_decision_node.h"
 
 #include "mo/convex_hull.h"
 #include "mo/ch_thts_manager.h"

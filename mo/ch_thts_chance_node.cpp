@@ -21,7 +21,7 @@ namespace thts {
                 static_pointer_cast<const MoThtsDNode>(parent)),
             num_backups(0),
             convex_hull(),
-            local_reward()
+            local_reward() 
     {
         MoThtsEnv& env = *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());
         local_reward = env.get_mo_reward_itfc(state,action,*thts_manager->get_thts_context());
@@ -44,15 +44,22 @@ namespace thts {
         for (pair<const shared_ptr<const Observation>,shared_ptr<ThtsDNode>>& child_pair : children) {
             CH_MoThtsDNode& ch_child = (CH_MoThtsDNode&) *child_pair.second;
             lock_guard<mutex> lg(ch_child.get_lock());
-            total_child_backups += ch_child.num_backups;
+            total_child_backups += ch_child.num_backups; 
         }
         
         // use empirical distribution to take an average of child ch values
-        convex_hull = ConvexHull<shared_ptr<const Action>>();
-        for (pair<const shared_ptr<const Observation>,shared_ptr<ThtsDNode>>& child_pair : children) {
-            CH_MoThtsDNode& ch_child = (CH_MoThtsDNode&) *child_pair.second;
-            lock_guard<mutex> lg(ch_child.get_lock());
-            convex_hull += ch_child.convex_hull * (ch_child.num_backups / total_child_backups);
+        // If havent visited any children yet then convex hull of child values is just the zero vector
+        convex_hull = ConvexHull<shared_ptr<const Action>>();  
+        if (total_child_backups > 0) {
+            for (pair<const shared_ptr<const Observation>,shared_ptr<ThtsDNode>>& child_pair : children) {
+                CH_MoThtsDNode& ch_child = (CH_MoThtsDNode&) *child_pair.second;
+                lock_guard<mutex> lg(ch_child.get_lock());
+                convex_hull += ch_child.convex_hull * (ch_child.num_backups / total_child_backups);
+            }
+        } else {
+            MoThtsManager& manager = (MoThtsManager&) *thts_manager;
+            vector<Eigen::ArrayXd> zero_vector_vector = {Eigen::ArrayXd::Zero(manager.reward_dim)};
+            convex_hull = ConvexHull<shared_ptr<const Action>>(zero_vector_vector, action);
         }
 
         // add reward to convex hull too
@@ -60,6 +67,9 @@ namespace thts {
 
         // dont forget to set tags for decision node to use
         convex_hull.set_tags(action);
+
+        // remember to incr num_backups
+        num_backups++;
     }
 
     string CH_MoThtsCNode::get_convex_hull_pretty_print_string() const {

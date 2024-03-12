@@ -29,7 +29,7 @@ namespace thts {
     {
         return convex_hull.get_best_point_tag(ctx.context_weight, *thts_manager);
     }
-
+ 
     void CH_MoThtsDNode::backup(
         const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 
         const std::vector<Eigen::ArrayXd>& trial_rewards_after_node, 
@@ -40,12 +40,15 @@ namespace thts {
         convex_hull = ConvexHull<shared_ptr<const Action>>();
         for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : children) {
             CH_MoThtsCNode& ch_child = (CH_MoThtsCNode&) *child_pair.second;
-            lock_guard<mutex> lg(ch_child.get_lock());
+            lock_guard<mutex> lg(ch_child.get_lock()); 
             convex_hull |= ch_child.convex_hull;
-        }
+        }  
+        
+        // remember to incr num_backups
+        num_backups++;
     }
 
-    string CH_MoThtsDNode::get_convex_hull_pretty_print_string() const 
+    string CH_MoThtsDNode::get_convex_hull_pretty_print_string() const
     {
         stringstream ss;
         ss << convex_hull;

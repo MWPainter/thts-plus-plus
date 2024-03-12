@@ -17,9 +17,14 @@ namespace thts {
 
     /**
      * CHMCTS Decision node
+     * 
+     * This code is quite messy, but don't plan to support it long term, sorry if you're reading this
     */
-    class ChmctsDNode : public CH_MoThtsDNode, public CztDNode {
+    class ChmctsDNode : public CH_MoThtsDNode {
         friend ChmctsCNode;
+
+        protected:
+            std::shared_ptr<CztDNode> czt_node;
 
         public:
             ChmctsDNode(
@@ -56,7 +61,7 @@ namespace thts {
          */
         public:
             std::shared_ptr<ChmctsCNode> create_child_node(std::shared_ptr<const Action> action);
-            virtual std::shared_ptr<ChmctsCNode> create_child_node_helper(
+            virtual std::shared_ptr<CH_MoThtsCNode> create_child_node_helper(
                 std::shared_ptr<const Action> action) const override;
             std::shared_ptr<ChmctsCNode> get_child_node(std::shared_ptr<const Action> action) const;
 
