@@ -6,38 +6,42 @@ using namespace std;
 
 namespace thts {
     ChmctsCNode::ChmctsCNode(
-        shared_ptr<CH_MoThtsManager> thts_manager,
+        shared_ptr<ChmctsManager> thts_manager,
         shared_ptr<const State> state,
         shared_ptr<const Action> action,
         int decision_depth,
         int decision_timestep,
-        shared_ptr<const CH_MoThtsDNode> parent) :
+        shared_ptr<const ChmctsDNode> parent) :
             CH_MoThtsCNode(
-                static_pointer_cast<MoThtsManager>(thts_manager),
+                static_pointer_cast<CH_MoThtsManager>(thts_manager),
                 state,
                 action,
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const CH_MoThtsDNode>(parent)),
-            CztCNode(
-                static_pointer_cast<CztManager>(thts_manager),
-                state,
-                action,
-                decision_depth,
-                decision_timestep,
-                static_pointer_cast<const CztDNode>(parent))
+            czt_node(
+                make_shared<CztCNode>(
+                    static_pointer_cast<CztManager>(thts_manager),
+                    state,
+                    action,
+                    decision_depth,
+                    decision_timestep)) // not passing parent pointer because CZT doesnt use it
     {
     }
     
     void ChmctsCNode::visit(MoThtsContext& ctx) 
     {
         CH_MoThtsCNode::visit(ctx);
-        CztCNode::visit(ctx);
+        czt_node->visit(ctx);
     } 
 
     shared_ptr<const State> ChmctsCNode::sample_observation(MoThtsContext& ctx)
     {
-        return CztCNode::sample_observation(ctx);
+        shared_ptr<const State> next_state = czt_node->sample_observation(ctx);
+        if (!has_child_node_itfc(static_pointer_cast<const Observation>(next_state))) {
+            create_child_node(next_state);
+        }
+        return next_state;
     }
 
     void ChmctsCNode::backup(
@@ -53,7 +57,7 @@ namespace thts {
             trial_cumulative_return_after_node, 
             trial_cumulative_return,
             ctx);
-        CztCNode::backup(
+        czt_node->backup(
             trial_rewards_before_node, 
             trial_rewards_after_node, 
             trial_cumulative_return_after_node, 
@@ -72,30 +76,35 @@ namespace thts {
  * All this code basically calls the corresponding base implementation function, with approprtiate casts before/after.
  */
 namespace thts {
-    shared_ptr<CH_MoThtsDNode> ChmctsCNode::create_child_node(shared_ptr<const State> next_state) 
+    shared_ptr<ChmctsDNode> ChmctsCNode::create_child_node(shared_ptr<const State> next_state) 
     {
         shared_ptr<const Observation> obs_itfc = static_pointer_cast<const Observation>(next_state);
         shared_ptr<ThtsDNode> new_child = ThtsCNode::create_child_node_itfc(obs_itfc);
-        return static_pointer_cast<CH_MoThtsDNode>(new_child);
+        return static_pointer_cast<ChmctsDNode>(new_child);
     }
 
-    shared_ptr<ChmctsDNode> ChmctsCNode::create_child_node_helper(shared_ptr<const Action> action) const 
+    /**
+     * Added making the child's czt_node pointing to the same CztNode as our czt_node
+    */
+    shared_ptr<CH_MoThtsDNode> ChmctsCNode::create_child_node_helper(shared_ptr<const State> next_state) const 
     {   
-        return make_shared<ChmctsCNode>(
+        shared_ptr<ChmctsDNode> child_node = make_shared<ChmctsDNode>(
             static_pointer_cast<ChmctsManager>(thts_manager), 
-            state, 
-            action, 
+            next_state, 
             decision_depth, 
             decision_timestep, 
             static_pointer_cast<const ChmctsCNode>(shared_from_this()));
+        shared_ptr<const Observation> obs = static_pointer_cast<const Observation>(next_state);
+        child_node->czt_node = static_pointer_cast<CztDNode>(czt_node->get_child_node_itfc(obs));
+        return static_pointer_cast<CH_MoThtsDNode>(child_node);
     }
 
 
-    shared_ptr<CH_MoThtsDNode> ChmctsCNode::get_child_node(shared_ptr<const State> next_state) const 
+    shared_ptr<ChmctsDNode> ChmctsCNode::get_child_node(shared_ptr<const State> next_state) const 
     {
         shared_ptr<const Observation> obs_itfc = static_pointer_cast<const Observation>(next_state);
         shared_ptr<ThtsDNode> new_child = ThtsCNode::get_child_node_itfc(obs_itfc);
-        return static_pointer_cast<CH_MoThtsDNode>(new_child);
+        return static_pointer_cast<ChmctsDNode>(new_child);
     }
 }
 

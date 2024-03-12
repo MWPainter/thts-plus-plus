@@ -223,14 +223,21 @@ namespace thts {
      * For the LP solver, we use lemon https://lemon.cs.elte.hu/pub/tutorial/a00020.html, because it provides a really 
      * clean symbolic interface to use. Really its a wrapper around other packages such as GLPK, Clp, Cbc, ILOG CPLEX 
      * and SoPlex https://lemon.cs.elte.hu/trac/lemon/wiki/InstallLinux
-     * Built with: cmake -DCMAKE_INSTALL_PREFIX=lemon .. from external/lemon-1.3.1/build folder
-     * Need to make sure that GLPK is installed first: sudo apt-get install glpk-doc glpk-utils libglpk-dev libglpk40
+     * 
+     * If ref_points.size() == 0, or ref_points == {point}, then there will be no constraint to bound the value of x 
+     * and an error will be thrown. So catch these cases at the start. In this case there is no point in 'ref_points' 
+     * to dominate 'point', so return false;
      */
     template <typename T>
     bool ConvexHull<T>::strongly_convex_dominated(
         const unordered_set<TaggedPoint<T>>& ref_points, 
         const TaggedPoint<T>& point) const
-    {  
+    {   
+        // Base case where lp will be unbounded and would throw an error
+        if (ref_points.size() == 0 || (ref_points.size() == 1 && ref_points.contains(point))) {
+            return false;
+        }
+
         // Make lp
         // Get n (number of points in 'ref_points' and dimension of vectors)
         lemon::Lp lp;
@@ -287,6 +294,8 @@ namespace thts {
      * Because working with a single set of points, 'pruned_points' will always contain *it in the 
      * strongly_convex_dominated call, so set 'ignore_if_point_in_ref_points' to true here, to avoid all points being 
      * pruned by themselves
+     * 
+     * 
     */
     template <typename T>
     unordered_set<TaggedPoint<T>> ConvexHull<T>::prune(const unordered_set<TaggedPoint<T>>& points) const {
@@ -403,7 +412,7 @@ namespace thts {
      * Get best action for recomnmending
     */
     template <typename T>
-    TaggedPoint<T>& ConvexHull<T>::get_best_point(Eigen::ArrayXd& context_weight, RandManager& rand_manager) 
+    TaggedPoint<T> ConvexHull<T>::get_best_point(Eigen::ArrayXd& context_weight, RandManager& rand_manager) const
     {
         unordered_map<TaggedPoint<T>, double> scalarised_values;
         for (const TaggedPoint<T>& tagged_point : ch_points) {
@@ -413,7 +422,7 @@ namespace thts {
     }
 
     template <typename T>
-    T& ConvexHull<T>::get_best_point_tag(Eigen::ArrayXd& context_weight, RandManager& rand_manager) 
+    T ConvexHull<T>::get_best_point_tag(Eigen::ArrayXd& context_weight, RandManager& rand_manager)  const
     {
         return get_best_point(context_weight,rand_manager).tag;
     }

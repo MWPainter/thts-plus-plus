@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mo/czt_manager.h"
+#include "mo/ch_thts_manager.h"
 
 
 namespace thts {
@@ -11,10 +12,10 @@ namespace thts {
     /**
      * Args object so that params can be set in a more named args way
      */
-    struct ChmctsManagerArgs : public CztManagerArgs {
+    struct ChmctsManagerArgs : public CH_MoThtsManagerArgs {
 
         ChmctsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env) :
-            CztManagerArgs(thts_env)
+            CH_MoThtsManagerArgs(thts_env)
         {
         }
 
@@ -26,15 +27,20 @@ namespace thts {
      * 
      * Member variables (environment):
      */
-    class ChmctsManager : public CztManager {
+    class ChmctsManager : public CH_MoThtsManager {
         public:
 
             /**
              * Constructor.
              */    
             ChmctsManager(const ChmctsManagerArgs& args) : 
-                CztManager(args)
+                CH_MoThtsManager(args)
             {
+                if (args.use_transposition_table) {
+                    throw std::runtime_error("CHMCTS isnt implemented in a way that is compatible with transposition "
+                        "tables because the transposition table will try to store Czt and Chmcts nodes that will "
+                        "overwrite each other in the table.");
+                }
             }
 
             /**

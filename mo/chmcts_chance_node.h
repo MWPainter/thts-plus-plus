@@ -15,14 +15,19 @@ namespace thts {
     class MoThtsContext;
 
     /**
-     * Base class for decision nodes that use ConvexHull objects for their state
+     *  CHMCTS chance node
+     * 
+     * This code is quite messy, but don't plan to support it long term, sorry if you're reading this
     */
-    class ChmctsCNode : public CH_MoThtsCNode, public CztCNode {
+    class ChmctsCNode : public CH_MoThtsCNode {
         friend ChmctsDNode;
+
+        protected:
+            std::shared_ptr<CztCNode> czt_node;
 
         public:
             ChmctsCNode(
-                std::shared_ptr<CH_MoThtsManager> thts_manager,
+                std::shared_ptr<ChmctsManager> thts_manager,
                 std::shared_ptr<const State> state,
                 std::shared_ptr<const Action> action,
                 int decision_depth,
@@ -55,8 +60,8 @@ namespace thts {
          */
         public:
             std::shared_ptr<ChmctsDNode> create_child_node(std::shared_ptr<const State> next_state);
-            virtual std::shared_ptr<ChmctsDNode> create_child_node_helper(
-                std::shared_ptr<const State> state) const;
+            virtual std::shared_ptr<CH_MoThtsDNode> create_child_node_helper(
+                std::shared_ptr<const State> next_state) const override;
             std::shared_ptr<ChmctsDNode> get_child_node(std::shared_ptr<const State> next_state) const;
 
 

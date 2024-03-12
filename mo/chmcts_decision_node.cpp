@@ -10,32 +10,36 @@ namespace thts {
         int decision_timestep,
         shared_ptr<const ChmctsCNode> parent) :
             CH_MoThtsDNode(
-                static_pointer_cast<MoThtsManager>(thts_manager),
+                static_pointer_cast<CH_MoThtsManager>(thts_manager),
                 state,
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const CH_MoThtsCNode>(parent)),
-            CztDNode(
-                static_pointer_cast<CztManager>(thts_manager),
-                state,
-                decision_depth,
-                decision_timestep,
-                static_pointer_cast<const CztCNode>(parent))
+            czt_node(
+                make_shared<CztDNode>(
+                    static_pointer_cast<CztManager>(thts_manager),
+                    state,
+                    decision_depth,
+                    decision_timestep)) // not passing parent pointer because CZT doesnt use it
     {
     }
     
     void ChmctsDNode::visit(MoThtsContext& ctx) 
     {
         CH_MoThtsDNode::visit(ctx);
-        CztDNode::visit(ctx);
+        czt_node->visit(ctx);
     } 
 
     shared_ptr<const Action> ChmctsDNode::select_action(MoThtsContext& ctx)
     {
-        return CztDNode::select_action(ctx);
+        shared_ptr<const Action> selected_act = czt_node->select_action(ctx);
+        if (!has_child_node_itfc(selected_act)) {
+            create_child_node(selected_act);
+        }
+        return selected_act;
     }
 
-    shared_ptr<const Action> ChmctsDNode::recommend_action(MoThtsContext& ctx)
+    shared_ptr<const Action> ChmctsDNode::recommend_action(MoThtsContext& ctx) const
     {
         return CH_MoThtsDNode::recommend_action(ctx);
     }
@@ -53,7 +57,7 @@ namespace thts {
             trial_cumulative_return_after_node, 
             trial_cumulative_return,
             ctx);
-        CztDNode::backup(
+        czt_node->backup(
             trial_rewards_before_node, 
             trial_rewards_after_node, 
             trial_cumulative_return_after_node, 
@@ -77,17 +81,22 @@ namespace thts {
         shared_ptr<const Action> act_itfc = static_pointer_cast<const Action>(action);
         shared_ptr<ThtsCNode> new_child = ThtsDNode::create_child_node_itfc(act_itfc);
         return static_pointer_cast<ChmctsCNode>(new_child);
-    }
+    } 
 
-    shared_ptr<ChmctsCNode> ChmctsDNode::create_child_node_helper(shared_ptr<const Action> action) const 
+    /**
+     * Added making the child's czt_node pointing to the same CztCNode as our czt_node
+    */
+    shared_ptr<CH_MoThtsCNode> ChmctsDNode::create_child_node_helper(shared_ptr<const Action> action) const 
     {   
-        return make_shared<ChmctsCNode>(
+        shared_ptr<ChmctsCNode> child_node = make_shared<ChmctsCNode>(
             static_pointer_cast<ChmctsManager>(thts_manager), 
             state, 
             action, 
             decision_depth, 
             decision_timestep, 
             static_pointer_cast<const ChmctsDNode>(shared_from_this()));
+        child_node->czt_node = static_pointer_cast<CztCNode>(czt_node->get_child_node_itfc(action));
+        return static_pointer_cast<CH_MoThtsCNode>(child_node);
     }
 
     shared_ptr<ChmctsCNode> ChmctsDNode::get_child_node(shared_ptr<const Action> action) const 
@@ -138,7 +147,7 @@ namespace thts {
 
     shared_ptr<ThtsCNode> ChmctsDNode::create_child_node_helper_itfc(shared_ptr<const Action> action) const {
         shared_ptr<const Action> act_itfc = static_pointer_cast<const Action>(action);
-        shared_ptr<ChmctsCNode> child_node = create_child_node_helper(act_itfc);
+        shared_ptr<CH_MoThtsCNode> child_node = create_child_node_helper(act_itfc);
         return static_pointer_cast<ThtsCNode>(child_node);
     }
 }

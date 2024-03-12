@@ -49,7 +49,7 @@ namespace thts {
 
         protected:
             virtual std::shared_ptr<CH_MoThtsCNode> create_child_node_helper(
-                std::shared_ptr<const Action> action) const;
+                std::shared_ptr<const Action> action) const = 0;
             virtual std::string get_pretty_print_val() const override = 0;
         
 
