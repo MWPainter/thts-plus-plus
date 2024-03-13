@@ -29,6 +29,7 @@ external/kata1*
 
 # Results output folders (other branches)
 plots
+dents_plots
 results
 
 # Outputs (other branches)
@@ -68,3 +69,4 @@ thts-run-toy-env
 *.exe
 *.out
 *.app
+

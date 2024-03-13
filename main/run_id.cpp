@@ -284,10 +284,21 @@ namespace thts {
             {
                 {CZT_BIAS_PARAM_ID, 4.0},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
+                {SM_L_INF_THRESH_PARAM_ID, 0.05},
+                // {SM_MAX_DEPTH, 10.0},
+                {SM_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
+                {SMBTS_SEARCH_TEMP_PARAM_ID, 1.0},
+                {SMBTS_EPSILON_PARAM_ID, 0.1},
+                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
+                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
+                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 0.5},
+                {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
             };
 
             vector<string> alg_ids = 
             {
+                // SMBTS_ALG_ID,
+                // SMDENTS_ALG_ID,
                 CZT_ALG_ID,
                 CHMCTS_ALG_ID,
             };
@@ -320,7 +331,7 @@ namespace thts {
             double search_runtime = 30.0;
             int max_trial_length = 50;
             double eval_delta = 1.0;
-            int rollouts_per_mc_eval = 500;
+            int rollouts_per_mc_eval = 1000;
             int num_repeats = 3;
             int num_threads = 16;
             int eval_threads = 16;
@@ -334,17 +345,18 @@ namespace thts {
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
                 {SMBTS_SEARCH_TEMP_PARAM_ID, 1.0},
                 {SMBTS_EPSILON_PARAM_ID, 0.1},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
-                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 0.5},
+                // {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
+                // {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
+                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 0.1},
                 {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
             };
 
             vector<string> alg_ids = 
             {
+                SMDENTS_ALG_ID,
+                // SMBTS_ALG_ID,
                 CZT_ALG_ID,
                 CHMCTS_ALG_ID,
-                SMDENTS_ALG_ID,
             };
 
             for (string alg_id : alg_ids) {
@@ -372,10 +384,10 @@ namespace thts {
         if (expr_id == POC_FT_EXPR_ID) {
             string env_id = FRUIT_TREE_ENV_ID;
             time_t expr_timestamp = std::time(nullptr);
-            double search_runtime = 30.0;
+            double search_runtime = 10.0;
             int max_trial_length = 50;
-            double eval_delta = 1.0;
-            int rollouts_per_mc_eval = 500;
+            double eval_delta = 0.5;
+            int rollouts_per_mc_eval = 1000;
             int num_repeats = 3;
             int num_threads = 16;
             int eval_threads = 16;
@@ -389,17 +401,18 @@ namespace thts {
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
                 {SMBTS_SEARCH_TEMP_PARAM_ID, 1.0},
                 {SMBTS_EPSILON_PARAM_ID, 0.1},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
+                // {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
+                // {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
                 {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 0.5},
                 {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
             };
 
             vector<string> alg_ids = 
             {
+                SMDENTS_ALG_ID,
+                // SMBTS_ALG_ID,
                 CZT_ALG_ID,
                 CHMCTS_ALG_ID,
-                SMDENTS_ALG_ID,
             };
 
             for (string alg_id : alg_ids) {
