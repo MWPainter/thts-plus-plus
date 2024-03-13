@@ -39,6 +39,9 @@ PY_OBJECTS = $(patsubst py/%.cpp, bin/py/%.o, $(PY_SOURCES))
 PY_MAIN = py/main/module.cpp
 PY_MAIN_OBJ = bin/py/main/module.o
 
+MAIN_SOURCES = $(wildcard main/*.cpp)
+MAIN_OBJECTS = $(patsubst main/%.cpp, bin/main/%.o, $(MAIN_SOURCES))
+
 GTEST = external/googletest/build/lib/libgtest_main.a
 
 ANACONDA_ENVS_HOME = /home/michael/anaconda3/envs
@@ -68,6 +71,8 @@ TARGET_THTS_PY_LIB = thtspp
 TARGET_THTS_PY_LIB_DEBUG = thtspp-debug
 TARGET_THTS_PY_EX = pyex
 TARGET_THTS_PY_EX_DEBUG = pyex-debug
+TARGET_MO_EXPR = moexpr
+TARGET_MO_EXPR_DEBUG = moexpr-debug
 
 THTS_PY_LIB_FULL_NAME = thts$$(python3.12-config --extension-suffix)
 
@@ -78,7 +83,7 @@ THTS_PY_LIB_FULL_NAME = thts$$(python3.12-config --extension-suffix)
 #####
 
 # Default, build everything
-all: $(TARGET_THTS_TEST) $(TARGET_THTS_PY_EX)
+all: $(TARGET_THTS_TEST) $(TARGET_THTS_PY_EX) $(TARGET_MO_EXPR)
 
 
 
@@ -121,6 +126,10 @@ $(PY_MAIN_OBJ) : $(PY_MAIN)
 	@mkdir -p bin/py/main
 	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
+# Build main object files rule
+$(MAIN_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
+	@mkdir -p $(@D)
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
 
 #####
@@ -160,6 +169,14 @@ $(TARGET_THTS_PY_EX): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(PY_MAIN_OBJ)
 $(TARGET_THTS_PY_EX_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
 $(TARGET_THTS_PY_EX_DEBUG): $(TARGET_THTS_PY_EX)
 
+# Expr entry point
+$(TARGET_MO_EXPR): LDFLAGS += $(PY_LDFLAGS)
+$(TARGET_MO_EXPR): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(MAIN_OBJECTS)
+	$(CXX) -shared $(PY_EX_CPPFLAGS) $(CPPFLAGS) $^ -o $(TARGET_MO_EXPR) $(LDFLAGS)
+
+# Debug expr entry
+$(TARGET_MO_EXPR_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
+$(TARGET_MO_EXPR_DEBUG): $(TARGET_MO_EXPR)
 
 
 #####
@@ -178,4 +195,4 @@ clean:
 #####
 # Phony targets, so make knows when a target isn't producing a corresponding output file of same name
 #####
-.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST_DEBUG) $(TARGET_THTS_PY_LIB) $(TARGET_THTS_PY_EX_DEBUG)
+.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST_DEBUG) $(TARGET_THTS_PY_LIB) $(TARGET_THTS_PY_EX_DEBUG) $(TARGET_MO_EXPR_DEBUG)
