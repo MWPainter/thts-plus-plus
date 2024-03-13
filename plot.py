@@ -305,18 +305,9 @@ def make_plot(
             alpha=alpha)
         return
 
-    if hue_key is None:
-        hue_key = "pretty_alg_id"
-    if title is None:
-        title = "Num Trials vs Search Time"
-    if xaxis_lab is None:
-        xaxis_lab = "Search Time"
-    if yaxis_lab is None:
-        yaxis_lab = "Trials"
-    if legend_lab is None and use_legend:
-        legend_lab = "Algorithm"
-    if alg_ids_to_add_param_to is None:
-        alg_ids_to_add_param_to = []
+    title = "Num Trials vs Search Time"
+    xaxis_lab = "Search Time"
+    yaxis_lab = "Trials"
 
     make_plot_df(
         df=df, 
