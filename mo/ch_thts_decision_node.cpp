@@ -25,9 +25,19 @@ namespace thts {
         num_visits += 1;
     } 
 
+    /**
+     * Convex hull is initialised with a single point tagged with nullptr
+     * Return a random action if the best point tag is nullptr
+    */
     shared_ptr<const Action> CH_MoThtsDNode::recommend_action(MoThtsContext& ctx) const 
-    {
-        return convex_hull.get_best_point_tag(ctx.context_weight, *thts_manager);
+    {  
+        shared_ptr<const Action> act = convex_hull.get_best_point_tag(ctx.context_weight, *thts_manager);
+        if (act == nullptr) {
+            shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
+            int index = thts_manager->get_rand_int(0, actions->size());
+            act = actions->at(index);
+        }
+        return act;
     }
  
     void CH_MoThtsDNode::backup(
@@ -43,7 +53,7 @@ namespace thts {
             lock_guard<mutex> lg(ch_child.get_lock()); 
             convex_hull |= ch_child.convex_hull;
         }  
-        
+
         // remember to incr num_backups
         num_backups++;
     }
