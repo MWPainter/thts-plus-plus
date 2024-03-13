@@ -71,8 +71,9 @@ namespace thts {
     string get_mc_eval_results_filename(RunID& run_id) {
         stringstream ss;
         ss << get_results_dir(run_id)
-            << "eval_"
-            << get_params_string_helper(run_id)
+            << "eval"
+            // << "_"
+            // << get_params_string_helper(run_id)
             << ".csv";
         return ss.str();
     }
