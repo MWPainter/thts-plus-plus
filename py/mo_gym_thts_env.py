@@ -1,5 +1,6 @@
 from py_thts_env import PyThtsEnv
 import mo_gymnasium as mo_gym
+import numpy as np
 
 def convert_numpy_array_to_int_list(arr):
     try:
@@ -13,6 +14,15 @@ def convert_numpy_array_to_float_list(arr):
     except:
         return arr
 
+
+# [0] is to get gym state
+def state_eq(s1, s2):
+    for x,y in zip(s1[0],s2[0]):
+        if x != y:
+            return False
+    return True
+
+
 class MoGymThtsEnv(PyThtsEnv):
 
     def __init__(self, mo_gym_env_id):
@@ -24,6 +34,10 @@ class MoGymThtsEnv(PyThtsEnv):
         init_gym_state, _ = self.env.reset()
         self.init_gym_state = convert_numpy_array_to_int_list(init_gym_state)
         self.reward_dim = reward.shape[0]
+
+        self.last_state = init_gym_state
+        self.last_action = None
+        self.last_reward = reward
 
 
     def get_reward_dim(self):
@@ -71,10 +85,9 @@ class MoGymThtsEnv(PyThtsEnv):
         """
         Samples a 'next_state' object from Pr('next_state'|'state','action') and returns it
         """
-        obs, reward, terminated, truncated, _info = self.env.step(action)
-        self.last_reward = reward
-        return (convert_numpy_array_to_int_list(obs), (terminated or truncated))
-        
+        if self.last_action is None or state_eq(state, self.last_state) or action != self.last_action:
+            self.step(state, action)
+        return self.last_state
 
     def get_observation_distribution(self, state, action):
         """
@@ -101,5 +114,13 @@ class MoGymThtsEnv(PyThtsEnv):
         main process worker threads when need to translate reward to C++
         So this converts it to a list
         """
+        if self.last_action is None or state_eq(state, self.last_state) or action != self.last_action:
+            self.step(state, action)
         return convert_numpy_array_to_float_list(self.last_reward)
+    
+    def step(self, state, action):
+        obs, reward, terminated, truncated, _info = self.env.step(action)
+        self.last_state = (convert_numpy_array_to_int_list(obs), (terminated or truncated))
+        self.last_reward = reward
+
     
