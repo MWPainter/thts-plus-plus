@@ -12,6 +12,16 @@
 
 #include <Eigen/Dense>
 
+// env ids - debug
+static const std::string DEBUG_ENV_1_ID = "debug_env_1"; // not stoch + 2 rew
+static const std::string DEBUG_ENV_2_ID = "debug_env_2"; // stoch + 2 rew
+static const std::string DEBUG_ENV_3_ID = "debug_env_3"; // not stoch + 4 rew
+static const std::string DEBUG_ENV_4_ID = "debug_env_4"; // stoch + 4 rew
+static const std::string DEBUG_PY_ENV_1_ID = "py_debug_env_1"; // not stoch + 2 rew
+static const std::string DEBUG_PY_ENV_2_ID = "py_debug_env_2"; // stoch + 2 rew
+static const std::string DEBUG_PY_ENV_3_ID = "py_debug_env_3"; // not stoch + 4 rew
+static const std::string DEBUG_PY_ENV_4_ID = "py_debug_env_4"; // stoch + 4 rew
+
 // env ids - toy/tree
 // TODO: implement + integrate tree envs to demonstrate things
 
@@ -55,8 +65,16 @@ static const std::string SMDENTS_ALG_ID = "smdents";
 
 // expr ids - testing
 static const std::string DEBUG_EXPR_ID = "000_debug";
-static const std::string POC_DST_EXPR_ID = "001_poc_dst";
-static const std::string POC_FT_EXPR_ID = "002_poc_ft";
+static const std::string DEBUG_ENV_EXPR_ID = "001_debug_env_1";
+static const std::string DEBUG_PY_ENV_EXPR_ID = "002_debug_py_env_1";
+static const std::string DEBUG_ENV_EXPR_ID = "003_debug_env_2";
+static const std::string DEBUG_PY_ENV_EXPR_ID = "004_debug_py_env_2";
+static const std::string DEBUG_ENV_EXPR_ID = "005_debug_env_3";
+static const std::string DEBUG_PY_ENV_EXPR_ID = "006_debug_py_env_3";
+static const std::string DEBUG_ENV_EXPR_ID = "007_debug_env_4";
+static const std::string DEBUG_PY_ENV_EXPR_ID = "008_debug_py_env_4";
+static const std::string POC_DST_EXPR_ID = "009_poc_dst";
+static const std::string POC_FT_EXPR_ID = "010_poc_ft";
 
 // expr ids - toy/tree
 // TODO: 1xx = hyperparam tuning 
