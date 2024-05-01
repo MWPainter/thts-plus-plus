@@ -41,6 +41,22 @@ static const std::string MINECART_ENV_ID = "minecart-v0";
 static const std::string HIGHWAY_ENV_ID = "mo-highway-v0";
 static const std::string HIGHWAY_FAST_ENV_ID = "mo-highway-fast-v0";
 
+static const std::unordered_set<std::string> DEBUG_ENVS =
+{
+     DEBUG_ENV_1_ID,
+     DEBUG_ENV_2_ID,
+     DEBUG_ENV_3_ID,
+     DEBUG_ENV_4_ID,
+};
+
+static const std::unordered_set<std::string> DEBUG_PY_ENVS =
+{
+     DEBUG_PY_ENV_1_ID,
+     DEBUG_PY_ENV_2_ID,
+     DEBUG_PY_ENV_3_ID,
+     DEBUG_PY_ENV_4_ID,
+};
+
 static const std::unordered_set<std::string> MO_GYM_ENVS =
 {
      DST_ENV_ID,
@@ -65,14 +81,14 @@ static const std::string SMDENTS_ALG_ID = "smdents";
 
 // expr ids - testing
 static const std::string DEBUG_EXPR_ID = "000_debug";
-static const std::string DEBUG_ENV_EXPR_ID = "001_debug_env_1";
-static const std::string DEBUG_PY_ENV_EXPR_ID = "002_debug_py_env_1";
-static const std::string DEBUG_ENV_EXPR_ID = "003_debug_env_2";
-static const std::string DEBUG_PY_ENV_EXPR_ID = "004_debug_py_env_2";
-static const std::string DEBUG_ENV_EXPR_ID = "005_debug_env_3";
-static const std::string DEBUG_PY_ENV_EXPR_ID = "006_debug_py_env_3";
-static const std::string DEBUG_ENV_EXPR_ID = "007_debug_env_4";
-static const std::string DEBUG_PY_ENV_EXPR_ID = "008_debug_py_env_4";
+static const std::string DEBUG_ENV_1_EXPR_ID = "001_debug_env_1";
+static const std::string DEBUG_PY_ENV_1_EXPR_ID = "002_debug_py_env_1";
+static const std::string DEBUG_ENV_2_EXPR_ID = "003_debug_env_2";
+static const std::string DEBUG_PY_ENV_2_EXPR_ID = "004_debug_py_env_2";
+static const std::string DEBUG_ENV_3_EXPR_ID = "005_debug_env_3";
+static const std::string DEBUG_PY_ENV_3_EXPR_ID = "006_debug_py_env_3";
+static const std::string DEBUG_ENV_4_EXPR_ID = "007_debug_env_4";
+static const std::string DEBUG_PY_ENV_4_EXPR_ID = "008_debug_py_env_4";
 static const std::string POC_DST_EXPR_ID = "009_poc_dst";
 static const std::string POC_FT_EXPR_ID = "010_poc_ft";
 

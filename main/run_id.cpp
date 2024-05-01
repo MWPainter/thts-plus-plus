@@ -13,11 +13,16 @@
 #include "py/pickle_wrapper.h"
 #include "py/mo_gym_multiprocessing_thts_env.h"
 
+#include "test/mo/test_mo_thts_env.h"
+#include "py/mo_py_multiprocessing_thts_env.h"
+
 #include <stdexcept>
 
 using namespace std;
 using namespace thts;
 using namespace thts::python;
+
+namespace py = pybind11;
 
 namespace thts {
     /**
@@ -114,6 +119,29 @@ namespace thts {
         if (MO_GYM_ENVS.contains(env_id)) {
             shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
             return make_shared<MoGymMultiprocessingThtsEnv>(pickle_wrapper, env_id);
+        }
+
+        if (DEBUG_ENVS.contains(env_id)) {
+            int walk_len = 10;
+            bool stochastic = (env_id == DEBUG_ENV_2_ID) || (env_id == DEBUG_ENV_4_ID);
+            double wrong_dir_prob = stochastic ? 0.25 : 0.0;
+            bool add_extra_rewards = (env_id == DEBUG_ENV_3_ID) || (env_id == DEBUG_ENV_4_ID);
+            return make_shared<TestMoThtsEnv>(walk_len, wrong_dir_prob, add_extra_rewards);
+        }
+
+        if (DEBUG_PY_ENVS.contains(env_id)) {
+            int walk_len = 10;
+            bool stochastic = (env_id == DEBUG_ENV_2_ID) || (env_id == DEBUG_ENV_4_ID);
+            double wrong_dir_prob = stochastic ? 0.25 : 0.0;
+            bool add_extra_rewards = (env_id == DEBUG_ENV_3_ID) || (env_id == DEBUG_ENV_4_ID);
+
+            py::module_ py_thts_env_module = py::module_::import("mo_test_env"); 
+            py::object py_thts_env_py_obj = py_thts_env_module.attr("MoPyTestThtsEnv")(
+                walk_len, wrong_dir_prob, add_extra_rewards);
+            py_thts_env = make_shared<py::object>(py_thts_env_py_obj);
+
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            return make_shared<MoPyMultiprocessingThtsEnv>(pickle_wrapper, py_thts_env);
         }
 
         throw runtime_error("Error in RunID get_env");
@@ -323,7 +351,74 @@ namespace thts {
             return run_ids;
         }
 
-        // expr_id: 001_poc_dst
+        // expr_id: 001_debug ... 008_debug
+        // debug expr ids for running Python vs C++ environment testing
+        unordered_map<string,string> py_vs_cpp_debug_env_ids = 
+        {
+            {DEBUG_ENV_1_EXPR_ID, DEBUG_ENV_1_ID},
+            {DEBUG_ENV_2_EXPR_ID, DEBUG_ENV_2_ID},
+            {DEBUG_ENV_3_EXPR_ID, DEBUG_ENV_3_ID},
+            {DEBUG_ENV_4_EXPR_ID, DEBUG_ENV_4_ID},
+            {DEBUG_PY_ENV_1_EXPR_ID, DEBUG_PY_ENV_1_ID},
+            {DEBUG_PY_ENV_2_EXPR_ID, DEBUG_PY_ENV_2_ID},
+            {DEBUG_PY_ENV_3_EXPR_ID, DEBUG_PY_ENV_3_ID},
+            {DEBUG_PY_ENV_4_EXPR_ID, DEBUG_PY_ENV_4_ID},
+        };
+        if (py_vs_cpp_debug_env_ids.contains(expr_id)) {
+            string env_id = env_ids[expr_id];
+            time_t expr_timestamp = std::time(nullptr);
+            double search_runtime = 5.0;
+            int max_trial_length = 50;
+            double eval_delta = 1.0;
+            int rollouts_per_mc_eval = 250;
+            int num_repeats = 3;
+            int num_threads = 16;
+            int eval_threads = 16;
+
+            unordered_map<string,double> alg_params =
+            {
+                {CZT_BIAS_PARAM_ID, 4.0},
+                {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
+                {SM_L_INF_THRESH_PARAM_ID, 0.05},
+                // {SM_MAX_DEPTH, 10.0},
+                {SM_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
+                {SMBTS_SEARCH_TEMP_PARAM_ID, 1.0},
+                {SMBTS_EPSILON_PARAM_ID, 0.1},
+                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
+                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
+                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 0.5},
+                {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
+            };
+
+            vector<string> alg_ids = 
+            {
+                SMBTS_ALG_ID,
+                SMDENTS_ALG_ID,
+                CZT_ALG_ID,
+                CHMCTS_ALG_ID,
+            };
+
+            for (string alg_id : alg_ids) {
+                run_ids->push_back(RunID(
+                    env_id,
+                    expr_id,
+                    expr_timestamp,
+                    alg_id,
+                    alg_params,
+                    search_runtime,
+                    max_trial_length,
+                    eval_delta,
+                    rollouts_per_mc_eval,
+                    num_repeats,
+                    num_threads,
+                    eval_threads
+                ));
+            }
+
+            return run_ids;
+        }
+
+        // expr_id: 009_poc_dst
         // proof of concept with deep sea treasure
         if (expr_id == POC_DST_EXPR_ID) {
             string env_id = DST_ENV_ID;
@@ -379,7 +474,7 @@ namespace thts {
             return run_ids;
         }
 
-        // expr_id: 002_poc_dst
+        // expr_id: 010_poc_dst
         // proof of concept with deep sea treasure
         if (expr_id == POC_FT_EXPR_ID) {
             string env_id = FRUIT_TREE_ENV_ID;
