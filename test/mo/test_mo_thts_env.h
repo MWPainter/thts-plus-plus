@@ -19,7 +19,7 @@ namespace thts::test{
 
         private:
             int walk_len;
-            double stay_prob;
+            double wrong_dir_prob;
             bool add_extra_rewards;
             double new_dir_bonus;
             double same_dir_bonus;
@@ -31,7 +31,7 @@ namespace thts::test{
         public:
             TestMoThtsEnv(
                 int walk_len, 
-                double stay_prob=0.0, 
+                double wrong_dir_prob=0.0, 
                 bool add_extra_rewards=false, 
                 double new_dir_bonus=0.5, 
                 double same_dir_bonus=0.3,
@@ -39,7 +39,7 @@ namespace thts::test{
                     ThtsEnv(true),
                     MoThtsEnv(add_extra_rewards ? 4 : 2,true), 
                     walk_len(walk_len), 
-                    stay_prob(stay_prob), 
+                    wrong_dir_prob(wrong_dir_prob), 
                     add_extra_rewards(add_extra_rewards),
                     new_dir_bonus(new_dir_bonus), 
                     same_dir_bonus(same_dir_bonus),
@@ -51,7 +51,7 @@ namespace thts::test{
                 ThtsEnv(true),
                 MoThtsEnv(other.add_extra_rewards ? 4 : 2,true), 
                 walk_len(other.walk_len), 
-                stay_prob(other.stay_prob), 
+                wrong_dir_prob(other.wrong_dir_prob), 
                 add_extra_rewards(other.add_extra_rewards),
                 new_dir_bonus(other.new_dir_bonus),
                 same_dir_bonus(other.same_dir_bonus),
@@ -69,12 +69,24 @@ namespace thts::test{
                 return gamma;
             }
 
+            int& get_x(shared_ptr<const Int3TupleState> state) const {
+                return std::get<0>(state->state);
+            }
+
+            int& get_y(shared_ptr<const Int3TupleState> state) const {
+                return std::get<1>(state->state);
+            }
+
+            int& get_last_direction(shared_ptr<const Int3TupleState> state) const {
+                return std::get<2>(state->state);
+            }
+
             shared_ptr<const Int3TupleState> get_initial_state() const {
                 return make_shared<Int3TupleState>(Int3TupleState(0,0,-1));
             }
 
             bool is_sink_state(shared_ptr<const Int3TupleState> state, ThtsEnvContext& ctx) const {
-                return (std::get<0>(state->state) + std::get<1>(state->state)) == walk_len;
+                return (get_x(state) + get_y(state)) == walk_len;
             }
 
             shared_ptr<IntActionVector> get_valid_actions(
@@ -91,17 +103,20 @@ namespace thts::test{
 
         private:
             shared_ptr<const Int3TupleState> make_candidate_next_state(
-                shared_ptr<const Int3TupleState> state, shared_ptr<const IntAction> action, bool stay) const
+                shared_ptr<const Int3TupleState> state, shared_ptr<const IntAction> action, bool wrong_dir) const
             {
                 shared_ptr<Int3TupleState> new_state = make_shared<Int3TupleState>(state->state);
-                if (!stay) {
-                    if (action->action == RIGHT) {
-                        std::get<0>(new_state->state) += 1;
-                    } else if (action->action == DOWN) {
-                        std::get<1>(new_state->state) += 1;
-                    }
+                int direction = aciton->action;
+                if (wrong_dir) {
+                    direction = 1 - action_val;
                 }
-                std::get<2>(new_state->state) = action->action;
+
+                if (direction == RIGHT) {
+                    std::get<0>(new_state->state) += 1;
+                } else if (action->action == DOWN) {
+                    std::get<1>(new_state->state) += 1;
+                }
+                std::get<2>(new_state->state) = direction;
                 return new_state;
             }
 
@@ -111,10 +126,10 @@ namespace thts::test{
             {
                 shared_ptr<const Int3TupleState> new_state = make_candidate_next_state(state, action, false);
                 shared_ptr<Int3TupleStateDistr> transition_distribution = make_shared<Int3TupleStateDistr>(); 
-                transition_distribution->insert_or_assign(new_state, 1.0-stay_prob);
-                if (stay_prob > 0.0) {
+                transition_distribution->insert_or_assign(new_state, 1.0-wrong_dir_prob);
+                if (wrong_dir_prob > 0.0) {
                     shared_ptr<const Int3TupleState> stay_state = make_candidate_next_state(state, action, true);
-                    transition_distribution->insert_or_assign(stay_state, stay_prob);
+                    transition_distribution->insert_or_assign(stay_state, wrong_dir_prob);
                 }
                 return transition_distribution;
             }
@@ -125,9 +140,9 @@ namespace thts::test{
                 RandManager& rand_manager,
                 ThtsEnvContext& ctx) const 
             {
-                if (stay_prob > 0.0) {
+                if (wrong_dir_prob > 0.0) {
                     double sample = rand_manager.get_rand_uniform();
-                    if (sample < stay_prob) {
+                    if (sample < wrong_dir_prob) {
                         return make_candidate_next_state(state,action,true);
                     }
                 }
@@ -146,15 +161,15 @@ namespace thts::test{
                 r[RIGHT] = -1.0; 
                 r[DOWN] = -1.0; 
                 // add bonus in r[dir], and add more if dir is different to last action
-                r[action->action] += (std::get<2>(state->state) == action->action) ? same_dir_bonus : new_dir_bonus;
+                r[action->action] += (get_last_direction(state) == action->action) ? same_dir_bonus : new_dir_bonus;
                 if (!add_extra_rewards) {
                     return r;
                 }
                 
                 if (action->action == RIGHT) {
-                    r[2] = pow(gamma,std::get<0>(state->state));
+                    r[2] = pow(gamma, get_x(state));
                 } else if (action->action == DOWN) {
-                    r[3] = pow(gamma,std::get<1>(state->state));
+                    r[3] = pow(gamma, get_y(state));
                 }
                 return r;
             }
