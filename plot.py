@@ -255,7 +255,7 @@ def make_plot(
             #     palette[alg_id] = "tab:red"
             if "SMDENTS" in alg_id:
                 palette[alg_id] = "tab:blue"
-            if "CZT" in alg_id:
+            if "SMBTS" in alg_id:
                 palette[alg_id] = "tab:orange"
             if "CHMCTS" in alg_id:
                 palette[alg_id] = "tab:purple"
@@ -412,29 +412,78 @@ if __name__ == "__main__":
         os.makedirs("plots")
 
 
+
+    ###
+    # Old plots for RG pressie
+    ###    
+    
+    # if "001" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+    #     # filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/*/eval_*.csv")
+    #     # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/hmcts/eval_*.csv")
+    #     filenames = [
+    #         "results/deep-sea-treasure-v0/001_poc_dst_1710339245/smdents/eval.csv",
+    #         "results/deep-sea-treasure-v0/001_poc_dst_1710339245/czt/eval.csv",
+    #         "results/deep-sea-treasure-v0/001_poc_dst_1710339245/chmcts/eval.csv",
+    #     ]
+    #     make_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/001_num_trials.png",
+    #         hue_key="pretty_alg_id",
+    #         alpha=0.8,
+    #         use_legend=True,
+    #         plot_num_trials=True)
+    #     make_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/001_utility.png",
+    #         hue_key="pretty_alg_id",
+    #         alpha=0.8,
+    #         use_legend=True,
+    #         plot_num_trials=False)
         
+    # if "001_1" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+    #     # filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/*/eval_*.csv")
+    #     # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/hmcts/eval_*.csv")
+    #     filenames = [
+    #         "results/deep-sea-treasure-v0/001_poc_dst_1710339518/smdents/eval.csv",
+    #         "results/deep-sea-treasure-v0/001_poc_dst_1710339518/czt/eval.csv",
+    #         "results/deep-sea-treasure-v0/001_poc_dst_1710339518/chmcts/eval.csv",
+    #     ]
+    #     make_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/001_1_num_trials.png",
+    #         hue_key="pretty_alg_id",
+    #         alpha=0.8,
+    #         use_legend=True,
+    #         plot_num_trials=True)
+    #     make_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/001_1_utility.png",
+    #         hue_key="pretty_alg_id",
+    #         alpha=0.8,
+    #         use_legend=True,
+    #         plot_num_trials=False)
+
+
+
+
+
+    # ------------------------------------------------------------------------------------------------------------------
+    
+
+
+
+
+    ###
+    # Debugging Py vs C++ plots
+    ###    
+    
     if "001" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        # # filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/*/eval_*.csv")
-        # filenames = glob.glob("results/deeo-sea-treasure-v0/001_poc_dst_1710339245/smdents/eval.csv")
-        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/ments/eval_*.csv")
-        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/est/eval_*.csv")
-        # # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/db-ments/eval_*.csv")
-        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/dents/eval_*.csv")
-        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/rents/eval_*.csv")
-        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/tents/eval_*.csv")
-        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/hmcts/eval_*.csv")
         filenames = [
-            "results/deep-sea-treasure-v0/001_poc_dst_1710339245/smdents/eval.csv",
-            "results/deep-sea-treasure-v0/001_poc_dst_1710339245/czt/eval.csv",
-            "results/deep-sea-treasure-v0/001_poc_dst_1710339245/chmcts/eval.csv",
+            "results/debug_env_1/001_debug_env_1_1714680035/chmcts/eval.csv",
+            "results/debug_env_1/001_debug_env_1_1714680035/czt/eval.csv",
+            "results/debug_env_1/001_debug_env_1_1714680035/smbts/eval.csv",
+            "results/debug_env_1/001_debug_env_1_1714680035/smdents/eval.csv",
         ]
-        make_plot(
-            filenames=filenames,
-            plot_filename="plots/001_num_trials.png",
-            hue_key="pretty_alg_id",
-            alpha=0.8,
-            use_legend=True,
-            plot_num_trials=True)
         make_plot(
             filenames=filenames,
             plot_filename="plots/001_utility.png",
@@ -442,33 +491,142 @@ if __name__ == "__main__":
             alpha=0.8,
             use_legend=True,
             plot_num_trials=False)
-        
-    if "001_1" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        # # filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/*/eval_*.csv")
-        # filenames = glob.glob("results/deeo-sea-treasure-v0/001_poc_dst_1710339245/smdents/eval.csv")
-        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/ments/eval_*.csv")
-        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/est/eval_*.csv")
-        # # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/db-ments/eval_*.csv")
-        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/dents/eval_*.csv")
-        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/rents/eval_*.csv")
-        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/tents/eval_*.csv")
-        # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/hmcts/eval_*.csv")
+    
+    if "002" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
         filenames = [
-            "results/deep-sea-treasure-v0/001_poc_dst_1710339518/smdents/eval.csv",
-            "results/deep-sea-treasure-v0/001_poc_dst_1710339518/czt/eval.csv",
-            "results/deep-sea-treasure-v0/001_poc_dst_1710339518/chmcts/eval.csv",
+            "results/py_debug_env_1/002_debug_py_env_1_1714683371/chmcts/eval.csv",
+            "results/py_debug_env_1/002_debug_py_env_1_1714683371/czt/eval.csv",
+            "results/py_debug_env_1/002_debug_py_env_1_1714683371/smbts/eval.csv",
+            "results/py_debug_env_1/002_debug_py_env_1_1714683371/smdents/eval.csv",
         ]
         make_plot(
             filenames=filenames,
-            plot_filename="plots/001_1_num_trials.png",
+            plot_filename="plots/002_utility.png",
+            hue_key="pretty_alg_id",
+            alpha=0.8,
+            use_legend=True,
+            plot_num_trials=False)
+    
+    if "003" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = [
+            "results/debug_env_2/003_debug_env_2_1714690562/chmcts/eval.csv",
+            "results/debug_env_2/003_debug_env_2_1714690562/czt/eval.csv",
+            "results/debug_env_2/003_debug_env_2_1714690562/smbts/eval.csv",
+            "results/debug_env_2/003_debug_env_2_1714690562/smdents/eval.csv",
+        ]
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/003_utility.png",
+            hue_key="pretty_alg_id",
+            alpha=0.8,
+            use_legend=True,
+            plot_num_trials=False)
+    
+    if "004" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = [
+            "results/py_debug_env_2/004_debug_py_env_2_1714689024/chmcts/eval.csv",
+            "results/py_debug_env_2/004_debug_py_env_2_1714689024/czt/eval.csv",
+            "results/py_debug_env_2/004_debug_py_env_2_1714689024/smbts/eval.csv",
+            "results/py_debug_env_2/004_debug_py_env_2_1714689024/smdents/eval.csv",
+        ]
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/004_utility.png",
+            hue_key="pretty_alg_id",
+            alpha=0.8,
+            use_legend=True,
+            plot_num_trials=False)
+    
+    if "005" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = [
+            "results/debug_env_3/005_debug_env_3_1714683965/chmcts/eval.csv",
+            "results/debug_env_3/005_debug_env_3_1714683965/czt/eval.csv",
+            "results/debug_env_3/005_debug_env_3_1714683965/smbts/eval.csv",
+            "results/debug_env_3/005_debug_env_3_1714683965/smdents/eval.csv",
+        ]
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/005_utility.png",
+            hue_key="pretty_alg_id",
+            alpha=0.8,
+            use_legend=True,
+            plot_num_trials=False)
+    
+    if "006" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = glob.glob("results/py_debug_env_3/006_debug_py_env_3_1714689229/*/eval.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/006_utility.png",
+            hue_key="pretty_alg_id",
+            alpha=0.8,
+            use_legend=True,
+            plot_num_trials=False)
+    
+    if "007" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = glob.glob("results/debug_env_4/007_debug_env_4_1714684155/*/eval.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/007_utility.png",
+            hue_key="pretty_alg_id",
+            alpha=0.8,
+            use_legend=True,
+            plot_num_trials=False)
+    
+    if "008" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = glob.glob("results/py_debug_env_4/008_debug_py_env_4_1714689439/*/eval.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/008_utility.png",
+            hue_key="pretty_alg_id",
+            alpha=0.8,
+            use_legend=True,
+            plot_num_trials=False)
+
+
+
+
+
+    # ------------------------------------------------------------------------------------------------------------------
+    
+
+
+
+
+    ###
+    # Proof of concept plots on gym envs
+    ###  
+    
+    if "009" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = glob.glob("results/deep-sea-treasure-v0/009_poc_dst_1714743803/*/eval.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/009_dst_num_trials.png",
             hue_key="pretty_alg_id",
             alpha=0.8,
             use_legend=True,
             plot_num_trials=True)
         make_plot(
             filenames=filenames,
-            plot_filename="plots/001_1_utility.png",
+            plot_filename="plots/009_dst_utility.png",
             hue_key="pretty_alg_id",
             alpha=0.8,
             use_legend=True,
             plot_num_trials=False)
+    
+    if "010" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = glob.glob("results/fruit-tree-v0/010_poc_ft_1714744312/*/eval.csv")
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/010_ft_num_trials.png",
+            hue_key="pretty_alg_id",
+            alpha=0.8,
+            use_legend=True,
+            plot_num_trials=True)
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/010_ft_utility.png",
+            hue_key="pretty_alg_id",
+            alpha=0.8,
+            use_legend=True,
+            plot_num_trials=False)
+

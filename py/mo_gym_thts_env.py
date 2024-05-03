@@ -35,9 +35,9 @@ class MoGymThtsEnv(PyThtsEnv):
         self.init_gym_state = convert_numpy_array_to_int_list(init_gym_state)
         self.reward_dim = reward.shape[0]
 
-        self.last_state = init_gym_state
-        self.last_action = None
-        self.last_reward = reward
+        self.rollout_state_cache = {}
+        self.rollout_action_cache = {}
+        self.rollout_reward_cache = {}
 
 
     def get_reward_dim(self):
@@ -49,19 +49,22 @@ class MoGymThtsEnv(PyThtsEnv):
         """
         init_gym_state, _ = self.env.reset()
         self.init_gym_state = convert_numpy_array_to_int_list(init_gym_state)
+        self.rollout_state_cache = {}
+        self.rollout_action_cache = {}
+        self.rollout_reward_cache = {}
         
 
     def get_initial_state(self):
         """
         Returns the initial state of the environment
         """
-        return (self.init_gym_state, False)
+        return (self.init_gym_state, False, 0)
 
     def is_sink_state(self, state):
         """
         Returns if 'state' is a sink state
         """
-        _gym_state, is_sink = state
+        _gym_state, is_sink, _timestep = state
         return is_sink
         
 
@@ -85,9 +88,12 @@ class MoGymThtsEnv(PyThtsEnv):
         """
         Samples a 'next_state' object from Pr('next_state'|'state','action') and returns it
         """
-        if self.last_action is None or state_eq(state, self.last_state) or action != self.last_action:
-            self.step(state, action)
-        return self.last_state
+        _gym_state, _is_sink, timestep = state
+        if timestep in self.rollout_action_cache and self.rollout_action_cache[timestep] != action:
+            raise Exception("Trying to sample from Pr(.|s,a1) and Pr(.|s,a2) in gym env in a single rollout")
+        if timestep+1 not in self.rollout_state_cache:
+            self.step(state,action)
+        return self.rollout_state_cache[timestep+1]
 
     def get_observation_distribution(self, state, action):
         """
@@ -114,13 +120,18 @@ class MoGymThtsEnv(PyThtsEnv):
         main process worker threads when need to translate reward to C++
         So this converts it to a list
         """
-        if self.last_action is None or state_eq(state, self.last_state) or action != self.last_action:
-            self.step(state, action)
-        return convert_numpy_array_to_float_list(self.last_reward)
+        _gym_state, _is_sink, timestep = state
+        if timestep in self.rollout_action_cache and self.rollout_action_cache[timestep] != action:
+            raise Exception("Trying to get R(s,a1) and R(s,a2) in gym env in a single rollout")
+        if timestep not in self.rollout_reward_cache:
+            self.step(state,action)
+        return self.rollout_reward_cache[timestep]
     
     def step(self, state, action):
+        _gym_state, _is_sink, timestep = state
         obs, reward, terminated, truncated, _info = self.env.step(action)
-        self.last_state = (convert_numpy_array_to_int_list(obs), (terminated or truncated))
-        self.last_reward = reward
+        self.rollout_action_cache[timestep] = action
+        self.rollout_reward_cache[timestep] = convert_numpy_array_to_float_list(reward)
+        self.rollout_state_cache[timestep+1] = (convert_numpy_array_to_int_list(obs), (terminated or truncated), timestep+1)
 
     

@@ -66,8 +66,10 @@ namespace thts {
             std::weak_ptr<const ThtsCNode> parent;
 
             int num_visits;
+        public:
             CNodeChildMap children;
 
+        protected:
             double heuristic_value;
 
         public: 

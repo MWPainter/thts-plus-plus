@@ -23,7 +23,8 @@ namespace thts {
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const MoThtsCNode>(parent)),
-            simplex_map(thts_manager->reward_dim, thts_manager->default_q_value)
+            // simplex_map(thts_manager->reward_dim, thts_manager->default_q_value)
+            simplex_map(thts_manager->reward_dim, mo_heuristic_value)
     {
     }
     

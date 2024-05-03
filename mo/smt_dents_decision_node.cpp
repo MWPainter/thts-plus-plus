@@ -127,7 +127,8 @@ namespace thts {
         // simplex map - splitting + message passing
         SmtBtsManager& manager = (SmtBtsManager&) *thts_manager;
         simplex->maybe_subdivide(simplex_map, manager);
-        closest_vertex->share_values_message_passing();
+        // closest_vertex->share_values_message_passing();
+        closest_vertex->share_values_message_passing_push();
     }
 }
 

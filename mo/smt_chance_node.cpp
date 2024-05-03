@@ -21,8 +21,8 @@ namespace thts {
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const MoThtsDNode>(parent)),
-            // simplex_map(thts_manager->reward_dim, Eigen::ArrayXd::Zero(thts_manager->reward_dim))
-            simplex_map(thts_manager->reward_dim, thts_manager->default_q_value)
+            simplex_map(thts_manager->reward_dim, Eigen::ArrayXd::Zero(thts_manager->reward_dim))
+            // simplex_map(thts_manager->reward_dim, thts_manager->default_q_value)
     {
     }
     

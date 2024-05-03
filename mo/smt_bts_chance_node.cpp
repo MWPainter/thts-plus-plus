@@ -1,5 +1,7 @@
 #include "mo/smt_bts_chance_node.h"
 
+#include <iostream>
+
 using namespace std; 
 
 namespace thts {

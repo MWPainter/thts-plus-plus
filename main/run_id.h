@@ -79,8 +79,10 @@ static const std::string CHMCTS_ALG_ID = "chmcts";
 static const std::string SMBTS_ALG_ID = "smbts";
 static const std::string SMDENTS_ALG_ID = "smdents";
 
-// expr ids - testing
+// expr ids - testing - for VS debugging
 static const std::string DEBUG_EXPR_ID = "000_debug";
+
+// expr ids - testing - debugging 
 static const std::string DEBUG_ENV_1_EXPR_ID = "001_debug_env_1";
 static const std::string DEBUG_PY_ENV_1_EXPR_ID = "002_debug_py_env_1";
 static const std::string DEBUG_ENV_2_EXPR_ID = "003_debug_env_2";
@@ -89,6 +91,8 @@ static const std::string DEBUG_ENV_3_EXPR_ID = "005_debug_env_3";
 static const std::string DEBUG_PY_ENV_3_EXPR_ID = "006_debug_py_env_3";
 static const std::string DEBUG_ENV_4_EXPR_ID = "007_debug_env_4";
 static const std::string DEBUG_PY_ENV_4_EXPR_ID = "008_debug_py_env_4";
+
+// expr ids - testing - proof of concept tests on mo-gym envs (running without hyperparam tuning)
 static const std::string POC_DST_EXPR_ID = "009_poc_dst";
 static const std::string POC_FT_EXPR_ID = "010_poc_ft";
 
