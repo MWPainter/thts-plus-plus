@@ -21,6 +21,8 @@
 using namespace std;
 using namespace thts;
 using namespace thts::python;
+using namespace thts::test;
+using namespace pybind11::literals;
 
 namespace py = pybind11;
 
@@ -108,7 +110,7 @@ namespace thts {
 
     bool RunID::is_python_env() 
     {
-        return MO_GYM_ENVS.contains(env_id);
+        return MO_GYM_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id);
     }
 
     /**
@@ -131,14 +133,14 @@ namespace thts {
 
         if (DEBUG_PY_ENVS.contains(env_id)) {
             int walk_len = 10;
-            bool stochastic = (env_id == DEBUG_ENV_2_ID) || (env_id == DEBUG_ENV_4_ID);
+            bool stochastic = (env_id == DEBUG_PY_ENV_2_ID) || (env_id == DEBUG_PY_ENV_4_ID);
             double wrong_dir_prob = stochastic ? 0.25 : 0.0;
-            bool add_extra_rewards = (env_id == DEBUG_ENV_3_ID) || (env_id == DEBUG_ENV_4_ID);
+            bool add_extra_rewards = (env_id == DEBUG_PY_ENV_3_ID) || (env_id == DEBUG_PY_ENV_4_ID);
 
             py::module_ py_thts_env_module = py::module_::import("mo_test_env"); 
             py::object py_thts_env_py_obj = py_thts_env_module.attr("MoPyTestThtsEnv")(
-                walk_len, wrong_dir_prob, add_extra_rewards);
-            py_thts_env = make_shared<py::object>(py_thts_env_py_obj);
+                "walk_len"_a=walk_len, "wrong_dir_prob"_a=wrong_dir_prob, "add_extra_rewards"_a=add_extra_rewards);
+            shared_ptr<py::object> py_thts_env = make_shared<py::object>(py_thts_env_py_obj);
 
             shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
             return make_shared<MoPyMultiprocessingThtsEnv>(pickle_wrapper, py_thts_env);
@@ -160,6 +162,7 @@ namespace thts {
             manager_args.num_envs = num_envs;
             manager_args.bias = czt_bias;
             manager_args.num_backups_before_allowed_to_split = czt_ball_split_visit_thresh;
+            // manager_args.use_transposition_table = true;
             return make_shared<CztManager>(manager_args);
         }
 
@@ -171,6 +174,7 @@ namespace thts {
             manager_args.num_envs = num_envs;
             manager_args.bias = czt_bias;
             manager_args.num_backups_before_allowed_to_split = czt_ball_split_visit_thresh;
+            // manager_args.use_transposition_table = true;
             return make_shared<ChmctsManager>(manager_args);
         }
 
@@ -190,6 +194,7 @@ namespace thts {
                 manager_args.temp_decay_fn = decayed_temp_inv_sqrt;
             }
             manager_args.temp_decay_visits_scale = smbts_search_temp_decay_visits_scale;
+            // manager_args.use_transposition_table = true;
             return make_shared<SmtBtsManager>(manager_args);
         }
 
@@ -211,6 +216,7 @@ namespace thts {
             manager_args.temp_decay_visits_scale = smbts_search_temp_decay_visits_scale;
             manager_args.value_temp_init = smdents_entropy_temp_init;
             manager_args.value_temp_decay_visits_scale = smdents_entropy_temp_visits_scale;
+            // manager_args.use_transposition_table = true;
             return make_shared<SmtDentsManager>(manager_args);
         }
 
@@ -258,6 +264,28 @@ namespace thts {
             return Eigen::ArrayXd::Zero(6);
         }
 
+
+        if (DEBUG_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id)) {
+            unordered_set<string> four_d_envs = 
+            {
+                DEBUG_ENV_3_ID,
+                DEBUG_ENV_4_ID,
+                DEBUG_PY_ENV_3_ID,
+                DEBUG_PY_ENV_4_ID,
+            };
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
+            if (four_d_envs.contains(env_id)) {
+                min_val = Eigen::ArrayXd(4);
+            }
+            min_val[0] = -10.0;
+            min_val[1] = -10.0;
+            if (four_d_envs.contains(env_id)) {
+                min_val[2] = 0.0;
+                min_val[3] = 0.0;
+            }
+            return min_val;
+        }
+
         throw runtime_error("Error in RunID get_env_min_value");
     }
 
@@ -275,6 +303,27 @@ namespace thts {
         }
         if (env_id == FRUIT_TREE_ENV_ID) {
             return Eigen::ArrayXd::Ones(6) * 10.0;
+        }
+                
+        if (DEBUG_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id)) {
+            unordered_set<string> four_d_envs = 
+            {
+                DEBUG_ENV_3_ID,
+                DEBUG_ENV_4_ID,
+                DEBUG_PY_ENV_3_ID,
+                DEBUG_PY_ENV_4_ID,
+            };
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
+            if (four_d_envs.contains(env_id)) {
+                max_val = Eigen::ArrayXd(4);
+            }
+            max_val[0] = -5.0;
+            max_val[1] = -5.0;
+            if (four_d_envs.contains(env_id)) {
+                max_val[2] = 2.0;
+                max_val[3] = 2.0;
+            }
+            return max_val;
         }
 
         throw runtime_error("Error in RunID get_env_max_value");
@@ -299,14 +348,15 @@ namespace thts {
         // debug expr id for debugging
         if (expr_id == DEBUG_EXPR_ID) {
             string env_id = DST_ENV_ID;
+            // string env_id = DEBUG_PY_ENV_1_ID;
             time_t expr_timestamp = std::time(nullptr);
             double search_runtime = 5.0;
             int max_trial_length = 50;
             double eval_delta = 1.0;
             int rollouts_per_mc_eval = 250;
             int num_repeats = 3;
-            int num_threads = 16;
-            int eval_threads = 16;
+            int num_threads = 1;
+            int eval_threads = 1;
 
             unordered_map<string,double> alg_params =
             {
@@ -314,10 +364,12 @@ namespace thts {
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
                 {SM_L_INF_THRESH_PARAM_ID, 0.05},
                 // {SM_MAX_DEPTH, 10.0},
-                {SM_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 1.0},
+                // {SM_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
+                {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
+                {SMBTS_SEARCH_TEMP_PARAM_ID, 100.0},
                 {SMBTS_EPSILON_PARAM_ID, 0.1},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
+                // {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
+                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 0.0},
                 {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
                 {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 0.5},
                 {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
@@ -325,10 +377,10 @@ namespace thts {
 
             vector<string> alg_ids = 
             {
-                // SMBTS_ALG_ID,
+                SMBTS_ALG_ID,
                 // SMDENTS_ALG_ID,
-                CZT_ALG_ID,
-                CHMCTS_ALG_ID,
+                // CZT_ALG_ID,
+                // CHMCTS_ALG_ID,
             };
 
             for (string alg_id : alg_ids) {
@@ -363,11 +415,11 @@ namespace thts {
             {DEBUG_PY_ENV_2_EXPR_ID, DEBUG_PY_ENV_2_ID},
             {DEBUG_PY_ENV_3_EXPR_ID, DEBUG_PY_ENV_3_ID},
             {DEBUG_PY_ENV_4_EXPR_ID, DEBUG_PY_ENV_4_ID},
-        };
+        }; 
         if (py_vs_cpp_debug_env_ids.contains(expr_id)) {
-            string env_id = env_ids[expr_id];
+            string env_id = py_vs_cpp_debug_env_ids[expr_id];
             time_t expr_timestamp = std::time(nullptr);
-            double search_runtime = 5.0;
+            double search_runtime = 15.0;
             int max_trial_length = 50;
             double eval_delta = 1.0;
             int rollouts_per_mc_eval = 250;
@@ -377,16 +429,18 @@ namespace thts {
 
             unordered_map<string,double> alg_params =
             {
-                {CZT_BIAS_PARAM_ID, 4.0},
+                {CZT_BIAS_PARAM_ID, 100.0},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
                 {SM_L_INF_THRESH_PARAM_ID, 0.05},
                 // {SM_MAX_DEPTH, 10.0},
-                {SM_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
+                // {SM_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
+                {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
                 {SMBTS_SEARCH_TEMP_PARAM_ID, 1.0},
                 {SMBTS_EPSILON_PARAM_ID, 0.1},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
+                // {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
+                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 0.0},
                 {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
-                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 0.5},
+                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 0.1},
                 {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
             };
 
@@ -438,18 +492,20 @@ namespace thts {
                 {SM_L_INF_THRESH_PARAM_ID, 0.05},
                 // {SM_MAX_DEPTH, 10.0},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 1.0},
-                {SMBTS_EPSILON_PARAM_ID, 0.1},
+                // {SMBTS_SEARCH_TEMP_PARAM_ID, 1.0},
+                {SMBTS_SEARCH_TEMP_PARAM_ID, 10.0},
+                {SMBTS_EPSILON_PARAM_ID, 0.01},
                 // {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                // {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
-                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 0.1},
+                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 0.0},
+                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
+                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 1.0},
                 {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
             };
 
             vector<string> alg_ids = 
             {
                 SMDENTS_ALG_ID,
-                // SMBTS_ALG_ID,
+                SMBTS_ALG_ID,
                 CZT_ALG_ID,
                 CHMCTS_ALG_ID,
             };
@@ -494,18 +550,20 @@ namespace thts {
                 {SM_L_INF_THRESH_PARAM_ID, 0.05},
                 // {SM_MAX_DEPTH, 10.0},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 1.0},
-                {SMBTS_EPSILON_PARAM_ID, 0.1},
+                // {SMBTS_SEARCH_TEMP_PARAM_ID, 1.0},
+                {SMBTS_SEARCH_TEMP_PARAM_ID, 10.0},
+                {SMBTS_EPSILON_PARAM_ID, 0.01},
                 // {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                // {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
-                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 0.5},
+                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 0.0},
+                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
+                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 1.0},
                 {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
             };
 
             vector<string> alg_ids = 
             {
                 SMDENTS_ALG_ID,
-                // SMBTS_ALG_ID,
+                SMBTS_ALG_ID,
                 CZT_ALG_ID,
                 CHMCTS_ALG_ID,
             };

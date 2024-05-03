@@ -7,6 +7,8 @@
 #include <limits>
 #include <sstream>
 
+#include <iostream>
+
 using namespace std; 
 
 namespace thts {
@@ -213,7 +215,8 @@ namespace thts {
 
         SmtBtsManager& manager = (SmtBtsManager&) *thts_manager;
         simplex->maybe_subdivide(simplex_map, manager);
-        closest_vertex->share_values_message_passing();
+        // closest_vertex->share_values_message_passing();
+        closest_vertex->share_values_message_passing_push();
     }
 
     string SmtBtsDNode::get_pretty_print_val() const {

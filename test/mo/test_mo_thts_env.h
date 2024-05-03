@@ -69,15 +69,15 @@ namespace thts::test{
                 return gamma;
             }
 
-            int& get_x(shared_ptr<const Int3TupleState> state) const {
+            int get_x(shared_ptr<const Int3TupleState> state) const {
                 return std::get<0>(state->state);
             }
 
-            int& get_y(shared_ptr<const Int3TupleState> state) const {
+            int get_y(shared_ptr<const Int3TupleState> state) const {
                 return std::get<1>(state->state);
             }
 
-            int& get_last_direction(shared_ptr<const Int3TupleState> state) const {
+            int get_last_direction(shared_ptr<const Int3TupleState> state) const {
                 return std::get<2>(state->state);
             }
 
@@ -106,14 +106,14 @@ namespace thts::test{
                 shared_ptr<const Int3TupleState> state, shared_ptr<const IntAction> action, bool wrong_dir) const
             {
                 shared_ptr<Int3TupleState> new_state = make_shared<Int3TupleState>(state->state);
-                int direction = aciton->action;
+                int direction = action->action;
                 if (wrong_dir) {
-                    direction = 1 - action_val;
+                    direction = 1 - direction;
                 }
 
                 if (direction == RIGHT) {
                     std::get<0>(new_state->state) += 1;
-                } else if (action->action == DOWN) {
+                } else if (direction == DOWN) {
                     std::get<1>(new_state->state) += 1;
                 }
                 std::get<2>(new_state->state) = direction;

@@ -1,5 +1,5 @@
 from mo_py_thts_env import MoPyThtsEnv
-import numpy as np
+# import numpy as np
 import random
 
 RIGHT = 0
@@ -59,21 +59,21 @@ class MoPyTestThtsEnv(MoPyThtsEnv):
     
     def get_transition_distribution(self, state, action):
         cand_next_state = self.candidate_next_state(state, action, False)
-        distr = {cand_next_state: 1.0 - self.stay_prob}
+        distr = {cand_next_state: 1.0 - self.wrong_dir_prob}
         if (self.wrong_dir_prob > 0.0):
             wrong_dir_state = self.candidate_next_state(state, action, True)
-            distr[wrong_dir_state] = self.stay_prob
+            distr[wrong_dir_state] = self.wrong_dir_prob
         return distr
     
     def sample_transition_distribution(self, state, action):
-        if (self.stay_prob == 0.0):
+        if (self.wrong_dir_prob == 0.0):
             return self.candidate_next_state(state,action, False)
         
         r = random.random()
         return self.candidate_next_state(state, action, (r < self.wrong_dir_prob))
         
     def get_reward(self, state, action):
-        r = np.zeros(4)
+        r = [0.0] * 4 if self.add_extra_rewards else [0.0] * 2
         r[RIGHT] = -1.0
         r[DOWN] = -1.0
         r[action] += self.same_dir_bonus if self._get_last_direction(state) == action else self.new_dir_bonus
@@ -86,3 +86,17 @@ class MoPyTestThtsEnv(MoPyThtsEnv):
         else:
             r[3] = self.gamma ** self._y(state)
         return r
+    
+
+if __name__ == "__main__":
+    env = MoPyTestThtsEnv(10,0.25,True)
+    cur_state = env.get_initial_state()
+    print(cur_state)
+    next_act = 0
+    while not env.is_sink_state(cur_state):
+        r = env.get_reward(cur_state, next_act)
+        cur_state = env.sample_transition_distribution(cur_state, next_act)
+        next_act = 1-next_act
+        print(r)
+        print(cur_state)
+    print("fin")

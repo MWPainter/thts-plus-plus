@@ -7,6 +7,13 @@
 #include "py/mo_py_thts.h"
 #include "py/py_multiprocessing_thts_env.h"
 
+#include "mo/czt_chance_node.h"
+#include "mo/czt_decision_node.h"
+#include "mo/chmcts_chance_node.h"
+#include "mo/chmcts_decision_node.h"
+#include "mo/smt_chance_node.h"
+#include "mo/smt_decision_node.h"
+
 #include "py/py_helper.h"
 #include <Python.h>
 
@@ -106,8 +113,9 @@ namespace thts {
     string get_tree_filename(RunID& run_id, int replicate) {
         stringstream ss;
         ss << get_results_dir(run_id)
-            << "tree_"
-            << get_params_string_helper(run_id)
+            << "tree"
+            // << "tree_"
+            // << get_params_string_helper(run_id)
             << ".txt";
         return ss.str();
     }
@@ -200,6 +208,72 @@ namespace thts {
             std_dev = evaluator.get_stddev_mean_mo_ctx_return();
             normalised_mean = evaluator.get_mean_mo_normalised_ctx_return();
             normalised_std_dev = evaluator.get_stddev_mean_mo_normalised_ctx_return();
+        }
+    }
+
+    /**
+     * Returns the filename for a debug info printout
+    */
+    string get_debug_filename(RunID& run_id, int replicate) {
+        stringstream ss;
+        ss << get_results_dir(run_id)
+            << "debug_info"
+            // << "tree_"
+            // << get_params_string_helper(run_id)
+            << ".txt";
+        return ss.str();
+    }
+
+    /**
+     * Writes debug info
+    */
+    void write_debug_info_to_file(shared_ptr<MoThtsDNode> root_node, ofstream& out_file) {
+        shared_ptr<CztDNode> ball_list_root_node = dynamic_pointer_cast<CztDNode>(root_node);
+        if (ball_list_root_node) {
+            out_file << "ROOT NODE INFO" << endl   
+                << "---------------" << endl;
+            out_file << ball_list_root_node->get_ball_list_pretty_print_string() << endl;
+            out_file << "---------------" << endl;
+
+            for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : root_node->children) {
+                out_file << "ACTION " << child_pair.first << endl 
+                    << "---------------" << endl;
+                CztCNode& child_node = (CztCNode&) *child_pair.second;
+                out_file << child_node.get_ball_list_pretty_print_string() << endl;
+                out_file << "---------------" << endl;
+            }  
+        }
+
+        shared_ptr<ChmctsDNode> convex_hull_root_node = dynamic_pointer_cast<ChmctsDNode>(root_node);
+        if (convex_hull_root_node) {
+            out_file << "ROOT NODE INFO" << endl   
+                << "---------------" << endl;
+            out_file << convex_hull_root_node->get_convex_hull_pretty_print_string() << endl;
+            out_file << "---------------" << endl;
+
+            for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : root_node->children) {
+                out_file << "ACTION " << child_pair.first << endl 
+                    << "---------------" << endl;
+                ChmctsCNode& child_node = (ChmctsCNode&) *child_pair.second;
+                out_file << child_node.get_convex_hull_pretty_print_string() << endl;
+                out_file << "---------------" << endl;
+            }  
+        }
+
+        shared_ptr<SmtThtsDNode> simplex_map_root_node = dynamic_pointer_cast<SmtThtsDNode>(root_node);
+        if (simplex_map_root_node) {
+            out_file << "ROOT NODE INFO" << endl   
+                << "---------------" << endl;
+            out_file << simplex_map_root_node->get_simplex_map_pretty_print_string() << endl;
+            out_file << "---------------" << endl;
+
+            for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : root_node->children) {
+                out_file << "ACTION " << child_pair.first << endl 
+                    << "---------------" << endl;
+                SmtThtsCNode& child_node = (SmtThtsCNode&) *child_pair.second;
+                out_file << child_node.get_simplex_map_pretty_print_string() << endl;
+                out_file << "---------------" << endl;
+            }  
         }
     }
 
@@ -341,10 +415,24 @@ namespace thts {
                 string tree_filename = get_tree_filename(run_id, replicate);
                 ofstream tree_file;
                 tree_file.open(tree_filename, ios::out);
-                tree_file << root_node->get_pretty_print_string(4) << endl;
+                tree_file << root_node->get_pretty_print_string(1) << endl;
                 tree_file.close();
             }
 
+            // Write debug info
+            if (replicate == 0) {
+                shared_ptr<py::gil_scoped_acquire> acq3;
+                if (run_id.is_python_env()) {
+                    acq3 = make_shared<py::gil_scoped_acquire>();
+                }
+                string debug_filename = get_debug_filename(run_id, replicate);
+                ofstream debug_file;
+                debug_file.open(debug_filename, ios::out);
+                write_debug_info_to_file(root_node, debug_file);
+                debug_file.close();
+            }
+
+            // Flush
             eval_file.flush();
         }   
 
