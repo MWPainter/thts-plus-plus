@@ -139,18 +139,6 @@ namespace thts {
      * Additionally, the thts manager is used to wrap any random number generation required, to provide a simple 
      * interface to node classes, without having to construct a random number generator in every node.
      * 
-     * Options:
-     *      mcts_mode:
-     *      transposition_table:
-     *          Specifies if a transposition table is to be used. Nodes are stored in a table upon creation, keyed by 
-     *          (depth, Observation) tuples. When creating a new node, we first look if it exists in the table 
-     *          already, and if it does we return that instead. This requires State and Action objects to have 
-     *          std::hash and std::equal_to definitions. NOTE: should only use transposition_table if the 
-     *          (depth,Observation) tuples have a one to one correspondance with decision nodes, otherwise this may 
-     *          cause bugs.
-     *      is_two_player_game:
-     *          Specifies if we are planning for a two player game
-     * 
      * Member variables (environment):
      *      thts_env:
      *          A ThtsEnv object that provides the dynamics of the environment to plan in
