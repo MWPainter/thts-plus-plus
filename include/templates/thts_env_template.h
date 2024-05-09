@@ -4,10 +4,10 @@
  * To use the template, copy the relevant sections into your .h and .cpp files, and make the following find and replace
  * operations:
  *      _Env -> YourEnvClass
- *      _Context -> YourThtsEnvContext class (often ThtsEnvContext should be sufficient)
- *      _S -> YourStateClass
- *      _A -> YourActionClass
- *      _O -> YourObservationClass
+ *      _Context -> YourThtsEnvContextClassName     (ThtsEnvContext unless you know you need something more)
+ *      _S -> YourStateClass                        (your custom state class, or predefined state class from thts_types.h)
+ *      _A -> YourActionClass                       (your custom action class, or predefined action class from thts_types.h)
+ *      _O -> YourObservationClass                  (if fully observable, then == YourStateClass)
  * 
  * Finally, complete all of the TODO comments inline.
  */
@@ -21,6 +21,7 @@
 #pragma once
 
 #include "thts_env.h"
+#include "thts_env_context.h"
 #include "thts_manager.h"
 #include "thts_types.h"
 
@@ -29,7 +30,7 @@
 #include <unordered_map>
 #include <vector>
 
-// TODO: any other includes needed
+// TODO: any other includes needed (e.g. the .h file for YourThtsManagerClassName)
 
 namespace thts{
     // TODO: delete these forward declarations (added to stop IDEs showing compile errors).

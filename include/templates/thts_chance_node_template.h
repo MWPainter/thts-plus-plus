@@ -3,13 +3,14 @@
  * 
  * To use the template, copy the relevant sections into your .h and .cpp files, and make the following find and replace
  * operations:
- *      _DNode -> YourDNodeClass
- *      _CNode -> YourCNodeClass
- *      _Manager -> YourThtsManagerClass (often ThtsManager should be sufficient)
- *      _Context -> YourThtsEnvContextClass (often ThtsEnvContext should be sufficient)
- *      _S -> YourStateClass
- *      _A -> YourActionClass
- *      _O -> YourObservationClass
+ *      _DNode -> YourDNodeClass                
+ *      _CNode -> YourCNodeClass                
+ *      _Manager -> YourThtsManagerClass            (your subclass of ThtsManager containing params for your alg)
+ *      _Context -> YourThtsEnvContextClassName     (ThtsEnvContext unless you know you need something more)
+ *      _S -> YourStateClass                        (ThtsState unless you want to restrict types of state that can be used)
+ *      _A -> YourActionClass                       (ThtsAction unless you want to restrict types of action that can be used)
+ *      _O -> YourObservationClass                  (ThtsState if fully observable, ThtsObservation if partially observable
+ *                                                   unless you want to restrict the types of observation that can be used)
  * 
  * Finally, complete all of the TODO comments inline.
  * 
@@ -36,6 +37,8 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+
+// TODO: any other includes needed (e.g. the .h file for YourThtsManagerClassName)
 
 namespace thts {
     // TODO: delete these forward declarations (added to stop IDEs showing compile errors).
