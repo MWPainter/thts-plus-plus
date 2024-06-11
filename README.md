@@ -1,6 +1,6 @@
 # Monte Carlo Tree Search with Boltmann Exploration
 
-This branch (`xpr_go`) branches off the main branch at some point (before a major refactor of THTS++ `main` branch). It contains the experiments for the paper [https://arxiv.org/abs/2404.07732](Monte Carlo Tree Search with Boltmann Exploration), which was accepted at NeurIPS2023.
+This branch (`xpr_go`) branches off the main branch at some point (before a major refactor of THTS++ `main` branch). It contains the experiments for the paper [Monte Carlo Tree Search with Boltmann Exploration](https://arxiv.org/abs/2404.07732), which was accepted at NeurIPS2023.
 
 Below is the original readme for this branch during development.
 
