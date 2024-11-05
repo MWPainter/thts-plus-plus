@@ -11,7 +11,6 @@ Main readme is below
 THTS Implementation in C++, with Python bindings (eventually). By default, running `make` will just compile unit tests to an executable called `thts-test`, if you run this some tests will fail but they should all contain `todo` in their names, as they are mostly placeholder tests.
 
 
-
 ## Code Overview
 
 All subdirectories in the `include/` folder contain `README.md` files, which give an overview of the code from that 
