@@ -11,3 +11,6 @@
 [submodule "external/eigen"]
 	path = external/eigen
 	url = https://gitlab.com/libeigen/eigen.git
+[submodule "external/bayesopt"]
+	path = external/bayesopt
+	url = https://github.com/rmcantin/bayesopt.git
