@@ -52,6 +52,7 @@ INCLUDES = -I. -Iinclude -Isrc -Iexternal -Iexternal/eigen -Iexternal/qhull/src 
 TEST_INCLUDES = -Iexternal/googletest/build/include
 INCLUDES += -Iexternal/pybind11/include $$(python3.12 -m pybind11 --includes) -Ipy
 INCLUDES += -I$(ANACONDA_ENVS_HOME)/thts3.12/include/python3.12
+INCLUDES += -Iexternal/bayesopt/include
 
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20
 PY_LIB_CPPFLAGS += -fPIC -fvisibility=hidden # needed to create shared library
@@ -59,7 +60,8 @@ PY_EX_CPPFLAGS += -pie -fPIE # needed to create executable
 TEST_CPPFLAGS = 
 CPPFLAGS_DEBUG = -g -ggdb
 
-LDFLAGS = -Lexternal/qhull/lib -L/usr/lib/x86_64-linux-gnu -Lexternal/lemon-1.3.1/build/lemon/lib -lqhullcpp -lqhullstatic_r -lemon -lglpk -lpthread
+LDFLAGS = -Lexternal/qhull/lib -L/usr/lib/x86_64-linux-gnu -Lexternal/lemon-1.3.1/build/lemon/lib -Lexternal/bayesopt/build/lib
+LDFLAGS += -lqhullcpp -lqhullstatic_r -lemon -lglpk -lpthread -lbayesopt -lnlopt
 PY_LD_LOCS =  -L$(ANACONDA_ENVS_HOME)/thts3.12/lib
 PY_LDFLAGS = $(PY_LD_LOCS) -lpython3.12
 TEST_LDFLAGS = -Lexternal/googletest/build/lib -lgtest -lgtest_main -lgmock

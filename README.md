@@ -131,8 +131,25 @@ make
 
 ## Installing BayesOpt
 
-TODO
+Follow BayesOpt install guide (mostly, see below), dont need the python or octave stuff, as doing C++: 
+https://rmcantin.github.io/bayesopt/html/install.html
 
+Turns out apt-get'ing boost libraries downloads v1.74, which is a version where trying to create a vector will cause 
+compiler errors... Tried doing ppa stuff to get an updated version but it just broke my apt-get. Resorted to 
+downloading lastest tar.gz from here: https://www.boost.org/users/history/version_1_86_0.html, then unpacking and 
+copying the files inside the "boost" folder to "/usr/include/boost" where it would be installed anyway. Going to 
+have to remember that if ever want to remove/update it, that need to delete this folder manually. And also it doesn't 
+need compiling because boost is mostly header only (appart from a few parts which I hope we're not using or ever going 
+to use).
+
+I also like having the build directory and not installing globally, so did:
+```
+cd external/bayesopt
+mkdir build
+cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=.
+make install
+```
 
 
 
