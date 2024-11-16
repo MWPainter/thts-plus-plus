@@ -32,7 +32,30 @@ namespace py = pybind11;
 using namespace thts;
 using namespace thts::python;
 
+static const string HP_OPT_RESULTS_DIR = "hp_opt/";
+
 namespace thts {
+    
+    /**
+     * Helper to make a string of:
+     * "param1=val1/param2=val2/.../paramN=valN/"
+     * Old version output:
+     * "param1=val1,param2=val2,...,paramN=valN",
+     * but lead to filenames that were too long
+    */
+    string get_params_string_helper(RunID& run_id) {
+        stringstream ss;
+        vector<string> &relevant_param_ids = RELEVANT_PARAM_IDS.at(run_id.alg_id);
+        unordered_set<string> relevant_param_ids_set(relevant_param_ids.begin(),relevant_param_ids.end());
+        for (pair<string,double> param_val_entry : run_id.alg_params) {
+            if (!relevant_param_ids_set.contains(param_val_entry.first)) {
+                continue;
+            }
+            ss << param_val_entry.first << "=" << param_val_entry.second << "/";
+        }
+        return ss.str();
+    }
+
     /**
      * Gets the results directory for this run (doesn't check/make)
     */
@@ -41,7 +64,8 @@ namespace thts {
         ss << "results/" 
             << run_id.env_id << "/" 
             << run_id.expr_id << "_" << run_id.expr_timestamp << "/" 
-            << run_id.alg_id << "/";
+            << run_id.alg_id << "/"
+            << get_params_string_helper(run_id);
         return ss.str();
     }
 
@@ -55,26 +79,10 @@ namespace thts {
         }
         return results_dir;
     }
-    
-    /**
-     * Helper to make a string of:
-     * "param1=val1,param2=val2,...,paramN=valN"
-    */
-    string get_params_string_helper(RunID& run_id) {
-        stringstream ss;
-        unsigned int i = 0;
-        for (pair<string,double> param_val_entry : run_id.alg_params) {
-            ss << param_val_entry.first << "=" << param_val_entry.second;
-            if (++i < run_id.alg_params.size()) {
-                ss << ",";
-            }
-        }
-        return ss.str();
-    }
 
     /**
      * Returns the filename for the mc eval results file
-    */
+    */ 
     string get_mc_eval_results_filename(RunID& run_id) {
         stringstream ss;
         ss << get_results_dir(run_id)
@@ -101,7 +109,7 @@ namespace thts {
         stringstream ss;
         ss << get_results_dir(run_id)
             << "log_"
-            << get_params_string_helper(run_id) << "_"
+            // << get_params_string_helper(run_id) << "_"
             << int_to_string_padded(replicate)
             << ".csv";
         return ss.str();
@@ -323,7 +331,7 @@ namespace thts {
      * 
      * We dont try to gracefully exit
     */
-    void run_expr(RunID& run_id) {
+    double run_expr(RunID& run_id) {
         // create results dir + eval file
         create_results_dir(run_id);
         string eval_filename = get_mc_eval_results_filename(run_id);
@@ -333,6 +341,7 @@ namespace thts {
         write_eval_header(eval_file);
 
         // Run experiment 'replicate' many times
+        double avg_mean_over_replicates = 0.0;
         for (int replicate=0; replicate<run_id.num_repeats; replicate++) {
             // Acquire gil
             shared_ptr<py::gil_scoped_acquire> acq;
@@ -434,15 +443,25 @@ namespace thts {
 
             // Flush
             eval_file.flush();
+
+            // Update avg mean
+            double num_replicates_run = replicate;
+            avg_mean_over_replicates *= (num_replicates_run) / (num_replicates_run+1.0);
+            avg_mean_over_replicates += mean / (num_replicates_run+1.0);
         }   
 
         // close eval file
         eval_file.close();
+
+        // Return avg mean utility over replicates
+        return avg_mean_over_replicates;
     }
 
     /**
      * Runs all experiments in 'run_ids'
      * This was in main, until needed to start hacking in the sill subinterpreter bug mitigation
+     * 
+     * (Entry point for 'eval' experiments)
     */
     void run_exprs(shared_ptr<vector<RunID>> run_ids) 
     {
@@ -477,6 +496,62 @@ namespace thts {
             dummy_subinterpreter_mutex->unlock();
             dummy_thread->join();
         }
+    }
+
+    /**
+     * Returns the results directory to use for this run, making sure that it exists, and creating it if it doesnt
+    */
+    string create_hp_opt_results_dir() {
+        if (!filesystem::exists(HP_OPT_RESULTS_DIR)) {
+            filesystem::create_directories(HP_OPT_RESULTS_DIR);
+        }
+    }
+
+    /**
+     * Returns the filename for the mc eval results file
+    */ 
+    string get_hp_opt_results_filename(string expr_id, time_t timestamp) {
+        stringstream ss;
+        ss << HP_OPT_RESULTS_DIR << expr_id << "_" << timestamp << ".txt";
+        return ss.str();
+    }
+
+
+    /**
+     * Runs hyperparameter opt for 'expr_id'
+     */
+    void run_hp_opt(string expr_id) {
+        // Get the hp_opt
+        shared_ptr<HyperparamOptimiser> hp_opt = get_hyperparam_optimiser_from_expr_id(expr_id);
+        
+        // Create output filestream
+        create_hp_opt_results_dir();
+        string hp_opt_filename = get_hp_opt_results_filename(expr_id, hp_opt->expr_timestamp);
+        ofstream hp_opt_file;
+        hp_opt_file.open(hp_opt_filename, ios::out);// | ios::app);
+        hp_opt->set_results_fs(hp_opt_file);
+
+        // Write header
+        hp_opt->write_header();
+
+        // Make bayesopt::Parameters
+        bayesopt::Parameters bo_params;
+        bo_params.surr_name = "sGaussianProcessNormal";
+        bo_params.noise = 1e-10;
+        bo_params.n_iterations = 190;
+        bo_params.n_init_samples = 10;
+        bo_params.n_iter_relearn = 10;
+        bo_params.verbose_level = 0;
+
+        // Run bayesopt (we do own logging, so results vector unecessary)
+        bayesopt::vectord _results(hp_opt->num_hyperparams);
+        hp_opt->optimize(_results);
+
+        // Write best eval to file at end
+        hp_opt->write_best_eval();
+
+        // Close file
+        hp_opt_file.close();
     }
 
 }
