@@ -530,8 +530,8 @@ namespace thts {
             return run_ids;
         }
 
-        // expr_id: 010_poc_dst
-        // proof of concept with deep sea treasure
+        // expr_id: 010_poc_ft
+        // proof of concept with fruit tree
         if (expr_id == POC_FT_EXPR_ID) {
             string env_id = FRUIT_TREE_ENV_ID;
             time_t expr_timestamp = std::time(nullptr);
@@ -590,5 +590,250 @@ namespace thts {
 
         throw runtime_error("Error in get_run_ids_from_expr_id");
     }
+
+    /**
+     * Hyperparam optimiser - constructor
+     */
+    HyperparamOptimiser::HyperparamOptimiser(
+        string env_id,
+        string expr_id,
+        time_t expr_timestamp,
+        string alg_id,
+        unordered_map<string, pair<double,double>> alg_params_min_max,
+        double search_runtime,
+        int max_trial_length,
+        double eval_delta,
+        int rollouts_per_mc_eval,
+        int num_repeats,
+        int num_threads,
+        int eval_threads
+        bayesopt::Parameters params) :
+            bayesopt::ContinuousModel(RELEVANT_PARAM_IDS[alg_id].size(), params),
+            num_hyperparams(RELEVANT_PARAM_IDS[alg_id].size()),
+            env_id(env_id),
+            expr_id(expr_id),
+            expr_timestamp(expr_timestamp),
+            alg_id(alg_id),
+            alg_param_ids(RELEVANT_PARAM_IDS[alg_id]),
+            alg_params_min_max(alg_params_min_max),
+            search_runtime(search_runtime),
+            max_trial_length(max_trial_length),
+            eval_delta(eval_delta),
+            rollouts_per_mc_eval(rollouts_per_mc_eval),
+            num_repeats(num_repeats),
+            num_threads(num_threads),
+            eval_threads(eval_threads),
+            num_envs((eval_threads > num_threads) ? eval_threads : num_threads),
+            best_eval(0.0),
+            best_alg_params(),
+            results_fs(nullptr),
+            hp_opt_iter(0)
+    {
+        // error checking
+        if (alg_param_ids.size() != alg_params_min_max.size()) {
+            throw runtime_error("Expecting list of param min/max values to be same size as list of ");
+        }
+        for (string param_id : alg_param_ids) {
+            if (!alg_params_min_max.contains(param_id)) {
+                stringstream ss;
+                ss << "Expected list of hyperparams for alg_id=" << alg_id 
+                    << " did not match keys provided in alg_params_min_max. Specifically the param_id=" << param_id 
+                    << " was missing.";
+                throw runtime_error(ss.str());
+            }
+        }
+
+        // might as well set bounding box here
+        bayesopt::vectord min_vec(num_hyperparams);
+        bayesopt::vectord max_vec(num_hyperparams);
+        for (int i=0; i<alg_param_ids.size(); i++) {
+            pair<double,double> min_max = alg_params_min_max[alg_param_ids[i]];
+            min_vec[i] = min_max.first;
+            max_vec[i] = min_max.second;
+        }
+        bayesopt::ContinuousModel::setBoundingBox(min_vec,max_vec);
+    };
+
+    void HyperparamOptimiser::set_results_fs(fstream &fs)
+    {
+        results_fs = fs;
+    }
+
+    unordered_map<string, double> HyperparamOptimiser::get_alg_params_from_bayesopt_vec(bayesopt::vectord vec)
+    {
+        unordered_map<string, double> alg_params;
+        for (int i=0; i<alg_param_ids.size(); i++) {
+            param_id = alg_param_ids[i];
+            if (BOOLEAN_PARAM_IDS.contains(param_id)) {
+                pair<double,double> min_max = alg_params_min_max[param_id]; 
+                alg_params[param_id] = get_bool_val_from_cts_sample(vec[i], min_max.first, min_max.second);
+            } else if (INTEGER_PARAM_IDS.contains(param_id)) {
+                pair<double,double> min_max = alg_params_min_max[param_id]; 
+                alg_params[param_id] = get_int_val_from_cts_sample(vec[i], min_max.first, min_max.second);
+            } else {
+                alg_params[param_id] = vec[i];
+            }
+        }
+    };
+
+    bool get_bool_val_from_cts_sample(double sample_val, int min, int max)
+    {
+        double midpoint = ((double) min+max) / 2.0;
+        return (sample_val > midpoint);
+    };
+
+    int get_int_val_from_cts_sample(double sample_val, int min, int max)
+    {
+        if (sample_val == max) {
+            return max-1;            
+        }
+        return (int)sample_val;
+    };
+
+    /**
+     * Hyperparam optimiser - fn to optimise
+     */
+    HyperparamOptimiser::evaluateSample(const bayesopt::vectord &query) 
+    {
+        unordered_map<string,double> alg_params = get_alg_params_from_bayesopt_vec(query);
+        RunID run_id(
+            env_id,
+            expr_id,
+            expr_timestamp,
+            alg_id,
+            alg_params,
+            search_runtime,
+            max_trial_length,
+            eval_delta,
+            rollouts_per_mc_eval,
+            num_repeats,
+            num_threads,
+            eval_threads
+        );
+        double eval = thts::run_expr(run_id);
+        write_eval_line(alg_params, eval);
+        return eval;
+    };
+
+    /**
+     * Writes a header with the params for each eval top results_fs
+     */
+    void write_header()
+    {
+        results_fs << "env_id,alg_id,search_runtime,max_trial_length,rollouts_per_mc_eval,num_repeats,"
+            << "num_threads" << endl
+            << end_id << ","
+            << alg_id << ","
+            << search_runtime << ","
+            << max_trial_length << ","
+            << rollouts_per_mc_eval << ","
+            << num_repeats << ","
+            << num_threads 
+            << endl << endl;
+        
+        results_fs << "hp_opt_iter" << ",";
+        for (string param_id : alg_param_ids) {
+            results_fs << param_id << ",";
+        } 
+        results_fs << "eval(mc_estimate_expected_utility)" << endl;
+    };
+
+    /**
+     * Write eval/hyperparam sample line to file
+     * - note that hp_opt_iter only used here, and also updated here
+     */
+    void write_eval_line(unordered_map<string,double> alg_params, double eval)
+    {   
+        results_fs << hp_opt_iter++ << ",";
+        for (string param_id : alg_param_ids) {
+            results_fs << alg_params[param_id] << ",";
+        }
+        results_fs << eval << endl;
+    };
+
+    void write_best_eval()
+    {
+        results_fs << endl;
+        results_fs << "Best eval with params:" << endl;
+        results_fs << "eval (mc_estimate_expected_utility) = " << best_eval << endl;
+        for (pair<string,double> pr : best_alg_params) {
+            results_fs << pr.first << " = " << pr.second << endl;
+        }
+    };
+
+    /**
+     * Gets hyperparam optimiser from expr_id
+     */
+    shared_ptr<HyperparamOptimiser> get_hyperparam_optimiser_from_expr_id(string expr_id)
+
+        // expr_id: 020_debug_czt_hp /  021_debug_chmcts_hp / 022_debug_smbts_hp / 023_debug_smdents_hp
+        // debug expr id for debugging
+        if (expr_id == DEBUG_CZT_HP_OPT_EXPR_ID 
+            || expr_id == DEBUG_CHMCTS_HP_OPT_EXPR_ID
+            || expr_id == DEBUG_SMBTS_HP_OPT_EXPR_ID
+            || expr_id == DEBUG_SMDENTS_HP_OPT_EXPR_ID) 
+        {
+            string ald_id = CZT_ALG_ID;
+            unordered_map<string, pair<double,double>> alg_params_min_max = {
+                {CZT_BIAS_PARAM_ID, make_pair(1.0, 10.0)},
+                {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 20.0)},
+            };
+            if (expr_id == DEBUG_CHMCTS_HP_OPT_EXPR_ID) {
+                alg_id = CHMCTS_ALG_ID;
+            }
+            if (expr_id == DEBUG_SMBTS_HP_OPT_EXPR_ID) {
+                alg_id = SMBTS_ALG_ID;
+                alg_params_min_max = {
+                    {SM_L_INF_THRESH_PARAM_ID, make_pair(0.0001, 0.5)},
+                    {SM_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 20.0)},
+                    {SMBTS_SEARCH_TEMP_PARAM_ID, make_pair(0.01, 10.0)},
+                    {SMBTS_EPSILON_PARAM_ID, make_pair(0.0001, 0.5)},
+                    {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, make_pair(0.0, 1.0)},
+                    {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, make_pair(1.0, 10.0)},
+                };
+            }
+            if (expr_id == DEBUG_SMDENTS_HP_OPT_EXPR_ID) {
+                alg_id = SMDENTS_ALG_ID;
+                alg_params_min_max = {
+                    {SM_L_INF_THRESH_PARAM_ID, make_pair(0.0001, 0.5)},
+                    {SM_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 20.0)},
+                    {SMBTS_SEARCH_TEMP_PARAM_ID, make_pair(0.01, 10.0)},
+                    {SMBTS_EPSILON_PARAM_ID, make_pair(0.0001, 0.5)},
+                    {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, make_pair(0.0, 1.0)},
+                    {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, make_pair(1.0, 10.0)},
+                    {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, make_pair(0.001, 10.0)},
+                    {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, make_pair(1.0, 10.0)},
+                };
+            }
+
+            string env_id = DST_ENV_ID;
+            time_t expr_timestamp = std::time(nullptr);
+            double search_runtime = 5.0;
+            int max_trial_length = 50;
+            double eval_delta = 1.0;
+            int rollouts_per_mc_eval = 250;
+            int num_repeats = 1;
+            int num_threads = 1;
+            int eval_threads = 1;
+
+            return make_shared<HyperparamOptimiser>(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                // TODO alg_params_min_max,
+                search_runtime,
+                max_trial_length,
+                eval_delta,
+                rollouts_per_mc_eval,
+                num_repeats,
+                num_threads,
+                eval_threads
+            );
+        }
+
+        throw runtime_error("Error in get_hyperparam_optimiser_from_expr_id");
+    };
+
 
 }

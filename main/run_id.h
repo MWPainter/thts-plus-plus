@@ -1,16 +1,23 @@
 #pragma once
 
+#include "main/run_expr.h"
+
 #include "mo/mo_thts_env.h"
 #include "mo/mo_thts_manager.h"
 #include "mo/mo_thts_decision_node.h"
 
 #include <ctime>
+#include <fstream>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 
 #include <Eigen/Dense>
+
+#include "bayesopt/bayesopt.hpp"
+#include "bayesopt/parameters.hpp"
 
 // env ids - debug
 static const std::string DEBUG_ENV_1_ID = "debug_env_1"; // not stoch + 2 rew
@@ -96,6 +103,12 @@ static const std::string DEBUG_PY_ENV_4_EXPR_ID = "008_debug_py_env_4";
 static const std::string POC_DST_EXPR_ID = "009_poc_dst";
 static const std::string POC_FT_EXPR_ID = "010_poc_ft";
 
+// expr ids - testing - debugging HP opt
+static const std::string DEBUG_CZT_HP_OPT_EXPR_ID = "020_debug_czt_hp";
+static const std::string DEBUG_CHMCTS_HP_OPT_EXPR_ID = "021_debug_chmcts_hp";
+static const std::string DEBUG_SMBTS_HP_OPT_EXPR_ID = "022_debug_smbts_hp";
+static const std::string DEBUG_SMDENTS_HP_OPT_EXPR_ID = "023_debug_smdents_hp";
+
 // expr ids - toy/tree
 // TODO: 1xx = hyperparam tuning 
 // TODO: 2xx = eval
@@ -119,6 +132,60 @@ static const std::string SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID = "smbts_
 
 static const std::string SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID = "smdents_entropy_temp_init";
 static const std::string SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID = "smdents_entropy_temp_visits_scale";
+
+// relevant alg ids -> param ids
+static std::unordered_map<std::string,std::vector<std::string>> RELEVANT_PARAM_IDS =
+{
+    {CZT_ALG_ID,
+        {
+            CZT_BIAS_PARAM_ID,
+            CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID,
+        },
+    },
+    {CHMCTS_ALG_ID,
+        {
+            CZT_BIAS_PARAM_ID,
+            CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID,
+        },
+    },
+    {SMBTS_ALG_ID,
+        {
+            SM_L_INF_THRESH_PARAM_ID,
+            // SM_MAX_DEPTH,
+            SM_SPLIT_VISIT_THRESH_PARAM_ID,
+            SMBTS_SEARCH_TEMP_PARAM_ID,
+            SMBTS_EPSILON_PARAM_ID,
+            SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID,
+            SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID,
+        },
+    },
+    {SMDENTS_ALG_ID,
+        {
+            SM_L_INF_THRESH_PARAM_ID,
+            // SM_MAX_DEPTH,
+            SM_SPLIT_VISIT_THRESH_PARAM_ID,
+            SMBTS_SEARCH_TEMP_PARAM_ID,
+            SMBTS_EPSILON_PARAM_ID,
+            SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID,
+            SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID,
+            SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID,
+            SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID
+        },
+    },
+};
+
+// List of boolean + int param ids
+static std::unordered_set<std::string> BOOLEAN_PARAM_IDS =
+{
+    SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID,
+};
+
+static std::unordered_set<std::string> INTEGER_PARAM_IDS =
+{
+    CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID,
+    // SM_MAX_DEPTH,
+    SM_SPLIT_VISIT_THRESH_PARAM_ID,
+};
 
 
 namespace thts {
@@ -248,4 +315,81 @@ namespace thts {
      * Get a list of run id's from an experiment id
     */
     std::shared_ptr<std::vector<RunID>> get_run_ids_from_expr_id(std::string expr_id);
+
+    /**
+     * Class for running hyperparam optimisation
+     * 
+     * 'alg_param_ids' 
+     *      is used to map between vectors (used in bayesopt) and param ids
+     * 'alg_param_min_max[param_id]' 
+     *      specifies the maximum and minimum values to use in bayesopt for param id
+     *      N.B. min and max can be arbitrary for a boolean value, but may as well be 0.0, and 1.0
+     *          and for integer value, we will sample in the *integer* range [min,max)
+     */
+    class HyperparamOptimiser : public bayesopt::ContinuousModel
+    {
+        public:
+            int num_hyperparams;
+
+            std::string env_id;
+            std::string expr_id;
+            std::time_t expr_timestamp;
+            std::string alg_id;
+
+            std::vector<std::string> alg_param_ids;
+            std::unordered_map<std::string, std::pair<double,double>> alg_params_min_max;
+
+            double search_runtime;
+            int max_trial_length;
+            double eval_delta;
+            int rollouts_per_mc_eval;
+            int num_repeats;
+            int num_threads;
+            int eval_threads;
+            int num_envs;
+
+            double best_eval;
+            std::unordered_map<std::string, double> best_alg_params;
+
+            std::fstream &results_fs;
+            int hp_opt_iter;
+            
+            HyperparamOptimiser(
+                std::string env_id,
+                std::string expr_id,
+                std::time_t expr_timestamp,
+                std::string alg_id,
+                std::unordered_map<std::string, std::pair<double,double>> alg_params_min_max,
+                double search_runtime,
+                int max_trial_length,
+                double eval_delta,
+                int rollouts_per_mc_eval,
+                int num_repeats,
+                int num_threads,
+                int eval_threads
+                bayesopt::Parameters params);
+
+            void set_results_fs(std::fstream &fs);
+
+            virtual std::unordered_map<std::string, double> get_alg_params_from_bayesopt_vec(bayesopt::vectord vec);
+
+            bool get_bool_val_from_cts_sample(double sample_val, int min, int max);
+
+            int get_int_val_from_cts_sample(double sample_val, int min, int max);
+
+            virtual double evaluateSample(const bayesopt::vectord &query) override;
+
+            void write_header();
+
+        private:
+            void write_eval_line(std::unordered_map<std::string,double> alg_params, double eval);
+
+        public:
+            void write_best_eval();
+    };
+
+    /**
+     * Creates and returns a hyperparamters optimiser from experiment id
+    */
+    std::shared_ptr<HyperparamOptimiser> get_hyperparam_optimiser_from_expr_id(std::string expr_id);
 }

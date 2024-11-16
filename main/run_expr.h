@@ -7,7 +7,17 @@
 
 namespace thts {
     /**
-     * Performs all of the (replicated) runs corresponding to 'run_id'
+     * Performs all of the (replicated) runs corresponding to 'run_id', returning avg expected utility over replicates
+    */
+    double run_expr(RunID &run_id);
+
+    /**
+     * Performs all of the (replicated) runs corresponding to each 'run_id' in 'run_ids'
     */
     void run_exprs(std::shared_ptr<std::vector<RunID>> run_ids);
+
+    /**
+     * Performs hyperparameter search corresponding to experiment id 'expr_id'
+     */
+    void run_hp_opt(std::string expr_id);
 }
