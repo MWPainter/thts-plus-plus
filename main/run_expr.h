@@ -2,6 +2,7 @@
 
 #include "main/run_id.h"
 
+#include <ctime>
 #include <memory>
 #include <vector>
 
@@ -20,4 +21,9 @@ namespace thts {
      * Performs hyperparameter search corresponding to experiment id 'expr_id'
      */
     void run_hp_opt(std::string expr_id);
+
+    /**
+     * Computes an estimate for the noise parameter of bayesopt for environment with 'env_id' using a random policy 
+     */
+    void estimate_noise_for_hp_opt(std::string env_id);
 }

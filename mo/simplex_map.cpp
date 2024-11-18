@@ -13,6 +13,8 @@
 
 #include <Eigen/SVD>
 
+#include <iostream>
+
 
 using namespace std;
 
@@ -34,6 +36,7 @@ namespace thts {
     NGV::NGV(Eigen::ArrayXd weight, Eigen::ArrayXd init_val_estimate, double init_entr_estimate) : 
         value_estimate(init_val_estimate), 
         entropy(init_entr_estimate),
+        pure_backup_value_estimate(false),
         weight(weight),
         neighbours(make_shared<unordered_set<shared_ptr<NGV>>>())
     {
@@ -42,6 +45,7 @@ namespace thts {
     NGV::NGV(NGV& v0, NGV& v1, double ratio) :
         value_estimate(),
         entropy(),
+        pure_backup_value_estimate(false),
         weight(),
         neighbours(make_shared<unordered_set<shared_ptr<NGV>>>())
     {
@@ -54,9 +58,11 @@ namespace thts {
         if (ctx_val_v0 >= ctx_val_v1) {
             value_estimate = v0.value_estimate;
             entropy = v0.entropy;
+            pure_backup_value_estimate = v0.pure_backup_value_estimate;
         } else {
             value_estimate = v1.value_estimate;
             entropy = v1.entropy;
+            pure_backup_value_estimate = v1.pure_backup_value_estimate;
         }
 
         // NOTE: we can't upsed the neighbourhood graph here because we cant call 'shared_from_this' from constructor
@@ -105,19 +111,38 @@ namespace thts {
         }
     }
 
+    /**
+     * Just copying docstring here to highlight that we only try to push/pull backed up values, and avoid copying 
+     * heuristic value estimates. (This lead to problems when I was developing, but cant remember at time of writing).
+     * 
+     * The need for value_esimtate_from_backup comes from not wanting to share heuristic values. Consider a case for 
+     * example where the heuristic is the zero vector [0,0], and all of your rewards are negative. So the values are 
+     * [-a -b], for some a,b >= 0. In this case, the message passing will keep the heuristic values always, rather than 
+     * the more accurate dp estimates. So we mark if the value estimate is from a backup, so we can avoid pulling 
+     * innacurate heuristic values.
+     */
     void NGV::share_values_message_passing_helper_push(NGV& other) 
     {
-        if (thts::helper::dot(other.weight,value_estimate) > thts::helper::dot(other.weight,other.value_estimate)) {
+        if (pure_backup_value_estimate 
+            && thts::helper::dot(other.weight,value_estimate) > thts::helper::dot(other.weight,other.value_estimate)) 
+        {
             other.value_estimate = value_estimate;
             other.entropy = entropy;
+            other.pure_backup_value_estimate = pure_backup_value_estimate;
         }
     }
 
+    /**
+     * See '*_push' docstring
+     */
     void NGV::share_values_message_passing_helper_pull(NGV& other) 
     {
-        if (thts::helper::dot(weight,other.value_estimate) > thts::helper::dot(weight,value_estimate)) {
+        if (other.pure_backup_value_estimate
+            && thts::helper::dot(weight,other.value_estimate) > thts::helper::dot(weight,value_estimate)) 
+        {
             value_estimate = other.value_estimate;
             entropy = other.entropy;
+            pure_backup_value_estimate = other.pure_backup_value_estimate;
         }
     }
 

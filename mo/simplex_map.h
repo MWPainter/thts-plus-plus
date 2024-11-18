@@ -88,15 +88,23 @@ namespace thts {
      *      playlist
      * TODO long term: make these structs private data types inside the SimplexMap class
      * 
+     * The need for value_esimtate_from_backup comes from not wanting to share heuristic values. Consider a case for 
+     * example where the heuristic is the zero vector [0,0], and all of your rewards are negative. So the values are 
+     * [-a -b], for some a,b >= 0. In this case, the message passing will keep the heuristic values always, rather than 
+     * the more accurate dp estimates. So we mark if the value estimate is from a backup, so we can avoid pulling 
+     * innacurate heuristic values.
+     * 
      * Args:
      *      value_estimate: Best value estimate for this weight/context
      *      entropy: Entropy estimate
+     *      pure_backup_value_estimate: If the value estimate has been computed purely from backup values (rather than heuristic)
      *      weight: The weight/context for this node/vertex
      *      neighbours: A set of neighbour NGV vertices
     */
     struct NGV : public std::enable_shared_from_this<NGV> {
         Eigen::ArrayXd value_estimate;
         double entropy;
+        bool pure_backup_value_estimate;
 
         Eigen::ArrayXd weight;
         std::shared_ptr<std::unordered_set<std::shared_ptr<NGV>>> neighbours;
@@ -256,6 +264,13 @@ namespace thts {
      *          The TN child on the normal side of the splitting hyperplane
      *      opposite_side_child:
      *          The TN child on the opposite side of the splitting hyperplane
+     * 
+     * Some notes when revising this. 
+     * 'splitting_edge' refers to the edge of the simplex that is split by the two children of this node
+     * 'splitting_hyperplane_normal' is the normal to the seperating hyperplane between the two children
+     * 'splitting_edge_normal_side_vertex' and 'splitting_edge_opposite_side_vertex' are the vertices at the ends of 
+     *      the 'splitting_edge'
+     * 'splitting_edge_new_vertex' is the new NGV created as a result of splitting this simplex
     */
     struct TN {
         int dim;

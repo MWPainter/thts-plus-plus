@@ -66,11 +66,13 @@ namespace thts {
                 std::shared_ptr<const Action> action, 
                 double opponent_coeff, 
                 MoThtsContext& ctx,
-                double& entropy) const;
+                double& entropy,
+                bool& pure_backup_val) const;
             void get_child_q_values(
                 ActionVector& actions,
                 std::unordered_map<std::shared_ptr<const Action>,Eigen::ArrayXd>& q_val_map, 
                 std::unordered_map<std::shared_ptr<const Action>,double>& entropy_map, 
+                std::unordered_map<std::shared_ptr<const Action>,bool>& pure_backup_val_map,
                 MoThtsContext& ctx) const;
 
             /**

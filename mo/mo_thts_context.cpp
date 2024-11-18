@@ -6,9 +6,16 @@ using namespace std;
 
 namespace thts {
 
-    MoThtsContext::MoThtsContext(MoThtsManager& manager) : context_weight() 
+    MoThtsContext::MoThtsContext(MoThtsManager& manager) : ThtsEnvContext(), context_weight() 
     {
         sample_uniform_random_simplex_for_weight(manager);
+    } 
+
+    MoThtsContext::MoThtsContext(Eigen::ArrayXd weight) : ThtsEnvContext(), context_weight() 
+    {
+        // Apparently eigen does some fast stuff and better not to init in initialiser list
+        // https://stackoverflow.com/questions/47644021/eigen-copy-constructor-vs-operator-performance
+        context_weight = weight;
     } 
 
     void MoThtsContext::sample_uniform_random_simplex_for_weight(MoThtsManager& manager)

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "main/run_expr.h"
-
 #include "mo/mo_thts_env.h"
 #include "mo/mo_thts_manager.h"
 #include "mo/mo_thts_decision_node.h"
@@ -47,6 +45,9 @@ static const std::string LUNAR_LANDER_ENV_ID = "mo-lunar-lander-v2";
 static const std::string MINECART_ENV_ID = "minecart-v0";
 static const std::string HIGHWAY_ENV_ID = "mo-highway-v0";
 static const std::string HIGHWAY_FAST_ENV_ID = "mo-highway-fast-v0";
+
+// env ids - mo gymnasium (with extra time cost)
+static const std::string FOUR_ROOM_TIMED_ENV_ID = "four-room-v0";
 
 static const std::unordered_set<std::string> DEBUG_ENVS =
 {
@@ -114,8 +115,28 @@ static const std::string DEBUG_SMDENTS_HP_OPT_EXPR_ID = "023_debug_smdents_hp";
 // TODO: 2xx = eval
 
 // expr ids - mo gymnasium
-// TODO: 3xx = hyperparam tuning
-// TODO: 4xx = eval
+// 3xx + 4xx = hyperparam tuning
+// - deep sea treasure
+static const std::string HP_OPT_DST_CZT = "300_hp_opt_dst_czt";
+static const std::string HP_OPT_DST_CHMCTS = "301_hp_opt_dst_chmcts";
+static const std::string HP_OPT_DST_SMBTS = "302_hp_opt_dst_smbts";
+static const std::string HP_OPT_DST_SMDENTS = "303_hp_opt_dst_smdents";
+// - breakable bottles
+static const std::string HP_OPT_BB_CZT = "310_hp_opt_bb_czt";
+static const std::string HP_OPT_BB_CHMCTS = "311_hp_opt_bb_chmcts";
+static const std::string HP_OPT_BB_SMBTS = "312_hp_opt_bb_smbts";
+static const std::string HP_OPT_BB_SMDENTS = "313_hp_opt_bb_smdents";
+// - four room (timed)
+static const std::string HP_OPT_FRT_CZT = "320_hp_opt_frt_czt";
+static const std::string HP_OPT_FRT_CHMCTS = "321_hp_opt_frt_chmcts";
+static const std::string HP_OPT_FRT_SMBTS = "322_hp_opt_frt_smbts";
+static const std::string HP_OPT_FRT_SMDENTS = "323_hp_opt_frt_smdents";
+// - minecart
+static const std::string HP_OPT_MINE_CZT = "330_hp_opt_mine_czt";
+static const std::string HP_OPT_MINE_CHMCTS = "331_hp_opt_mine_chmcts";
+static const std::string HP_OPT_MINE_SMBTS = "332_hp_opt_mine_smbts";
+static const std::string HP_OPT_MINE_SMDENTS = "333_hp_opt_mine_smdents";
+// 5xx + 6xx = eval
 
 // param ids
 static const std::string CZT_BIAS_PARAM_ID = "czt_bias";
@@ -189,6 +210,29 @@ static std::unordered_set<std::string> INTEGER_PARAM_IDS =
 
 
 namespace thts {
+    /**
+     * Create the env corresponding to 'env_id' and return is
+     */
+    std::shared_ptr<MoThtsEnv> get_env(std::string env_id);
+
+    /**
+     * Checks if env corresponding to 'env_id' is a python env
+     */
+    bool is_python_env(std::string env_id);
+
+    /**
+     * The minimum value possible in the environment
+     * Useful for setting default values
+     * (Note min value for each independent objective, which isn't necessarily achievable)
+    */
+    Eigen::ArrayXd get_env_min_value(std::string env_id, int max_trial_length);
+
+    /**
+     * Returns the max value possible in the environment 
+     * (Same as get_env_min_value, but for maximum)
+    */
+    Eigen::ArrayXd get_env_max_value(std::string env_id);
+
     /**
      * Struct to wrap all the params for a eval run
      * 
@@ -351,7 +395,7 @@ namespace thts {
             double best_eval;
             std::unordered_map<std::string, double> best_alg_params;
 
-            std::fstream &results_fs;
+            std::ofstream &results_fs;
             int hp_opt_iter;
             
             HyperparamOptimiser(
@@ -366,10 +410,11 @@ namespace thts {
                 int rollouts_per_mc_eval,
                 int num_repeats,
                 int num_threads,
-                int eval_threads
-                bayesopt::Parameters params);
+                int eval_threads,
+                bayesopt::Parameters params,
+                std::ofstream &results_fs);
 
-            void set_results_fs(std::fstream &fs);
+            bool is_python_env();
 
             virtual std::unordered_map<std::string, double> get_alg_params_from_bayesopt_vec(bayesopt::vectord vec);
 
@@ -391,5 +436,6 @@ namespace thts {
     /**
      * Creates and returns a hyperparamters optimiser from experiment id
     */
-    std::shared_ptr<HyperparamOptimiser> get_hyperparam_optimiser_from_expr_id(std::string expr_id);
+    std::shared_ptr<HyperparamOptimiser> get_hyperparam_optimiser_from_expr_id(
+        std::string expr_id, std::time_t expr_timestamp, std::ofstream &hp_opt_fs);
 }
