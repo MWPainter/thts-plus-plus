@@ -659,7 +659,7 @@ namespace thts {
             num_threads(num_threads),
             eval_threads(eval_threads),
             num_envs((eval_threads > num_threads) ? eval_threads : num_threads),
-            best_eval(0.0),
+            best_eval(numeric_limits<double>::lowest()),
             best_alg_params(),
             results_fs(results_fs),
             hp_opt_iter(0)
@@ -747,11 +747,11 @@ namespace thts {
             eval_threads
         );
         double eval = thts::run_expr(run_id);
-        write_eval_line(alg_params, eval);
         if (eval > best_eval) {
             best_eval = eval;
             best_alg_params = alg_params;
         }
+        write_eval_line(alg_params, eval);
         return eval;
     };
 
@@ -777,7 +777,7 @@ namespace thts {
         for (string param_id : alg_param_ids) {
             results_fs << param_id << ",";
         } 
-        results_fs << "eval(mc_estimate_expected_utility)" << endl;
+        results_fs << "eval(mc_estimate_expected_utility),best_eval_so_far" << endl;
 
         // Print out the min an max params trying
         results_fs << "MIN,";
@@ -803,7 +803,7 @@ namespace thts {
         for (string param_id : alg_param_ids) {
             results_fs << alg_params[param_id] << ",";
         }
-        results_fs << eval << endl;
+        results_fs << eval << "," << best_eval << endl;
     };
 
     void HyperparamOptimiser::write_best_eval()
@@ -907,8 +907,207 @@ namespace thts {
             );
         }
 
+
+
+
+        // expr_id: 5x0 + 6x0 
+        // initial mo gym hyperparam opt for czt
+        if (HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID.contains(expr_id)) {
+            string alg_id = CZT_ALG_ID;
+            unordered_map<string, pair<double,double>> alg_params_min_max = {
+                {CZT_BIAS_PARAM_ID, make_pair(0.01, 1000.0)},
+                {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
+            };
+
+            string env_id = HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID[expr_id];
+            double search_runtime = 30.0;
+            int max_trial_length = 50;
+            double eval_delta = 1.0;
+            int rollouts_per_mc_eval = 1024;
+            int num_repeats = 5;
+            int num_threads = 32;
+            int eval_threads = 32;
+
+            bayesopt::Parameters bo_params;
+            bo_params.surr_name = "sGaussianProcessML";
+            bo_params.noise = 1.0; 
+            bo_params.n_iterations = 190;
+            bo_params.n_init_samples = 10;
+            bo_params.n_iter_relearn = 10;
+            bo_params.verbose_level = 0;
+
+            return make_shared<HyperparamOptimiser>(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params_min_max,
+                search_runtime,
+                max_trial_length,
+                eval_delta,
+                rollouts_per_mc_eval,
+                num_repeats,
+                num_threads,
+                eval_threads,
+                bo_params,
+                hp_opt_fs
+            );
+        }
+
+        // expr_id: 5x1 + 6x1
+        // initial mo gym hyperparam opt for chmcts
+        if (HP_OPT_MOGYM_CHMCTS_EXPR_ID_TO_ENV_ID.contains(expr_id)) {
+            string alg_id = CHMCTS_ALG_ID;
+            unordered_map<string, pair<double,double>> alg_params_min_max = {
+                {CZT_BIAS_PARAM_ID, make_pair(0.01, 1000.0)},
+                {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
+            };
+
+            string env_id = HP_OPT_MOGYM_CHMCTS_EXPR_ID_TO_ENV_ID[expr_id];
+            double search_runtime = 30.0;
+            int max_trial_length = 50;
+            double eval_delta = 1.0;
+            int rollouts_per_mc_eval = 1024;
+            int num_repeats = 5;
+            int num_threads = 32;
+            int eval_threads = 32;
+
+            bayesopt::Parameters bo_params;
+            bo_params.surr_name = "sGaussianProcessML";
+            bo_params.noise = 1.0; 
+            bo_params.n_iterations = 190;
+            bo_params.n_init_samples = 10;
+            bo_params.n_iter_relearn = 10;
+            bo_params.verbose_level = 0;
+
+            return make_shared<HyperparamOptimiser>(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params_min_max,
+                search_runtime,
+                max_trial_length,
+                eval_delta,
+                rollouts_per_mc_eval,
+                num_repeats,
+                num_threads,
+                eval_threads,
+                bo_params,
+                hp_opt_fs
+            );
+        }
+
+        // expr_id: 5x2 + 6x2
+        // initial mo gym hyperparam opt for smbts
+        if (HP_OPT_MOGYM_SMBTS_EXPR_ID_TO_ENV_ID.contains(expr_id)) {
+            string alg_id = SMBTS_ALG_ID;
+            unordered_map<string, pair<double,double>> alg_params_min_max = 
+            {
+                {SM_L_INF_THRESH_PARAM_ID, make_pair(0.0001, 0.5)},
+                {SM_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
+                {SMBTS_SEARCH_TEMP_PARAM_ID, make_pair(0.01, 1000.0)},
+                {SMBTS_EPSILON_PARAM_ID, make_pair(0.0001, 0.5)},
+                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, make_pair(0.0, 1.0)},
+                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
+            };
+
+            string env_id = HP_OPT_MOGYM_SMBTS_EXPR_ID_TO_ENV_ID[expr_id];
+            double search_runtime = 30.0;
+            int max_trial_length = 50;
+            double eval_delta = 1.0;
+            int rollouts_per_mc_eval = 1024;
+            int num_repeats = 5;
+            int num_threads = 32;
+            int eval_threads = 32;
+
+            bayesopt::Parameters bo_params;
+            bo_params.surr_name = "sGaussianProcessML";
+            bo_params.noise = 1.0; 
+            bo_params.n_iterations = 190;
+            bo_params.n_init_samples = 10;
+            bo_params.n_iter_relearn = 10;
+            bo_params.verbose_level = 0;
+
+            return make_shared<HyperparamOptimiser>(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params_min_max,
+                search_runtime,
+                max_trial_length,
+                eval_delta,
+                rollouts_per_mc_eval,
+                num_repeats,
+                num_threads,
+                eval_threads,
+                bo_params,
+                hp_opt_fs
+            );
+        }
+
+        // expr_id: 5x3 + 6x3
+        // initial mo gym hyperparam opt for smdents
+        if (HP_OPT_MOGYM_SMDENTS_EXPR_ID_TO_ENV_ID.contains(expr_id)) {
+            string alg_id = SMDENTS_ALG_ID;
+            unordered_map<string, pair<double,double>> alg_params_min_max = 
+            {
+                {SM_L_INF_THRESH_PARAM_ID, make_pair(0.0001, 0.5)},
+                {SM_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
+                {SMBTS_SEARCH_TEMP_PARAM_ID, make_pair(0.01, 1000.0)},
+                {SMBTS_EPSILON_PARAM_ID, make_pair(0.0001, 0.5)},
+                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, make_pair(0.0, 1.0)},
+                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
+                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, make_pair(0.001, 100.0)},
+                {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
+            };
+
+            string env_id = HP_OPT_MOGYM_SMDENTS_EXPR_ID_TO_ENV_ID[expr_id];
+            double search_runtime = 30.0;
+            int max_trial_length = 50;
+            double eval_delta = 1.0;
+            int rollouts_per_mc_eval = 1024;
+            int num_repeats = 5;
+            int num_threads = 32;
+            int eval_threads = 32;
+
+            bayesopt::Parameters bo_params;
+            bo_params.surr_name = "sGaussianProcessML";
+            bo_params.noise = 1.0; 
+            bo_params.n_iterations = 190;
+            bo_params.n_init_samples = 10;
+            bo_params.n_iter_relearn = 10;
+            bo_params.verbose_level = 0;
+
+            return make_shared<HyperparamOptimiser>(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params_min_max,
+                search_runtime,
+                max_trial_length,
+                eval_delta,
+                rollouts_per_mc_eval,
+                num_repeats,
+                num_threads,
+                eval_threads,
+                bo_params,
+                hp_opt_fs
+            );
+        }
+
+
+
+
+
         throw runtime_error("Error in get_hyperparam_optimiser_from_expr_id");
     };
+
+
+
+
 
 
 }

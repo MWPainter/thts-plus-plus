@@ -32,12 +32,14 @@ TEST_OBJECTS = $(patsubst test/%.cpp, bin/test/%.o, $(TEST_SOURCES))
 MO_SOURCES = $(wildcard mo/*.cpp)
 MO_OBJECTS = $(patsubst mo/%.cpp, bin/mo/%.o, $(MO_SOURCES))
 
-# PY_MODULE_DEF = py/module/module.cpp
 PY_SOURCES = $(wildcard py/*.cpp)
 PY_OBJECTS = $(patsubst py/%.cpp, bin/py/%.o, $(PY_SOURCES))
 
 PY_MAIN = py/main/module.cpp
 PY_MAIN_OBJ = bin/py/main/module.o
+
+MAIN_SOURCES = $(wildcard main/*.cpp)
+MAIN_OBJECTS = $(patsubst main/%.cpp, bin/main/%.o, $(MAIN_SOURCES))
 
 GTEST = external/googletest/build/lib/libgtest_main.a
 
@@ -49,6 +51,7 @@ INCLUDES = -I. -Iinclude -Isrc -Iexternal -Iexternal/eigen -Iexternal/qhull/src 
 TEST_INCLUDES = -Iexternal/googletest/build/include
 INCLUDES += -Iexternal/pybind11/include $$(python3.12 -m pybind11 --includes) -Ipy
 INCLUDES += -I$(ANACONDA_ENVS_HOME)/thts3.12/include/python3.12
+INCLUDES += -Iexternal/bayesopt/include
 
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20
 PY_LIB_CPPFLAGS += -fPIC -fvisibility=hidden # needed to create shared library
@@ -56,7 +59,8 @@ PY_EX_CPPFLAGS += -pie -fPIE # needed to create executable
 TEST_CPPFLAGS = 
 CPPFLAGS_DEBUG = -g -ggdb
 
-LDFLAGS = -Lexternal/qhull/lib -L/usr/lib/x86_64-linux-gnu -Lexternal/lemon-1.3.1/build/lemon/lib -lqhullcpp -lqhullstatic_r -lemon -lglpk -lpthread
+LDFLAGS = -Lexternal/qhull/lib -L/usr/lib/x86_64-linux-gnu -Lexternal/lemon-1.3.1/build/lemon/lib -Lexternal/bayesopt/build/lib
+LDFLAGS += -lqhullcpp -lqhullstatic_r -lemon -lglpk -lpthread -lbayesopt -lnlopt
 PY_LD_LOCS =  -L$(ANACONDA_ENVS_HOME)/thts3.12/lib
 PY_LDFLAGS = $(PY_LD_LOCS) -lpython3.12
 TEST_LDFLAGS = -Lexternal/googletest/build/lib -lgtest -lgtest_main -lgmock
@@ -68,6 +72,8 @@ TARGET_THTS_PY_LIB = thtspp
 TARGET_THTS_PY_LIB_DEBUG = thtspp-debug
 TARGET_THTS_PY_EX = pyex
 TARGET_THTS_PY_EX_DEBUG = pyex-debug
+TARGET_MO_EXPR = moexpr
+TARGET_MO_EXPR_DEBUG = moexpr-debug
 
 THTS_PY_LIB_FULL_NAME = thts$$(python3.12-config --extension-suffix)
 
@@ -78,7 +84,7 @@ THTS_PY_LIB_FULL_NAME = thts$$(python3.12-config --extension-suffix)
 #####
 
 # Default, build everything
-all: $(TARGET_THTS_TEST) $(TARGET_THTS_PY_EX)
+all: $(TARGET_THTS_TEST) $(TARGET_THTS_PY_EX) $(TARGET_MO_EXPR)
 
 
 
@@ -121,6 +127,10 @@ $(PY_MAIN_OBJ) : $(PY_MAIN)
 	@mkdir -p bin/py/main
 	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
+# Build main object files rule
+$(MAIN_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
+	@mkdir -p $(@D)
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
 
 #####
@@ -160,6 +170,14 @@ $(TARGET_THTS_PY_EX): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(PY_MAIN_OBJ)
 $(TARGET_THTS_PY_EX_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
 $(TARGET_THTS_PY_EX_DEBUG): $(TARGET_THTS_PY_EX)
 
+# Expr entry point
+$(TARGET_MO_EXPR): LDFLAGS += $(PY_LDFLAGS)
+$(TARGET_MO_EXPR): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(MAIN_OBJECTS)
+	$(CXX) -shared $(PY_EX_CPPFLAGS) $(CPPFLAGS) $^ -o $(TARGET_MO_EXPR) $(LDFLAGS)
+
+# Debug expr entry
+$(TARGET_MO_EXPR_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
+$(TARGET_MO_EXPR_DEBUG): $(TARGET_MO_EXPR)
 
 
 #####
@@ -178,4 +196,4 @@ clean:
 #####
 # Phony targets, so make knows when a target isn't producing a corresponding output file of same name
 #####
-.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST_DEBUG) $(TARGET_THTS_PY_LIB) $(TARGET_THTS_PY_EX_DEBUG)
+.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST_DEBUG) $(TARGET_THTS_PY_LIB) $(TARGET_THTS_PY_EX_DEBUG) $(TARGET_MO_EXPR_DEBUG)
