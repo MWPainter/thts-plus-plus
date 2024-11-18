@@ -7,6 +7,9 @@ thts-test
 pyex
 moexpr
 
+# Results/output folders dont want to copy around
+results
+
 # Hidden files
 .vscode
 .DS_Store
@@ -30,7 +33,6 @@ external/kata1*
 # Results output folders (other branches)
 plots
 dents_plots
-results
 
 # Outputs (other branches)
 go-test
