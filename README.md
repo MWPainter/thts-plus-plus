@@ -123,6 +123,7 @@ mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=lemon ..
 make
+make install
 ```
 
 

@@ -32,7 +32,6 @@ TEST_OBJECTS = $(patsubst test/%.cpp, bin/test/%.o, $(TEST_SOURCES))
 MO_SOURCES = $(wildcard mo/*.cpp)
 MO_OBJECTS = $(patsubst mo/%.cpp, bin/mo/%.o, $(MO_SOURCES))
 
-# PY_MODULE_DEF = py/module/module.cpp
 PY_SOURCES = $(wildcard py/*.cpp)
 PY_OBJECTS = $(patsubst py/%.cpp, bin/py/%.o, $(PY_SOURCES))
 
