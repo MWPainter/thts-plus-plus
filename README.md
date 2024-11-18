@@ -153,6 +153,8 @@ make install
 
 I also added the line `set(CMAKE_CXX_STANDARD 20) # thts++ change: updated standard to c++17` to the bayesopt `cmakelists.txt`
 
+Wasnt so simple getting it to work on jade, needed the entire library, not just the include (header) files, and had to install fresh rather than copying header files. Not sure why.
+
 
 
 

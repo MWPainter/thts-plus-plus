@@ -27,5 +27,4 @@ echo Running experiment ${EXPR_ID}
 
 cd $CODE_DIR
 source setup_jade_devel_shell.sh
-source setup_env_vars_for_devel_jade.sh
 ./moexpr opt $EXPR_ID
