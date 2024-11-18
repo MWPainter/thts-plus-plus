@@ -31,24 +31,31 @@ static const std::string DEBUG_PY_ENV_4_ID = "py_debug_env_4"; // stoch + 4 rew
 // TODO: implement + integrate tree envs to demonstrate things
 
 // env ids - mo gymnasium (discr obs / discr act)
-static const std::string DST_ENV_ID = "deep-sea-treasure-v0";
-static const std::string DST_CONC_ENV_ID = "deep-sea-treasure-concave-v0";
-static const std::string DST_MIRR_ENV_ID = "deep-sea-treasure-mirrored-v0";
-static const std::string RESOURCE_GATHER_ENV_ID = "resource-gathering-v0";
-static const std::string BREAKABLE_BOTTLES_ENV_ID = "breakable-bottles-v0";
-static const std::string FRUIT_TREE_ENV_ID = "fruit-tree-v0";
-static const std::string FOUR_ROOM_ENV_ID = "four-room-v0";
+static const std::string DST_ENV_ID = "deep-sea-treasure-v0";                   // 50x + 70x
+static const std::string DST_CONC_ENV_ID = "deep-sea-treasure-concave-v0";      // 51x + 71x
+static const std::string DST_MIRR_ENV_ID = "deep-sea-treasure-mirrored-v0";     // 52x + 72x
+static const std::string RESOURCE_GATHER_ENV_ID = "resource-gathering-v0";      // 53x + 73x
+static const std::string BREAKABLE_BOTTLES_ENV_ID = "breakable-bottles-v0";     // 55x + 75x
+static const std::string FRUIT_TREE_ENV_ID = "fruit-tree-v0";                   // 56x + 76x
+static const std::string FOUR_ROOM_ENV_ID = "four-room-v0";                     // 57x + 77x
 
 // env ids - mo gymnasium (cts obs / discr act)
-static const std::string MOUNTAIN_CAR_ENV_ID = "mo-mountaincar-v0";
-static const std::string LUNAR_LANDER_ENV_ID = "mo-lunar-lander-v2";
-static const std::string MINECART_ENV_ID = "minecart-v0";
-static const std::string HIGHWAY_ENV_ID = "mo-highway-v0";
-static const std::string HIGHWAY_FAST_ENV_ID = "mo-highway-fast-v0";
+static const std::string MOUNTAIN_CAR_ENV_ID = "mo-mountaincar-v0";             // 59x + 79x
+static const std::string LUNAR_LANDER_ENV_ID = "mo-lunar-lander-v2";            // 60x + 80x
+static const std::string MINECART_ENV_ID = "minecart-v0";                       // 61x + 81x
+static const std::string HIGHWAY_ENV_ID = "mo-highway-v0";                      // 62x + 82x
+static const std::string HIGHWAY_FAST_ENV_ID = "mo-highway-fast-v0";            // 63x + 83x
 
 // env ids - mo gymnasium (with extra time cost)
-static const std::string FOUR_ROOM_TIMED_ENV_ID = "four-room-v0";
+static const std::string RESOURCE_GATHER_TIMED_ENV_ID = "resource-gathering-timed-v0";  // 54x + 74x
+static const std::string FOUR_ROOM_TIMED_ENV_ID = "four-room-timed-v0";                 // 58x + 78x
+static const std::unordered_map<std::string,std::string> TIMED_ENV_ID_TO_GYM_ID =
+{
+    {RESOURCE_GATHER_TIMED_ENV_ID, RESOURCE_GATHER_ENV_ID},
+    {FOUR_ROOM_TIMED_ENV_ID, FOUR_ROOM_ENV_ID},
+};
 
+// lists of envs - debug envs
 static const std::unordered_set<std::string> DEBUG_ENVS =
 {
      DEBUG_ENV_1_ID,
@@ -57,6 +64,7 @@ static const std::unordered_set<std::string> DEBUG_ENVS =
      DEBUG_ENV_4_ID,
 };
 
+// lists of envs - debug py envs
 static const std::unordered_set<std::string> DEBUG_PY_ENVS =
 {
      DEBUG_PY_ENV_1_ID,
@@ -65,6 +73,12 @@ static const std::unordered_set<std::string> DEBUG_PY_ENVS =
      DEBUG_PY_ENV_4_ID,
 };
 
+// lists of envs - toy envas
+static const std::unordered_set<std::string> TOY_ENVS =
+{
+};
+
+// lists of envs - mo gymnasium envs
 static const std::unordered_set<std::string> MO_GYM_ENVS =
 {
      DST_ENV_ID,
@@ -110,33 +124,75 @@ static const std::string DEBUG_CHMCTS_HP_OPT_EXPR_ID = "021_debug_chmcts_hp";
 static const std::string DEBUG_SMBTS_HP_OPT_EXPR_ID = "022_debug_smbts_hp";
 static const std::string DEBUG_SMDENTS_HP_OPT_EXPR_ID = "023_debug_smdents_hp";
 
-// expr ids - toy/tree
-// TODO: 1xx = hyperparam tuning 
-// TODO: 2xx = eval
+// expr ids - toy/tree (1xx + 2xx = hyperparam tuning)
+// TODO
 
-// expr ids - mo gymnasium
-// 3xx + 4xx = hyperparam tuning
+
+// expr ids - toy/tree (3xx + 4xx = eval)
+// TODO
+
+// expr ids - mo gymnasium (5xx + 6xx = hyperparam tuning)
 // - deep sea treasure
-static const std::string HP_OPT_DST_CZT = "300_hp_opt_dst_czt";
-static const std::string HP_OPT_DST_CHMCTS = "301_hp_opt_dst_chmcts";
-static const std::string HP_OPT_DST_SMBTS = "302_hp_opt_dst_smbts";
-static const std::string HP_OPT_DST_SMDENTS = "303_hp_opt_dst_smdents";
+static const std::string HP_OPT_DST_CZT_EXPR_ID = "500_hp_opt_dst_czt";
+static const std::string HP_OPT_DST_CHMCTS_EXPR_ID = "501_hp_opt_dst_chmcts";
+static const std::string HP_OPT_DST_SMBTS_EXPR_ID = "502_hp_opt_dst_smbts";
+static const std::string HP_OPT_DST_SMDENTS_EXPR_ID = "503_hp_opt_dst_smdents";
 // - breakable bottles
-static const std::string HP_OPT_BB_CZT = "310_hp_opt_bb_czt";
-static const std::string HP_OPT_BB_CHMCTS = "311_hp_opt_bb_chmcts";
-static const std::string HP_OPT_BB_SMBTS = "312_hp_opt_bb_smbts";
-static const std::string HP_OPT_BB_SMDENTS = "313_hp_opt_bb_smdents";
+static const std::string HP_OPT_BB_CZT_EXPR_ID = "550_hp_opt_bb_czt";
+static const std::string HP_OPT_BB_CHMCTS_EXPR_ID = "551_hp_opt_bb_chmcts";
+static const std::string HP_OPT_BB_SMBTS_EXPR_ID = "552_hp_opt_bb_smbts";
+static const std::string HP_OPT_BB_SMDENTS_EXPR_ID = "553_hp_opt_bb_smdents";
+// - fruit tree
+static const std::string HP_OPT_FT_CZT_EXPR_ID = "560_hp_opt_ft_czt";
+static const std::string HP_OPT_FT_CHMCTS_EXPR_ID = "561_hp_opt_ft_chmcts";
+static const std::string HP_OPT_FT_SMBTS_EXPR_ID = "562_hp_opt_ft_smbts";
+static const std::string HP_OPT_FT_SMDENTS_EXPR_ID = "563_hp_opt_ft_smdents";
 // - four room (timed)
-static const std::string HP_OPT_FRT_CZT = "320_hp_opt_frt_czt";
-static const std::string HP_OPT_FRT_CHMCTS = "321_hp_opt_frt_chmcts";
-static const std::string HP_OPT_FRT_SMBTS = "322_hp_opt_frt_smbts";
-static const std::string HP_OPT_FRT_SMDENTS = "323_hp_opt_frt_smdents";
+static const std::string HP_OPT_FOUR_T_CZT_EXPR_ID = "580_hp_opt_four_czt";
+static const std::string HP_OPT_FOUR_T_CHMCTS_EXPR_ID = "581_hp_opt_four_chmcts";
+static const std::string HP_OPT_FOUR_T_SMBTS_EXPR_ID = "582_hp_opt_four_smbts";
+static const std::string HP_OPT_FOUR_T_SMDENTS_EXPR_ID = "583_hp_opt_four_smdents";
 // - minecart
-static const std::string HP_OPT_MINE_CZT = "330_hp_opt_mine_czt";
-static const std::string HP_OPT_MINE_CHMCTS = "331_hp_opt_mine_chmcts";
-static const std::string HP_OPT_MINE_SMBTS = "332_hp_opt_mine_smbts";
-static const std::string HP_OPT_MINE_SMDENTS = "333_hp_opt_mine_smdents";
-// 5xx + 6xx = eval
+static const std::string HP_OPT_MINE_CZT_EXPR_ID = "610_hp_opt_mine_czt";
+static const std::string HP_OPT_MINE_CHMCTS_EXPR_ID = "611_hp_opt_mine_chmcts";
+static const std::string HP_OPT_MINE_SMBTS_EXPR_ID = "612_hp_opt_mine_smbts";
+static const std::string HP_OPT_MINE_SMDENTS_EXPR_ID = "613_hp_opt_mine_smdents";
+
+// expr ids - lists of czt / chmcts / bts / dents expr_ids
+static std::unordered_map<std::string,std::string> HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID =
+{
+    {HP_OPT_DST_CZT_EXPR_ID,        DST_ENV_ID},
+    {HP_OPT_BB_CZT_EXPR_ID,         BREAKABLE_BOTTLES_ENV_ID},
+    {HP_OPT_FT_CZT_EXPR_ID,         FRUIT_TREE_ENV_ID},
+    {HP_OPT_FOUR_T_CZT_EXPR_ID,     FOUR_ROOM_TIMED_ENV_ID},
+    {HP_OPT_MINE_CZT_EXPR_ID,       MINECART_ENV_ID},
+};
+static std::unordered_map<std::string,std::string> HP_OPT_MOGYM_CHMCTS_EXPR_ID_TO_ENV_ID =
+{
+    {HP_OPT_DST_CHMCTS_EXPR_ID,     DST_ENV_ID},
+    {HP_OPT_BB_CHMCTS_EXPR_ID,      BREAKABLE_BOTTLES_ENV_ID},
+    {HP_OPT_FT_CHMCTS_EXPR_ID,      FRUIT_TREE_ENV_ID},
+    {HP_OPT_FOUR_T_CHMCTS_EXPR_ID,  FOUR_ROOM_TIMED_ENV_ID},
+    {HP_OPT_MINE_CHMCTS_EXPR_ID,    MINECART_ENV_ID},
+};
+static std::unordered_map<std::string,std::string> HP_OPT_MOGYM_SMBTS_EXPR_ID_TO_ENV_ID =
+{   
+    {HP_OPT_DST_SMBTS_EXPR_ID,      DST_ENV_ID},
+    {HP_OPT_BB_SMBTS_EXPR_ID,       BREAKABLE_BOTTLES_ENV_ID},
+    {HP_OPT_FT_SMBTS_EXPR_ID,       FRUIT_TREE_ENV_ID},
+    {HP_OPT_FOUR_T_SMBTS_EXPR_ID,   FOUR_ROOM_TIMED_ENV_ID},
+    {HP_OPT_MINE_SMBTS_EXPR_ID,     MINECART_ENV_ID},
+};
+static std::unordered_map<std::string,std::string> HP_OPT_MOGYM_SMDENTS_EXPR_ID_TO_ENV_ID =
+{
+    {HP_OPT_DST_SMDENTS_EXPR_ID,        DST_ENV_ID},
+    {HP_OPT_BB_SMDENTS_EXPR_ID,         BREAKABLE_BOTTLES_ENV_ID},
+    {HP_OPT_FT_SMDENTS_EXPR_ID,         FRUIT_TREE_ENV_ID},
+    {HP_OPT_FOUR_T_SMDENTS_EXPR_ID,     FOUR_ROOM_TIMED_ENV_ID},
+    {HP_OPT_MINE_SMDENTS_EXPR_ID,       MINECART_ENV_ID},
+};
+
+// expr ids - mo gymnasium (7xx + 8xx = eval)
 
 // param ids
 static const std::string CZT_BIAS_PARAM_ID = "czt_bias";
