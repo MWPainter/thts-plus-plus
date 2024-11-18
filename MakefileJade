@@ -52,7 +52,7 @@ TEST_INCLUDES = -Iexternal/googletest/build/include
 INCLUDES += -Iexternal/pybind11/include $$(python3.12 -m pybind11 --includes) -Ipy
 INCLUDES += -I$(ANACONDA_ENVS_HOME)/thts3.12/include/python3.12
 INCLUDES += -Iexternal/bayesopt/include
-INCLUDES += -I/jmain02/home/J2AD008/wga37/mmp10-wga37/boost/boost_1_86_0/boost # where we put boost (header only) files on jade
+INCLUDES += -I/jmain02/home/J2AD008/wga37/mmp10-wga37/boost/boost_1_86_0 # where we put boost (header only) files on jade
 
 CPPFLAGS = $(INCLUDES) -Wall -std=c++2a
 PY_LIB_CPPFLAGS += -fPIC -fvisibility=hidden # needed to create shared library
