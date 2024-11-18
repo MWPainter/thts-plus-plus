@@ -21,7 +21,7 @@
 
 
 HOME_DIR="/jmain02/home/J2AD008/wga37/mmp10-wga37"
-CODE_DIR="/jmain02/home/J2AD008/wga37/mmp10-wga37/thts-plus-plus"
+CODE_DIR="/jmain02/home/J2AD008/wga37/mmp10-wga37/mo/thts-plus-plus"
 
 echo Running experiment ${EXPR_ID}
 
