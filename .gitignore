@@ -9,6 +9,7 @@ moexpr
 
 # Results/output folders dont want to copy around
 results
+slurm/slurm_output
 
 # Hidden files
 .vscode
