@@ -1,6 +1,7 @@
 #include "main/run_expr.h"
 
 #include "helper_templates.h"
+
 #include "mo/mo_mc_eval.h"
 #include "py/mo_py_mc_eval.h"
 #include "mo/mo_thts.h"
@@ -501,7 +502,7 @@ namespace thts {
     /**
      * Returns the results directory to use for this run, making sure that it exists, and creating it if it doesnt
     */
-    string create_hp_opt_results_dir() {
+    void create_hp_opt_results_dir() {
         if (!filesystem::exists(HP_OPT_RESULTS_DIR)) {
             filesystem::create_directories(HP_OPT_RESULTS_DIR);
         }
@@ -521,27 +522,33 @@ namespace thts {
      * Runs hyperparameter opt for 'expr_id'
      */
     void run_hp_opt(string expr_id) {
-        // Get the hp_opt
-        shared_ptr<HyperparamOptimiser> hp_opt = get_hyperparam_optimiser_from_expr_id(expr_id);
+        // timestamp, so can rerun with same params and keep both results
+        time_t expr_timestamp = std::time(nullptr);
         
         // Create output filestream
         create_hp_opt_results_dir();
-        string hp_opt_filename = get_hp_opt_results_filename(expr_id, hp_opt->expr_timestamp);
+        string hp_opt_filename = get_hp_opt_results_filename(expr_id, expr_timestamp);
         ofstream hp_opt_file;
         hp_opt_file.open(hp_opt_filename, ios::out);// | ios::app);
-        hp_opt->set_results_fs(hp_opt_file);
+
+        // Get the hp_opt
+        shared_ptr<HyperparamOptimiser> hp_opt = get_hyperparam_optimiser_from_expr_id(
+            expr_id, expr_timestamp, hp_opt_file);
+
+        // If running python, make interpreter and immediately run a dummy no-op subinterpreter  
+        // (see comment on start_dummy_subinterpreter)
+        shared_ptr<py::scoped_interpreter> guard;
+        shared_ptr<mutex> dummy_subinterpreter_mutex = make_shared<mutex>();
+        shared_ptr<thread> dummy_thread;
+        if (hp_opt->is_python_env()) {
+            guard = make_shared<py::scoped_interpreter>();
+            py::gil_scoped_release rel;
+            dummy_subinterpreter_mutex->lock();
+            dummy_thread = start_dummy_subinterpreter(dummy_subinterpreter_mutex);
+        }
 
         // Write header
         hp_opt->write_header();
-
-        // Make bayesopt::Parameters
-        bayesopt::Parameters bo_params;
-        bo_params.surr_name = "sGaussianProcessNormal";
-        bo_params.noise = 1e-10;
-        bo_params.n_iterations = 190;
-        bo_params.n_init_samples = 10;
-        bo_params.n_iter_relearn = 10;
-        bo_params.verbose_level = 0;
 
         // Run bayesopt (we do own logging, so results vector unecessary)
         bayesopt::vectord _results(hp_opt->num_hyperparams);
@@ -552,6 +559,116 @@ namespace thts {
 
         // Close file
         hp_opt_file.close();
+
+        // Let the dummy subinterpreter die
+        if (hp_opt->is_python_env()) {
+            dummy_subinterpreter_mutex->unlock();
+            dummy_thread->join();
+        }
     }
 
+    /**
+     * Compute noise estimate
+     */
+    void estimate_noise_for_hp_opt(std::string env_id)
+    {
+        // Params that we're hardcoding because this bit is a bit hacky anyway
+        unordered_map<string,int> rollouts_per_mc_eval = 
+        {
+            {DST_ENV_ID, 500},
+        };
+        unordered_map<string,int> max_trial_length = 
+        {
+            {DST_ENV_ID, 50},
+        };
+        
+        unordered_map<string,int> eval_threads = 
+        {
+            {DST_ENV_ID, 10},
+        };
+        
+        // Error check
+        if (!rollouts_per_mc_eval.contains(env_id)) {
+            throw runtime_error("Invalide env_id, maybe havent added params for this env?");
+        }
+
+        // If running python, make interpreter and immediately run a dummy no-op subinterpreter  
+        // (see comment on start_dummy_subinterpreter)
+        shared_ptr<py::scoped_interpreter> guard;
+        shared_ptr<mutex> dummy_subinterpreter_mutex = make_shared<mutex>();
+        shared_ptr<thread> dummy_thread;
+        if (is_python_env(env_id)) {
+            guard = make_shared<py::scoped_interpreter>();
+            py::gil_scoped_release rel;
+            dummy_subinterpreter_mutex->lock();
+            dummy_thread = start_dummy_subinterpreter(dummy_subinterpreter_mutex);
+        }
+
+        // Create env
+        shared_ptr<MoThtsEnv> env = get_env(env_id);
+        MoThtsManagerArgs dummy_manager_args(env);
+        dummy_manager_args.num_envs = eval_threads[env_id];
+        dummy_manager_args.seed = 60415;
+        shared_ptr<MoThtsManager> dummy_manager = make_shared<MoThtsManager>(dummy_manager_args);
+        
+        // Start python servers
+        // - should be able to just have a lockguard 'py::gil_scoped_acquire acq;' in the conditional block, but when 
+        //      try that version there's some issue with gil locking in mc evaluator. As this isn't even main path of 
+        //      code for these experiments (let alone the library), I'm not keen to understand why right now
+        shared_ptr<py::gil_scoped_acquire> acq;
+        shared_ptr<py::gil_scoped_release> rel;
+        if (is_python_env(env_id)) {
+            // py::gil_scoped_acquire acq;
+            acq = make_shared<py::gil_scoped_acquire>();
+            for (int i=0; i<eval_threads[env_id]; i++) {
+                PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(
+                    dummy_manager->thts_env(i));
+                py_mp_env.start_python_server(i);
+            }
+            rel = make_shared<py::gil_scoped_release>();
+        }
+
+        // Run evaluator
+        double mean, std_dev, normalised_mean, normalised_std_dev;
+        if (is_python_env(env_id)) {
+            shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(nullptr, env, dummy_manager);  
+            MoPyMCEvaluator evaluator(
+                eval_policy, 
+                max_trial_length[env_id], 
+                dummy_manager, 
+                get_env_min_value(env_id, max_trial_length[env_id]), 
+                get_env_max_value(env_id));
+            evaluator.run_rollouts(rollouts_per_mc_eval[env_id], eval_threads[env_id]);
+            mean = evaluator.get_mean_mo_ctx_return();
+            std_dev = evaluator.get_stddev_mean_mo_ctx_return();
+            normalised_mean = evaluator.get_mean_mo_normalised_ctx_return();
+            normalised_std_dev = evaluator.get_stddev_mean_mo_normalised_ctx_return();
+
+        } else {
+            shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(nullptr, env, dummy_manager);  
+            MoMCEvaluator evaluator(
+                eval_policy, 
+                max_trial_length[env_id], 
+                dummy_manager, 
+                get_env_min_value(env_id, max_trial_length[env_id]), 
+                get_env_max_value(env_id));
+            evaluator.run_rollouts(rollouts_per_mc_eval[env_id], eval_threads[env_id]);
+            mean = evaluator.get_mean_mo_ctx_return();
+            std_dev = evaluator.get_stddev_mean_mo_ctx_return();
+            normalised_mean = evaluator.get_mean_mo_normalised_ctx_return();
+            normalised_std_dev = evaluator.get_stddev_mean_mo_normalised_ctx_return();
+        }
+
+        // Print info
+        cout << "Mean: " << mean << endl   
+            << "StdDev: " << std_dev << endl;
+        cout << "Normalised Mean: " << normalised_mean << endl   
+            << "Normalised StdDev: " << normalised_std_dev << endl;
+
+        // Let the dummy subinterpreter die
+        if (is_python_env(env_id)) {
+            dummy_subinterpreter_mutex->unlock();
+            dummy_thread->join();
+        }
+    }
 }

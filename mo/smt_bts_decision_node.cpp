@@ -45,7 +45,8 @@ namespace thts {
         shared_ptr<const Action> action, 
         double opp_coeff, 
         MoThtsContext& ctx,
-        double& entropy) const 
+        double& entropy,
+        bool& pure_backup_val) const 
     {
         SmtBtsManager& manager = (SmtBtsManager&) *thts_manager;
         if (!has_child_node_itfc(action)) {
@@ -57,20 +58,24 @@ namespace thts {
         shared_ptr<TN> simplex = child.simplex_map.get_leaf_tn_node(ctx.context_weight);
         shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight);
         entropy = closest_vertex->entropy;
+        pure_backup_val = closest_vertex->pure_backup_value_estimate;
         return closest_vertex->value_estimate * opp_coeff;
     }
 
     void SmtBtsDNode::get_child_q_values(
         ActionVector& actions,
         unordered_map<shared_ptr<const Action>,Eigen::ArrayXd>& q_val_map, 
-        unordered_map<shared_ptr<const Action>,double>& entropy_map, 
+        unordered_map<shared_ptr<const Action>,double>& entropy_map,
+        unordered_map<shared_ptr<const Action>,bool>& pure_backup_val_map, 
         MoThtsContext& ctx) const
     {
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         for (shared_ptr<const Action> action : actions) {
             double entropy;
-            q_val_map[action] = get_q_value(action, opp_coeff, ctx, entropy);
+            bool pure_backup_val;
+            q_val_map[action] = get_q_value(action, opp_coeff, ctx, entropy, pure_backup_val);
             entropy_map[action] = entropy;
+            pure_backup_val_map[action] = pure_backup_val;
         }
     }
 
@@ -156,7 +161,8 @@ namespace thts {
         shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
         unordered_map<shared_ptr<const Action>,Eigen::ArrayXd> q_val_map;
         unordered_map<shared_ptr<const Action>,double> entropy_map;
-        get_child_q_values(*actions, q_val_map, entropy_map, ctx);
+        unordered_map<shared_ptr<const Action>,bool> _pure_backup_val_map;
+        get_child_q_values(*actions, q_val_map, entropy_map, _pure_backup_val_map, ctx);
 
         ActionDistr action_distr;
         compute_action_distribution(*actions, q_val_map, entropy_map, action_distr, ctx);
@@ -173,7 +179,8 @@ namespace thts {
         shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
         unordered_map<shared_ptr<const Action>,Eigen::ArrayXd> q_val_map;
         unordered_map<shared_ptr<const Action>,double> entropy_map;
-        get_child_q_values(*actions, q_val_map, entropy_map, ctx);
+        unordered_map<shared_ptr<const Action>,bool> _pure_backup_val_map;
+        get_child_q_values(*actions, q_val_map, entropy_map, _pure_backup_val_map, ctx);
 
         unordered_map<shared_ptr<const Action>,double> ctx_q_val_map;
         for (shared_ptr<const Action> action : *actions) {
@@ -183,6 +190,9 @@ namespace thts {
         return helper::get_max_key_break_ties_randomly(ctx_q_val_map, *thts_manager);
     }
 
+    /**
+     * See comments on NGV datatype for what the pure_backup stuff is about
+     */
     void SmtBtsDNode::backup(
         const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 
         const std::vector<Eigen::ArrayXd>& trial_rewards_after_node, 
@@ -192,31 +202,42 @@ namespace thts {
     {
         num_backups++;
 
-        shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
-        unordered_map<shared_ptr<const Action>,Eigen::ArrayXd> q_val_map;
-        unordered_map<shared_ptr<const Action>,double> entropy_map;
-        get_child_q_values(*actions, q_val_map, entropy_map, ctx);
-
-        Eigen::ArrayXd best_q_val;
-        double max_ctx_q_val = numeric_limits<double>::lowest();
-        for (shared_ptr<const Action> action : *actions) {
-            double ctx_q_val = thts::helper::dot(ctx.context_weight, q_val_map[action]);
-            if (ctx_q_val > max_ctx_q_val) {
-                max_ctx_q_val = ctx_q_val;
-                best_q_val = q_val_map[action];
-            }
-        }
-
+        // Get closest NGV in simplex map
         shared_ptr<TN> simplex = simplex_map.get_leaf_tn_node(ctx.context_weight);
         shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight);
 
+        // Want to backup according to closest_vertex->weight, so make a context with that weight to use
+        MoThtsContext closest_vertex_ctx(closest_vertex->weight);
+
+        // get q vals
+        shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, closest_vertex_ctx);
+        unordered_map<shared_ptr<const Action>,Eigen::ArrayXd> q_val_map;
+        unordered_map<shared_ptr<const Action>,double> entropy_map;
+        unordered_map<shared_ptr<const Action>,bool> pure_backup_val_map;
+        get_child_q_values(*actions, q_val_map, entropy_map, pure_backup_val_map, closest_vertex_ctx);
+
+        // dp backups
+        Eigen::ArrayXd best_q_val;
+        bool best_q_val_is_pure_backup;
+        double max_ctx_q_val = numeric_limits<double>::lowest();
+        for (shared_ptr<const Action> action : *actions) {
+            double ctx_q_val = thts::helper::dot(closest_vertex->weight, q_val_map[action]);
+            if (ctx_q_val > max_ctx_q_val) {
+                max_ctx_q_val = ctx_q_val;
+                best_q_val = q_val_map[action];
+                best_q_val_is_pure_backup = pure_backup_val_map[action];
+            }
+        }
+
+        // update simplex map
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         closest_vertex->value_estimate = best_q_val * opp_coeff;
+        closest_vertex->pure_backup_value_estimate = best_q_val_is_pure_backup;
 
+        // simplex map - splitting + message passing
         SmtBtsManager& manager = (SmtBtsManager&) *thts_manager;
         simplex->maybe_subdivide(simplex_map, manager);
-        // closest_vertex->share_values_message_passing();
-        closest_vertex->share_values_message_passing_push();
+        closest_vertex->share_values_message_passing();
     }
 
     string SmtBtsDNode::get_pretty_print_val() const {

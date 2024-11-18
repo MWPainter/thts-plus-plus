@@ -1,0 +1,19 @@
+env_id,alg_id,search_runtime,max_trial_length,rollouts_per_mc_eval,num_repeats,num_threads
+deep-sea-treasure-v0,smbts,5,50,5,1,1
+
+hp_opt_iter,sm_l_inf_thresh,sm_split_visit_thresh,smbts_search_temp,smbts_epsilon,smbts_use_search_temp_decay,smbts_search_temp_decay_visits_scale,eval(mc_estimate_expected_utility)
+MIN,0.0001,1,0.01,0.0001,0,1,MIN
+MAX,0.5,20,10,0.5,1,10,MAX
+0,0.39577,12,0.950122,0.00428217,0,5.61963,2.83041
+1,0.0235497,8,8.70651,0.363425,1,1.69495,5.73019
+2,0.5,19,0.01,0.0001,0,10,0.185656
+3,0.5,1,0.01,0.5,0,10,5.57902
+
+Best eval with params:
+eval (mc_estimate_expected_utility) = 5.73019
+smbts_search_temp_decay_visits_scale = 1.69495
+smbts_epsilon = 0.363425
+smbts_search_temp = 8.70651
+smbts_use_search_temp_decay = 1
+sm_split_visit_thresh = 8
+sm_l_inf_thresh = 0.0235497

@@ -1411,9 +1411,9 @@ int main(int argc, char *argv[]) {
     */
     // sm_bts_test();
     // sm_bts_4d_test();
-    // sm_dents_test();
-    // sm_bts_bin_tree_test();
-    // sm_bts_bin_tree_4d_test();
+    sm_dents_test();
+    sm_bts_bin_tree_test();
+    sm_bts_bin_tree_4d_test();
 
     /**
      * Testing chmcts

@@ -1,5 +1,7 @@
 #include "main/run_id.h"
 
+#include "main/run_expr.h"
+
 #include "mo/chmcts_manager.h"
 #include "mo/czt_manager.h"
 #include "mo/smt_bts_manager.h"
@@ -27,6 +29,132 @@ using namespace pybind11::literals;
 namespace py = pybind11;
 
 namespace thts {
+
+    /**
+     * Create and return the env
+    */
+    shared_ptr<MoThtsEnv> get_env(string env_id) 
+    {
+        if (MO_GYM_ENVS.contains(env_id)) {
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            return make_shared<MoGymMultiprocessingThtsEnv>(pickle_wrapper, env_id);
+        }
+
+        if (DEBUG_ENVS.contains(env_id)) {
+            int walk_len = 10;
+            bool stochastic = (env_id == DEBUG_ENV_2_ID) || (env_id == DEBUG_ENV_4_ID);
+            double wrong_dir_prob = stochastic ? 0.25 : 0.0;
+            bool add_extra_rewards = (env_id == DEBUG_ENV_3_ID) || (env_id == DEBUG_ENV_4_ID);
+            return make_shared<TestMoThtsEnv>(walk_len, wrong_dir_prob, add_extra_rewards);
+        }
+
+        if (DEBUG_PY_ENVS.contains(env_id)) {
+            int walk_len = 10;
+            bool stochastic = (env_id == DEBUG_PY_ENV_2_ID) || (env_id == DEBUG_PY_ENV_4_ID);
+            double wrong_dir_prob = stochastic ? 0.25 : 0.0;
+            bool add_extra_rewards = (env_id == DEBUG_PY_ENV_3_ID) || (env_id == DEBUG_PY_ENV_4_ID);
+
+            py::module_ py_thts_env_module = py::module_::import("mo_test_env"); 
+            py::object py_thts_env_py_obj = py_thts_env_module.attr("MoPyTestThtsEnv")(
+                "walk_len"_a=walk_len, "wrong_dir_prob"_a=wrong_dir_prob, "add_extra_rewards"_a=add_extra_rewards);
+            shared_ptr<py::object> py_thts_env = make_shared<py::object>(py_thts_env_py_obj);
+
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            return make_shared<MoPyMultiprocessingThtsEnv>(pickle_wrapper, py_thts_env);
+        }
+
+        throw runtime_error("Error in get_env");
+    }
+    
+    /**
+     * Checks if env corresponding to 'env_id' is a python env
+     */
+    bool is_python_env(string env_id) 
+    {
+        return MO_GYM_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id);
+    }
+
+    /**
+     * Get min value
+     * See https://mo-gymnasium.farama.org/ for env defs
+    */
+    Eigen::ArrayXd get_env_min_value(string env_id, int max_trial_length) 
+    {
+        if (env_id == DST_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
+            min_val[0] = 0.0;
+            min_val[1] = -1.0 * max_trial_length;
+            return min_val;
+        }
+        if (env_id == FRUIT_TREE_ENV_ID) {
+            return Eigen::ArrayXd::Zero(6);
+        }
+
+
+        if (DEBUG_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id)) {
+            unordered_set<string> four_d_envs = 
+            {
+                DEBUG_ENV_3_ID,
+                DEBUG_ENV_4_ID,
+                DEBUG_PY_ENV_3_ID,
+                DEBUG_PY_ENV_4_ID,
+            };
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
+            if (four_d_envs.contains(env_id)) {
+                min_val = Eigen::ArrayXd(4);
+            }
+            min_val[0] = -10.0;
+            min_val[1] = -10.0;
+            if (four_d_envs.contains(env_id)) {
+                min_val[2] = 0.0;
+                min_val[3] = 0.0;
+            }
+            return min_val;
+        }
+
+        throw runtime_error("Error in get_env_min_value");
+    }
+
+    /**
+     * Get max value
+     * See https://mo-gymnasium.farama.org/ for env defs
+    */
+    Eigen::ArrayXd get_env_max_value(string env_id) 
+    {
+        if (env_id == DST_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
+            max_val[0] = 23.7;
+            max_val[1] = 0.0;
+            return max_val;
+        }
+        if (env_id == FRUIT_TREE_ENV_ID) {
+            return Eigen::ArrayXd::Ones(6) * 10.0;
+        }
+                
+        if (DEBUG_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id)) {
+            unordered_set<string> four_d_envs = 
+            {
+                DEBUG_ENV_3_ID,
+                DEBUG_ENV_4_ID,
+                DEBUG_PY_ENV_3_ID,
+                DEBUG_PY_ENV_4_ID,
+            };
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
+            if (four_d_envs.contains(env_id)) {
+                max_val = Eigen::ArrayXd(4);
+            }
+            max_val[0] = -5.0;
+            max_val[1] = -5.0;
+            if (four_d_envs.contains(env_id)) {
+                max_val[2] = 2.0;
+                max_val[3] = 2.0;
+            }
+            return max_val;
+        }
+
+        throw runtime_error("Error in get_env_max_value");
+    }
+
     /**
      * Default constructor
     */
@@ -110,43 +238,12 @@ namespace thts {
 
     bool RunID::is_python_env() 
     {
-        return MO_GYM_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id);
+        return thts::is_python_env(env_id);
     }
 
-    /**
-     * Create and return the env
-    */
     shared_ptr<MoThtsEnv> RunID::get_env() 
     {
-        if (MO_GYM_ENVS.contains(env_id)) {
-            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-            return make_shared<MoGymMultiprocessingThtsEnv>(pickle_wrapper, env_id);
-        }
-
-        if (DEBUG_ENVS.contains(env_id)) {
-            int walk_len = 10;
-            bool stochastic = (env_id == DEBUG_ENV_2_ID) || (env_id == DEBUG_ENV_4_ID);
-            double wrong_dir_prob = stochastic ? 0.25 : 0.0;
-            bool add_extra_rewards = (env_id == DEBUG_ENV_3_ID) || (env_id == DEBUG_ENV_4_ID);
-            return make_shared<TestMoThtsEnv>(walk_len, wrong_dir_prob, add_extra_rewards);
-        }
-
-        if (DEBUG_PY_ENVS.contains(env_id)) {
-            int walk_len = 10;
-            bool stochastic = (env_id == DEBUG_PY_ENV_2_ID) || (env_id == DEBUG_PY_ENV_4_ID);
-            double wrong_dir_prob = stochastic ? 0.25 : 0.0;
-            bool add_extra_rewards = (env_id == DEBUG_PY_ENV_3_ID) || (env_id == DEBUG_PY_ENV_4_ID);
-
-            py::module_ py_thts_env_module = py::module_::import("mo_test_env"); 
-            py::object py_thts_env_py_obj = py_thts_env_module.attr("MoPyTestThtsEnv")(
-                "walk_len"_a=walk_len, "wrong_dir_prob"_a=wrong_dir_prob, "add_extra_rewards"_a=add_extra_rewards);
-            shared_ptr<py::object> py_thts_env = make_shared<py::object>(py_thts_env_py_obj);
-
-            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-            return make_shared<MoPyMultiprocessingThtsEnv>(pickle_wrapper, py_thts_env);
-        }
-
-        throw runtime_error("Error in RunID get_env");
+        return thts::get_env(env_id);
     }
 
     /**
@@ -254,39 +351,7 @@ namespace thts {
     */
     Eigen::ArrayXd RunID::get_env_min_value() 
     {
-        if (env_id == DST_ENV_ID) {
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
-            min_val[0] = 0.0;
-            min_val[1] = -1.0 * max_trial_length;
-            return min_val;
-        }
-        if (env_id == FRUIT_TREE_ENV_ID) {
-            return Eigen::ArrayXd::Zero(6);
-        }
-
-
-        if (DEBUG_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id)) {
-            unordered_set<string> four_d_envs = 
-            {
-                DEBUG_ENV_3_ID,
-                DEBUG_ENV_4_ID,
-                DEBUG_PY_ENV_3_ID,
-                DEBUG_PY_ENV_4_ID,
-            };
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
-            if (four_d_envs.contains(env_id)) {
-                min_val = Eigen::ArrayXd(4);
-            }
-            min_val[0] = -10.0;
-            min_val[1] = -10.0;
-            if (four_d_envs.contains(env_id)) {
-                min_val[2] = 0.0;
-                min_val[3] = 0.0;
-            }
-            return min_val;
-        }
-
-        throw runtime_error("Error in RunID get_env_min_value");
+        return thts::get_env_min_value(env_id, max_trial_length);
     }
 
     /**
@@ -295,38 +360,7 @@ namespace thts {
     */
     Eigen::ArrayXd RunID::get_env_max_value() 
     {
-        if (env_id == DST_ENV_ID) {
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
-            max_val[0] = 23.7;
-            max_val[1] = 0.0;
-            return max_val;
-        }
-        if (env_id == FRUIT_TREE_ENV_ID) {
-            return Eigen::ArrayXd::Ones(6) * 10.0;
-        }
-                
-        if (DEBUG_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id)) {
-            unordered_set<string> four_d_envs = 
-            {
-                DEBUG_ENV_3_ID,
-                DEBUG_ENV_4_ID,
-                DEBUG_PY_ENV_3_ID,
-                DEBUG_PY_ENV_4_ID,
-            };
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
-            if (four_d_envs.contains(env_id)) {
-                max_val = Eigen::ArrayXd(4);
-            }
-            max_val[0] = -5.0;
-            max_val[1] = -5.0;
-            if (four_d_envs.contains(env_id)) {
-                max_val[2] = 2.0;
-                max_val[3] = 2.0;
-            }
-            return max_val;
-        }
-
-        throw runtime_error("Error in RunID get_env_max_value");
+        return thts::get_env_max_value(env_id);
     }
 
     /**
@@ -606,8 +640,9 @@ namespace thts {
         int rollouts_per_mc_eval,
         int num_repeats,
         int num_threads,
-        int eval_threads
-        bayesopt::Parameters params) :
+        int eval_threads,
+        bayesopt::Parameters params,
+        ofstream &results_fs) :
             bayesopt::ContinuousModel(RELEVANT_PARAM_IDS[alg_id].size(), params),
             num_hyperparams(RELEVANT_PARAM_IDS[alg_id].size()),
             env_id(env_id),
@@ -626,7 +661,7 @@ namespace thts {
             num_envs((eval_threads > num_threads) ? eval_threads : num_threads),
             best_eval(0.0),
             best_alg_params(),
-            results_fs(nullptr),
+            results_fs(results_fs),
             hp_opt_iter(0)
     {
         // error checking
@@ -646,7 +681,7 @@ namespace thts {
         // might as well set bounding box here
         bayesopt::vectord min_vec(num_hyperparams);
         bayesopt::vectord max_vec(num_hyperparams);
-        for (int i=0; i<alg_param_ids.size(); i++) {
+        for (size_t i=0; i<alg_param_ids.size(); i++) {
             pair<double,double> min_max = alg_params_min_max[alg_param_ids[i]];
             min_vec[i] = min_max.first;
             max_vec[i] = min_max.second;
@@ -654,16 +689,16 @@ namespace thts {
         bayesopt::ContinuousModel::setBoundingBox(min_vec,max_vec);
     };
 
-    void HyperparamOptimiser::set_results_fs(fstream &fs)
+    bool HyperparamOptimiser::is_python_env() 
     {
-        results_fs = fs;
+        return MO_GYM_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id);
     }
 
     unordered_map<string, double> HyperparamOptimiser::get_alg_params_from_bayesopt_vec(bayesopt::vectord vec)
     {
         unordered_map<string, double> alg_params;
-        for (int i=0; i<alg_param_ids.size(); i++) {
-            param_id = alg_param_ids[i];
+        for (size_t i=0; i<alg_param_ids.size(); i++) {
+            string param_id = alg_param_ids[i];
             if (BOOLEAN_PARAM_IDS.contains(param_id)) {
                 pair<double,double> min_max = alg_params_min_max[param_id]; 
                 alg_params[param_id] = get_bool_val_from_cts_sample(vec[i], min_max.first, min_max.second);
@@ -674,15 +709,16 @@ namespace thts {
                 alg_params[param_id] = vec[i];
             }
         }
+        return alg_params;
     };
 
-    bool get_bool_val_from_cts_sample(double sample_val, int min, int max)
+    bool HyperparamOptimiser::get_bool_val_from_cts_sample(double sample_val, int min, int max)
     {
         double midpoint = ((double) min+max) / 2.0;
         return (sample_val > midpoint);
     };
 
-    int get_int_val_from_cts_sample(double sample_val, int min, int max)
+    int HyperparamOptimiser::get_int_val_from_cts_sample(double sample_val, int min, int max)
     {
         if (sample_val == max) {
             return max-1;            
@@ -693,7 +729,7 @@ namespace thts {
     /**
      * Hyperparam optimiser - fn to optimise
      */
-    HyperparamOptimiser::evaluateSample(const bayesopt::vectord &query) 
+    double HyperparamOptimiser::evaluateSample(const bayesopt::vectord &query) 
     {
         unordered_map<string,double> alg_params = get_alg_params_from_bayesopt_vec(query);
         RunID run_id(
@@ -712,17 +748,22 @@ namespace thts {
         );
         double eval = thts::run_expr(run_id);
         write_eval_line(alg_params, eval);
+        if (eval > best_eval) {
+            best_eval = eval;
+            best_alg_params = alg_params;
+        }
         return eval;
     };
 
     /**
      * Writes a header with the params for each eval top results_fs
      */
-    void write_header()
+    void HyperparamOptimiser::write_header()
     {
+        // expr params
         results_fs << "env_id,alg_id,search_runtime,max_trial_length,rollouts_per_mc_eval,num_repeats,"
             << "num_threads" << endl
-            << end_id << ","
+            << env_id << ","
             << alg_id << ","
             << search_runtime << ","
             << max_trial_length << ","
@@ -731,18 +772,32 @@ namespace thts {
             << num_threads 
             << endl << endl;
         
-        results_fs << "hp_opt_iter" << ",";
+        // hyperparams (with sample number (hp_opt_iter) and eval at start/end)
+        results_fs << "hp_opt_iter,";
         for (string param_id : alg_param_ids) {
             results_fs << param_id << ",";
         } 
         results_fs << "eval(mc_estimate_expected_utility)" << endl;
+
+        // Print out the min an max params trying
+        results_fs << "MIN,";
+        for (string param_id : alg_param_ids) {
+            results_fs << alg_params_min_max[param_id].first << ",";
+        } 
+        results_fs << "MIN" << endl;
+        results_fs << "MAX,";
+        for (string param_id : alg_param_ids) {
+            results_fs << alg_params_min_max[param_id].second << ",";
+        } 
+        results_fs << "MAX" << endl;
+
     };
 
     /**
      * Write eval/hyperparam sample line to file
      * - note that hp_opt_iter only used here, and also updated here
      */
-    void write_eval_line(unordered_map<string,double> alg_params, double eval)
+    void HyperparamOptimiser::write_eval_line(unordered_map<string,double> alg_params, double eval)
     {   
         results_fs << hp_opt_iter++ << ",";
         for (string param_id : alg_param_ids) {
@@ -751,7 +806,7 @@ namespace thts {
         results_fs << eval << endl;
     };
 
-    void write_best_eval()
+    void HyperparamOptimiser::write_best_eval()
     {
         results_fs << endl;
         results_fs << "Best eval with params:" << endl;
@@ -764,8 +819,9 @@ namespace thts {
     /**
      * Gets hyperparam optimiser from expr_id
      */
-    shared_ptr<HyperparamOptimiser> get_hyperparam_optimiser_from_expr_id(string expr_id)
-
+    shared_ptr<HyperparamOptimiser> get_hyperparam_optimiser_from_expr_id(
+        string expr_id, time_t expr_timestamp, ofstream &hp_opt_fs)
+    {
         // expr_id: 020_debug_czt_hp /  021_debug_chmcts_hp / 022_debug_smbts_hp / 023_debug_smdents_hp
         // debug expr id for debugging
         if (expr_id == DEBUG_CZT_HP_OPT_EXPR_ID 
@@ -773,14 +829,19 @@ namespace thts {
             || expr_id == DEBUG_SMBTS_HP_OPT_EXPR_ID
             || expr_id == DEBUG_SMDENTS_HP_OPT_EXPR_ID) 
         {
-            string ald_id = CZT_ALG_ID;
+            // expr_id 020_debug_czt_hp
+            string alg_id = CZT_ALG_ID;
             unordered_map<string, pair<double,double>> alg_params_min_max = {
                 {CZT_BIAS_PARAM_ID, make_pair(1.0, 10.0)},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 20.0)},
             };
+
+            // expr_id 021_debug_chmcts_hp
             if (expr_id == DEBUG_CHMCTS_HP_OPT_EXPR_ID) {
                 alg_id = CHMCTS_ALG_ID;
             }
+
+            // expr_id 022_debug_smbts_hp
             if (expr_id == DEBUG_SMBTS_HP_OPT_EXPR_ID) {
                 alg_id = SMBTS_ALG_ID;
                 alg_params_min_max = {
@@ -792,6 +853,8 @@ namespace thts {
                     {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, make_pair(1.0, 10.0)},
                 };
             }
+
+            // expr_id 023_debug_smdents_hp
             if (expr_id == DEBUG_SMDENTS_HP_OPT_EXPR_ID) {
                 alg_id = SMDENTS_ALG_ID;
                 alg_params_min_max = {
@@ -806,12 +869,22 @@ namespace thts {
                 };
             }
 
+
+            // Make bayesopt::Parameters
+            bayesopt::Parameters bo_params;
+            bo_params.surr_name = "sGaussianProcessML";
+            bo_params.noise = 2.0; // ./moexpr noise deep-sea-treasure-v0 -> std_dev 40.0, so low balling by factor 20
+            bo_params.n_iterations = 2;//190;
+            bo_params.n_init_samples = 2;//10;
+            bo_params.n_iter_relearn = 10;
+            bo_params.verbose_level = 0;
+
+            // env params
             string env_id = DST_ENV_ID;
-            time_t expr_timestamp = std::time(nullptr);
             double search_runtime = 5.0;
             int max_trial_length = 50;
             double eval_delta = 1.0;
-            int rollouts_per_mc_eval = 250;
+            int rollouts_per_mc_eval = 5;
             int num_repeats = 1;
             int num_threads = 1;
             int eval_threads = 1;
@@ -821,14 +894,16 @@ namespace thts {
                 expr_id,
                 expr_timestamp,
                 alg_id,
-                // TODO alg_params_min_max,
+                alg_params_min_max,
                 search_runtime,
                 max_trial_length,
                 eval_delta,
                 rollouts_per_mc_eval,
                 num_repeats,
                 num_threads,
-                eval_threads
+                eval_threads,
+                bo_params,
+                hp_opt_fs
             );
         }
 

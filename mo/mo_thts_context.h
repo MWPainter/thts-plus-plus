@@ -19,6 +19,7 @@ namespace thts {
             Eigen::ArrayXd context_weight;
 
             MoThtsContext(MoThtsManager& manager);
+            MoThtsContext(Eigen::ArrayXd weight);
             virtual ~MoThtsContext() = default;
         
         private:

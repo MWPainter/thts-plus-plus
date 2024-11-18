@@ -77,6 +77,9 @@ namespace thts {
         }
     }
 
+    /**
+     * See comments on NGV datatype for what the pure_backup stuff is about
+     */
     void SmtDentsDNode::backup(
         const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 
         const std::vector<Eigen::ArrayXd>& trial_rewards_after_node, 
@@ -86,49 +89,56 @@ namespace thts {
     {
         num_backups++;
 
+        // Get closest NGV in simplex map
+        shared_ptr<TN> simplex = simplex_map.get_leaf_tn_node(ctx.context_weight);
+        shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight);
+
+        // Want to backup according to closest_vertex->weight, so make a context with that weight to use
+        MoThtsContext closest_vertex_ctx(closest_vertex->weight);
+
         // get q vals
-        shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
+        shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, closest_vertex_ctx);
         unordered_map<shared_ptr<const Action>,Eigen::ArrayXd> q_val_map;
         unordered_map<shared_ptr<const Action>,double> entropy_map;
-        get_child_q_values(*actions, q_val_map, entropy_map, ctx);
+        unordered_map<shared_ptr<const Action>,bool> pure_backup_val_map;
+        get_child_q_values(*actions, q_val_map, entropy_map, pure_backup_val_map, closest_vertex_ctx);
 
         // Compute local policy + entropy
         ActionDistr policy;
-        compute_action_distribution(*actions, q_val_map, entropy_map, policy, ctx);
+        compute_action_distribution(*actions, q_val_map, entropy_map, policy, closest_vertex_ctx);
 
         double local_entropy = 0.0;
         for (pair<shared_ptr<const Action>,double> pr : policy) {
             double prob = pr.second;
             if (prob == 0.0) continue;
-            local_entropy -= prob * log(prob);
+            local_entropy -= prob * log(prob); 
         }
 
         // dp backups + subtree entropy
         Eigen::ArrayXd best_q_val;
         double subtree_entropy;
+        bool best_q_val_is_pure_backup;
         double max_ctx_q_val = numeric_limits<double>::lowest();
         for (shared_ptr<const Action> action : *actions) {
-            double ctx_q_val = thts::helper::dot(ctx.context_weight, q_val_map[action]);
+            double ctx_q_val = thts::helper::dot(closest_vertex->weight, q_val_map[action]);
             if (ctx_q_val > max_ctx_q_val) {
                 max_ctx_q_val = ctx_q_val;
                 best_q_val = q_val_map[action];
+                best_q_val_is_pure_backup = pure_backup_val_map[action];
             }
             subtree_entropy += policy[action] * entropy_map[action];
         }
 
         // update simplex map
-        shared_ptr<TN> simplex = simplex_map.get_leaf_tn_node(ctx.context_weight);
-        shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight);
-
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         closest_vertex->value_estimate = best_q_val * opp_coeff;
         closest_vertex->entropy = local_entropy + subtree_entropy;
+        closest_vertex->pure_backup_value_estimate = best_q_val_is_pure_backup;
 
         // simplex map - splitting + message passing
         SmtBtsManager& manager = (SmtBtsManager&) *thts_manager;
         simplex->maybe_subdivide(simplex_map, manager);
-        // closest_vertex->share_values_message_passing();
-        closest_vertex->share_values_message_passing_push();
+        closest_vertex->share_values_message_passing();
     }
 }
 

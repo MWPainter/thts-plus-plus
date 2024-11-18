@@ -24,6 +24,8 @@ int main(int argc, char* argv[]) {
         thts::run_exprs(run_ids);
     } else if (string(argv[1]) == "opt") {  
         thts::run_hp_opt(argv[2]);
+    } else if (string(argv[1]) == "noise") {
+        thts::estimate_noise_for_hp_opt(argv[2]);
     }
 
     return 0;
