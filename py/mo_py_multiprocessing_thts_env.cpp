@@ -58,6 +58,7 @@ namespace thts::python {
         shared_mem_wrapper->args[0] = *state->get_serialised_state();
         shared_mem_wrapper->args[1] = *action->get_serialised_action();
         shared_mem_wrapper->make_rpc_call();
+        py::gil_scoped_acquire acquire;
         py::list py_mo_reward = pickle_wrapper->deserialise(shared_mem_wrapper->args[0]);
         int i=0;
         Eigen::ArrayXd mo_reward = Eigen::ArrayXd::Zero(reward_dim);

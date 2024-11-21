@@ -47,7 +47,7 @@ namespace thts {
             int num_backups;
             double soft_value;
             double local_reward;
-            std::shared_ptr<StateDistr> next_state_distr;
+            // std::shared_ptr<StateDistr> next_state_distr;
 
             /**
              * Handles the thts sample_observation function by randomly sampling.
@@ -55,7 +55,7 @@ namespace thts {
              * Returns:
              *      The sampled next state
              */
-            std::shared_ptr<const State> sample_observation_random();
+            std::shared_ptr<const State> sample_observation_random(ThtsEnvContext& ctx);
 
             /**
              * Implements a soft backup for ments. (Average of child nodes values + immediate reward R(s,a))

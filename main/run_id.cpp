@@ -384,11 +384,11 @@ namespace thts {
             string env_id = DST_ENV_ID;
             // string env_id = DEBUG_PY_ENV_1_ID;
             time_t expr_timestamp = std::time(nullptr);
-            double search_runtime = 5.0;
+            double search_runtime = 1.0;
             int max_trial_length = 50;
-            double eval_delta = 1.0;
-            int rollouts_per_mc_eval = 250;
-            int num_repeats = 3;
+            double eval_delta = 0.5;
+            int rollouts_per_mc_eval = 50;
+            int num_repeats = 2;
             int num_threads = 1;
             int eval_threads = 1;
 

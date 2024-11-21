@@ -1,9 +1,0 @@
-env_id,alg_id,search_runtime,max_trial_length,rollouts_per_mc_eval,num_repeats,num_threads
-deep-sea-treasure-v0,czt,20,50,1024,5,16
-
-hp_opt_iter,czt_bias,czt_ball_split_visit_thresh,eval(mc_estimate_expected_utility),best_eval_so_far
-MIN,0.01,5,MIN
-MAX,100,100,MAX
-0,30.7378,89,2.09046,2.09046
-1,72.6359,31,1.43134,2.09046
-2,21.9448,39,2.17221,2.17221

@@ -30,6 +30,12 @@ namespace thts {
         for (int i=1; i<num_envs; i++) {
             thts_envs->push_back(args.thts_env->clone());
         }
+
+        // TODO: this is a bit hacky
+        // - as main thread (not any worker thread) needs to get a thts_env for constructing initial node
+        // - register (this current thread == main thread) to tid==0. So we will have two threads registered to tid,
+        // - but this main thread will only access thts_env's before any worker threads spawned, so its ok
+        register_thread_id(0);
     }
     
     /**

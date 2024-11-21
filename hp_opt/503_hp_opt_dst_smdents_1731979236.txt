@@ -1,9 +1,0 @@
-env_id,alg_id,search_runtime,max_trial_length,rollouts_per_mc_eval,num_repeats,num_threads
-deep-sea-treasure-v0,smdents,20,50,1024,5,16
-
-hp_opt_iter,sm_l_inf_thresh,sm_split_visit_thresh,smbts_search_temp,smbts_epsilon,smbts_use_search_temp_decay,smbts_search_temp_decay_visits_scale,smdents_entropy_temp_init,smdents_entropy_temp_visits_scale,eval(mc_estimate_expected_utility),best_eval_so_far
-MIN,0.0001,1,0.01,0.0001,0,0.01,0.001,0.01,MIN
-MAX,0.5,100,100,0.5,1,100,100,100,MAX
-0,0.0601137,73,70.402,0.227843,1,52.4433,86.9549,16.2851,6.05683,6.05683
-1,0.374062,4,34.9125,0.338752,0,34.14,17.6613,40.3577,5.92937,6.05683
-2,0.171864,32,51.5162,0.279935,1,16.2683,98.582,84.4315,6.22129,6.22129

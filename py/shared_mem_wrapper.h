@@ -69,6 +69,11 @@ namespace thts::python {
             // Reads results out from shared mem
             void make_rpc_call();
 
+            // Dont wait for response when making kill call
+            // TODO: consider if better way to do this?
+            // TODO: as providing a general wrapper, might be worth making a blocking option, and have a read_rpc_result for non_blocking rpc calls
+            void make_kill_rpc_call();
+
         private:
             void read_from_shared_mem();
             void write_to_shared_mem();

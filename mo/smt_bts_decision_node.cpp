@@ -218,7 +218,7 @@ namespace thts {
 
         // dp backups
         Eigen::ArrayXd best_q_val;
-        bool best_q_val_is_pure_backup;
+        bool best_q_val_is_pure_backup = false;
         double max_ctx_q_val = numeric_limits<double>::lowest();
         for (shared_ptr<const Action> action : *actions) {
             double ctx_q_val = thts::helper::dot(closest_vertex->weight, q_val_map[action]);
