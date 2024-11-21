@@ -3,6 +3,8 @@
 #include "py/py_multiprocessing_thts_env.h"
 #include "mo/mo_thts_env.h"
 
+#include <pybind11/pybind11.h>
+
 
 namespace thts::python {
     // PyBind

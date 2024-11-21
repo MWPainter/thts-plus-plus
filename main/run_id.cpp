@@ -915,18 +915,18 @@ namespace thts {
         if (HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID.contains(expr_id)) {
             string alg_id = CZT_ALG_ID;
             unordered_map<string, pair<double,double>> alg_params_min_max = {
-                {CZT_BIAS_PARAM_ID, make_pair(0.01, 1000.0)},
-                {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
+                {CZT_BIAS_PARAM_ID, make_pair(0.01, 100.0)},
+                {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(5.0, 100.0)},
             };
 
             string env_id = HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID[expr_id];
-            double search_runtime = 30.0;
+            double search_runtime = 20.0;
             int max_trial_length = 50;
             double eval_delta = 1.0;
             int rollouts_per_mc_eval = 1024;
             int num_repeats = 5;
-            int num_threads = 32;
-            int eval_threads = 32;
+            int num_threads = 16;
+            int eval_threads = 16;
 
             bayesopt::Parameters bo_params;
             bo_params.surr_name = "sGaussianProcessML";
@@ -959,18 +959,18 @@ namespace thts {
         if (HP_OPT_MOGYM_CHMCTS_EXPR_ID_TO_ENV_ID.contains(expr_id)) {
             string alg_id = CHMCTS_ALG_ID;
             unordered_map<string, pair<double,double>> alg_params_min_max = {
-                {CZT_BIAS_PARAM_ID, make_pair(0.01, 1000.0)},
-                {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
+                {CZT_BIAS_PARAM_ID, make_pair(0.01, 100.0)},
+                {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(5.0, 100.0)},
             };
 
             string env_id = HP_OPT_MOGYM_CHMCTS_EXPR_ID_TO_ENV_ID[expr_id];
-            double search_runtime = 30.0;
+            double search_runtime = 20.0;
             int max_trial_length = 50;
             double eval_delta = 1.0;
             int rollouts_per_mc_eval = 1024;
             int num_repeats = 5;
-            int num_threads = 32;
-            int eval_threads = 32;
+            int num_threads = 16;
+            int eval_threads = 16;
 
             bayesopt::Parameters bo_params;
             bo_params.surr_name = "sGaussianProcessML";
@@ -1006,20 +1006,20 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, make_pair(0.0001, 0.5)},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, make_pair(0.01, 1000.0)},
+                {SMBTS_SEARCH_TEMP_PARAM_ID, make_pair(0.01, 100.0)},
                 {SMBTS_EPSILON_PARAM_ID, make_pair(0.0001, 0.5)},
                 {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, make_pair(0.0, 1.0)},
                 {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
             };
 
             string env_id = HP_OPT_MOGYM_SMBTS_EXPR_ID_TO_ENV_ID[expr_id];
-            double search_runtime = 30.0;
+            double search_runtime = 20.0;
             int max_trial_length = 50;
             double eval_delta = 1.0;
             int rollouts_per_mc_eval = 1024;
             int num_repeats = 5;
-            int num_threads = 32;
-            int eval_threads = 32;
+            int num_threads = 16;
+            int eval_threads = 16;
 
             bayesopt::Parameters bo_params;
             bo_params.surr_name = "sGaussianProcessML";
@@ -1055,7 +1055,7 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, make_pair(0.0001, 0.5)},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, make_pair(0.01, 1000.0)},
+                {SMBTS_SEARCH_TEMP_PARAM_ID, make_pair(0.01, 100.0)},
                 {SMBTS_EPSILON_PARAM_ID, make_pair(0.0001, 0.5)},
                 {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, make_pair(0.0, 1.0)},
                 {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
@@ -1064,13 +1064,13 @@ namespace thts {
             };
 
             string env_id = HP_OPT_MOGYM_SMDENTS_EXPR_ID_TO_ENV_ID[expr_id];
-            double search_runtime = 30.0;
+            double search_runtime = 20.0;
             int max_trial_length = 50;
             double eval_delta = 1.0;
             int rollouts_per_mc_eval = 1024;
             int num_repeats = 5;
-            int num_threads = 32;
-            int eval_threads = 32;
+            int num_threads = 16;
+            int eval_threads = 16;
 
             bayesopt::Parameters bo_params;
             bo_params.surr_name = "sGaussianProcessML";

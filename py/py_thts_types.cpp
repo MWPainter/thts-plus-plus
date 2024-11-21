@@ -21,7 +21,6 @@ namespace thts::python {
      * Just point towards pybind interface for each function
      */
     PyObservation::PyObservation(shared_ptr<PickleWrapper> py_pickle_wrapper, shared_ptr<py::object> _py_obs) : 
-        lock(),
         py_obs(_py_obs),
         py_pickle_wrapper(py_pickle_wrapper),
         serialised_obs()
@@ -29,7 +28,6 @@ namespace thts::python {
     }
 
     PyObservation::PyObservation(shared_ptr<PickleWrapper> py_pickle_wrapper, shared_ptr<string> serialised_obs) : 
-        lock(),
         py_obs(),
         py_pickle_wrapper(py_pickle_wrapper),
         serialised_obs(serialised_obs)
@@ -37,13 +35,14 @@ namespace thts::python {
     }
     
     PyObservation::~PyObservation() {
-        lock_guard<recursive_mutex> lg(lock);
+        py::gil_scoped_acquire acquire;
         py_obs.reset();
         py_pickle_wrapper.reset();
     }
 
     shared_ptr<py::object> PyObservation::get_py_obs() const {
         if (py_obs == nullptr) {
+            py::gil_scoped_acquire acquire;
             py_obs = make_shared<py::object>(py_pickle_wrapper->deserialise(*serialised_obs));
         }
         return py_obs;
@@ -51,7 +50,7 @@ namespace thts::python {
 
     shared_ptr<string> PyObservation::get_serialised_obs() const {
         if (serialised_obs == nullptr) {
-            lock_guard<recursive_mutex> lg(lock);
+            py::gil_scoped_acquire acquire;
             serialised_obs = make_shared<string>(py_pickle_wrapper->serialise(*py_obs));
         }
         return serialised_obs;
@@ -83,7 +82,7 @@ namespace thts::python {
     }
     
     string PyObservation::get_pretty_print_string() const {
-        lock_guard<recursive_mutex> lg(lock);
+        py::gil_scoped_acquire acquire;
         return py::str(*get_py_obs());
     }
 
@@ -92,7 +91,6 @@ namespace thts::python {
      * Just point towards pybind interface for each function
      */
     PyState::PyState(shared_ptr<PickleWrapper> py_pickle_wrapper, shared_ptr<py::object> _py_state) : 
-        lock(),
         py_state(_py_state),
         py_pickle_wrapper(py_pickle_wrapper),
         serialised_state()
@@ -100,7 +98,6 @@ namespace thts::python {
     }
 
     PyState::PyState(shared_ptr<PickleWrapper> py_pickle_wrapper, shared_ptr<string> serialised_state) : 
-        lock(),
         py_state(),
         py_pickle_wrapper(py_pickle_wrapper),
         serialised_state(serialised_state)
@@ -108,13 +105,14 @@ namespace thts::python {
     }
     
     PyState::~PyState() {
-        lock_guard<recursive_mutex> lg(lock);
+        py::gil_scoped_acquire acquire;
         py_state.reset();
         py_pickle_wrapper.reset();
     }
 
     shared_ptr<py::object> PyState::get_py_state() const {
         if (py_state == nullptr) {
+            py::gil_scoped_acquire acquire;
             py_state = make_shared<py::object>(py_pickle_wrapper->deserialise(*serialised_state));
         }
         return py_state;
@@ -122,7 +120,7 @@ namespace thts::python {
 
     shared_ptr<string> PyState::get_serialised_state() const {
         if (serialised_state == nullptr) {
-            lock_guard<recursive_mutex> lg(lock);
+            py::gil_scoped_acquire acquire;
             serialised_state = make_shared<string>(py_pickle_wrapper->serialise(*py_state));
         }
         return serialised_state;
@@ -154,7 +152,7 @@ namespace thts::python {
     }
     
     string PyState::get_pretty_print_string() const {
-        lock_guard<recursive_mutex> lg(lock);
+        py::gil_scoped_acquire acquire;
         return py::str(*get_py_state());
     }
 
@@ -163,7 +161,6 @@ namespace thts::python {
      * Just point towards pybind interface for each function
      */
     PyAction::PyAction(shared_ptr<PickleWrapper> py_pickle_wrapper, shared_ptr<py::object> _py_action) : 
-        lock(),
         py_action(_py_action),
         py_pickle_wrapper(py_pickle_wrapper),
         serialised_action()
@@ -171,7 +168,6 @@ namespace thts::python {
     }
 
     PyAction::PyAction(shared_ptr<PickleWrapper> py_pickle_wrapper, shared_ptr<string> serialised_action) : 
-        lock(),
         py_action(),
         py_pickle_wrapper(py_pickle_wrapper),
         serialised_action(serialised_action)
@@ -179,13 +175,14 @@ namespace thts::python {
     }
     
     PyAction::~PyAction() {
-        lock_guard<recursive_mutex> lg(lock);
+        py::gil_scoped_acquire acquire;
         py_action.reset();
         py_pickle_wrapper.reset();
     }
 
     shared_ptr<py::object> PyAction::get_py_action() const {
         if (py_action == nullptr) {
+            py::gil_scoped_acquire acquire;
             py_action = make_shared<py::object>(py_pickle_wrapper->deserialise(*serialised_action));
         }
         return py_action;
@@ -193,7 +190,7 @@ namespace thts::python {
 
     shared_ptr<string> PyAction::get_serialised_action() const {
         if (serialised_action == nullptr) {
-            lock_guard<recursive_mutex> lg(lock);
+            py::gil_scoped_acquire acquire;
             serialised_action = make_shared<string>(py_pickle_wrapper->serialise(*py_action));
         }
         return serialised_action;
@@ -225,7 +222,7 @@ namespace thts::python {
     }
     
     string PyAction::get_pretty_print_string() const {
-        lock_guard<recursive_mutex> lg(lock);
+        py::gil_scoped_acquire acquire;
         return py::str(*get_py_action());
     }
 }

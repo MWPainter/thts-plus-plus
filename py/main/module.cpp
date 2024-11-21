@@ -45,6 +45,7 @@
 
 #include <sys/sem.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 using namespace std;
 using namespace thts;
@@ -130,60 +131,66 @@ void pickle_multiproc_test() {
     thts::python::helper::destroy_sem(semid);
 }
 
-void pickle_subinterpret_test_loop(int tid, py::module_& py_pickle_module, mutex& lock) {
-    // subinterpreter
-    thts::python::helper::lock_gil();
-    PyInterpreterConfig config = {
-        .use_main_obmalloc = 0,
-        .allow_fork = 0,
-        .allow_exec = 0,
-        .allow_threads = 1,
-        .allow_daemon_threads = 0,
-        .check_multi_interp_extensions = 1,
-        .gil = PyInterpreterConfig_OWN_GIL,
-    };
-    PyThreadState *tstate;
-    Py_NewInterpreterFromConfig(&tstate, &config);
-    if (tstate == NULL) {
-        throw runtime_error("Error starting subinterpreter");
-    }
+/**
+ * Getting rid of subinterpreter stuff
+ * lock_gil used to call the cpython lock gil function, that was it
+ * Keeping this though just incase ever want to use subinterpreters again?
+ * Probably not, but better to avoid the all of the pain of working this out from scratch again in the odd case do want
+ */
+// void pickle_subinterpret_test_loop(int tid, py::module_& py_pickle_module, mutex& lock) {
+//     // subinterpreter
+//     thts::python::helper::lock_gil();
+//     PyInterpreterConfig config = {
+//         .use_main_obmalloc = 0,
+//         .allow_fork = 0,
+//         .allow_exec = 0,
+//         .allow_threads = 1,
+//         .allow_daemon_threads = 0,
+//         .check_multi_interp_extensions = 1,
+//         .gil = PyInterpreterConfig_OWN_GIL,
+//     };
+//     PyThreadState *tstate;
+//     Py_NewInterpreterFromConfig(&tstate, &config);
+//     if (tstate == NULL) {
+//         throw runtime_error("Error starting subinterpreter");
+//     }
 
-    for (int i=0; i<1000; i++) {
-        lock.lock();
-        py::dict py_dict;
-        py_dict["tid"] = 1;
-        py_dict["somethingelse"] = "tid";
-        py::object py_serialise_fn = py_pickle_module.attr("dumps");
-        py::object py_dict_serialised = py_serialise_fn(py_dict);  
-        string serialised_dict_stirng = py_dict_serialised.cast<string>();   
-        py::object py_deserialise_fn = py_pickle_module.attr("loads");
-        py::object py_dict_deserialised = py_deserialise_fn(py_dict_serialised);
-        py::object py_dict_serialised_from_cpp = py::bytes(serialised_dict_stirng);
-        py::object py_dict_deserialised_from_cpp = py_deserialise_fn(py_dict_serialised_from_cpp);   
-        if ((i%100) == 0) { 
-            // lock.lock();
-            cout << "finished loop " << i << " in thread " << tid << endl;
-            // lock.unlock();
-        }
-        lock.unlock();
-    }
-
-}
+//     for (int i=0; i<1000; i++) {
+//         lock.lock();
+//         py::dict py_dict;
+//         py_dict["tid"] = 1;
+//         py_dict["somethingelse"] = "tid";
+//         py::object py_serialise_fn = py_pickle_module.attr("dumps");
+//         py::object py_dict_serialised = py_serialise_fn(py_dict);  
+//         string serialised_dict_stirng = py_dict_serialised.cast<string>();   
+//         py::object py_deserialise_fn = py_pickle_module.attr("loads");
+//         py::object py_dict_deserialised = py_deserialise_fn(py_dict_serialised);
+//         py::object py_dict_serialised_from_cpp = py::bytes(serialised_dict_stirng);
+//         py::object py_dict_deserialised_from_cpp = py_deserialise_fn(py_dict_serialised_from_cpp);   
+//         if ((i%100) == 0) { 
+//             // lock.lock();
+//             cout << "finished loop " << i << " in thread " << tid << endl;
+//             // lock.unlock();
+//         }
+//         lock.unlock();
+//     }
+// }
 
 /**
  * Pickle works with subinterpreters
  * But
  * Pickle needs to be protected from concurrency still
 */
-void pickle_subinterpret_test() {
-    py::module_ py_pickle_module = py::module_::import("pickle");
-    py::gil_scoped_release rel;
-    mutex lock;
-    thread t0(&pickle_subinterpret_test_loop, 0, std::ref(py_pickle_module), std::ref(lock));
-    thread t1(&pickle_subinterpret_test_loop, 1, std::ref(py_pickle_module), std::ref(lock));
-    t0.join();
-    t1.join();
-}
+// void pickle_subinterpret_test() {
+//     py::module_ py_pickle_module = py::module_::import("pickle");
+//     py::gil_scoped_release rel;
+//     mutex lock;
+
+//     thread t0(&pickle_subinterpret_test_loop, 0, std::ref(py_pickle_module), std::ref(lock));
+//     thread t1(&pickle_subinterpret_test_loop, 1, std::ref(py_pickle_module), std::ref(lock));
+//     t0.join();
+//     t1.join();
+// }
 
 // testing setting up shared memory 
 // updating an integer in a piece of shared memory
@@ -247,6 +254,52 @@ void shared_mem_wrapper_test() {
     cout << "Recieved rpc result:" << endl << smw.rpc_id << endl << smw.num_args << endl << smw.args[0] << endl;
 }
 
+/**
+ * test pybind gil objects
+ */
+void _pybind_gil_test_helper_t0(int thread_id) {
+    // no gil held
+    py::gil_scoped_acquire acquire;
+    // gil held
+    cout << "In thread id: " << thread_id << ", 0s sleep with gil, (1ack), should appear at 0s" << endl;
+    sleep(2);
+    {
+        cout << "In thread id: " << thread_id << ", 1s sleep w/gil, (1ack,1rel), should appear at 2s" << endl;
+        py::gil_scoped_release release;
+        //no gil held
+        sleep(2);
+    }
+    // gil held (scoped release out of scope => reacquire)
+    cout << "In thread id: " << thread_id << ", 1s sleep w/gil, 2s sleep w/out, (1ack), should appeat at 6s "
+        << "(but second at 6s)" << endl;
+}
+void _pybind_gil_test_helper_t1(int thread_id) {
+    // no gil held
+    py::gil_scoped_acquire acquire;
+    // gil held
+    cout << "In thread id: " << thread_id << ", 0s sleep, should appear at 2s (but second at 2s)" << endl;
+    sleep(2);
+    cout << "In thread id: " << thread_id << ", 2s sleep, should appear at 4s" << endl;
+    sleep(2);
+    cout << "In thread id: " << thread_id << ", 4s sleep, should appear at 6s" << endl;
+}
+
+/**
+ * Working out how to use gil with scoped_interpreter
+ * 
+ * gil is acquired by default, so need to release it in main thread first
+ * 
+ * Want to check if gil_scoped_acquire releases the gil in its destructor, as it didn't seem clear in docs
+ */
+void pybind_gil_test() {
+    py::gil_scoped_release release;
+    thread thread_one(&_pybind_gil_test_helper_t0, 0);
+    sleep(1);
+    thread thread_two(&_pybind_gil_test_helper_t1, 1);
+    thread_one.join();
+    thread_two.join();
+}
+
 void py_thts_env_test(double alpha, bool use_python_env) {
     // release gil
     py::gil_scoped_release rel;
@@ -256,7 +309,7 @@ void py_thts_env_test(double alpha, bool use_python_env) {
     double stay_prob = 0.0;
     int num_trials = 10000;
     int print_tree_depth = 2;
-    int num_threads = 4;
+    int num_threads = 3;
 
     // Make py env (making a py::object of python thts env, and pass into constructor)
     shared_ptr<ThtsEnv> thts_env;
@@ -277,7 +330,7 @@ void py_thts_env_test(double alpha, bool use_python_env) {
     shared_ptr<EstDNode> root_node;
     shared_ptr<ThtsPool> bts_pool;
     {
-        py::gil_scoped_acquire acq;
+        // py::gil_scoped_acquire acq;
 
         DentsManagerArgs args(thts_env);
         args.seed = 60415;
@@ -313,7 +366,7 @@ void py_thts_env_test(double alpha, bool use_python_env) {
 
     // Print out a tree (same as c++)
     // Make sure have gil, because getting pretty print string using python objects
-    py::gil_scoped_acquire acq;
+    // py::gil_scoped_acquire acq;
     cout << "EST with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -336,6 +389,7 @@ void py_thts_env_test(double alpha, bool use_python_env) {
     // Force tree destructors to be called (to clean up python objects with the gil)
     // resetting smart pointers should refcount to zero and call destructor
     // A bit annoying having to make everything a smart pointer to call destructors with gil, but mech
+    py::gil_scoped_acquire acq;
     manager.reset();
     manager_args.reset();
     thts_env.reset();
@@ -1372,16 +1426,17 @@ int main(int argc, char *argv[]) {
     // pickle_test();
     // sem_test();
     // pickle_multiproc_test();
-    // pickle_subinterpret_test();
+    // pickle_subinterpret_test(); // commented out now
     // shared_mem_test();
     // shared_mem_wrapper_test();
+    // pybind_gil_test();
 
     /**
      * Testing py thts env
     */
-    // bool bts_alpha = 1.0;
-    // bool use_python_env = true;
-    // py_thts_env_test(bts_alpha, use_python_env); 
+    bool bts_alpha = 1.0;
+    bool use_python_env = true;
+    py_thts_env_test(bts_alpha, use_python_env); 
 
     /**
      * Testing czt
@@ -1411,15 +1466,15 @@ int main(int argc, char *argv[]) {
     */
     // sm_bts_test();
     // sm_bts_4d_test();
-    sm_dents_test();
-    sm_bts_bin_tree_test();
-    sm_bts_bin_tree_4d_test();
+    // sm_dents_test();
+    // sm_bts_bin_tree_test();
+    // sm_bts_bin_tree_4d_test();
 
     /**
      * Testing chmcts
     */
-    chmcts_test();
-    chmcts_4d_test();
+    // chmcts_test();
+    // chmcts_4d_test();
 
     return 0;
 }

@@ -1,6 +1,7 @@
 #include "py/mo_py_multiprocessing_thts_env.h"
 
 #include "py/py_helper.h"
+#include "py/py_helper_templates.h"
 #include "py/py_thts_types.h"
 
 #include <mutex>
@@ -24,8 +25,8 @@ namespace thts::python {
         shared_ptr<py::object> py_thts_env) :
             PyMultiprocessingThtsEnv(pickle_wrapper, py_thts_env),
             MoThtsEnv(
-                (py_thts_env != nullptr) ? py_thts_env->attr("get_reward_dim")().cast<int>()        : 2, 
-                (py_thts_env != nullptr) ? py_thts_env->attr("is_fully_observable")().cast<bool>()  : true)
+                (py_thts_env != nullptr) ? helper::call_py_getter<int>(py_thts_env,"get_reward_dim")        : 2, 
+                (py_thts_env != nullptr) ? helper::call_py_getter<bool>(py_thts_env,"is_fully_observable")  : true)
     {
     }
 
