@@ -1,10 +1,13 @@
 #include "py/py_multiprocessing_thts_env.h"
 
 #include "py/py_helper.h"
+#include "py/py_helper_templates.h"
 #include "py/py_thts_types.h"
 
 #include <mutex>
 
+#include <signal.h>
+#include <sys/prctl.h>
 #include <unistd.h>
 
 #include <iostream>
@@ -22,7 +25,7 @@ namespace thts::python {
     PyMultiprocessingThtsEnv::PyMultiprocessingThtsEnv(
         shared_ptr<PickleWrapper> pickle_wrapper,
         shared_ptr<py::object> py_thts_env) :
-            ThtsEnv((py_thts_env != nullptr) ? py_thts_env->attr("is_fully_observable")().cast<bool>() : true),
+            ThtsEnv((py_thts_env != nullptr) ? helper::call_py_getter<bool>(py_thts_env,"is_fully_observable") : true),
             py_thts_env(py_thts_env),
             pickle_wrapper(pickle_wrapper),
             shared_mem_wrapper()
@@ -51,16 +54,33 @@ namespace thts::python {
         shared_mem_wrapper.reset();
     }
 
+    /**
+     * Setup python server fork
+     * Using: https://stackoverflow.com/questions/284325/how-to-make-child-process-die-after-parent-exits/36945270#36945270
+     * -> this sets the forked process to be terminated when parent process is terminated
+     * -> 
+     */
     void PyMultiprocessingThtsEnv::start_python_server(int tid) {
         shared_mem_wrapper = make_shared<SharedMemWrapper>(tid, 8*1024);
+        pid_t ppid_before_fork = getpid();
         pid_t pid = fork();
         if (pid == 0) {
+            int r = prctl(PR_SET_PDEATHSIG, SIGTERM); 
+            if (r == -1 || getppid() != ppid_before_fork) { 
+                exit(1); 
+            }
             server_main();
             exit(0);
         }
     }
 
+    /**
+     * Runs the server in a loop
+     * As the server runs in a forked process, so contains a completely duplicated python interpreter, we can afford to 
+     * hold the gil in the forked python interpreter for the duration of the server process
+     */
     void PyMultiprocessingThtsEnv::server_main() {
+        py::gil_scoped_acquire acquire;
         while(true) {
             shared_mem_wrapper->server_wait_for_rpc_call();
             int rpc_id = shared_mem_wrapper->rpc_id;
@@ -145,6 +165,7 @@ namespace thts::python {
         shared_mem_wrapper->num_args = 1;
         shared_mem_wrapper->args[0] = *state->get_serialised_state();
         shared_mem_wrapper->make_rpc_call();
+        py::gil_scoped_acquire acquire;
         py::list py_valid_actions = pickle_wrapper->deserialise(shared_mem_wrapper->args[0]);
         
         shared_ptr<PyActionVector> valid_actions = make_shared<PyActionVector>();
@@ -173,6 +194,7 @@ namespace thts::python {
         shared_mem_wrapper->args[0] = *state->get_serialised_state();
         shared_mem_wrapper->args[1] = *action->get_serialised_action();
         shared_mem_wrapper->make_rpc_call();
+        py::gil_scoped_acquire acquire;
         py::dict py_transition_prob_map = pickle_wrapper->deserialise(shared_mem_wrapper->args[0]);
 
         shared_ptr<PyStateDistr> transition_prob_map = make_shared<PyStateDistr>();
@@ -209,7 +231,8 @@ namespace thts::python {
         return make_shared<const PyState>(pickle_wrapper, make_shared<string>(shared_mem_wrapper->args[0]));
     }
 
-    string PyMultiprocessingThtsEnv::get_reward_py_server(string& state, string& action) const {
+    string PyMultiprocessingThtsEnv::get_reward_py_server(string& state, string& action) const 
+    {
         py::object py_state = pickle_wrapper->deserialise(state);
         py::object py_action = pickle_wrapper->deserialise(action);
         py::handle py_get_reward_fn = py_thts_env->attr("get_reward");
@@ -227,6 +250,7 @@ namespace thts::python {
         shared_mem_wrapper->args[0] = *state->get_serialised_state();
         shared_mem_wrapper->args[1] = *action->get_serialised_action();
         shared_mem_wrapper->make_rpc_call();
+        py::gil_scoped_acquire acquire;
         return pickle_wrapper->deserialise(shared_mem_wrapper->args[0]).cast<double>();
     }
 

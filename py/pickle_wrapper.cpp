@@ -8,11 +8,11 @@ namespace py = pybind11;
 namespace thts::python {
 
     PickleWrapper::PickleWrapper() : 
-        pickle_lock(), 
         py_pickle_module(), 
         py_pickle_dumps_fn(),
         py_pickle_loads_fn()
     {
+        py::gil_scoped_acquire acquire;
         py_pickle_module = make_shared<py::module_>(py::module_::import("pickle"));
         py_pickle_dumps_fn = make_shared<py::object>(py_pickle_module->attr("dumps"));
         py_pickle_loads_fn = make_shared<py::object>(py_pickle_module->attr("loads"));
@@ -20,6 +20,7 @@ namespace thts::python {
 
     PickleWrapper::~PickleWrapper()
     {
+        py::gil_scoped_acquire acquire;
         py_pickle_module.reset();
         py_pickle_dumps_fn.reset();
         py_pickle_loads_fn.reset();
@@ -27,16 +28,15 @@ namespace thts::python {
 
     string PickleWrapper::serialise(py::object& py_obj)
     {
-        pickle_lock.lock();
+        py::gil_scoped_acquire acquire;
         py::object py_serialised_obj = (*py_pickle_dumps_fn)(py_obj);
-        pickle_lock.unlock();
         return py_serialised_obj.cast<string>();
     }
 
     py::object PickleWrapper::deserialise(string& serialised_py_obj_str) 
     {
+        py::gil_scoped_acquire acquire;
         py::object py_serialised_obj = py::bytes(serialised_py_obj_str);
-        lock_guard<mutex> lg(pickle_lock);
         return (*py_pickle_loads_fn)(py_serialised_obj);
     }
 }

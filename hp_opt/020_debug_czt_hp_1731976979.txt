@@ -1,0 +1,15 @@
+env_id,alg_id,search_runtime,max_trial_length,rollouts_per_mc_eval,num_repeats,num_threads
+deep-sea-treasure-v0,czt,5,50,5,1,1
+
+hp_opt_iter,czt_bias,czt_ball_split_visit_thresh,eval(mc_estimate_expected_utility),best_eval_so_far
+MIN,1,1,MIN
+MAX,10,20,MAX
+0,8.47746,15,3.37978,3.37978
+1,1.49634,4,-3.40379,3.37978
+2,1,1,-1.3424,3.37978
+3,1,19,-0.272507,3.37978
+
+Best eval with params:
+eval (mc_estimate_expected_utility) = 3.37978
+czt_ball_split_visit_thresh = 15
+czt_bias = 8.47746

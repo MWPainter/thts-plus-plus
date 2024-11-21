@@ -49,23 +49,7 @@ namespace thts::python {
     void PyThtsPool::worker_fn(int tid) {
         // setup thread
         thts_manager->register_thread_id(tid);
-        // Make new interpreter
-        // Need to lock with CPython API because pybind11 gil interface not built to work with it
-        thts::python::helper::lock_gil();
-        PyInterpreterConfig config = {
-            .use_main_obmalloc = 0,
-            .allow_fork = 0,
-            .allow_exec = 0,
-            .allow_threads = 1,
-            .allow_daemon_threads = 0,
-            .check_multi_interp_extensions = 1,
-            .gil = PyInterpreterConfig_OWN_GIL,
-        };
-        PyThreadState *tstate;
-        Py_NewInterpreterFromConfig(&tstate, &config);
-        if (tstate == NULL) {
-            throw runtime_error("Error starting subinterpreter");
-        }
+        
 
         // main work loop
         lock_guard<mutex> lg(work_left_lock);

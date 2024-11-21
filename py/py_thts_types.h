@@ -30,7 +30,6 @@ namespace thts::python {
     class PyObservation : public Observation {
 
         protected:
-            mutable std::recursive_mutex lock;
             mutable std::shared_ptr<py::object> py_obs;
             std::shared_ptr<PickleWrapper> py_pickle_wrapper;
             mutable std::shared_ptr<std::string> serialised_obs;
@@ -59,7 +58,6 @@ namespace thts::python {
         friend PyMultiprocessingThtsEnv;
 
         protected:
-            mutable std::recursive_mutex lock;
             mutable std::shared_ptr<py::object> py_state;
             std::shared_ptr<PickleWrapper> py_pickle_wrapper;
             mutable std::shared_ptr<std::string> serialised_state;
@@ -87,7 +85,6 @@ namespace thts::python {
         friend PyMultiprocessingThtsEnv;
         
         protected:
-            mutable std::recursive_mutex lock;
             mutable std::shared_ptr<py::object> py_action;
             std::shared_ptr<PickleWrapper> py_pickle_wrapper;
             mutable std::shared_ptr<std::string> serialised_action;

@@ -66,7 +66,7 @@ namespace thts {
     */
     int ThtsManager::get_thts_thread_id() {
         shared_lock<shared_mutex> reader_lg(thread_id_map_lock);
-        return thread_id_map[std::this_thread::get_id()];
+        return thread_id_map.at(std::this_thread::get_id());
     }
 
     /**

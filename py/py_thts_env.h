@@ -27,6 +27,12 @@ namespace thts::python {
     typedef std::unordered_map<std::shared_ptr<const PyObservation>,double> PyObservationDistr;
 
     /** 
+     * NOTE:
+     * - this version of PyThtsEnv will be slow, and wont gain much from multi-threading, as there is lots of gil 
+     *      locking happening in this class. If want to interact with a Python env from multiple threads then use 
+     *      PyMultiprocessingThtsEnv
+     * 
+     * 
      * A ThtsEnv subclass used as a wrapper around an environment defined in python
      * Assumes that the python environment is a subclass the 'PyThtsEnv' (python class defined in py_thts_env.py
      * 
@@ -54,8 +60,6 @@ namespace thts::python {
          * Core PyThtsEnv implementaion.
          */
         protected:
-            bool multiple_threads_using_this_env;
-            mutable std::mutex py_thts_env_lock;
             std::shared_ptr<py::object> py_thts_env;
             std::shared_ptr<PickleWrapper> pickle_wrapper;
 
@@ -68,7 +72,6 @@ namespace thts::python {
              */
             PyThtsEnv(
                 std::shared_ptr<py::object> py_thts_env, 
-                bool multiple_threads_using_this_env,
                 std::shared_ptr<PickleWrapper> pickle_wrapper);
 
             /**
@@ -85,13 +88,6 @@ namespace thts::python {
              * Mark destructor as virtual for subclassing.
              */
             virtual ~PyThtsEnv();
-
-        private:
-            /**
-             * Locking to protect underlying py
-            */
-            std::unique_lock<std::mutex> maybe_lock_for_py_thts_env() const;
-            void ensure_py_thts_env_unlocked(std::unique_lock<std::mutex>& ul) const;
 
             /**
              * Returns the initial state for the environment.

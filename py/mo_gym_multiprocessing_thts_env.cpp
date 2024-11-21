@@ -15,6 +15,7 @@ namespace thts::python {
             MoPyMultiprocessingThtsEnv(pickle_wrapper, nullptr),
             gym_env_id(gym_env_id)
     {
+        py::gil_scoped_acquire acquire;
         py::module_ py_thts_env_module = py::module_::import("mo_gym_thts_env"); 
         py::object py_thts_env_py_obj = py_thts_env_module.attr("MoGymThtsEnv")(gym_env_id);
         py_thts_env = make_shared<py::object>(py_thts_env_py_obj);

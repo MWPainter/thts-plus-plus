@@ -24,25 +24,6 @@ namespace thts::python {
     void PyMCEvaluator::thread_run_rollouts(
         int total_rollouts, int thread_id, int num_threads, shared_ptr<EvalPolicy> thread_policy) 
     {
-
-        // Setup Py subinterpreter
-        // Need to lock with CPython API because pybind11 gil interface not built to work with it
-        thts::python::helper::lock_gil();
-        PyInterpreterConfig config = {
-            .use_main_obmalloc = 0,
-            .allow_fork = 0,
-            .allow_exec = 0,
-            .allow_threads = 1,
-            .allow_daemon_threads = 0,
-            .check_multi_interp_extensions = 1,
-            .gil = PyInterpreterConfig_OWN_GIL,
-        };
-        PyThreadState *tstate;
-        Py_NewInterpreterFromConfig(&tstate, &config);
-        if (tstate == NULL) {
-            throw runtime_error("Error starting subinterpreter");
-        }
-
         // Run normal run rollouts
         return MCEvaluator::thread_run_rollouts(total_rollouts, thread_id, num_threads, thread_policy);
     }
