@@ -116,8 +116,8 @@ namespace thts {
 
         // dp backups + subtree entropy
         Eigen::ArrayXd best_q_val;
-        double subtree_entropy;
-        bool best_q_val_is_pure_backup;
+        double subtree_entropy = 0.0;
+        bool best_q_val_is_pure_backup = false;
         double max_ctx_q_val = numeric_limits<double>::lowest();
         for (shared_ptr<const Action> action : *actions) {
             double ctx_q_val = thts::helper::dot(closest_vertex->weight, q_val_map[action]);

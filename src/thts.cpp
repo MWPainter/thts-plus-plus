@@ -313,6 +313,9 @@ namespace thts {
      */
     void ThtsPool::worker_fn(int tid) {
         // setup thread
+        // TODO: when integrate with main branch, don't want this necessarily here
+        //          probably re-introduce PyThtsPool (in py/py_thts.{h,cpp}), which is currently commented out
+        // TODO: also re-introduce MoPyThtsPool (in py/mo_py_thts.{h,cpp}) in MO branch
         thts_manager->register_thread_id(tid);
 
         // main work loop

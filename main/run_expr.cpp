@@ -3,7 +3,6 @@
 #include "helper_templates.h"
 
 #include "mo/mo_mc_eval.h"
-#include "py/mo_py_mc_eval.h"
 #include "mo/mo_thts.h"
 #include "py/mo_py_thts.h"
 #include "py/py_multiprocessing_thts_env.h"
@@ -198,26 +197,14 @@ namespace thts {
         shared_ptr<MoThtsManager> thts_manager,
         RunID& run_id) 
     {   
-        if (run_id.is_python_env()) {
-            shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(root_node, env, thts_manager);  
-            MoPyMCEvaluator evaluator(
-                eval_policy, run_id.max_trial_length, thts_manager, run_id.get_env_min_value(), run_id.get_env_max_value());
-            evaluator.run_rollouts(run_id.rollouts_per_mc_eval, run_id.eval_threads);
-            mean = evaluator.get_mean_mo_ctx_return();
-            std_dev = evaluator.get_stddev_mean_mo_ctx_return();
-            normalised_mean = evaluator.get_mean_mo_normalised_ctx_return();
-            normalised_std_dev = evaluator.get_stddev_mean_mo_normalised_ctx_return();
-
-        } else {
-            shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(root_node, env, thts_manager);  
-            MoMCEvaluator evaluator(
-                eval_policy, run_id.max_trial_length, thts_manager, run_id.get_env_min_value(), run_id.get_env_max_value());
-            evaluator.run_rollouts(run_id.rollouts_per_mc_eval, run_id.eval_threads);
-            mean = evaluator.get_mean_mo_ctx_return();
-            std_dev = evaluator.get_stddev_mean_mo_ctx_return();
-            normalised_mean = evaluator.get_mean_mo_normalised_ctx_return();
-            normalised_std_dev = evaluator.get_stddev_mean_mo_normalised_ctx_return();
-        }
+        shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(root_node, env, thts_manager);  
+        MoMCEvaluator evaluator(
+            eval_policy, run_id.max_trial_length, thts_manager, run_id.get_env_min_value(), run_id.get_env_max_value());
+        evaluator.run_rollouts(run_id.rollouts_per_mc_eval, run_id.eval_threads);
+        mean = evaluator.get_mean_mo_ctx_return();
+        std_dev = evaluator.get_stddev_mean_mo_ctx_return();
+        normalised_mean = evaluator.get_mean_mo_normalised_ctx_return();
+        normalised_std_dev = evaluator.get_stddev_mean_mo_normalised_ctx_return();
     }
 
     /**
@@ -287,46 +274,6 @@ namespace thts {
     }
 
     /**
-     * Python has a really annoying bug that it crashes when trying to clean up subinterpreters
-     * That means that if you ever have >0 subinterpreters, when the number of subinterpreters falls to 0 then it will 
-     * crash
-     * To get around this, we're going to just run all of our code for 'run_expr' using a subinterpreter itself
-     * This way at least one (this one) will always exist throughout the runtime of the program to stop it from crashing
-     * LMAO, this didnt even work
-     * k python
-     * going to try making an subinterpreter that waits to be signalled to exit
-    */
-    void dummy_subinterpreter_routine(shared_ptr<mutex> m)
-    {
-        // Setup Py subinterpreter
-        // Need to lock with CPython API because pybind11 gil interface not built to work with it
-        thts::python::helper::lock_gil();
-        PyInterpreterConfig config = {
-            .use_main_obmalloc = 0,
-            .allow_fork = 0,
-            .allow_exec = 0,
-            .allow_threads = 1,
-            .allow_daemon_threads = 0,
-            .check_multi_interp_extensions = 1,
-            .gil = PyInterpreterConfig_OWN_GIL,
-        };
-        PyThreadState *tstate;
-        Py_NewInterpreterFromConfig(&tstate, &config);
-        if (tstate == NULL) {
-            throw runtime_error("Error starting subinterpreter");
-        }
-        
-        // wait until signalled
-        m->lock();
-        cout << "I am dummy subinterpreter and its frustrating that I exist" << endl;
-    }
-
-    shared_ptr<thread> start_dummy_subinterpreter(shared_ptr<mutex> m) 
-    {
-        return make_shared<thread>(&dummy_subinterpreter_routine, m);
-    }
-
-    /**
      * Performs all of the (replicated) runs corresponding to 'run_id'
      * (This is the one exposed function (for now) in run_toy.cpp)
      * 
@@ -344,16 +291,11 @@ namespace thts {
         // Run experiment 'replicate' many times
         double avg_mean_over_replicates = 0.0;
         for (int replicate=0; replicate<run_id.num_repeats; replicate++) {
-            // Acquire gil
-            shared_ptr<py::gil_scoped_acquire> acq;
-            if (run_id.is_python_env()) {
-                acq = make_shared<py::gil_scoped_acquire>();
-            }
 
             // print
             cout << "Starting run on " << run_id.env_id << " with alg " << run_id.alg_id << " and params " 
                 << helper::unordered_map_pretty_print_string(run_id.alg_params) << ", replicate " << replicate << endl;
-
+                
             // setup env
             shared_ptr<MoThtsEnv> env = run_id.get_env();
             shared_ptr<MoThtsManager> thts_manager = run_id.get_thts_manager(env);
@@ -365,18 +307,7 @@ namespace thts {
                 }
             }
             shared_ptr<MoThtsDNode> root_node = run_id.get_root_search_node(env, thts_manager);
-            shared_ptr<ThtsPool> thts_pool;
-            if (run_id.is_python_env()) {
-                thts_pool = make_shared<MoPyThtsPool>(thts_manager, root_node, run_id.num_threads);
-            } else {
-                thts_pool = make_shared<MoThtsPool>(thts_manager, root_node, run_id.num_threads);
-            }
-
-            // Release gil during search, let threads grab it as necessary
-            shared_ptr<py::gil_scoped_release> rel;
-            if (run_id.is_python_env()) {
-                rel = make_shared<py::gil_scoped_release>();
-            }
+            shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(thts_manager, root_node, run_id.num_threads);
 
             // eval at 0 trials
             double mean, stddev, normalised_mean, normalised_stddev;
@@ -418,10 +349,6 @@ namespace thts {
 
             // Write tree to file
             if (replicate == 0) {
-                shared_ptr<py::gil_scoped_acquire> acq2;
-                if (run_id.is_python_env()) {
-                    acq2 = make_shared<py::gil_scoped_acquire>();
-                }
                 string tree_filename = get_tree_filename(run_id, replicate);
                 ofstream tree_file;
                 tree_file.open(tree_filename, ios::out);
@@ -431,10 +358,6 @@ namespace thts {
 
             // Write debug info
             if (replicate == 0) {
-                shared_ptr<py::gil_scoped_acquire> acq3;
-                if (run_id.is_python_env()) {
-                    acq3 = make_shared<py::gil_scoped_acquire>();
-                }
                 string debug_filename = get_debug_filename(run_id, replicate);
                 ofstream debug_file;
                 debug_file.open(debug_filename, ios::out);
@@ -449,6 +372,11 @@ namespace thts {
             double num_replicates_run = replicate;
             avg_mean_over_replicates *= (num_replicates_run) / (num_replicates_run+1.0);
             avg_mean_over_replicates += mean / (num_replicates_run+1.0);
+            
+            env.reset();
+            thts_manager.reset();
+            root_node.reset();
+            thts_pool.reset();
         }   
 
         // close eval file
@@ -475,27 +403,17 @@ namespace thts {
             }
         }
 
-        // If running python, make interpreter and immediately run a dummy no-op subinterpreter  
-        // (see comment on start_dummy_subinterpreter)
-        shared_ptr<py::scoped_interpreter> guard;
-        shared_ptr<mutex> dummy_subinterpreter_mutex = make_shared<mutex>();
-        shared_ptr<thread> dummy_thread;
+        // If running python, make interpreter and release gil
+        shared_ptr<py::scoped_interpreter> py_interpreter;
+        shared_ptr<py::gil_scoped_release> release;
         if (need_python) {
-            guard = make_shared<py::scoped_interpreter>();
-            py::gil_scoped_release rel;
-            dummy_subinterpreter_mutex->lock();
-            dummy_thread = start_dummy_subinterpreter(dummy_subinterpreter_mutex);
-        }
+            py_interpreter = make_shared<py::scoped_interpreter>();
+            release = make_shared<py::gil_scoped_release>();
+        }   
 
         // Actually run experiments
         for (RunID& run_id : *run_ids) {
             thts::run_expr(run_id);
-        }
-
-        // Let the dummy subinterpreter die
-        if (need_python) {
-            dummy_subinterpreter_mutex->unlock();
-            dummy_thread->join();
         }
     }
 
@@ -535,16 +453,12 @@ namespace thts {
         shared_ptr<HyperparamOptimiser> hp_opt = get_hyperparam_optimiser_from_expr_id(
             expr_id, expr_timestamp, hp_opt_file);
 
-        // If running python, make interpreter and immediately run a dummy no-op subinterpreter  
-        // (see comment on start_dummy_subinterpreter)
-        shared_ptr<py::scoped_interpreter> guard;
-        shared_ptr<mutex> dummy_subinterpreter_mutex = make_shared<mutex>();
-        shared_ptr<thread> dummy_thread;
+        // If running python, make interpreter and release gil
+        shared_ptr<py::scoped_interpreter> py_interpreter;
+        shared_ptr<py::gil_scoped_release> release;
         if (hp_opt->is_python_env()) {
-            guard = make_shared<py::scoped_interpreter>();
-            py::gil_scoped_release rel;
-            dummy_subinterpreter_mutex->lock();
-            dummy_thread = start_dummy_subinterpreter(dummy_subinterpreter_mutex);
+            py_interpreter = make_shared<py::scoped_interpreter>();
+            release = make_shared<py::gil_scoped_release>();
         }
 
         // Write header
@@ -559,12 +473,6 @@ namespace thts {
 
         // Close file
         hp_opt_file.close();
-
-        // Let the dummy subinterpreter die
-        if (hp_opt->is_python_env()) {
-            dummy_subinterpreter_mutex->unlock();
-            dummy_thread->join();
-        }
     }
 
     /**
@@ -592,16 +500,12 @@ namespace thts {
             throw runtime_error("Invalide env_id, maybe havent added params for this env?");
         }
 
-        // If running python, make interpreter and immediately run a dummy no-op subinterpreter  
-        // (see comment on start_dummy_subinterpreter)
-        shared_ptr<py::scoped_interpreter> guard;
-        shared_ptr<mutex> dummy_subinterpreter_mutex = make_shared<mutex>();
-        shared_ptr<thread> dummy_thread;
+        // If running python, make interpreter and release gil
+        shared_ptr<py::scoped_interpreter> py_interpreter;
+        shared_ptr<py::gil_scoped_release> release;
         if (is_python_env(env_id)) {
-            guard = make_shared<py::scoped_interpreter>();
-            py::gil_scoped_release rel;
-            dummy_subinterpreter_mutex->lock();
-            dummy_thread = start_dummy_subinterpreter(dummy_subinterpreter_mutex);
+            py_interpreter = make_shared<py::scoped_interpreter>();
+            release = make_shared<py::gil_scoped_release>();
         }
 
         // Create env
@@ -612,63 +516,32 @@ namespace thts {
         shared_ptr<MoThtsManager> dummy_manager = make_shared<MoThtsManager>(dummy_manager_args);
         
         // Start python servers
-        // - should be able to just have a lockguard 'py::gil_scoped_acquire acq;' in the conditional block, but when 
-        //      try that version there's some issue with gil locking in mc evaluator. As this isn't even main path of 
-        //      code for these experiments (let alone the library), I'm not keen to understand why right now
-        shared_ptr<py::gil_scoped_acquire> acq;
-        shared_ptr<py::gil_scoped_release> rel;
         if (is_python_env(env_id)) {
-            // py::gil_scoped_acquire acq;
-            acq = make_shared<py::gil_scoped_acquire>();
             for (int i=0; i<eval_threads[env_id]; i++) {
                 PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(
                     dummy_manager->thts_env(i));
                 py_mp_env.start_python_server(i);
             }
-            rel = make_shared<py::gil_scoped_release>();
         }
 
         // Run evaluator
-        double mean, std_dev, normalised_mean, normalised_std_dev;
-        if (is_python_env(env_id)) {
-            shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(nullptr, env, dummy_manager);  
-            MoPyMCEvaluator evaluator(
-                eval_policy, 
-                max_trial_length[env_id], 
-                dummy_manager, 
-                get_env_min_value(env_id, max_trial_length[env_id]), 
-                get_env_max_value(env_id));
-            evaluator.run_rollouts(rollouts_per_mc_eval[env_id], eval_threads[env_id]);
-            mean = evaluator.get_mean_mo_ctx_return();
-            std_dev = evaluator.get_stddev_mean_mo_ctx_return();
-            normalised_mean = evaluator.get_mean_mo_normalised_ctx_return();
-            normalised_std_dev = evaluator.get_stddev_mean_mo_normalised_ctx_return();
-
-        } else {
-            shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(nullptr, env, dummy_manager);  
-            MoMCEvaluator evaluator(
-                eval_policy, 
-                max_trial_length[env_id], 
-                dummy_manager, 
-                get_env_min_value(env_id, max_trial_length[env_id]), 
-                get_env_max_value(env_id));
-            evaluator.run_rollouts(rollouts_per_mc_eval[env_id], eval_threads[env_id]);
-            mean = evaluator.get_mean_mo_ctx_return();
-            std_dev = evaluator.get_stddev_mean_mo_ctx_return();
-            normalised_mean = evaluator.get_mean_mo_normalised_ctx_return();
-            normalised_std_dev = evaluator.get_stddev_mean_mo_normalised_ctx_return();
-        }
+        shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(nullptr, env, dummy_manager);  
+        MoMCEvaluator evaluator(
+            eval_policy, 
+            max_trial_length[env_id], 
+            dummy_manager, 
+            get_env_min_value(env_id, max_trial_length[env_id]), 
+            get_env_max_value(env_id));
+        evaluator.run_rollouts(rollouts_per_mc_eval[env_id], eval_threads[env_id]);
+        double mean = evaluator.get_mean_mo_ctx_return();
+        double std_dev = evaluator.get_stddev_mean_mo_ctx_return();
+        double normalised_mean = evaluator.get_mean_mo_normalised_ctx_return();
+        double normalised_std_dev = evaluator.get_stddev_mean_mo_normalised_ctx_return();
 
         // Print info
         cout << "Mean: " << mean << endl   
             << "StdDev: " << std_dev << endl;
         cout << "Normalised Mean: " << normalised_mean << endl   
             << "Normalised StdDev: " << normalised_std_dev << endl;
-
-        // Let the dummy subinterpreter die
-        if (is_python_env(env_id)) {
-            dummy_subinterpreter_mutex->unlock();
-            dummy_thread->join();
-        }
     }
 }

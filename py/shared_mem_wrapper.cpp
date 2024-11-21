@@ -53,6 +53,12 @@ namespace thts::python {
         read_from_shared_mem(); 
     }
 
+    // When killing the server, it wont respond, so dont wait for a response
+    void SharedMemWrapper::make_kill_rpc_call() {
+        write_to_shared_mem();
+        thts::python::helper::release_sem(semid, 0);
+    }
+
     void SharedMemWrapper::read_from_shared_mem() {
         int* shm_rpc_id = (int*) shared_mem_ptr;
         rpc_id = *shm_rpc_id;

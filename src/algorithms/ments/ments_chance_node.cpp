@@ -24,9 +24,9 @@ namespace thts {
                 static_pointer_cast<const ThtsDNode>(parent)),
             num_backups(0),
             soft_value(thts_manager->default_q_value),
-            local_reward(thts_manager->thts_env()->get_reward_itfc(state,action,*thts_manager->get_thts_context())),
-            next_state_distr(thts_manager->thts_env()->get_transition_distribution_itfc(
-                state,action,*thts_manager->get_thts_context())) 
+            local_reward(thts_manager->thts_env()->get_reward_itfc(state,action,*thts_manager->get_thts_context()))//,
+            // next_state_distr(thts_manager->thts_env()->get_transition_distribution_itfc(
+            //     state,action,*thts_manager->get_thts_context())) 
     {
     }
 
@@ -40,8 +40,10 @@ namespace thts {
     /**
      * Implementation of sample_observation, that uses the sample from distribution helper function.
      */
-    shared_ptr<const State> MentsCNode::sample_observation_random() {
-        shared_ptr<const State> sampled_state = helper::sample_from_distribution(*next_state_distr, *thts_manager);
+    shared_ptr<const State> MentsCNode::sample_observation_random(ThtsEnvContext& ctx) {
+        // shared_ptr<const State> sampled_state = helper::sample_from_distribution(*next_state_distr, *thts_manager);
+        shared_ptr<const State> sampled_state = thts_manager->thts_env()->sample_transition_distribution_itfc(
+            state, action, *thts_manager, ctx);
         if (!has_child_node(sampled_state)) {
             create_child_node(sampled_state);
         }
@@ -52,7 +54,7 @@ namespace thts {
      * Sample observation calls sample_observation_random.
      */
     shared_ptr<const State> MentsCNode::sample_observation(ThtsEnvContext& ctx) {
-        return sample_observation_random();
+        return sample_observation_random(ctx);
     }
 
 

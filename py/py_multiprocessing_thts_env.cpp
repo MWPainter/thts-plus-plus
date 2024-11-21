@@ -49,6 +49,12 @@ namespace thts::python {
     }
 
     PyMultiprocessingThtsEnv::~PyMultiprocessingThtsEnv() {
+
+        shared_mem_wrapper->rpc_id = RPC_kill_server;
+        shared_mem_wrapper->num_args = 0;
+        shared_mem_wrapper->make_kill_rpc_call();
+
+        py::gil_scoped_acquire acquire;
         py_thts_env.reset();
         pickle_wrapper.reset();
         shared_mem_wrapper.reset();

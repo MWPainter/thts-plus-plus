@@ -4,7 +4,6 @@
 
 #include "py/gym_multiprocessing_thts_env.h"
 #include "py/mo_gym_multiprocessing_thts_env.h"
-#include "py/mo_py_mc_eval.h"
 #include "py/mo_py_thts.h"
 #include "py/pickle_wrapper.h"
 #include "py/py_multiprocessing_thts_env.h"
@@ -349,13 +348,8 @@ void py_thts_env_test(double alpha, bool use_python_env) {
             }
         }
         
-        root_node = make_shared<EstDNode>(
-            manager, thts_env->get_initial_state_itfc(), 0, 0);
-        if (use_python_env) {
-            bts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
-        } else {
-            bts_pool = make_shared<ThtsPool>(manager, root_node, num_threads);
-        }
+        root_node = make_shared<EstDNode>(manager, thts_env->get_initial_state_itfc(), 0, 0);
+        bts_pool = make_shared<ThtsPool>(manager, root_node, num_threads);
     }
 
     // Run thts trials (same as c++)
@@ -374,27 +368,27 @@ void py_thts_env_test(double alpha, bool use_python_env) {
     } else {
         cout << endl;
     }
-
+    
     // Keep on crashing after here
     // TODO: sort out for python lib release, because need to not crash at least until Py_Finalize to use in Python code
     // Annoying to run ipcrm -v -a all the time, so make sure thats not necessary by the time it crashes
 
-    if (use_python_env) {
-        for (int i=0; i<num_threads; i++) {
-            PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(manager->thts_env(i));
-            py_mp_env.clear_unix_sem_and_shm();
-        }
-    }
+    // if (use_python_env) {
+    //     for (int i=0; i<num_threads; i++) {
+    //         PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(manager->thts_env(i));
+    //         py_mp_env.clear_unix_sem_and_shm();
+    //     }
+    // }
 
     // Force tree destructors to be called (to clean up python objects with the gil)
     // resetting smart pointers should refcount to zero and call destructor
     // A bit annoying having to make everything a smart pointer to call destructors with gil, but mech
-    py::gil_scoped_acquire acq;
-    manager.reset();
-    manager_args.reset();
-    thts_env.reset();
-    bts_pool.reset();
-    root_node.reset();
+    // py::gil_scoped_acquire acq;
+    // manager.reset();
+    // manager_args.reset();
+    // thts_env.reset();
+    // bts_pool.reset();
+    // root_node.reset();
 }
 
 void czt_test() {
@@ -588,6 +582,8 @@ void czt_4d_test() {
 }
 
 void gym_env_test() {
+    py::gil_scoped_release release;
+
     // params
     string gym_env_id = "FrozenLake-v1";
     int num_trials = 100;
@@ -617,18 +613,16 @@ void gym_env_test() {
     }
 
     shared_ptr<EstDNode> root_node = make_shared<EstDNode>(manager, thts_env->get_initial_state_itfc(), 0, 0);
-    shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
+    shared_ptr<ThtsPool> thts_pool = make_shared<ThtsPool>(manager, root_node, num_threads);
 
     // Run thts trials (same as c++)
     // Needs to not have the gil, so threads can grab it any make interpreters
-    py::gil_scoped_release rel;
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree (same as c++)
     // Make sure have gil, because getting pretty print string using python objects
-    py::gil_scoped_acquire acq;
     cout << "EST with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -640,21 +634,23 @@ void gym_env_test() {
     // Keep on crashing after here
     // TODO: sort out for python lib release, because need to not crash at least until Py_Finalize to use in Python code
     // Annoying to run ipcrm -v -a all the time, so make sure thats not necessary by the time it crashes
-    for (int i=0; i<num_threads; i++) {
-        PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(manager->thts_env(i));
-        py_mp_env.clear_unix_sem_and_shm();
-    }
+    // for (int i=0; i<num_threads; i++) {
+    //     PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(manager->thts_env(i));
+    //     py_mp_env.clear_unix_sem_and_shm();
+    // }
 
     // Force tree destructors to be called (to clean up python objects with the gil)
     // resetting smart pointers should refcount to zero and call destructor
     // A bit annoying having to make everything a smart pointer to call destructors with gil, but mech
-    manager.reset();
-    thts_env.reset();
-    thts_pool.reset();
-    root_node.reset();
+    // manager.reset();
+    // thts_env.reset();
+    // thts_pool.reset();
+    // root_node.reset();
 }
 
 void mo_gym_env_test() {
+    py::gil_scoped_release release;
+
     // params
     double bias = 4.0;
     int num_backups_before_allowed_to_split = 10;
@@ -690,16 +686,14 @@ void mo_gym_env_test() {
     // subinterpreters
     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
     shared_ptr<CztDNode> root_node = make_shared<CztDNode>(manager, init_state, 0, 0);
-    shared_ptr<ThtsPool> thts_pool = make_shared<MoPyThtsPool>(manager, root_node, num_threads);
+    shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    py::gil_scoped_release rel;
     thts_pool->run_trials(num_trials);
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree
     // Make sure have gil again if using python objects
-    py::gil_scoped_acquire acq;
     cout << "CZT with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -725,15 +719,13 @@ void mo_gym_env_test() {
     Eigen::ArrayXd r_max(2);
     r_max[0] = 23.7;
     r_max[1] = 0.0;
-    MoPyMCEvaluator mo_mc_eval(
+    MoMCEvaluator mo_mc_eval(
         policy, 
         manager->max_depth,
         manager,
         r_min,
         r_max);
-    py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
-    py::gil_scoped_acquire acq2;
 
     cout << "CZT evaluations from MoMCEval." << endl;
     cout << "Mean MO return." << endl;
@@ -744,15 +736,15 @@ void mo_gym_env_test() {
     cout << mo_mc_eval.get_mean_mo_normalised_ctx_return() << endl;
 
     // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
-    for (int i=0; i<num_threads; i++) {
-        PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(manager->thts_env(i));
-        py_mp_env.clear_unix_sem_and_shm();
-    }
-    manager.reset();
-    args.reset();
-    thts_env.reset();
-    thts_pool.reset();
-    root_node.reset();
+    // for (int i=0; i<num_threads; i++) {
+    //     PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(manager->thts_env(i));
+    //     py_mp_env.clear_unix_sem_and_shm();
+    // }
+    // manager.reset();
+    // args.reset();
+    // thts_env.reset();
+    // thts_pool.reset();
+    // root_node.reset();
 }
 
 void eigen_svd_test() {
@@ -1449,12 +1441,12 @@ int main(int argc, char *argv[]) {
      * TODO: this currently fails, because gym envs requires algorithms to run in a model free mode, but we only have 
      *      single objective algorithms implemented in a planning mode
     */
-    // gym_env_test();
+    gym_env_test();
 
     /**
      * Testing python mo gym envs
     */
-    // mo_gym_env_test();
+    mo_gym_env_test();
 
     /**
      * Testing Eigen SVD
