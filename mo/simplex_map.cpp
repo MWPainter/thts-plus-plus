@@ -858,6 +858,17 @@ namespace thts {
         // Make root TN node with unit simplex
         root_node = make_shared<TN>(dim, 0, unit_simplex_vertices);
     }
+
+    /**
+     * Destructor needs to make sure that the NGV graph gets cleaned up 
+     * We can do this by iterating through all of the NGV's and calling reset on their neighbour maps
+     */
+    SimplexMap::~SimplexMap() 
+    {
+        for (shared_ptr<NGV> vertex : * n_graph_vertices) {
+            vertex->neighbours.reset();
+        }
+    }
     
     shared_ptr<LSE> SimplexMap::get_or_create_lse(shared_ptr<NGV> v0, shared_ptr<NGV> v1) 
     {

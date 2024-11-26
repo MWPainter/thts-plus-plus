@@ -1,15 +1,11 @@
 #include "main/run_id.h"
 #include "main/run_expr.h"
+#include "main/val.h"
 
 #include <memory>
 #include <stdexcept>
+#include <string>
 #include <vector>
-
-// #include "bayesopt/bayesopt.hpp"
-// #include "bayesopt/parameters.hpp"
-
-// #include <boost/numeric/ublas/vector.hpp>
-// #include <iostream>
 
 using namespace std;
 
@@ -26,6 +22,8 @@ int main(int argc, char* argv[]) {
         thts::run_hp_opt(argv[2]);
     } else if (string(argv[1]) == "noise") {
         thts::estimate_noise_for_hp_opt(argv[2]);
+    } else if (string(argv[1]) == "val") {
+        thts::run_valgrind_debugging(stoi(string(argv[2])));
     }
 
     return 0;
@@ -36,6 +34,12 @@ int main(int argc, char* argv[]) {
 //  * BayesOpt playing
 //  ********
 //  */
+
+// #include "bayesopt/bayesopt.hpp"
+// #include "bayesopt/parameters.hpp"
+
+// #include <boost/numeric/ublas/vector.hpp>
+// #include <iostream>
 
 // class MyOptimizationC: public bayesopt::ContinuousModel
 // {

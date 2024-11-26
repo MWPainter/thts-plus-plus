@@ -968,7 +968,7 @@ namespace thts {
             int max_trial_length = 50;
             double eval_delta = 1.0;
             int rollouts_per_mc_eval = 1024;
-            int num_repeats = 5;
+            int num_repeats = 1;
             int num_threads = 16;
             int eval_threads = 16;
 
@@ -1017,7 +1017,7 @@ namespace thts {
             int max_trial_length = 50;
             double eval_delta = 1.0;
             int rollouts_per_mc_eval = 1024;
-            int num_repeats = 5;
+            int num_repeats = 1;
             int num_threads = 16;
             int eval_threads = 16;
 
@@ -1068,7 +1068,7 @@ namespace thts {
             int max_trial_length = 50;
             double eval_delta = 1.0;
             int rollouts_per_mc_eval = 1024;
-            int num_repeats = 5;
+            int num_repeats = 1;
             int num_threads = 16;
             int eval_threads = 16;
 
