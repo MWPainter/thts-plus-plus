@@ -433,6 +433,14 @@ namespace thts {
             SimplexMap(int reward_dim, Eigen::ArrayXd default_val);
 
             /**
+             * Destructor
+             * 
+             * The graph of NGV's will have pointers to each other that will keep ref counts > 0 and never get freed, 
+             * unless we explicitly clean it up.
+             */
+            ~SimplexMap();
+
+            /**
              * Gets the LSE that v0 and v1 lie on (from 'lse_map')
              * If an LSE for these vertices doesnt exist, it makes it and adds to 'lse_map' 
             */

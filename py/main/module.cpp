@@ -315,9 +315,7 @@ void py_thts_env_test(double alpha, bool use_python_env) {
     if (use_python_env) {
         py::gil_scoped_acquire acq;
         py::module_ py_thts_env_module = py::module_::import("test_env"); 
-        py::object py_thts_env = py_thts_env_module.attr("PyTestThtsEnv")(env_size, stay_prob);
-        shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-        thts_env = make_shared<PyMultiprocessingThtsEnv>(pickle_wrapper, make_shared<py::object>(py_thts_env));
+    py::scoped_interpreter guard;shared<py::object>(py_thts_env));
     } else {
         thts_env = make_shared<thts::python::TestThtsEnv>(env_size, stay_prob);
     }
@@ -1410,7 +1408,7 @@ void chmcts_4d_test() {
 
 // C++ entry point for debugging
 int main(int argc, char *argv[]) {
-    py::scoped_interpreter guard;
+    py::scoped_interpreter py_interpreter;
 
     /**
      * Debugging tests
