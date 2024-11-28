@@ -11,6 +11,9 @@ namespace thts::python {
     using namespace thts;
     namespace py = pybind11;
 
+    // ID to identify this env for server processes
+    static std::string MOPY_ENV_SERVER_ID = "mo_py_mp_env";
+
     /** 
      * 
      */
@@ -21,11 +24,20 @@ namespace thts::python {
          */
         public:
             /**
-             * Constructor
+             * Constructor, passing python object directly
              */
             MoPyMultiprocessingThtsEnv(
                 std::shared_ptr<PickleWrapper> pickle_wrapper,
                 std::shared_ptr<py::object> py_thts_env);
+
+            /**
+             * Constructor, passing python module name, class name, and constructor args
+             */
+            MoPyMultiprocessingThtsEnv(
+                std::shared_ptr<PickleWrapper> pickle_wrapper,
+                std::string module_name,
+                std::string class_name,
+                std::shared_ptr<py::dict> constructor_kw_args);
 
             /**
              * Private copy constructor to implement 
@@ -41,6 +53,11 @@ namespace thts::python {
              * Mark destructor as virtual for subclassing.
              */
             virtual ~MoPyMultiprocessingThtsEnv() = default;
+
+            /**
+             * Override id so "py_env_server" program can identify it needs to use this env.
+             */
+            virtual std::string get_multiprocessing_env_type_id() override;
         
         public:
 

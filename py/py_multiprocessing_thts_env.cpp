@@ -4,6 +4,7 @@
 #include "py/py_helper_templates.h"
 #include "py/py_thts_types.h"
 
+#include <filesystem>
 #include <mutex>
 
 #include <signal.h>
@@ -11,6 +12,7 @@
 #include <unistd.h>
 
 #include <iostream>
+#include "helper_templates.h"
 
 namespace py = pybind11;
 using namespace std; 
@@ -28,15 +30,41 @@ namespace thts::python {
             ThtsEnv((py_thts_env != nullptr) ? helper::call_py_getter<bool>(py_thts_env,"is_fully_observable") : true),
             py_thts_env(py_thts_env),
             pickle_wrapper(pickle_wrapper),
-            shared_mem_wrapper()
+            shared_mem_wrapper(),
+            module_name(),
+            class_name(),
+            constructor_kw_args(nullptr)
     {
+    }
+
+    PyMultiprocessingThtsEnv::PyMultiprocessingThtsEnv(
+        shared_ptr<PickleWrapper> pickle_wrapper,
+        string module_name,
+        string class_name,
+        shared_ptr<py::dict> constructor_kw_args) :
+            ThtsEnv(),
+            py_thts_env(nullptr),
+            pickle_wrapper(pickle_wrapper),
+            shared_mem_wrapper(),
+            module_name(module_name),
+            class_name(class_name),
+            constructor_kw_args(constructor_kw_args)
+    {
+        py::gil_scoped_acquire acquire;
+        py::module_ py_thts_env_module = py::module_::import(module_name.c_str());
+        py::dict& kw_args = *constructor_kw_args;
+        py_thts_env = make_shared<py::object>(py_thts_env_module.attr(class_name.c_str())(**kw_args));
+        _is_fully_observable = py_thts_env->attr("is_fully_observable")().cast<bool>();
     }
 
     PyMultiprocessingThtsEnv::PyMultiprocessingThtsEnv(PyMultiprocessingThtsEnv& other) :
         ThtsEnv(other._is_fully_observable),
         py_thts_env(other.py_thts_env),
         pickle_wrapper(other.pickle_wrapper),
-        shared_mem_wrapper()
+        shared_mem_wrapper(),
+        module_name(other.module_name),
+        class_name(other.class_name),
+        constructor_kw_args(other.constructor_kw_args)
     {
     }
 
@@ -49,7 +77,6 @@ namespace thts::python {
     }
 
     PyMultiprocessingThtsEnv::~PyMultiprocessingThtsEnv() {
-
         shared_mem_wrapper->rpc_id = RPC_kill_server;
         shared_mem_wrapper->num_args = 0;
         shared_mem_wrapper->make_kill_rpc_call();
@@ -73,10 +100,50 @@ namespace thts::python {
         if (pid == 0) {
             int r = prctl(PR_SET_PDEATHSIG, SIGTERM); 
             if (r == -1 || getppid() != ppid_before_fork) { 
-                exit(1); 
+                exit(-1); 
             }
-            server_main();
-            exit(0);
+
+            // Execve the server process if we are child process
+            string py_env_server_program_name = filesystem::current_path().string() + "/py_env_server";
+            vector<string> args;
+            fill_multiprocessing_args(args, tid);
+            vector<char*> c_args;
+            c_args.push_back(const_cast<char*>(py_env_server_program_name.c_str()));
+            // for (string arg : args) {  - urgh, arg is temporary storage so arg.c_str get clobbered if do this...
+            for (size_t i=0; i<args.size(); i++) {
+                c_args.push_back(const_cast<char*>(args[i].c_str()));
+            }
+            c_args.push_back(nullptr);
+            execvp(c_args[0], c_args.data());
+            throw runtime_error("Error in calling execvp to spawn server process.");
+        }
+    }
+
+    /**
+     * Gets the id to identify what type of python multiprocessing env this is
+     */
+    string PyMultiprocessingThtsEnv::get_multiprocessing_env_type_id() 
+    {
+        return PY_ENV_SERVER_ID;
+    }
+
+    /**
+     * Adds the arguments needed in to run the "py_env_server" program for this env.
+     */
+    void PyMultiprocessingThtsEnv::fill_multiprocessing_args(vector<string>& args, int tid)
+    {
+        if (constructor_kw_args == nullptr) {
+            throw runtime_error("Trying to start multiprocessing server without having args to construct the env "
+                "in the new process.");
+        }
+        args.push_back(get_multiprocessing_env_type_id());
+        args.push_back(to_string(tid));
+        args.push_back(module_name);
+        args.push_back(class_name);
+        py::gil_scoped_acquire acquire;
+        for (auto kw_arg : *constructor_kw_args) {
+            args.push_back(kw_arg.first.cast<string>());
+            args.push_back(kw_arg.second.cast<string>());
         }
     }
 
@@ -85,35 +152,45 @@ namespace thts::python {
      * As the server runs in a forked process, so contains a completely duplicated python interpreter, we can afford to 
      * hold the gil in the forked python interpreter for the duration of the server process
      */
-    void PyMultiprocessingThtsEnv::server_main() {
-        py::gil_scoped_acquire acquire;
+    void PyMultiprocessingThtsEnv::server_main(int tid) {
+        shared_mem_wrapper = make_shared<SharedMemWrapper>(tid, 8*1024, true);
         while(true) {
+            cout << "waiting for rpc call in server" << endl;
             shared_mem_wrapper->server_wait_for_rpc_call();
+            cout << "got rpc call in server" << endl;
             int rpc_id = shared_mem_wrapper->rpc_id;
 
             if (rpc_id == RPC_kill_server) {
+                cout << "1" << endl;
                 return;
             } else if (rpc_id == RPC_get_initial_state) {
+                cout << "2" << endl;
                 shared_mem_wrapper->args[0] = get_initial_state_py_server();
             } else if (rpc_id == RPC_is_sink_state) {
+                cout << "3" << endl;
                 string& state = shared_mem_wrapper->args[0];
                 shared_mem_wrapper->args[0] = is_sink_state_py_server(state);
             } else if (rpc_id == RPC_get_valid_actions) {
+                cout << "4" << endl;
                 string& state = shared_mem_wrapper->args[0];
                 shared_mem_wrapper->args[0] = get_valid_actions_py_server(state);
             } else if (rpc_id == RPC_get_transition_distribution) {
+                cout << "5" << endl;
                 string& state = shared_mem_wrapper->args[0];
                 string& action = shared_mem_wrapper->args[1];
                 shared_mem_wrapper->args[0] = get_transition_distribution_py_server(state, action);
             } else if (rpc_id == RPC_sample_transition_distribution) {
+                cout << "6" << endl;
                 string& state = shared_mem_wrapper->args[0];
                 string& action = shared_mem_wrapper->args[1];
                 shared_mem_wrapper->args[0] = sample_transition_distribution_py_server(state, action);
             } else if (rpc_id == RPC_get_reward) {
+                cout << "7" << endl;
                 string& state = shared_mem_wrapper->args[0];
                 string& action = shared_mem_wrapper->args[1];
                 shared_mem_wrapper->args[0] = get_reward_py_server(state, action);
             } else if (rpc_id == RPC_reset) {
+                cout << "8" << endl;
                 reset_py_server();
                 shared_mem_wrapper->args[0] = "\n\n";
             } 

@@ -33,4 +33,9 @@ namespace thts::python {
     shared_ptr<ThtsEnv> MoGymMultiprocessingThtsEnv::clone() {
         return make_shared<MoGymMultiprocessingThtsEnv>(*this);
     }
+
+    string MoGymMultiprocessingThtsEnv::get_multiprocessing_env_type_id() 
+    {
+        return MOGYM_ENV_SERVER_ID;
+    }
 } 

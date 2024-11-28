@@ -35,6 +35,9 @@ MO_OBJECTS = $(patsubst mo/%.cpp, bin/mo/%.o, $(MO_SOURCES))
 PY_SOURCES = $(wildcard py/*.cpp)
 PY_OBJECTS = $(patsubst py/%.cpp, bin/py/%.o, $(PY_SOURCES))
 
+PY_ENV_SERVER_MAIN = py/env_server/main.cpp
+PY_ENV_SERVER_MAIN_OBJ = bin/py/env_server/main.o
+
 PY_MAIN = py/main/module.cpp
 PY_MAIN_OBJ = bin/py/main/module.o
 
@@ -75,6 +78,8 @@ TARGET_THTS_PY_EX = pyex
 TARGET_THTS_PY_EX_DEBUG = pyex-debug
 TARGET_MO_EXPR = moexpr
 TARGET_MO_EXPR_DEBUG = moexpr-debug
+TARGET_PY_ENV_SERVER = py_env_server
+TARGET_PY_ENV_SERVER_DEBUG = py_env_server-debug
 
 THTS_PY_LIB_FULL_NAME = thts$$(python3.12-config --extension-suffix)
 
@@ -85,7 +90,7 @@ THTS_PY_LIB_FULL_NAME = thts$$(python3.12-config --extension-suffix)
 #####
 
 # Default, build everything
-all: $(TARGET_THTS_TEST) $(TARGET_THTS_PY_EX) $(TARGET_MO_EXPR)
+all: $(TARGET_THTS_TEST) $(TARGET_THTS_PY_EX) $(TARGET_MO_EXPR) $(TARGET_PY_ENV_SERVER)
 
 
 
@@ -125,6 +130,10 @@ $(TEST_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
 $(PY_MAIN_OBJ) : $(PY_MAIN)
+	@mkdir -p bin/py/main
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
+
+$(PY_ENV_SERVER_MAIN_OBJ) : $(PY_ENV_SERVER_MAIN)
 	@mkdir -p bin/py/main
 	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
@@ -170,6 +179,15 @@ $(TARGET_THTS_PY_EX): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(PY_MAIN_OBJ)
 # C++ entry point for debugging python C++ entry point
 $(TARGET_THTS_PY_EX_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
 $(TARGET_THTS_PY_EX_DEBUG): $(TARGET_THTS_PY_EX)
+
+# Py Env Server entry point
+$(TARGET_PY_ENV_SERVER): LDFLAGS += $(PY_LDFLAGS)
+$(TARGET_PY_ENV_SERVER): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(PY_ENV_SERVER_MAIN_OBJ)
+	$(CXX) -shared $(PY_EX_CPPFLAGS) $(CPPFLAGS) $^ -o $(TARGET_PY_ENV_SERVER) $(LDFLAGS)
+
+# Debug Py Env Server entry point
+$(TARGET_PY_ENV_SERVER_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
+$(TARGET_PY_ENV_SERVER_DEBUG): $(TARGET_PY_ENV_SERVER)
 
 # Expr entry point
 $(TARGET_MO_EXPR): LDFLAGS += $(PY_LDFLAGS)

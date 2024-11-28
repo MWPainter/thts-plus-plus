@@ -30,4 +30,22 @@ namespace thts::python {
     shared_ptr<ThtsEnv> GymMultiprocessingThtsEnv::clone() {
         return make_shared<GymMultiprocessingThtsEnv>(*this);
     }
+
+    /**
+     * Gets the id to identify what type of python multiprocessing env this is
+     */
+    string GymMultiprocessingThtsEnv::get_multiprocessing_env_type_id() 
+    {
+        return GYM_ENV_SERVER_ID;
+    }
+
+    /**
+     * Adds the arguments needed in to run the "py_env_server" program for this env.
+     */
+    void GymMultiprocessingThtsEnv::fill_multiprocessing_args(vector<string>& args, int tid)
+    {
+        args.push_back(get_multiprocessing_env_type_id());
+        args.push_back(to_string(tid));
+        args.push_back(gym_env_id);
+    }
 } 

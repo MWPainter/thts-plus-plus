@@ -17,14 +17,14 @@ class MoPyTestThtsEnv(MoPyThtsEnv):
         same_dir_bonus=0.3, 
         gamma=0.5):
         
-        self.reward_dim = 4 if add_extra_rewards else 2
+        self.reward_dim = 4 if bool(add_extra_rewards) else 2
         super().__init__(reward_dim=self.reward_dim, fully_observable=True)
-        self.walk_len = walk_len
-        self.wrong_dir_prob = wrong_dir_prob         
-        self.add_extra_rewards = add_extra_rewards
-        self.new_dir_bonus = new_dir_bonus
-        self.same_dir_bonus = same_dir_bonus
-        self.gamma = gamma
+        self.walk_len = int(walk_len)
+        self.wrong_dir_prob = float(wrong_dir_prob)         
+        self.add_extra_rewards = bool(add_extra_rewards)
+        self.new_dir_bonus = float(new_dir_bonus)
+        self.same_dir_bonus = float(same_dir_bonus)
+        self.gamma = float(gamma)
 
     def _x(self, state):
         return state[0]

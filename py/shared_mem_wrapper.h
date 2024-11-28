@@ -41,6 +41,7 @@ namespace thts::python {
             int shmid;
             int shared_mem_size;
             void* shared_mem_ptr;
+            bool is_server_process;
 
         public:
             int rpc_id;
@@ -48,7 +49,7 @@ namespace thts::python {
             std::string args[3];
 
         public:
-            SharedMemWrapper(int tid, int shared_mem_size_in_bytes);
+            SharedMemWrapper(int tid, int shared_mem_size_in_bytes, bool is_server_process=false);
             virtual ~SharedMemWrapper();
 
             void breakpoint_add();

@@ -22,6 +22,9 @@ namespace thts::python {
     using namespace thts;
     namespace py = pybind11;
 
+    // ID to identify this env for server processes
+    static std::string PY_ENV_SERVER_ID = "py_mp_env"; 
+
     // Enum for function calls
     enum ThtsEnvRpcFn {
         RPC_kill_server = 0,
@@ -72,16 +75,29 @@ namespace thts::python {
             std::shared_ptr<PickleWrapper> pickle_wrapper;
             std::shared_ptr<SharedMemWrapper> shared_mem_wrapper;
 
+            std::string module_name;
+            std::string class_name;
+            std::shared_ptr<py::dict> constructor_kw_args;
+
         /**
          * Core ThtsEnv implementation functinos.
          */
         public:
             /**
-             * Constructor
+             * Constructor, passing python object directly
              */
             PyMultiprocessingThtsEnv(
                 std::shared_ptr<PickleWrapper> pickle_wrapper,
                 std::shared_ptr<py::object> py_thts_env);
+
+            /**
+             * Constructor, passing python module name, class name, and constructor args
+             */
+            PyMultiprocessingThtsEnv(
+                std::shared_ptr<PickleWrapper> pickle_wrapper,
+                std::string module_name,
+                std::string class_name,
+                std::shared_ptr<py::dict> constructor_kw_args);
 
             /**
              * Private copy constructor to implement 
@@ -106,16 +122,22 @@ namespace thts::python {
             /**
              * Starts python server process and sets up 'shared_mem_wrapper'
              * 'tid' for the thread that will use this env
+             * 
+             * Called from client process
             */
             void start_python_server(int tid);
 
-        private:
             /**
-             * Main function for python server process
+             * Main function run by the python server process
             */
-            void server_main();
-        
-        public:
+            void server_main(int tid);
+
+            /**
+             * Adds the arguments needed in to run the "py_env_server" program for this env.
+             */
+            virtual std::string get_multiprocessing_env_type_id();
+            virtual void fill_multiprocessing_args(std::vector<std::string>& args, int tid);
+
             /**
              * Returns the initial state for the environment.
              * 
