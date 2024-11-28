@@ -25,7 +25,8 @@ namespace thts::python {
              */
             MoGymMultiprocessingThtsEnv(
                 std::shared_ptr<PickleWrapper> pickle_wrapper,
-                std::string& gym_env_id);
+                std::string& gym_env_id,
+                bool is_server_process=false);
 
             /**
              * Private copy constructor to implement 

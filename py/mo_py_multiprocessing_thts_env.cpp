@@ -22,8 +22,9 @@ namespace thts::python {
 
     MoPyMultiprocessingThtsEnv::MoPyMultiprocessingThtsEnv(
         shared_ptr<PickleWrapper> pickle_wrapper,
-        shared_ptr<py::object> py_thts_env) :
-            PyMultiprocessingThtsEnv(pickle_wrapper, py_thts_env),
+        shared_ptr<py::object> py_thts_env,
+        bool is_server_process) :
+            PyMultiprocessingThtsEnv(pickle_wrapper, py_thts_env, is_server_process),
             MoThtsEnv(
                 (py_thts_env != nullptr) ? helper::call_py_getter<int>(py_thts_env,"get_reward_dim")        : 2, 
                 (py_thts_env != nullptr) ? helper::call_py_getter<bool>(py_thts_env,"is_fully_observable")  : true)
@@ -34,8 +35,9 @@ namespace thts::python {
         shared_ptr<PickleWrapper> pickle_wrapper,
         string module_name,
         string class_name,
-        shared_ptr<py::dict> constructor_kw_args) :
-            PyMultiprocessingThtsEnv(pickle_wrapper, module_name, class_name, constructor_kw_args),
+        shared_ptr<py::dict> constructor_kw_args,
+        bool is_server_process) :
+            PyMultiprocessingThtsEnv(pickle_wrapper, module_name, class_name, constructor_kw_args, is_server_process),
             MoThtsEnv(2,true)
     {
         _is_fully_observable = py_thts_env->attr("is_fully_observable")().cast<bool>();

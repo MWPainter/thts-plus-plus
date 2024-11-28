@@ -78,6 +78,7 @@ namespace thts::python {
             std::string module_name;
             std::string class_name;
             std::shared_ptr<py::dict> constructor_kw_args;
+            bool is_server_process;
 
         /**
          * Core ThtsEnv implementation functinos.
@@ -88,7 +89,8 @@ namespace thts::python {
              */
             PyMultiprocessingThtsEnv(
                 std::shared_ptr<PickleWrapper> pickle_wrapper,
-                std::shared_ptr<py::object> py_thts_env);
+                std::shared_ptr<py::object> py_thts_env,
+                bool is_server_process=false);
 
             /**
              * Constructor, passing python module name, class name, and constructor args
@@ -97,7 +99,8 @@ namespace thts::python {
                 std::shared_ptr<PickleWrapper> pickle_wrapper,
                 std::string module_name,
                 std::string class_name,
-                std::shared_ptr<py::dict> constructor_kw_args);
+                std::shared_ptr<py::dict> constructor_kw_args,
+                bool is_server_process=false);
 
             /**
              * Private copy constructor to implement 
