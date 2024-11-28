@@ -10,8 +10,8 @@ class PyTestThtsEnv(PyThtsEnv):
 
     def __init__(self, grid_size, stay_prob=0.0):
         super().__init__(fully_observable=True)
-        self.grid_size = grid_size
-        self.stay_prob = stay_prob
+        self.grid_size = int(grid_size)
+        self.stay_prob = float(stay_prob)
 
     def get_initial_state(self):
         return (0,0)

@@ -6,24 +6,29 @@ using namespace std;
 namespace py = pybind11;
 
 namespace thts::python {
-    SharedMemWrapper::SharedMemWrapper(int tid, int shared_mem_size_in_bytes) :
+    SharedMemWrapper::SharedMemWrapper(int tid, int shared_mem_size_in_bytes, bool is_server_process) :
         unix_key(thts::python::helper::get_unix_key(tid)),
-        semid(thts::python::helper::init_sem(unix_key, 2)),
-        shmid(thts::python::helper::init_shared_mem(unix_key,shared_mem_size_in_bytes)),
+        semid(thts::python::helper::init_sem(unix_key, 2, is_server_process)),
+        shmid(thts::python::helper::init_shared_mem(unix_key,shared_mem_size_in_bytes, is_server_process)),
         shared_mem_size(shared_mem_size_in_bytes),
         shared_mem_ptr(thts::python::helper::get_shared_mem_ptr(shmid)),
+        is_server_process(is_server_process),
         rpc_id(),
         num_args(),
         args()    
     {
-        // acquire the sems by default
-        thts::python::helper::acquire_sem(semid, 0);
-        thts::python::helper::acquire_sem(semid, 1);
+        // acquire the sems by default (if client process)
+        if (!is_server_process) {
+            thts::python::helper::acquire_sem(semid, 0);
+            thts::python::helper::acquire_sem(semid, 1);
+        }
     };
 
     SharedMemWrapper::~SharedMemWrapper() {
-        thts::python::helper::destroy_sem(semid);
-        thts::python::helper::destroy_shared_mem(shmid);
+        if (!is_server_process) {
+            thts::python::helper::destroy_sem(semid);
+            thts::python::helper::destroy_shared_mem(shmid);
+        }
     };
 
     // Called by server process, waits to be signalled to start rpc call

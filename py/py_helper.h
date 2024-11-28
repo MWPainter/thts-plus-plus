@@ -23,7 +23,7 @@ namespace thts::python::helper {
      * Initialise unix semaphores for Unix Multiprocessing
      * Returns semid used to identify the semaphore set
     */
-    int init_sem(key_t key, int num_sems);
+    int init_sem(key_t key, int num_sems, bool is_server_process=false);
 
     /**
      * Acquire unix semaphore (decrease value by 1)
@@ -44,7 +44,7 @@ namespace thts::python::helper {
      * Makes a piece of shared memory
      * Returns shmid used to identify the piece of shared memory
     */
-    int init_shared_mem(key_t key, int size_in_bytes);
+    int init_shared_mem(key_t key, int size_in_bytes, bool is_server_process=false);
 
     /**
      * Gets ptr to shared memory given shared memory id 'shmid'

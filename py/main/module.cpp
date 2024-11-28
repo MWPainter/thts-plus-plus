@@ -305,17 +305,34 @@ void py_thts_env_test(double alpha, bool use_python_env) {
 
     // params
     int env_size = 3;
-    double stay_prob = 0.0;
+    double stay_prob = 0.1;
     int num_trials = 10000;
     int print_tree_depth = 2;
-    int num_threads = 3;
+    int num_threads = 1;
 
     // Make py env (making a py::object of python thts env, and pass into constructor)
     shared_ptr<ThtsEnv> thts_env;
     if (use_python_env) {
         py::gil_scoped_acquire acq;
-        py::module_ py_thts_env_module = py::module_::import("test_env"); 
-    py::scoped_interpreter guard;shared<py::object>(py_thts_env));
+
+        shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+
+        // py::module_ py_thts_env_module = py::module_::import("test_env"); 
+        // py::object py_thts_env = py_thts_env_module.attr("PyTestThtsEnv")(env_size, stay_prob);
+        // thts_env = make_shared<PyMultiprocessingThtsEnv>(pickle_wrapper, make_shared<py::object>(py_thts_env));
+
+        // py::module_ py_thts_env_module = py::module_::import("test_env"); 
+        // py::dict kw_args;
+        // kw_args["grid_size"] = to_string(env_size);
+        // kw_args["stay_prob"] = to_string(stay_prob);
+        // py::object py_thts_env = py_thts_env_module.attr("PyTestThtsEnv")(**kw_args);
+        // thts_env = make_shared<PyMultiprocessingThtsEnv>(pickle_wrapper, make_shared<py::object>(py_thts_env));
+
+        py::dict kw_args;
+        kw_args["grid_size"] = to_string(env_size);
+        kw_args["stay_prob"] = to_string(stay_prob);
+        thts_env = make_shared<PyMultiprocessingThtsEnv>(
+            pickle_wrapper, "test_env", "PyTestThtsEnv", make_shared<py::dict>(kw_args));
     } else {
         thts_env = make_shared<thts::python::TestThtsEnv>(env_size, stay_prob);
     }
@@ -1439,12 +1456,12 @@ int main(int argc, char *argv[]) {
      * TODO: this currently fails, because gym envs requires algorithms to run in a model free mode, but we only have 
      *      single objective algorithms implemented in a planning mode
     */
-    gym_env_test();
+    // gym_env_test();
 
     /**
      * Testing python mo gym envs
     */
-    mo_gym_env_test();
+    // mo_gym_env_test();
 
     /**
      * Testing Eigen SVD

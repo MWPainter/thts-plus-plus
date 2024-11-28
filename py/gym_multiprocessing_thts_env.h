@@ -8,6 +8,9 @@ namespace thts::python {
     using namespace thts;
     namespace py = pybind11;
 
+    // ID to identify this env for server processes
+    static std::string GYM_ENV_SERVER_ID = "gym_mp_env";
+
     /** 
      * Gym
      */
@@ -33,6 +36,13 @@ namespace thts::python {
              * Clone - virtual copy constructor idiom
             */
             virtual std::shared_ptr<ThtsEnv> clone() override;
+
+            /**
+             * Adds the arguments needed in to run the "py_env_server" program for this env.
+             */
+            virtual std::string get_multiprocessing_env_type_id() override;
+            virtual void fill_multiprocessing_args(std::vector<std::string>& args, int tid) override;
+            
     };
 }
 

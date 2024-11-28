@@ -30,6 +30,18 @@ namespace thts::python {
     {
     }
 
+    MoPyMultiprocessingThtsEnv::MoPyMultiprocessingThtsEnv(
+        shared_ptr<PickleWrapper> pickle_wrapper,
+        string module_name,
+        string class_name,
+        shared_ptr<py::dict> constructor_kw_args) :
+            PyMultiprocessingThtsEnv(pickle_wrapper, module_name, class_name, constructor_kw_args),
+            MoThtsEnv(2,true)
+    {
+        _is_fully_observable = py_thts_env->attr("is_fully_observable")().cast<bool>();
+        reward_dim = py_thts_env->attr("get_reward_dim")().cast<bool>();
+    }
+
     MoPyMultiprocessingThtsEnv::MoPyMultiprocessingThtsEnv(MoPyMultiprocessingThtsEnv& other) :
         PyMultiprocessingThtsEnv(other),
         MoThtsEnv(other)
@@ -38,6 +50,11 @@ namespace thts::python {
 
     shared_ptr<ThtsEnv> MoPyMultiprocessingThtsEnv::clone() {
         return make_shared<MoPyMultiprocessingThtsEnv>(*this);
+    }
+
+    string MoPyMultiprocessingThtsEnv::get_multiprocessing_env_type_id() 
+    {
+        return MOPY_ENV_SERVER_ID;
     }
 
     double MoPyMultiprocessingThtsEnv::get_reward_itfc(

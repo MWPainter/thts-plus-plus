@@ -2,6 +2,7 @@
 
 #include <exception>
 #include <filesystem>
+#include <iostream>
 
 namespace thts::python::helper {
     using namespace std;
@@ -15,7 +16,7 @@ namespace thts::python::helper {
     }
 
     key_t get_unix_key(int tid) {
-        return ftok(filesystem::current_path().c_str(), tid);
+        return ftok(filesystem::current_path().c_str(), tid+1);
     }
 
     /**
@@ -26,13 +27,23 @@ namespace thts::python::helper {
      * In our usecase the main thread will set all of this up before any child processes are spawned, so we've 
      * simplified it
     */
-    int init_sem(key_t key, int num_sems)  /* key from ftok() */
+    int init_sem(key_t key, int num_sems, bool is_server_process)  /* key from ftok() */
     {
-        // create semaphores
-        int semid = semget(key, num_sems, IPC_CREAT | IPC_EXCL | 0666);
+        cout << is_server_process << ": " << key << endl;
+        // create semaphores (if not server process), just get them if server process
+        int flags = 0666;
+        if (!is_server_process) {
+            flags |= IPC_CREAT;
+        }
+        int semid = semget(key, num_sems, flags);
         if (semid < 0) {
             throw runtime_error("Error creating filesystem semaphores (try running 'ipcrm -v -a' to clear unix "
                 "semaphores and rerunning)");
+        }
+
+        // If getting semaphores from server process, they should be initialised already
+        if (is_server_process) {
+            return semid;
         }
 
         // Initialise semaphores to a value of one
@@ -90,8 +101,12 @@ namespace thts::python::helper {
      * Makes a piece of shared memory
      * Returns shmid used to identify the piece of shared memory
     */
-    int init_shared_mem(key_t key, int size_in_bytes) {
-        int shmid = shmget(key, size_in_bytes, 0644 | IPC_CREAT);
+    int init_shared_mem(key_t key, int size_in_bytes, bool is_server_process) {
+        int flags = 0644;
+        if (!is_server_process) {
+            flags |= IPC_CREAT;
+        }
+        int shmid = shmget(key, size_in_bytes, flags);
         if (shmid == -1) {
             throw runtime_error("Error making shared memory");
         }
