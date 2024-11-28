@@ -33,12 +33,12 @@ int main(int argc, char* argv[])
     if (env_type_id == GYM_ENV_SERVER_ID) 
     {
         string gym_env_id = string(argv[3]);
-        thts_env = make_unique<GymMultiprocessingThtsEnv>(pickle_wrapper, gym_env_id);
+        thts_env = make_unique<GymMultiprocessingThtsEnv>(pickle_wrapper, gym_env_id, true);
     }
     else if (env_type_id == MOGYM_ENV_SERVER_ID)
     {
         string gym_env_id = string(argv[3]);
-        thts_env = make_unique<MoGymMultiprocessingThtsEnv>(pickle_wrapper, gym_env_id);
+        thts_env = make_unique<MoGymMultiprocessingThtsEnv>(pickle_wrapper, gym_env_id, true);
 
     }
     else if (env_type_id == PY_ENV_SERVER_ID)
@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
             kw_args[py::cast(string(argv[i]))] = py::cast(string(argv[i+1]));
         }
         thts_env = make_unique<PyMultiprocessingThtsEnv>(
-            pickle_wrapper, module_name, class_name, make_shared<py::dict>(kw_args));
+            pickle_wrapper, module_name, class_name, make_shared<py::dict>(kw_args), true);
     }
     else if (env_type_id == MOPY_ENV_SERVER_ID)
     {
@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
             kw_args[py::cast(string(argv[i]))] = py::cast(string(argv[i+1]));
         }
         thts_env = make_unique<PyMultiprocessingThtsEnv>(
-            pickle_wrapper, module_name, class_name, make_shared<py::dict>(kw_args));
+            pickle_wrapper, module_name, class_name, make_shared<py::dict>(kw_args), true);
     }
 
     thts_env->server_main(client_tid);

@@ -29,11 +29,10 @@ namespace thts::python::helper {
     */
     int init_sem(key_t key, int num_sems, bool is_server_process)  /* key from ftok() */
     {
-        cout << is_server_process << ": " << key << endl;
         // create semaphores (if not server process), just get them if server process
         int flags = 0666;
         if (!is_server_process) {
-            flags |= IPC_CREAT;
+            flags |= IPC_CREAT | IPC_EXCL;
         }
         int semid = semget(key, num_sems, flags);
         if (semid < 0) {

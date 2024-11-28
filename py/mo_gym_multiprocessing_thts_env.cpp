@@ -10,9 +10,10 @@ namespace thts::python {
 
     MoGymMultiprocessingThtsEnv::MoGymMultiprocessingThtsEnv(
         shared_ptr<PickleWrapper> pickle_wrapper,
-        string& gym_env_id) :
+        string& gym_env_id,
+        bool is_server_process) :
             ThtsEnv(true),
-            MoPyMultiprocessingThtsEnv(pickle_wrapper, nullptr),
+            MoPyMultiprocessingThtsEnv(pickle_wrapper, nullptr, is_server_process),
             gym_env_id(gym_env_id)
     {
         py::gil_scoped_acquire acquire;
@@ -25,7 +26,7 @@ namespace thts::python {
 
     MoGymMultiprocessingThtsEnv::MoGymMultiprocessingThtsEnv(MoGymMultiprocessingThtsEnv& other) :
         ThtsEnv(other.ThtsEnv::_is_fully_observable),
-        MoPyMultiprocessingThtsEnv(other.pickle_wrapper, other.py_thts_env),
+        MoPyMultiprocessingThtsEnv(other),
         gym_env_id(other.gym_env_id)
     {
     }
