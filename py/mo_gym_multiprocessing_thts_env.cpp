@@ -39,4 +39,14 @@ namespace thts::python {
     {
         return MOGYM_ENV_SERVER_ID;
     }
+
+    /**
+     * Adds the arguments needed in to run the "py_env_server" program for this env.
+     */
+    void MoGymMultiprocessingThtsEnv::fill_multiprocessing_args(vector<string>& args, int tid)
+    {
+        args.push_back(get_multiprocessing_env_type_id());
+        args.push_back(to_string(tid));
+        args.push_back(gym_env_id);
+    }
 } 

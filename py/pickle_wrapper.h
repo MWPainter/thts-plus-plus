@@ -11,6 +11,8 @@ namespace thts::python {
 
     /**
      * A wrapper around the pickle module that can be used in a multi-threaded environment
+     * 
+     * Basically translates between pickleable py::object's and C++ strings as needed
      */
     class PickleWrapper {
         private:

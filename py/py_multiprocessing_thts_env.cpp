@@ -9,10 +9,7 @@
 
 #include <signal.h>
 #include <sys/prctl.h>
-#include <unistd.h>
-
-#include <iostream>
-#include "helper_templates.h"
+#include <sys/wait.h>
 
 namespace py = pybind11;
 using namespace std; 
@@ -32,6 +29,7 @@ namespace thts::python {
             py_thts_env(py_thts_env),
             pickle_wrapper(pickle_wrapper),
             shared_mem_wrapper(),
+            child_pid(),
             module_name(),
             class_name(),
             constructor_kw_args(nullptr),
@@ -49,6 +47,7 @@ namespace thts::python {
             py_thts_env(nullptr),
             pickle_wrapper(pickle_wrapper),
             shared_mem_wrapper(),
+            child_pid(),
             module_name(module_name),
             class_name(class_name),
             constructor_kw_args(constructor_kw_args),
@@ -66,6 +65,7 @@ namespace thts::python {
         py_thts_env(other.py_thts_env),
         pickle_wrapper(other.pickle_wrapper),
         shared_mem_wrapper(),
+        child_pid(),
         module_name(other.module_name),
         class_name(other.class_name),
         constructor_kw_args(other.constructor_kw_args),
@@ -86,6 +86,10 @@ namespace thts::python {
             shared_mem_wrapper->rpc_id = RPC_kill_server;
             shared_mem_wrapper->num_args = 0;
             shared_mem_wrapper->make_kill_rpc_call();
+
+            // wait for server process to exit (so child process is reaped)
+            int status;
+            waitpid(child_pid, &status, 0);
         }
 
         py::gil_scoped_acquire acquire;
@@ -125,6 +129,7 @@ namespace thts::python {
             execvp(c_args[0], c_args.data());
             throw runtime_error("Error in calling execvp to spawn server process.");
         }
+        child_pid = pid;
     }
 
     /**

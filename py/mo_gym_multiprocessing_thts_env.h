@@ -42,5 +42,6 @@ namespace thts::python {
              * Override id so "py_env_server" program can identify it needs to use this env.
              */
             virtual std::string get_multiprocessing_env_type_id() override;
+            virtual void fill_multiprocessing_args(std::vector<std::string>& args, int tid) override;
     };
 }

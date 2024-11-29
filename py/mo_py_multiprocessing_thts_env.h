@@ -22,7 +22,7 @@ namespace thts::python {
         /**
          * Core ThtsEnv implementation functinos.
          */
-        public:
+        protected:
             /**
              * Constructor, passing python object directly
              */
@@ -31,6 +31,7 @@ namespace thts::python {
                 std::shared_ptr<py::object> py_thts_env,
                 bool is_server_process=false);
 
+        public:
             /**
              * Constructor, passing python module name, class name, and constructor args
              */

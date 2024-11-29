@@ -6,6 +6,7 @@ external/lemon-1.3.1/build
 thts-test
 pyex
 moexpr
+py_env_server
 valgrind-out.txt
 
 # Results/output folders dont want to copy around

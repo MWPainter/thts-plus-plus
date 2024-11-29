@@ -16,6 +16,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <unistd.h>
+
 
 namespace thts::python {
     // PyBind
@@ -46,24 +48,28 @@ namespace thts::python {
      * A ThtsEnv subclass used as a wrapper around an environment defined in python
      * Assumes that the python environment is a subclass the 'PyThtsEnv' (python class defined in py_thts_env.py
      * 
-     * Assumes that if we have n threads then thts is going to use n copies of this environment. 
-     * It runs each python env in a seperate process with its own full interpreter
-     * This way numpy code can be run
-     * 
-     * Protecting python variables:
-     * - py_thts_env needs to be protected by a lock
-     * - if py_thts_env may return the same objects between different function calls then those objects need to be 
-     *      protected from concurrent accesses (so we have a lock per function)
-     * - if not, then we only need to proect using py_thts_env object
-     * 
      * Member variables:
-     *      multiple_threads_using_this_env:
      *      py_thts_env: 
      *          A pybind11 py::object pointing to the python implementation an environment
-     *      py_env_may_return_shared_py_obj: 
-     *          If the py_thts_env pybind object might return the same object between different calls
-     *      lock: 
-     *          For protecting the python objects we're touching
+     *      pickle_wrapper:
+     *          Pointer to a PickleWrapper for translating between C++ strings and py::objects using Python's pickle
+     *      shared_mem_wrapper:
+     *          Class that contains all of the logic to create, manage and interact with shared memory for 
+     *          inter process comms.
+     *      module_name:
+     *          See class_name
+     *      class_name:
+     *          If you would import you python env using "from <module_name> import <class_name>", then the strings 
+     *          module_name and class_name are needed to make the Thts env.
+     *      constructor_kw_args:
+     *          A pointer to a py::dict object that specifys the key-word arguments to construct the class
+     *      is_server_process:
+     *          A boolean to identify if we are currently running in a client process (running thts trials) or a 
+     *          server process (interacting with the underlying python environment)
+     * 
+     * N.B. on the python side, the ThtsEnv needs to be able to take arguments as strings, as arguments are passed to 
+     * subprocesses as strings. 
+     *      
      */
     class PyMultiprocessingThtsEnv : virtual public ThtsEnv {
 
@@ -74,6 +80,7 @@ namespace thts::python {
             std::shared_ptr<py::object> py_thts_env;
             std::shared_ptr<PickleWrapper> pickle_wrapper;
             std::shared_ptr<SharedMemWrapper> shared_mem_wrapper;
+            pid_t child_pid;
 
             std::string module_name;
             std::string class_name;
@@ -83,7 +90,7 @@ namespace thts::python {
         /**
          * Core ThtsEnv implementation functinos.
          */
-        public:
+        protected:
             /**
              * Constructor, passing python object directly
              */
@@ -95,6 +102,7 @@ namespace thts::python {
             /**
              * Constructor, passing python module name, class name, and constructor args
              */
+        public:
             PyMultiprocessingThtsEnv(
                 std::shared_ptr<PickleWrapper> pickle_wrapper,
                 std::string module_name,

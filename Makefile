@@ -57,7 +57,7 @@ INCLUDES += -I$(ANACONDA_ENVS_HOME)/thts3.12/include/python3.12
 INCLUDES += -Iexternal/bayesopt/include
 
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20 
-# CPPFLAGS += -O3
+CPPFLAGS += -O3
 PY_LIB_CPPFLAGS += -fPIC -fvisibility=hidden # needed to create shared library
 PY_EX_CPPFLAGS += -pie -fPIE # needed to create executable
 TEST_CPPFLAGS = 
