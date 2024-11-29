@@ -54,13 +54,17 @@ namespace thts {
             double wrong_dir_prob = stochastic ? 0.25 : 0.0;
             bool add_extra_rewards = (env_id == DEBUG_PY_ENV_3_ID) || (env_id == DEBUG_PY_ENV_4_ID);
 
-            py::module_ py_thts_env_module = py::module_::import("mo_test_env"); 
-            py::object py_thts_env_py_obj = py_thts_env_module.attr("MoPyTestThtsEnv")(
-                "walk_len"_a=walk_len, "wrong_dir_prob"_a=wrong_dir_prob, "add_extra_rewards"_a=add_extra_rewards);
-            shared_ptr<py::object> py_thts_env = make_shared<py::object>(py_thts_env_py_obj);
+            py::gil_scoped_acquire acquire;
+            string module_name = "mo_test_env";
+            string class_name = "MoPyTestThtsEnv";
+            py::dict kw_args;
+            kw_args["walk_len"] = walk_len; 
+            kw_args["wrong_dir_prob"] = wrong_dir_prob;
+            kw_args["add_extra_rewards"] = add_extra_rewards;
 
             shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-            return make_shared<MoPyMultiprocessingThtsEnv>(pickle_wrapper, py_thts_env);
+            return make_shared<MoPyMultiprocessingThtsEnv>(
+                pickle_wrapper, module_name, class_name, make_shared<py::dict>(kw_args));
         }
 
         throw runtime_error("Error in get_env");
@@ -920,11 +924,11 @@ namespace thts {
             };
 
             string env_id = HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID[expr_id];
-            double search_runtime = 20.0;
+            double search_runtime = 1.0;//20.0;
             int max_trial_length = 50;
             double eval_delta = 1.0;
             int rollouts_per_mc_eval = 1024;
-            int num_repeats = 5;
+            int num_repeats = 1;//5;
             int num_threads = 16;
             int eval_threads = 16;
 

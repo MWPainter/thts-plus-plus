@@ -1441,9 +1441,9 @@ int main(int argc, char *argv[]) {
     /**
      * Testing py thts env
     */
-    bool bts_alpha = 1.0;
-    bool use_python_env = true;
-    py_thts_env_test(bts_alpha, use_python_env); 
+    // bool bts_alpha = 1.0;
+    // bool use_python_env = true;
+    // py_thts_env_test(bts_alpha, use_python_env); 
 
     /**
      * Testing czt
@@ -1456,12 +1456,12 @@ int main(int argc, char *argv[]) {
      * TODO: this currently fails, because gym envs requires algorithms to run in a model free mode, but we only have 
      *      single objective algorithms implemented in a planning mode
     */
-    // gym_env_test();
+    gym_env_test();
 
     /**
      * Testing python mo gym envs
     */
-    // mo_gym_env_test();
+    mo_gym_env_test();
 
     /**
      * Testing Eigen SVD

@@ -328,10 +328,14 @@ namespace thts {
         shared_ptr<ThtsEnv> thts_env;
         {
             py::gil_scoped_acquire acq;
-            py::module_ py_thts_env_module = py::module_::import("test_env"); 
-            py::object py_thts_env = py_thts_env_module.attr("PyTestThtsEnv")(env_size, stay_prob);
+            string module_name = "test_env"; 
+            string class_name = "PyTestThtsEnv";
+            py::dict kw_args;
+            kw_args["grid_size"] = env_size;
+            kw_args["stay_prob"] = stay_prob;
             shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-            thts_env = make_shared<PyMultiprocessingThtsEnv>(pickle_wrapper, make_shared<py::object>(py_thts_env));
+            thts_env = make_shared<PyMultiprocessingThtsEnv>(
+                pickle_wrapper, module_name, class_name, make_shared<py::dict>(kw_args));
         } 
 
         // Make thts manager with the py env 
