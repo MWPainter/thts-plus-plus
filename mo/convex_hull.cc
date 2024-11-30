@@ -281,6 +281,10 @@ namespace thts {
         // Solve 
         lp.solve();
         if (lp.primalType() != lemon::Lp::OPTIMAL) {
+            cout << "Getting error in linear programming solver." << endl;
+            cout << "Point considering being pruned = " << point << endl;
+            cout << "And set of reference points = " 
+                 << thts::helper::unordered_set_pretty_print_string(ref_points) << endl;
             throw runtime_error("Lin prog in convex hull cant be solved. If not optimal its infeasible or unbounded");
         }
 

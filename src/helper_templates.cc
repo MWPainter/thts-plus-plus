@@ -150,6 +150,26 @@ namespace thts::helper {
     }
 
     /**
+     * Printing sets
+     */
+    template <typename T>
+    string unordered_set_pretty_print_string(const unordered_set<T>& st) {
+        stringstream ss;
+        ss << "{";
+        bool first_iter = true;
+        for (const T& item : st) {
+            if (!first_iter) {
+                ss << ",";
+            } else {
+                first_iter = false;
+            }
+            ss << item;
+        }
+        ss << "}";
+        return ss.str();
+    } 
+
+    /**
      * Printing maps
      */
     template <typename K, typename V>
