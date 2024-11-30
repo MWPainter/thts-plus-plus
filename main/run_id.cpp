@@ -756,7 +756,8 @@ namespace thts {
             best_alg_params = alg_params;
         }
         write_eval_line(alg_params, eval);
-        return eval;
+        // bayes opt tried to minimise, so return *-1.0 because want to maximise
+        return -1.0 * eval;
     };
 
     /**
