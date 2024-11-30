@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace thts::helper {
@@ -73,6 +74,18 @@ namespace thts::helper {
     std::string vector_pretty_print_string(const std::vector<T>& vec);
 
     /**
+     * Helper function for printing unordered_set types to strings. Assumes that the type T can be fed into an ostream.
+     * 
+     * Args:
+     *      s: The set to pretty print
+     * 
+     * Returns:
+     *      A string representing a pretty printed version of the set.
+     */
+    template <typename T>
+    std::string unordered_set_pretty_print_string(const std::unordered_set<T>& st); 
+
+    /**
      * Helper function for printing unordered_map types to strings. Assumes that the types K,V can be fed into an 
      * ostream.
      * 
@@ -81,7 +94,7 @@ namespace thts::helper {
      *      delimiter: A delimiter to use between the keys and values
      * 
      * Returns:
-     *      A string representing a pretty printed version of the vector.
+     *      A string representing a pretty printed version of the map.
      */
     template <typename K, typename V>
     std::string unordered_map_pretty_print_string(const std::unordered_map<K,V>& mp, std::string delimiter=":"); 
