@@ -75,7 +75,10 @@ namespace thts::python {
             /**
              * Mo get reward itfc
              * - implementation takes PyState and PyAction
+             * On the server side, this overrides the "get_reward_py_server" function
             */
+            virtual std::shared_ptr<std::vector<double>> get_reward_py_server(
+                std::string& state, std::string& action) const override;
             virtual Eigen::ArrayXd get_mo_reward(
                 std::shared_ptr<const PyState> state, 
                 std::shared_ptr<const PyAction> action,

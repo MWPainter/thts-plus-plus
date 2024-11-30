@@ -52,6 +52,12 @@ namespace thts::python::helper {
     void* get_shared_mem_ptr(int shmid);
 
     /**
+     * Detach from shared memory
+     * (All processed need to detach from the shared memory to be able to destroy the shared mem)
+     */
+    void detach_shared_mem(void* data_ptr);
+
+    /**
      * Destroy shared memory associated with 'shmid'
     */
     void destroy_shared_mem(int shmid);

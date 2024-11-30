@@ -56,6 +56,10 @@ namespace thts::python {
      *      shared_mem_wrapper:
      *          Class that contains all of the logic to create, manage and interact with shared memory for 
      *          inter process comms.
+     *      shared_memory_size_in_bytes:
+     *          The size of the shared memory segment to use in the shaed_mem_wrapper (default = 1Mb)
+     *      child_pid:
+     *          The pid of the child (server) process spawned
      *      module_name:
      *          See class_name
      *      class_name:
@@ -80,6 +84,7 @@ namespace thts::python {
             std::shared_ptr<py::object> py_thts_env;
             std::shared_ptr<PickleWrapper> pickle_wrapper;
             std::shared_ptr<SharedMemWrapper> shared_mem_wrapper;
+            size_t shared_memory_size_in_bytes;
             pid_t child_pid;
 
             std::string module_name;
@@ -97,7 +102,8 @@ namespace thts::python {
             PyMultiprocessingThtsEnv(
                 std::shared_ptr<PickleWrapper> pickle_wrapper,
                 std::shared_ptr<py::object> py_thts_env,
-                bool is_server_process=false);
+                bool is_server_process=false,
+                size_t shared_memory_size_in_bytes=1024*1024);
 
             /**
              * Constructor, passing python module name, class name, and constructor args
@@ -108,7 +114,8 @@ namespace thts::python {
                 std::string module_name,
                 std::string class_name,
                 std::shared_ptr<py::dict> constructor_kw_args,
-                bool is_server_process=false);
+                bool is_server_process=false,
+                size_t shared_memory_size_in_bytes=1024*1024);
 
             /**
              * Private copy constructor to implement 
@@ -155,7 +162,7 @@ namespace thts::python {
              * Returns:
              *      Initial state for this environment instance
              */
-            std::string get_initial_state_py_server() const;
+            std::shared_ptr<std::vector<std::string>> get_initial_state_py_server() const;
             std::shared_ptr<const PyState> get_initial_state() const;
 
             /**
@@ -167,7 +174,7 @@ namespace thts::python {
              * Returns:
              *      True if 'state' is a sink state and false otherwise
              */
-            std::string is_sink_state_py_server(std::string& state) const;
+            std::shared_ptr<std::vector<std::string>> is_sink_state_py_server(std::string& state) const;
             bool is_sink_state(std::shared_ptr<const PyState> state, ThtsEnvContext& ctx) const;
 
             /**
@@ -179,7 +186,7 @@ namespace thts::python {
              * Returns:
              *      Returns a list of actions available from 'state'
              */
-            std::string get_valid_actions_py_server(std::string& state) const;
+            std::shared_ptr<std::vector<std::string>> get_valid_actions_py_server(std::string& state) const;
             std::shared_ptr<PyActionVector> get_valid_actions(
                 std::shared_ptr<const PyState> state, ThtsEnvContext& ctx) const;
 
@@ -197,7 +204,7 @@ namespace thts::python {
              * Returns:
              *      Returns a successor state distribution from taking 'action' in state 'state'.
              */
-            std::string get_transition_distribution_py_server(
+            std::shared_ptr<std::unordered_map<std::string,double>> get_transition_distribution_py_server(
                 std::string& state, std::string& action) const;
             std::shared_ptr<PyStateDistr> get_transition_distribution(
                 std::shared_ptr<const PyState> state, 
@@ -217,7 +224,7 @@ namespace thts::python {
              * Returns:
              *      Returns an successor state sampled from taking 'action' from 'state'
              */
-            std::string sample_transition_distribution_py_server(
+            std::shared_ptr<std::vector<std::string>> sample_transition_distribution_py_server(
                 std::string& state, std::string& action) const;
             std::shared_ptr<const PyState> sample_transition_distribution(
                 std::shared_ptr<const PyState> state, 
@@ -241,7 +248,8 @@ namespace thts::python {
              * Returns:
              *      The reward for taking 'action' from 'state' (and sampling 'observation')
              */
-            std::string get_reward_py_server(std::string& state, std::string& action) const;
+            virtual std::shared_ptr<std::vector<double>> get_reward_py_server(
+                std::string& state, std::string& action) const;
             double get_reward(
                 std::shared_ptr<const PyState> state, 
                 std::shared_ptr<const PyAction> action, 
