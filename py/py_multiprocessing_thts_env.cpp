@@ -24,12 +24,14 @@ namespace thts::python {
     PyMultiprocessingThtsEnv::PyMultiprocessingThtsEnv(
         shared_ptr<PickleWrapper> pickle_wrapper,
         shared_ptr<py::object> py_thts_env,
-        bool is_server_process) :
+        bool is_server_process,
+        size_t shared_memory_size_in_bytes) :
             ThtsEnv((py_thts_env != nullptr) ? helper::call_py_getter<bool>(py_thts_env,"is_fully_observable") : true),
             py_thts_env(py_thts_env),
             pickle_wrapper(pickle_wrapper),
             shared_mem_wrapper(),
-            child_pid(),
+            shared_memory_size_in_bytes(shared_memory_size_in_bytes),
+            child_pid(0),
             module_name(),
             class_name(),
             constructor_kw_args(nullptr),
@@ -42,12 +44,14 @@ namespace thts::python {
         string module_name,
         string class_name,
         shared_ptr<py::dict> constructor_kw_args,
-        bool is_server_process) :
+        bool is_server_process,
+        size_t shared_memory_size_in_bytes) :
             ThtsEnv(),
             py_thts_env(nullptr),
             pickle_wrapper(pickle_wrapper),
             shared_mem_wrapper(),
-            child_pid(),
+            shared_memory_size_in_bytes(shared_memory_size_in_bytes),
+            child_pid(0),
             module_name(module_name),
             class_name(class_name),
             constructor_kw_args(constructor_kw_args),
@@ -65,7 +69,8 @@ namespace thts::python {
         py_thts_env(other.py_thts_env),
         pickle_wrapper(other.pickle_wrapper),
         shared_mem_wrapper(),
-        child_pid(),
+        shared_memory_size_in_bytes(other.shared_memory_size_in_bytes),
+        child_pid(0),
         module_name(other.module_name),
         class_name(other.class_name),
         constructor_kw_args(other.constructor_kw_args),
@@ -84,7 +89,7 @@ namespace thts::python {
     PyMultiprocessingThtsEnv::~PyMultiprocessingThtsEnv() {
         if (!is_server_process) {
             shared_mem_wrapper->rpc_id = RPC_kill_server;
-            shared_mem_wrapper->num_args = 0;
+            shared_mem_wrapper->value_type = SMT_none;
             shared_mem_wrapper->make_kill_rpc_call();
 
             // wait for server process to exit (so child process is reaped)
@@ -106,7 +111,12 @@ namespace thts::python {
      * -> 
      */
     void PyMultiprocessingThtsEnv::start_python_server(int tid) {
-        shared_mem_wrapper = make_shared<SharedMemWrapper>(tid, 8*1024);
+        if (child_pid != 0) {
+            throw runtime_error(
+                "Calling start_python_server in PyMultiprocessingThtsEnv with server process already running.");
+        }
+
+        shared_mem_wrapper = make_shared<SharedMemWrapper>(tid, shared_memory_size_in_bytes);
         pid_t ppid_before_fork = getpid();
         pid_t pid = fork();
         if (pid == 0) {
@@ -166,141 +176,184 @@ namespace thts::python {
      * hold the gil in the forked python interpreter for the duration of the server process
      */
     void PyMultiprocessingThtsEnv::server_main(int tid) {
-        shared_mem_wrapper = make_shared<SharedMemWrapper>(tid, 8*1024, true);
+        shared_mem_wrapper = make_shared<SharedMemWrapper>(tid, shared_memory_size_in_bytes, true);
         while(true) {
             shared_mem_wrapper->server_wait_for_rpc_call();
             int rpc_id = shared_mem_wrapper->rpc_id;
 
             if (rpc_id == RPC_kill_server) {
                 return;
-            } else if (rpc_id == RPC_get_initial_state) {
-                shared_mem_wrapper->args[0] = get_initial_state_py_server();
-            } else if (rpc_id == RPC_is_sink_state) {
-                string& state = shared_mem_wrapper->args[0];
-                shared_mem_wrapper->args[0] = is_sink_state_py_server(state);
-            } else if (rpc_id == RPC_get_valid_actions) {
-                string& state = shared_mem_wrapper->args[0];
-                shared_mem_wrapper->args[0] = get_valid_actions_py_server(state);
-            } else if (rpc_id == RPC_get_transition_distribution) {
-                string& state = shared_mem_wrapper->args[0];
-                string& action = shared_mem_wrapper->args[1];
-                shared_mem_wrapper->args[0] = get_transition_distribution_py_server(state, action);
-            } else if (rpc_id == RPC_sample_transition_distribution) {
-                string& state = shared_mem_wrapper->args[0];
-                string& action = shared_mem_wrapper->args[1];
-                shared_mem_wrapper->args[0] = sample_transition_distribution_py_server(state, action);
-            } else if (rpc_id == RPC_get_reward) {
-                string& state = shared_mem_wrapper->args[0];
-                string& action = shared_mem_wrapper->args[1];
-                shared_mem_wrapper->args[0] = get_reward_py_server(state, action);
-            } else if (rpc_id == RPC_reset) {
+            } 
+            else if (rpc_id == RPC_get_initial_state) 
+            {
+                shared_mem_wrapper->strings = get_initial_state_py_server();
+                shared_mem_wrapper->value_type = SMT_strings;
+            } 
+            else if (rpc_id == RPC_is_sink_state) 
+            {
+                string& state = shared_mem_wrapper->strings->at(0);
+                shared_mem_wrapper->strings = is_sink_state_py_server(state);
+                shared_mem_wrapper->value_type = SMT_strings;
+            } 
+            else if (rpc_id == RPC_get_valid_actions) 
+            {
+                string& state = shared_mem_wrapper->strings->at(0);
+                shared_mem_wrapper->strings = get_valid_actions_py_server(state);
+                shared_mem_wrapper->value_type = SMT_strings;
+            } 
+            else if (rpc_id == RPC_get_transition_distribution) 
+            {
+                string& state = shared_mem_wrapper->strings->at(0);
+                string& action = shared_mem_wrapper->strings->at(1);
+                shared_mem_wrapper->prob_distr = get_transition_distribution_py_server(state, action);
+                shared_mem_wrapper->value_type = SMT_prob_distr;
+            } 
+            else if (rpc_id == RPC_sample_transition_distribution) 
+            {
+                string& state = shared_mem_wrapper->strings->at(0);
+                string& action = shared_mem_wrapper->strings->at(1);
+                shared_mem_wrapper->strings = sample_transition_distribution_py_server(state, action);
+                shared_mem_wrapper->value_type = SMT_strings;
+            } 
+            else if (rpc_id == RPC_get_reward) 
+            {
+                string& state = shared_mem_wrapper->strings->at(0);
+                string& action = shared_mem_wrapper->strings->at(1);
+                shared_mem_wrapper->doubles = get_reward_py_server(state, action);
+                shared_mem_wrapper->value_type = SMT_doubles;
+            } 
+            else if (rpc_id == RPC_reset) 
+            {
                 reset_py_server();
-                shared_mem_wrapper->args[0] = "\n\n";
+                shared_mem_wrapper->value_type = SMT_none;
             } 
 
             shared_mem_wrapper->rpc_id = 0;
-            shared_mem_wrapper->num_args = 1;
             shared_mem_wrapper->server_send_rpc_call_result();
         }
     }
 
-    string PyMultiprocessingThtsEnv::get_initial_state_py_server() const 
+    shared_ptr<vector<string>> PyMultiprocessingThtsEnv::get_initial_state_py_server() const 
     {
         py::handle py_get_initial_state_fn = py_thts_env->attr("get_initial_state");
         py::object py_init_state = py_get_initial_state_fn();
-        return pickle_wrapper->serialise(py_init_state);
+
+        shared_ptr<vector<string>> result = make_shared<vector<string>>();
+        result->push_back(pickle_wrapper->serialise(py_init_state));
+        return result;
     }
     
     shared_ptr<const PyState> PyMultiprocessingThtsEnv::get_initial_state() const 
     {
         shared_mem_wrapper->rpc_id = RPC_get_initial_state;
-        shared_mem_wrapper->num_args = 0;
+        shared_mem_wrapper->value_type = SMT_none;
         shared_mem_wrapper->make_rpc_call();
-        return make_shared<const PyState>(pickle_wrapper, make_shared<string>(shared_mem_wrapper->args[0]));
+
+        return make_shared<const PyState>(pickle_wrapper, make_shared<string>(shared_mem_wrapper->strings->at(0)));
     }
 
-    string PyMultiprocessingThtsEnv::is_sink_state_py_server(string& state) const 
+    shared_ptr<vector<string>> PyMultiprocessingThtsEnv::is_sink_state_py_server(string& state) const 
     {
         py::object py_state = pickle_wrapper->deserialise(state);
         py::handle py_is_sink_state_fn = py_thts_env->attr("is_sink_state");
         bool is_sink_state = py_is_sink_state_fn(py_state).cast<bool>();
-        return is_sink_state ? "T" : "F";
+
+        shared_ptr<vector<string>> result = make_shared<vector<string>>();
+        result->push_back(is_sink_state ? "T" : "F");
+        return result;
     }
 
     bool PyMultiprocessingThtsEnv::is_sink_state(shared_ptr<const PyState> state, ThtsEnvContext& ctx) const 
     {
         shared_mem_wrapper->rpc_id = RPC_is_sink_state;
-        shared_mem_wrapper->num_args = 1;
-        shared_mem_wrapper->args[0] = *state->get_serialised_state();
+        shared_mem_wrapper->value_type = SMT_strings;
+        shared_mem_wrapper->strings = make_shared<vector<string>>();
+        shared_mem_wrapper->strings->push_back(*state->get_serialised_state());
         shared_mem_wrapper->make_rpc_call();
-        return shared_mem_wrapper->args[0] == "T";
+
+        return shared_mem_wrapper->strings->at(0) == "T";
     }
 
-    string PyMultiprocessingThtsEnv::get_valid_actions_py_server(string& state) const 
+    shared_ptr<vector<string>> PyMultiprocessingThtsEnv::get_valid_actions_py_server(string& state) const 
     {
         py::object py_state = pickle_wrapper->deserialise(state);
         py::handle py_get_valid_actions_fn = py_thts_env->attr("get_valid_actions");
-        py::object py_valid_actions_list = py_get_valid_actions_fn(py_state);
-        return pickle_wrapper->serialise(py_valid_actions_list);
+        py::list py_valid_actions = py_get_valid_actions_fn(py_state);
+
+        shared_ptr<vector<string>> serialised_valid_actions = make_shared<vector<string>>();
+        for (py::handle py_action : py_valid_actions) {
+            py::object py_action_object = py::cast<py::object>(py_action);
+            serialised_valid_actions->push_back(pickle_wrapper->serialise(py_action_object));
+        }
+        return serialised_valid_actions;
     }
     
     shared_ptr<PyActionVector> PyMultiprocessingThtsEnv::get_valid_actions(
         shared_ptr<const PyState> state, ThtsEnvContext& ctx) const 
     { 
         shared_mem_wrapper->rpc_id = RPC_get_valid_actions;
-        shared_mem_wrapper->num_args = 1;
-        shared_mem_wrapper->args[0] = *state->get_serialised_state();
+        shared_mem_wrapper->value_type = SMT_strings;
+        shared_mem_wrapper->strings = make_shared<vector<string>>();
+        shared_mem_wrapper->strings->push_back(*state->get_serialised_state());
         shared_mem_wrapper->make_rpc_call();
-        py::gil_scoped_acquire acquire;
-        py::list py_valid_actions = pickle_wrapper->deserialise(shared_mem_wrapper->args[0]);
-        
+
         shared_ptr<PyActionVector> valid_actions = make_shared<PyActionVector>();
-        for (py::handle py_action : py_valid_actions) {
-            py::object py_action_object = py::cast<py::object>(py_action);
+        valid_actions->reserve(shared_mem_wrapper->strings->size());
+        for (string& serialised_action_string : *shared_mem_wrapper->strings) {
             valid_actions->push_back(
-                make_shared<const PyAction>(pickle_wrapper, make_shared<py::object>(py_action_object)));
+                make_shared<const PyAction>(pickle_wrapper, make_shared<string>(serialised_action_string)));
         }
         return valid_actions;
     }
 
-    string PyMultiprocessingThtsEnv::get_transition_distribution_py_server(string& state, string& action) const 
+    shared_ptr<unordered_map<string,double>> PyMultiprocessingThtsEnv::get_transition_distribution_py_server(
+        string& state, string& action) const 
     {
         py::object py_state = pickle_wrapper->deserialise(state);
         py::object py_action = pickle_wrapper->deserialise(action);
         py::handle py_get_transition_distribution_fn = py_thts_env->attr("get_transition_distribution");
-        py::object py_transition_prob_map = py_get_transition_distribution_fn(py_state, py_action);
-        return pickle_wrapper->serialise(py_transition_prob_map);
+        py::dict py_transition_prob_map = py_get_transition_distribution_fn(py_state, py_action);
+
+        shared_ptr<unordered_map<string,double>> serialised_prob_map = make_shared<unordered_map<string,double>>();
+        for (pair<py::handle,py::handle> py_state_prob_pair : py_transition_prob_map) {
+            py::object py_next_state = py::cast<py::object>(py_state_prob_pair.first);
+            string key = pickle_wrapper->serialise(py_next_state);
+            double value = py_state_prob_pair.second.cast<double>();
+            serialised_prob_map->insert_or_assign(key,value);
+        }
+        return serialised_prob_map;
     }
 
     shared_ptr<PyStateDistr> PyMultiprocessingThtsEnv::get_transition_distribution(
         shared_ptr<const PyState> state, shared_ptr<const PyAction> action, ThtsEnvContext& ctx) const 
     {
         shared_mem_wrapper->rpc_id = RPC_get_transition_distribution;
-        shared_mem_wrapper->num_args = 2;
-        shared_mem_wrapper->args[0] = *state->get_serialised_state();
-        shared_mem_wrapper->args[1] = *action->get_serialised_action();
+        shared_mem_wrapper->value_type = SMT_strings;
+        shared_mem_wrapper->strings = make_shared<vector<string>>();
+        shared_mem_wrapper->strings->push_back(*state->get_serialised_state());
+        shared_mem_wrapper->strings->push_back(*action->get_serialised_action());
         shared_mem_wrapper->make_rpc_call();
-        py::gil_scoped_acquire acquire;
-        py::dict py_transition_prob_map = pickle_wrapper->deserialise(shared_mem_wrapper->args[0]);
-
+        
         shared_ptr<PyStateDistr> transition_prob_map = make_shared<PyStateDistr>();
-        for (pair<py::handle,py::handle> py_state_prob_pair : py_transition_prob_map) {
-            py::object py_next_state = py::cast<py::object>(py_state_prob_pair.first);
-            py::handle py_prob_double = py_state_prob_pair.second;
-            transition_prob_map->insert_or_assign(
-                make_shared<const PyState>(pickle_wrapper, make_shared<py::object>(py_next_state)), 
-                py_prob_double.cast<double>());
+        for (pair<string,double> serialised_state_prob_pair : *shared_mem_wrapper->prob_distr) {
+            shared_ptr<string> serialised_next_state = make_shared<string>(serialised_state_prob_pair.first);
+            shared_ptr<const PyState> next_state = make_shared<const PyState>(pickle_wrapper, serialised_next_state);
+            transition_prob_map->insert_or_assign(next_state, serialised_state_prob_pair.second);
         }
         return transition_prob_map; 
     }
 
-    string PyMultiprocessingThtsEnv::sample_transition_distribution_py_server(string& state, string& action) const
+    shared_ptr<vector<string>> PyMultiprocessingThtsEnv::sample_transition_distribution_py_server(
+        string& state, string& action) const
     {
         py::object py_state = pickle_wrapper->deserialise(state);
         py::object py_action = pickle_wrapper->deserialise(action);
         py::handle py_sample_transition_distribution_fn = py_thts_env->attr("sample_transition_distribution");
         py::object py_next_state = py_sample_transition_distribution_fn(py_state, py_action);
-        return pickle_wrapper->serialise(py_next_state);
+
+        shared_ptr<vector<string>> result = make_shared<vector<string>>();
+        result->push_back(pickle_wrapper->serialise(py_next_state));
+        return result;
     }
 
     shared_ptr<const PyState> PyMultiprocessingThtsEnv::sample_transition_distribution(
@@ -310,20 +363,25 @@ namespace thts::python {
         ThtsEnvContext& ctx) const 
     {
         shared_mem_wrapper->rpc_id = RPC_sample_transition_distribution;
-        shared_mem_wrapper->num_args = 2;
-        shared_mem_wrapper->args[0] = *state->get_serialised_state();
-        shared_mem_wrapper->args[1] = *action->get_serialised_action();
+        shared_mem_wrapper->value_type = SMT_strings;
+        shared_mem_wrapper->strings = make_shared<vector<string>>();
+        shared_mem_wrapper->strings->push_back(*state->get_serialised_state());
+        shared_mem_wrapper->strings->push_back(*action->get_serialised_action());
         shared_mem_wrapper->make_rpc_call();
-        return make_shared<const PyState>(pickle_wrapper, make_shared<string>(shared_mem_wrapper->args[0]));
+        
+        return make_shared<const PyState>(pickle_wrapper, make_shared<string>(shared_mem_wrapper->strings->at(0)));
     }
 
-    string PyMultiprocessingThtsEnv::get_reward_py_server(string& state, string& action) const 
+    shared_ptr<vector<double>> PyMultiprocessingThtsEnv::get_reward_py_server(string& state, string& action) const 
     {
         py::object py_state = pickle_wrapper->deserialise(state);
         py::object py_action = pickle_wrapper->deserialise(action);
         py::handle py_get_reward_fn = py_thts_env->attr("get_reward");
         py::object py_reward = py_get_reward_fn(py_state, py_action);
-        return pickle_wrapper->serialise(py_reward);
+
+        shared_ptr<vector<double>> result = make_shared<vector<double>>();
+        result->push_back(py_reward.cast<double>());
+        return result;
     }
 
     double PyMultiprocessingThtsEnv::get_reward(
@@ -332,12 +390,13 @@ namespace thts::python {
         ThtsEnvContext& ctx) const 
     {
         shared_mem_wrapper->rpc_id = RPC_get_reward;
-        shared_mem_wrapper->num_args = 2;
-        shared_mem_wrapper->args[0] = *state->get_serialised_state();
-        shared_mem_wrapper->args[1] = *action->get_serialised_action();
+        shared_mem_wrapper->value_type = SMT_strings;
+        shared_mem_wrapper->strings = make_shared<vector<string>>();
+        shared_mem_wrapper->strings->push_back(*state->get_serialised_state());
+        shared_mem_wrapper->strings->push_back(*action->get_serialised_action());
         shared_mem_wrapper->make_rpc_call();
-        py::gil_scoped_acquire acquire;
-        return pickle_wrapper->deserialise(shared_mem_wrapper->args[0]).cast<double>();
+
+        return shared_mem_wrapper->doubles->at(0);
     }
 
     void PyMultiprocessingThtsEnv::reset_py_server() const 
@@ -349,7 +408,7 @@ namespace thts::python {
     void PyMultiprocessingThtsEnv::reset() const
     {
         shared_mem_wrapper->rpc_id = RPC_reset;
-        shared_mem_wrapper->num_args = 0;
+        shared_mem_wrapper->value_type = SMT_none;
         shared_mem_wrapper->make_rpc_call();
     }
 }

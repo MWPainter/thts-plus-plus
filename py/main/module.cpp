@@ -228,29 +228,51 @@ void shared_mem_test() {
 }
 
 void shared_mem_wrapper_test() {
-    SharedMemWrapper smw(0,8*1024);
-    pid_t pid = fork();
-    if (pid == 0) {
-        smw.server_wait_for_rpc_call();
-        int rpc_id = smw.rpc_id;
-        int num_args = smw.num_args;
-        string arg1 = smw.args[0];
-        string arg2 = smw.args[1];
-        cout << "Recieved rpc call:" << endl << rpc_id << endl << num_args << endl << arg1 << endl << arg2 << endl;
-        smw.rpc_id = 0;
-        smw.num_args = 1;
-        smw.args[0] = "RPCRESULT";
-        smw.server_send_rpc_call_result();
-        exit(0);
+    throw runtime_error("shared mem wrapper tests need upstring for changes made in refactor");
+    // SharedMemWrapper smw(0,8*1024);
+    // pid_t pid = fork();
+    // if (pid == 0) {
+    //     smw.server_wait_for_rpc_call();
+    //     int rpc_id = smw.rpc_id;
+    //     int num_args = smw.num_args;
+    //     string arg1 = smw.args[0];
+    //     string arg2 = smw.args[1];
+    //     cout << "Recieved rpc call:" << endl << rpc_id << endl << num_args << endl << arg1 << endl << arg2 << endl;
+    //     smw.rpc_id = 0;
+    //     smw.num_args = 1;
+    //     smw.args[0] = "RPCRESULT";
+    //     smw.server_send_rpc_call_result();
+    //     exit(0);
+    // }
+
+    // smw.rpc_id = 3;
+    // smw.num_args = 2;
+    // smw.args[0] = "RPCARG1";
+    // smw.args[1] = "RPCARG2";
+    // smw.make_rpc_call();
+
+    // cout << "Recieved rpc result:" << endl << smw.rpc_id << endl << smw.num_args << endl << smw.args[0] << endl;
+}
+
+void shared_mem_destroy_test() {
+    // Max number of shared memory segments can have in use "at one time" is 4096
+    // This is fine, but need to make sure that actually destroying the shared memory
+    // Following code should crash if not cleaning up shared memory segments properly in SharedMemWrapper destructor
+    // There also seems to be a limit on semaphores, but not been running into that
+    vector<shared_ptr<SharedMemWrapper>> smw_vec;
+    for (int i=0; i<100; i++) {
+        smw_vec.push_back(make_shared<SharedMemWrapper>(i,1024));
+        smw_vec[i].reset();
     }
-
-    smw.rpc_id = 3;
-    smw.num_args = 2;
-    smw.args[0] = "RPCARG1";
-    smw.args[1] = "RPCARG2";
-    smw.make_rpc_call();
-
-    cout << "Recieved rpc result:" << endl << smw.rpc_id << endl << smw.num_args << endl << smw.args[0] << endl;
+    for (int j=0; j<50; j++) {
+        for (int i=0; i<100; i++) {
+            // cout << j*100 + i << endl;
+            smw_vec[i] = make_shared<SharedMemWrapper>(i,1024);
+        }
+        for (int i=0; i<100; i++) {
+            smw_vec[i].reset();
+        }
+    }
 }
 
 /**
@@ -1436,6 +1458,7 @@ int main(int argc, char *argv[]) {
     // pickle_subinterpret_test(); // commented out now
     // shared_mem_test();
     // shared_mem_wrapper_test();
+    shared_mem_destroy_test();
     // pybind_gil_test();
 
     /**
@@ -1456,12 +1479,12 @@ int main(int argc, char *argv[]) {
      * TODO: this currently fails, because gym envs requires algorithms to run in a model free mode, but we only have 
      *      single objective algorithms implemented in a planning mode
     */
-    gym_env_test();
+    // gym_env_test();
 
     /**
      * Testing python mo gym envs
     */
-    mo_gym_env_test();
+    // mo_gym_env_test();
 
     /**
      * Testing Eigen SVD

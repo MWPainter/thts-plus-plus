@@ -67,22 +67,35 @@ namespace thts::python {
         return MoThtsEnv::get_reward_itfc(state, action, ctx);
     }
 
+    shared_ptr<vector<double>> MoPyMultiprocessingThtsEnv::get_reward_py_server(string& state, string& action) const 
+    {
+        py::object py_state = pickle_wrapper->deserialise(state);
+        py::object py_action = pickle_wrapper->deserialise(action);
+        py::handle py_get_reward_fn = py_thts_env->attr("get_reward");
+        py::list py_reward_list = py_get_reward_fn(py_state, py_action);
+
+        shared_ptr<vector<double>> result = make_shared<vector<double>>();
+        for (py::handle py_reward_i : py_reward_list) {
+            result->push_back(py_reward_i.cast<double>());
+        }
+        return result;
+    }
+
     Eigen::ArrayXd MoPyMultiprocessingThtsEnv::get_mo_reward(
         shared_ptr<const PyState> state, 
         shared_ptr<const PyAction> action,
         ThtsEnvContext& ctx) const 
     {
         shared_mem_wrapper->rpc_id = RPC_get_reward;
-        shared_mem_wrapper->num_args = 2;
-        shared_mem_wrapper->args[0] = *state->get_serialised_state();
-        shared_mem_wrapper->args[1] = *action->get_serialised_action();
+        shared_mem_wrapper->value_type = SMT_strings;
+        shared_mem_wrapper->strings = make_shared<vector<string>>();
+        shared_mem_wrapper->strings->push_back(*state->get_serialised_state());
+        shared_mem_wrapper->strings->push_back(*action->get_serialised_action());
         shared_mem_wrapper->make_rpc_call();
-        py::gil_scoped_acquire acquire;
-        py::list py_mo_reward = pickle_wrapper->deserialise(shared_mem_wrapper->args[0]);
-        int i=0;
+
         Eigen::ArrayXd mo_reward = Eigen::ArrayXd::Zero(reward_dim);
-        for (py::handle rew_i : py_mo_reward) {
-            mo_reward[i++] = rew_i.cast<double>();
+        for (size_t i=0; i<shared_mem_wrapper->doubles->size(); i++) {
+            mo_reward[i] = shared_mem_wrapper->doubles->at(i);
         }
         return mo_reward;
     }

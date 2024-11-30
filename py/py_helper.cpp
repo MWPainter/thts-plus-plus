@@ -3,6 +3,7 @@
 #include <exception>
 #include <filesystem>
 #include <iostream>
+#include <sstream>
 
 namespace thts::python::helper {
     using namespace std;
@@ -36,8 +37,10 @@ namespace thts::python::helper {
         }
         int semid = semget(key, num_sems, flags);
         if (semid < 0) {
-            throw runtime_error("Error creating filesystem semaphores (try running 'ipcrm -v -a' to clear unix "
-                "semaphores and rerunning)");
+            stringstream ss;
+            ss << "Error creating filesystem semaphores (try running 'ipcrm -v -a' to clear unix semaphores and "
+               << "rerunning), errno: " << errno;
+            throw runtime_error(ss.str());
         }
 
         // If getting semaphores from server process, they should be initialised already
@@ -57,7 +60,9 @@ namespace thts::python::helper {
                 int e = errno;
                 semctl(semid, 0, IPC_RMID); /* clean up */
                 errno = e;
-                throw runtime_error("Error in initialising filesystem semaphores");
+                stringstream ss;
+                ss << "Error in initialising filesystem semaphores, errno: " << errno;
+                throw runtime_error(ss.str());
             }
         }
         
@@ -107,7 +112,9 @@ namespace thts::python::helper {
         }
         int shmid = shmget(key, size_in_bytes, flags);
         if (shmid == -1) {
-            throw runtime_error("Error making shared memory");
+            stringstream ss;
+            ss << "Error making shared memory, errno: " << errno;
+            throw runtime_error(ss.str());
         }
         return shmid;
     }
@@ -118,13 +125,24 @@ namespace thts::python::helper {
     void* get_shared_mem_ptr(int shmid) {
         void* data = shmat(shmid, (void*)0, 0);
         if (data == (void*)(-1)) {
-            throw runtime_error("Error attaching to shared memory");
+            stringstream ss;
+            ss << "Error attaching to shared memory, errno: " << errno;
+            throw runtime_error(ss.str());
         }
         return data;
     }
 
     /**
+     * detach
+     */
+    void detach_shared_mem(void* data_ptr)
+    {
+        shmdt(data_ptr);
+    }
+
+    /**
      * Destroy shared memory associated with 'shmid'
+     * Also need to detach from the shared memory segment first
     */
     void destroy_shared_mem(int shmid) {
         shmctl(shmid, IPC_RMID, NULL);
