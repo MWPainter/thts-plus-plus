@@ -91,6 +91,11 @@ namespace thts {
             T get_best_point_tag(Eigen::ArrayXd& context_weight, RandManager& rand_manager) const;
 
             /**
+             * Get max (linear) utility from this convex hull
+             */
+            double get_max_linear_utility(Eigen::ArrayXd& context_weight) const;
+
+            /**
              * TODO: want this directly implemented in operator<<
              * But declaring operator<< as friend wasnt working because I couldnt work out how to declare a templated 
              * function as a friend hmph

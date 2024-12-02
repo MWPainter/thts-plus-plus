@@ -626,6 +626,117 @@ namespace thts {
             return run_ids;
         }
 
+        // expr_id: 700_dst
+        // deep sea treasure eval
+        if (expr_id == EVAL_DST_EXPR_ID) {
+            string env_id = DST_ENV_ID;
+            time_t expr_timestamp = std::time(nullptr);
+            double search_runtime = 45.0;
+            int max_trial_length = 50;
+            double eval_delta = 0.5;
+            int rollouts_per_mc_eval = 2500;
+            int num_repeats = 25;
+            int num_threads = 16;
+            int eval_threads = 16;
+
+            // CZT
+            unordered_map<string,double> czt_alg_params =
+            {
+                {CZT_BIAS_PARAM_ID, 3.96968},
+                {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 5.0},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                CZT_ALG_ID,
+                czt_alg_params,
+                search_runtime,
+                max_trial_length,
+                eval_delta,
+                rollouts_per_mc_eval,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // CHMCTS
+            unordered_map<string,double> chmcts_alg_params =
+            {
+                {CZT_BIAS_PARAM_ID, 33.7555},
+                {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 5.0},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                CHMCTS_ALG_ID,
+                chmcts_alg_params,
+                search_runtime,
+                max_trial_length,
+                eval_delta,
+                rollouts_per_mc_eval,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // SMBTS
+            unordered_map<string,double> smbts_alg_params =
+            {
+                {SM_L_INF_THRESH_PARAM_ID, 0.000144821},
+                {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
+                {SMBTS_SEARCH_TEMP_PARAM_ID, 58.5697},
+                {SMBTS_EPSILON_PARAM_ID, 0.414515},
+                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
+                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9972},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                SMBTS_ALG_ID,
+                smbts_alg_params,
+                search_runtime,
+                max_trial_length,
+                eval_delta,
+                rollouts_per_mc_eval,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // SMDENTS
+            unordered_map<string,double> smdents_alg_params =
+            {
+                {SM_L_INF_THRESH_PARAM_ID, 0.000145879},
+                {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
+                {SMBTS_SEARCH_TEMP_PARAM_ID, 64.4872},
+                {SMBTS_EPSILON_PARAM_ID, 0.409571},
+                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
+                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9981},
+                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 99.998},
+                {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 0.0196627},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                SMDENTS_ALG_ID,
+                smdents_alg_params,
+                search_runtime,
+                max_trial_length,
+                eval_delta,
+                rollouts_per_mc_eval,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // return 
+            return run_ids;
+        }
+
         throw runtime_error("Error in get_run_ids_from_expr_id");
     }
 
