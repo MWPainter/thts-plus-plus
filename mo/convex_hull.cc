@@ -3,6 +3,8 @@
 #include "helper_templates.h"
 #include "mo/mo_helper.h"
 
+#include <limits>
+
 #include <iostream>
 #include <stdexcept>
 
@@ -190,7 +192,7 @@ namespace thts {
      * Prunes points that are not on the convex hull fronts. A point p should be pruned from a set of points ps if the 
      * following linear program returns a negative value:
      * 
-     * max x = ( 0 ... 0 1)^T  ( w x ) 
+     * max x = ( 0 ... 0 1)  ( w x )^T 
      * s.t. w^T (p - p') - x >= 0 for all p' \in ps
      *      \sum_i w_i = 1
      * 
@@ -227,6 +229,10 @@ namespace thts {
      * If ref_points.size() == 0, or ref_points == {point}, then there will be no constraint to bound the value of x 
      * and an error will be thrown. So catch these cases at the start. In this case there is no point in 'ref_points' 
      * to dominate 'point', so return false;
+     * 
+     * TODO: probably should just call this "convex_dominated", dont think this needs a notion of strong/weak. 
+     * Generally weak/strong only considers domination of points with itself, i.e. if p == p1 == p2, then p1 weakly 
+     * dominates p2, but doesnt strongly dominate p2
      */
     template <typename T>
     bool ConvexHull<T>::strongly_convex_dominated(
@@ -281,11 +287,20 @@ namespace thts {
         // Solve 
         lp.solve();
         if (lp.primalType() != lemon::Lp::OPTIMAL) {
-            cout << "Getting error in linear programming solver." << endl;
+            cout << "Lemon is saying it didn't find optimal solution. From testing these cases it seems like this "
+                << "usually happens when it is actually feasible and should be returning true. For now, going to "
+                << "hackily just return true here. Here are the points for reference:"; 
             cout << "Point considering being pruned = " << point << endl;
             cout << "And set of reference points = " 
                  << thts::helper::unordered_set_pretty_print_string(ref_points) << endl;
-            throw runtime_error("Lin prog in convex hull cant be solved. If not optimal its infeasible or unbounded");
+            return true;
+
+            // cout << "Getting error in linear programming solver." << endl;
+            // cout << "Point considering being pruned = " << point << endl;
+            // cout << "And set of reference points = " 
+            //      << thts::helper::unordered_set_pretty_print_string(ref_points) << endl;
+            // cout << "And lp.primalType() == " << lp.primalType() << endl;
+            // throw runtime_error("Lin prog in convex hull cant be solved. If not optimal its infeasible or unbounded");
         }
 
         // Check if optimal value was negative (meaning its dominated) or not
@@ -302,7 +317,8 @@ namespace thts {
      * 
     */
     template <typename T>
-    unordered_set<TaggedPoint<T>> ConvexHull<T>::prune(const unordered_set<TaggedPoint<T>>& points) const {
+    unordered_set<TaggedPoint<T>> ConvexHull<T>::prune(const unordered_set<TaggedPoint<T>>& points) const 
+    {
         unordered_set<TaggedPoint<T>> pruned_points(points);
         
         for (auto it = pruned_points.begin(); it != pruned_points.end(); ) {
@@ -429,6 +445,22 @@ namespace thts {
     T ConvexHull<T>::get_best_point_tag(Eigen::ArrayXd& context_weight, RandManager& rand_manager)  const
     {
         return get_best_point(context_weight,rand_manager).tag;
+    }
+
+    /**
+     * Get maximal contextual value
+     */
+    template <typename T>
+    double ConvexHull<T>::get_max_linear_utility(Eigen::ArrayXd& context_weight) const 
+    {
+        double max_scalarised_value = numeric_limits<double>::lowest();
+        for (const TaggedPoint<T>& tagged_point : ch_points) {
+            double scalarised_value = thts::helper::dot(tagged_point.point, context_weight);
+            if (scalarised_value > max_scalarised_value) {
+                max_scalarised_value = scalarised_value;
+            }
+        }
+        return max_scalarised_value;
     }
 
     /**

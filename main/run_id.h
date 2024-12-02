@@ -158,6 +158,9 @@ static const std::string HP_OPT_MINE_CHMCTS_EXPR_ID = "611_hp_opt_mine_chmcts";
 static const std::string HP_OPT_MINE_SMBTS_EXPR_ID = "612_hp_opt_mine_smbts";
 static const std::string HP_OPT_MINE_SMDENTS_EXPR_ID = "613_hp_opt_mine_smdents";
 
+// expr ids - mo gymnasium (7xx + 8xx = eval)
+static const std::string EVAL_DST_EXPR_ID = "700_dst";
+
 // expr ids - lists of czt / chmcts / bts / dents expr_ids
 static std::unordered_map<std::string,std::string> HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID =
 {
@@ -191,8 +194,6 @@ static std::unordered_map<std::string,std::string> HP_OPT_MOGYM_SMDENTS_EXPR_ID_
     {HP_OPT_FOUR_T_SMDENTS_EXPR_ID,     FOUR_ROOM_TIMED_ENV_ID},
     {HP_OPT_MINE_SMDENTS_EXPR_ID,       MINECART_ENV_ID},
 };
-
-// expr ids - mo gymnasium (7xx + 8xx = eval)
 
 // param ids
 static const std::string CZT_BIAS_PARAM_ID = "czt_bias";

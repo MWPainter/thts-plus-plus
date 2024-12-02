@@ -38,6 +38,7 @@ namespace thts {
             virtual void visit(MoThtsContext& ctx);
             virtual std::shared_ptr<const Action> select_action(MoThtsContext& ctx) = 0;
             virtual std::shared_ptr<const Action> recommend_action(MoThtsContext& ctx) const;
+            std::shared_ptr<const Action> recommend_action_from_tags(MoThtsContext& ctx) const;
             virtual void backup(
                 const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 
                 const std::vector<Eigen::ArrayXd>& trial_rewards_after_node, 

@@ -31,6 +31,33 @@ namespace thts {
     */
     shared_ptr<const Action> CH_MoThtsDNode::recommend_action(MoThtsContext& ctx) const 
     {  
+        unordered_map<shared_ptr<const Action>,double> utilities;
+        for (const pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : children) {
+            shared_ptr<const Action> action = child_pair.first;
+            CH_MoThtsCNode& ch_child = (CH_MoThtsCNode&) *child_pair.second;
+            lock_guard<mutex> lg(ch_child.get_lock()); 
+            utilities[action] = ch_child.convex_hull.get_max_linear_utility(ctx.context_weight);
+        }  
+        
+        // If no children, act randomly
+        if (utilities.size() == 0) {
+            shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
+            int index = thts_manager->get_rand_int(0, actions->size());
+            return actions->at(index);
+        }
+
+        // Return best utility
+        return thts::helper::get_max_key_break_ties_randomly(utilities, *thts_manager);
+    }
+
+    /**
+     * N.B. This is how we used to do it, but was the wrong idea
+     * 
+     * Convex hull is initialised with a single point tagged with nullptr
+     * Return a random action if the best point tag is nullptr
+    */
+    shared_ptr<const Action> CH_MoThtsDNode::recommend_action_from_tags(MoThtsContext& ctx) const 
+    {  
         shared_ptr<const Action> act = convex_hull.get_best_point_tag(ctx.context_weight, *thts_manager);
         if (act == nullptr) {
             shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
