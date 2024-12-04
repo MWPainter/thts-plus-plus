@@ -630,3 +630,34 @@ if __name__ == "__main__":
             use_legend=True,
             plot_num_trials=False)
 
+
+
+
+
+    # ------------------------------------------------------------------------------------------------------------------
+    
+
+
+
+
+    ###
+    # Gym env evals
+    ###  
+    
+    if "700dr" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = glob.glob("results/deep-sea-treasure-v0/x700_dst|desktop_run/**/eval.csv", recursive=True)
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/700dr_dst_num_trials.png",
+            hue_key="pretty_alg_id",
+            alpha=0.8,
+            use_legend=True,
+            plot_num_trials=True)
+        make_plot(
+            filenames=filenames,
+            plot_filename="plots/700dr_dst_utility.png",
+            hue_key="pretty_alg_id",
+            alpha=0.8,
+            use_legend=True,
+            plot_num_trials=False)
+
