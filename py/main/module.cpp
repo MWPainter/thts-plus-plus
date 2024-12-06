@@ -46,7 +46,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "lemon/lp.h"
+// #include "lemon/lp.h"
 
 using namespace std;
 using namespace thts;
@@ -1447,158 +1447,158 @@ void chmcts_4d_test() {
     cout << mo_mc_eval.get_mean_mo_normalised_ctx_return() << endl;
 }
 
-void ch_lin_prog_debugging() {
+// void ch_lin_prog_debugging() {
 
-    // // Example inputs #1
-    // // Running on this outputs that the point is dominated
-    // // Got a print out of the following from 'strongly_convex_dominated' function in convex hull code:
-    // // Point considering being pruned = (8.2,-12|2)
-    // // And set of reference points = {(8.2,-12|2),(11.5,-4|1),(19.6,-13|1),(22.4,-79|1),(15.1,-8|0)}
-    // // -> this doesn't get solved somehow
+//     // // Example inputs #1
+//     // // Running on this outputs that the point is dominated
+//     // // Got a print out of the following from 'strongly_convex_dominated' function in convex hull code:
+//     // // Point considering being pruned = (8.2,-12|2)
+//     // // And set of reference points = {(8.2,-12|2),(11.5,-4|1),(19.6,-13|1),(22.4,-79|1),(15.1,-8|0)}
+//     // // -> this doesn't get solved somehow
 
-    // // Recreate points
-    // Eigen::ArrayXd p0_v(2);
-    // p0_v << 8.2, -12.0;
-    // string p0_t = "2";
-    // TaggedPoint<string> p0(p0_v,p0_t);
+//     // // Recreate points
+//     // Eigen::ArrayXd p0_v(2);
+//     // p0_v << 8.2, -12.0;
+//     // string p0_t = "2";
+//     // TaggedPoint<string> p0(p0_v,p0_t);
 
-    // Eigen::ArrayXd p1_v(2);
-    // p1_v << 11.5, -4.0;
-    // string p1_t = "1";
-    // TaggedPoint<string> p1(p1_v,p1_t);
+//     // Eigen::ArrayXd p1_v(2);
+//     // p1_v << 11.5, -4.0;
+//     // string p1_t = "1";
+//     // TaggedPoint<string> p1(p1_v,p1_t);
 
-    // Eigen::ArrayXd p2_v(2);
-    // p2_v << 19.6, -13.0;
-    // string p2_t = "1";
-    // TaggedPoint<string> p2(p2_v,p2_t);
+//     // Eigen::ArrayXd p2_v(2);
+//     // p2_v << 19.6, -13.0;
+//     // string p2_t = "1";
+//     // TaggedPoint<string> p2(p2_v,p2_t);
 
-    // Eigen::ArrayXd p3_v(2);
-    // p3_v << 22.4, -79.0;
-    // string p3_t = "1";
-    // TaggedPoint<string> p3(p3_v,p3_t);
+//     // Eigen::ArrayXd p3_v(2);
+//     // p3_v << 22.4, -79.0;
+//     // string p3_t = "1";
+//     // TaggedPoint<string> p3(p3_v,p3_t);
 
-    // Eigen::ArrayXd p4_v(2);
-    // p4_v << 15.1, -8.0;
-    // string p4_t = "0";
-    // TaggedPoint<string> p4(p4_v,p4_t);
+//     // Eigen::ArrayXd p4_v(2);
+//     // p4_v << 15.1, -8.0;
+//     // string p4_t = "0";
+//     // TaggedPoint<string> p4(p4_v,p4_t);
 
-    // // Input to 'strongly_convex_dominated' function
-    // TaggedPoint<string> point = p0;
-    // unordered_set<TaggedPoint<string>> ref_points = {p0,p1,p2,p3,p4};
+//     // // Input to 'strongly_convex_dominated' function
+//     // TaggedPoint<string> point = p0;
+//     // unordered_set<TaggedPoint<string>> ref_points = {p0,p1,p2,p3,p4};
 
-    // Example inputs #2
-    // Point considering being pruned = (14,-19|0)
-    // And set of reference points = {(11.5,-4|1),(20.3,-37|1),(14,-19|0),(8.2,-2|1),(16.1,-16|1),(8.2,-3|0),(15.1,-11|1)}
-    // And lp.primalType() == 1
+//     // Example inputs #2
+//     // Point considering being pruned = (14,-19|0)
+//     // And set of reference points = {(11.5,-4|1),(20.3,-37|1),(14,-19|0),(8.2,-2|1),(16.1,-16|1),(8.2,-3|0),(15.1,-11|1)}
+//     // And lp.primalType() == 1
 
-    // Recreate points
-    Eigen::ArrayXd p0_v(2);
-    p0_v << 14.0, -19.0;
-    string p0_t = "0";
-    TaggedPoint<string> p0(p0_v,p0_t);
+//     // Recreate points
+//     Eigen::ArrayXd p0_v(2);
+//     p0_v << 14.0, -19.0;
+//     string p0_t = "0";
+//     TaggedPoint<string> p0(p0_v,p0_t);
 
-    Eigen::ArrayXd p1_v(2);
-    p1_v << 11.5, -4.0;
-    string p1_t = "1";
-    TaggedPoint<string> p1(p1_v,p1_t);
+//     Eigen::ArrayXd p1_v(2);
+//     p1_v << 11.5, -4.0;
+//     string p1_t = "1";
+//     TaggedPoint<string> p1(p1_v,p1_t);
 
-    Eigen::ArrayXd p2_v(2);
-    p2_v << 20.3, -37.0;
-    string p2_t = "1";
-    TaggedPoint<string> p2(p2_v,p2_t);
+//     Eigen::ArrayXd p2_v(2);
+//     p2_v << 20.3, -37.0;
+//     string p2_t = "1";
+//     TaggedPoint<string> p2(p2_v,p2_t);
 
-    Eigen::ArrayXd p3_v(2);
-    p3_v << 8.2, -2.0;
-    string p3_t = "1";
-    TaggedPoint<string> p3(p3_v,p3_t);
+//     Eigen::ArrayXd p3_v(2);
+//     p3_v << 8.2, -2.0;
+//     string p3_t = "1";
+//     TaggedPoint<string> p3(p3_v,p3_t);
 
-    Eigen::ArrayXd p4_v(2);
-    p4_v << 16.1, -16.0;
-    string p4_t = "1";
-    TaggedPoint<string> p4(p4_v,p4_t);
+//     Eigen::ArrayXd p4_v(2);
+//     p4_v << 16.1, -16.0;
+//     string p4_t = "1";
+//     TaggedPoint<string> p4(p4_v,p4_t);
 
-    Eigen::ArrayXd p5_v(2);
-    p5_v << 8.2, -3.0;
-    string p5_t = "0";
-    TaggedPoint<string> p5(p5_v,p5_t);
+//     Eigen::ArrayXd p5_v(2);
+//     p5_v << 8.2, -3.0;
+//     string p5_t = "0";
+//     TaggedPoint<string> p5(p5_v,p5_t);
 
-    Eigen::ArrayXd p6_v(2);
-    p6_v << 15.1, -11.0;
-    string p6_t = "1";
-    TaggedPoint<string> p6(p6_v,p6_t);
+//     Eigen::ArrayXd p6_v(2);
+//     p6_v << 15.1, -11.0;
+//     string p6_t = "1";
+//     TaggedPoint<string> p6(p6_v,p6_t);
 
-    // Input to 'strongly_convex_dominated' function
-    TaggedPoint<string> point = p0;
-    unordered_set<TaggedPoint<string>> ref_points = {p0,p1,p2,p3,p4,p5,p6};
+//     // Input to 'strongly_convex_dominated' function
+//     TaggedPoint<string> point = p0;
+//     unordered_set<TaggedPoint<string>> ref_points = {p0,p1,p2,p3,p4,p5,p6};
 
 
 
-    // C&P of strongly_convex_dominated to play around with it (but print statements instead of returns)
-    // And setting T=string
-    {
-        // Base case where lp will be unbounded and would throw an error
-        if (ref_points.size() == 0 || (ref_points.size() == 1 && ref_points.contains(point))) {
-            cout << "Base case retuning false" << endl;
-            return;
-            // return false;
-        }
+//     // C&P of strongly_convex_dominated to play around with it (but print statements instead of returns)
+//     // And setting T=string
+//     {
+//         // Base case where lp will be unbounded and would throw an error
+//         if (ref_points.size() == 0 || (ref_points.size() == 1 && ref_points.contains(point))) {
+//             cout << "Base case retuning false" << endl;
+//             return;
+//             // return false;
+//         }
 
-        // Make lp
-        // Get n (number of points in 'ref_points' and dimension of vectors)
-        lemon::Lp lp;
-        int dim = point.point.size();
+//         // Make lp
+//         // Get n (number of points in 'ref_points' and dimension of vectors)
+//         lemon::Lp lp;
+//         int dim = point.point.size();
 
-        // Add variables for w and x
-        vector<lemon::Lp::Col> w;
-        for (int i=0; i<dim; i++) {
-            w.push_back(lp.addCol());
-            lp.colLowerBound(w[i], 0.0);
-            lp.colUpperBound(w[i], 1.0);
-        }
-        lemon::Lp::Col x = lp.addCol();
+//         // Add variables for w and x
+//         vector<lemon::Lp::Col> w;
+//         for (int i=0; i<dim; i++) {
+//             w.push_back(lp.addCol());
+//             lp.colLowerBound(w[i], 0.0);
+//             lp.colUpperBound(w[i], 1.0);
+//         }
+//         lemon::Lp::Col x = lp.addCol();
 
-        // Add row constrains for the inequality constraint above (take care to not include 'point')
-        for (const TaggedPoint<string>& ref_p : ref_points) {
-            if (ref_p == point) continue;
-            Eigen::ArrayXd diff = point.point - ref_p.point; // p-p_k
+//         // Add row constrains for the inequality constraint above (take care to not include 'point')
+//         for (const TaggedPoint<string>& ref_p : ref_points) {
+//             if (ref_p == point) continue;
+//             Eigen::ArrayXd diff = point.point - ref_p.point; // p-p_k
 
-            lemon::Lp::Expr row_expr = 0;
-            for (int i=0; i<dim; i++) {
-                row_expr += diff[i] * w[i];
-            }
-            row_expr += -1.0 * x;
-            lemon::Lp::Constr row_constr = (row_expr >= 0.0);
-            lp.addRow(row_constr);
-        }
+//             lemon::Lp::Expr row_expr = 0;
+//             for (int i=0; i<dim; i++) {
+//                 row_expr += diff[i] * w[i];
+//             }
+//             row_expr += -1.0 * x;
+//             lemon::Lp::Constr row_constr = (row_expr >= 0.0);
+//             lp.addRow(row_constr);
+//         }
 
-        // Add row constraint for the equality constraint
-        lemon::Lp::Expr row_expr = 0;
-        for (int i=0; i<dim; i++) {
-            row_expr += w[i];
-        };
-        lemon::Lp::Constr row_constr = (row_expr == 1.0);
-        lp.addRow(row_constr);
+//         // Add row constraint for the equality constraint
+//         lemon::Lp::Expr row_expr = 0;
+//         for (int i=0; i<dim; i++) {
+//             row_expr += w[i];
+//         };
+//         lemon::Lp::Constr row_constr = (row_expr == 1.0);
+//         lp.addRow(row_constr);
 
-        // Set objective (max x)
-        lp.max();
-        lp.obj(x);
+//         // Set objective (max x)
+//         lp.max();
+//         lp.obj(x);
 
-        // Solve 
-        lp.solve();
-        if (lp.primalType() != lemon::Lp::OPTIMAL) {
-            cout << "Getting error in linear programming solver." << endl;
-            cout << "Point considering being pruned = " << point << endl;
-            cout << "And set of reference points = " 
-                 << thts::helper::unordered_set_pretty_print_string(ref_points) << endl;
-            cout << "And lp.primalType() == " << lp.primalType() << endl;
-            throw runtime_error("Lin prog in convex hull cant be solved. If not optimal its infeasible or unbounded");
-        }
+//         // Solve 
+//         lp.solve();
+//         if (lp.primalType() != lemon::Lp::OPTIMAL) {
+//             cout << "Getting error in linear programming solver." << endl;
+//             cout << "Point considering being pruned = " << point << endl;
+//             cout << "And set of reference points = " 
+//                  << thts::helper::unordered_set_pretty_print_string(ref_points) << endl;
+//             cout << "And lp.primalType() == " << lp.primalType() << endl;
+//             throw runtime_error("Lin prog in convex hull cant be solved. If not optimal its infeasible or unbounded");
+//         }
 
-        // Check if optimal value was negative (meaning its dominated) or not
-        cout << "Point is strongly convex dominated?" << (lp.primal() <= 0.0) << endl;
-        // return lp.primal() <= 0.0;
-    }
-}
+//         // Check if optimal value was negative (meaning its dominated) or not
+//         cout << "Point is strongly convex dominated?" << (lp.primal() <= 0.0) << endl;
+//         // return lp.primal() <= 0.0;
+//     }
+// }
 
 // C++ entry point for debugging
 int main(int argc, char *argv[]) {
@@ -1658,13 +1658,13 @@ int main(int argc, char *argv[]) {
     /**
      * Testing chmcts
     */
-    // chmcts_test();
-    // chmcts_4d_test();
+    chmcts_test();
+    chmcts_4d_test();
 
     /**
      * Debugging Convex hull linear programs
      */
-    ch_lin_prog_debugging();
+    // ch_lin_prog_debugging();
 
     return 0;
 }

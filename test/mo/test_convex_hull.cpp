@@ -310,6 +310,52 @@ TEST(Ch_Constructors, setting_tags) {
 
 }
 
+/**
+ * Tests 'equals' relationship
+ */
+TEST(Ch_Arithmetic, equality) {
+    vector<ConvexHull<string>> chs;
+
+    unordered_set<TaggedPoint<string>> points1 = {
+        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
+        TaggedPoint<string>(make_vec(2.0,1.0), "1"),
+    };
+    chs.push_back(ConvexHull<string>(points1));
+
+    unordered_set<TaggedPoint<string>> points2 = {
+        TaggedPoint<string>(make_vec(1.0,2.0), "2"),
+        TaggedPoint<string>(make_vec(2.0,1.0), "3"),
+    };
+    chs.push_back(ConvexHull<string>(points2));
+    
+    unordered_set<TaggedPoint<string>> points3 = {
+        TaggedPoint<string>(make_vec(2.0,3.0), "1"),
+        TaggedPoint<string>(make_vec(2.0,1.0), "1"),
+    };
+    chs.push_back(ConvexHull<string>(points3));
+
+    unordered_set<TaggedPoint<string>> points4 = {
+        TaggedPoint<string>(make_vec(1.0,2.0), "2"),
+    };
+    chs.push_back(ConvexHull<string>(points4));
+
+    for (size_t i=0; i<chs.size(); i++) {
+        for (size_t j=i+1; j<chs.size(); j++) {
+            if (i==0 && j==1) {
+                EXPECT_TRUE(chs[i].equals(chs[j]));
+                EXPECT_TRUE(chs[j].equals(chs[i]));
+                EXPECT_TRUE(chs[i] == chs[j]);
+                EXPECT_TRUE(chs[j] == chs[i]);
+            } else {
+                EXPECT_FALSE(chs[i].equals(chs[j]));
+                EXPECT_FALSE(chs[j].equals(chs[i]));
+                EXPECT_FALSE(chs[i] == chs[j]);
+                EXPECT_FALSE(chs[j] == chs[i]);
+            }
+        }
+    }
+}
+
 // /**
 //  * Single argument prune is tested in the constructors
 //  * Testing the two argument prune funciton

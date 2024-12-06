@@ -85,6 +85,11 @@ namespace thts {
             ConvexHull<T> add(const Eigen::ArrayXd& v) const;
 
             /**
+             * If this convex hull is equal to another convex hull (ignoring any tags)
+             */
+            bool equals(const ConvexHull<T> &other) const;
+
+            /**
              * Get the best tag for a context weight
             */
             TaggedPoint<T> get_best_point(Eigen::ArrayXd& context_weight, RandManager& rand_manager) const;
@@ -121,25 +126,31 @@ namespace std {
     ConvexHull<T> operator*(double s, const ConvexHull<T>& ch);
 
     /**
-     * Union of two pareto fronts
+     * Union of two convex hulls
     */
     template <typename T>
     ConvexHull<T> operator|(const ConvexHull<T>& ch1, const ConvexHull<T>& ch2);
 
     /**
-     * Sum of pareto fronts
+     * Sum of convex hulls
     */
     template <typename T>
     ConvexHull<T> operator+(const ConvexHull<T>& ch1, const ConvexHull<T>& ch2);
 
     /**
-     * Add vector to pareto front
+     * Add vector to convex hull
     */
     template <typename T>
     ConvexHull<T> operator+(const ConvexHull<T>& ch, const Eigen::ArrayXd& v);
 
     template <typename T>
     ConvexHull<T> operator+(const Eigen::ArrayXd& v, const ConvexHull<T>& ch);
+
+    /**
+     * Equality of convex hulls
+     */
+    template <typename T>
+    bool operator==(const ConvexHull<T>& lhs, const ConvexHull<T>& rhs);
 
     /**
      * Output stream
