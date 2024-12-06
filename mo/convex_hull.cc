@@ -8,7 +8,9 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "lemon/lp.h"
+// #include "lemon/lp.h"
+#include "coin-or/ClpSimplex.hpp"
+#include "coin-or/CoinPackedMatrix.hpp"
 
 
 
@@ -17,7 +19,7 @@
  */
 namespace thts {
     using namespace std;
-    using namespace lemon;
+    // using namespace lemon;
     
     /**
      * Constructor, empty
@@ -198,12 +200,11 @@ namespace thts {
      * 
      * This is implemented using the following constraints: 
      * 
-     * (  p-p_1       -1 )       (   )         (   )
-     * (   ...        ...)   *   ( w )   >=    ( 0 )
-     * (   ...        ...)       (   )         (   )
-     * (  p-p_n       -1 )       ( x )         ( 0 )
-     * 
-     * (  1 ... 1      0 )   *   ( w x )^T   =   1
+     * (  p-p_1       -1 )       (   )   >=    ( 0 )
+     * (   ...        ...)   *   (   )   >=    (...)        
+     * (   ...        ...)       ( w )   >=    (...)
+     * (  p-p_n       -1 )       (   )   >=    ( 0 )
+     * (  1 ... 1      0 )   *   ( x )   ==    ( 1 )         
      * 
      * Objective is given by:
      *       max (0 ... 0 1) * ( w x )^T
@@ -219,13 +220,6 @@ namespace thts {
      * For the boundary case, when x == 0, we're going to say it's dominated. Consider the points (0,2), (1,1) and (2,0)
      * the point (1,1) we want to be dominated, and it's optimal value of x will be zero (found at w=0.5*(1,1))
      * 
-     * 
-     * TODO: add documentation for the below
-     * 
-     * For the LP solver, we use lemon https://lemon.cs.elte.hu/pub/tutorial/a00020.html, because it provides a really 
-     * clean symbolic interface to use. Really its a wrapper around other packages such as GLPK, Clp, Cbc, ILOG CPLEX 
-     * and SoPlex https://lemon.cs.elte.hu/trac/lemon/wiki/InstallLinux
-     * 
      * If ref_points.size() == 0, or ref_points == {point}, then there will be no constraint to bound the value of x 
      * and an error will be thrown. So catch these cases at the start. In this case there is no point in 'ref_points' 
      * to dominate 'point', so return false;
@@ -233,6 +227,30 @@ namespace thts {
      * TODO: probably should just call this "convex_dominated", dont think this needs a notion of strong/weak. 
      * Generally weak/strong only considers domination of points with itself, i.e. if p == p1 == p2, then p1 weakly 
      * dominates p2, but doesnt strongly dominate p2
+     * 
+     * Going to be using CLP to solve these programs from https://github.com/coin-or/Clp/tree/master. (Originally 
+     * tried to use lemon with GLPK, but that was buggy, and couldn't get lemon working with any other backend).
+     * 
+     * From the readme, CLP solves linear programs of the form:
+     * minimize c^Tx 
+     * such that lhs ≤ Ax ≤ rhs 
+     * and lb ≤ x ≤ ub
+     * 
+     * There's a bit of weirdness, because we have to build A as a 'sparse matrix', although in our case it will be 
+     * dense. They also use "number of rows" and "number of collumns" in (from my perspective) a bit of a confusing 
+     * way, from what I can gather, number of collumns = number of vars, number of rows = number of constraints.
+     * 
+     * Also N.B. going to implement sum_i w_i = 1 constraint (last constraint/row above) as the first constraint/row
+     * 
+     * Some notes on making the dense CoinPackedMatrix, as we have to tell it that it's dense matrix:
+     * - let A be an nxm matrix, so n constraints and m variables
+     * - coin uses a 1D array to specify the elements of the matrix, because they can be sparse
+     * - matrix_row_start gives the indices that delimit the rows of the matrix in the 1D array 
+     * -- so this will be matrix_row_start = {0,m,2*m,...,n*m} for us
+     * - column specifies which column (varaible) each element in the array corresponds to
+     * -- for use this will look like {{0,1,...,m-1},{0,1,...,m-1},...,{0,1,...,m-1}}
+     * 
+     * Finally, note that CLP will minimise the objective, and the program we gave above is maximisation
      */
     template <typename T>
     bool ConvexHull<T>::strongly_convex_dominated(
@@ -244,68 +262,201 @@ namespace thts {
             return false;
         }
 
-        // Make lp
-        // Get n (number of points in 'ref_points' and dimension of vectors)
-        lemon::Lp lp;
+        // Size of lp
         int dim = point.point.size();
-
-        // Add variables for w and x
-        vector<lemon::Lp::Col> w;
-        for (int i=0; i<dim; i++) {
-            w.push_back(lp.addCol());
-            lp.colLowerBound(w[i], 0.0);
-            lp.colUpperBound(w[i], 1.0);
+        int num_vars = dim+1;
+        int num_constraints = ref_points.size() + 1;
+        if (ref_points.contains(point)) {
+            num_constraints--;
         }
-        lemon::Lp::Col x = lp.addCol();
 
-        // Add row constrains for the inequality constraint above (take care to not include 'point')
+        // Variable bounds
+        double var_lower_bound[num_vars];
+        double var_upper_bound[num_vars];
+        
+        for (int i=0; i<num_vars-1; i++) {
+            var_lower_bound[i] = 0.0;
+            var_upper_bound[i] = 1.0;
+        }
+        var_lower_bound[num_vars-1] = -COIN_DBL_MAX;
+        var_upper_bound[num_vars-1] = COIN_DBL_MAX;
+
+        // Constraints lower and upper bounds
+        double constraint_lower_bound[num_constraints];
+        double constraint_upper_bound[num_constraints];
+        
+        for (int i=0; i<num_constraints-1; i++) {
+            constraint_lower_bound[i] = 0.0;
+            constraint_upper_bound[i] = COIN_DBL_MAX;
+        }
+        constraint_lower_bound[num_constraints-1] = 1.0;
+        constraint_upper_bound[num_constraints-1] = 1.0;
+
+        // Construct a 'CoinPackedMatrix' for the linear program
+        // Build arrays to tell coin this is a dense matrix
+        // See comments above
+        int matrix_num_elements = num_vars * num_constraints;
+
+        CoinBigIndex matrix_row_start[num_constraints+1];
+        int column[matrix_num_elements];
+
+        for (int i=0; i<num_constraints; i++) {
+            matrix_row_start[i] = i*num_vars;
+
+            for (int j=0; j<num_vars; j++) {
+                int index = i*num_vars + j;
+                column[index] = j;
+            }
+        }
+        matrix_row_start[num_constraints] = matrix_num_elements;
+
+        // Finally, make the 1D array that specifies the matrix
+        double matrix[matrix_num_elements];
+
+        int index = 0;
         for (const TaggedPoint<T>& ref_p : ref_points) {
             if (ref_p == point) continue;
             Eigen::ArrayXd diff = point.point - ref_p.point; // p-p_k
-
-            lemon::Lp::Expr row_expr = 0;
-            for (int i=0; i<dim; i++) {
-                row_expr += diff[i] * w[i];
+            for (int i=0; i<diff.size(); i++) {
+                matrix[index++] = diff[i];
             }
-            row_expr += -1.0 * x;
-            lemon::Lp::Constr row_constr = (row_expr >= 0.0);
-            lp.addRow(row_constr);
+            matrix[index++] = -1.0;
         }
 
-        // Add row constraint for the equality constraint
-        lemon::Lp::Expr row_expr = 0;
         for (int i=0; i<dim; i++) {
-            row_expr += w[i];
-        };
-        lemon::Lp::Constr row_constr = (row_expr == 1.0);
-        lp.addRow(row_constr);
+            matrix[index++] = 1.0;
+        }
+        matrix[index] = 0.0;
+        
+        CoinPackedMatrix coin_packed_matrix(
+            false, num_vars, num_constraints, matrix_num_elements, matrix, column, matrix_row_start, nullptr);
 
-        // Set objective (max x)
-        lp.max();
-        lp.obj(x);
+        // Define the objective (to minimise) and the linear program (simplex)
+        // N.B. the true param to 'lp' should suppress CLP printing to stdout
+        // And tell clp to not print anything out
+        ClpSimplex lp;
+        lp.setLogLevel(0);
+        double objective_coeffs[num_vars];
 
-        // Solve 
-        lp.solve();
-        if (lp.primalType() != lemon::Lp::OPTIMAL) {
-            cout << "Lemon is saying it didn't find optimal solution. From testing these cases it seems like this "
-                << "usually happens when it is actually feasible and should be returning true. For now, going to "
-                << "hackily just return true here. Here are the points for reference:"; 
-            cout << "Point considering being pruned = " << point << endl;
-            cout << "And set of reference points = " 
-                 << thts::helper::unordered_set_pretty_print_string(ref_points) << endl;
-            return true;
+        for (int i=0; i<dim; i++) {
+            objective_coeffs[i] = 0.0;
+        }
+        objective_coeffs[dim] = -1.0;
 
-            // cout << "Getting error in linear programming solver." << endl;
-            // cout << "Point considering being pruned = " << point << endl;
-            // cout << "And set of reference points = " 
-            //      << thts::helper::unordered_set_pretty_print_string(ref_points) << endl;
-            // cout << "And lp.primalType() == " << lp.primalType() << endl;
-            // throw runtime_error("Lin prog in convex hull cant be solved. If not optimal its infeasible or unbounded");
+        lp.loadProblem(
+            coin_packed_matrix, 
+            var_lower_bound, 
+            var_upper_bound, 
+            objective_coeffs, 
+            constraint_lower_bound, 
+            constraint_upper_bound);
+
+        // Solve
+        // Can call primal or dual and read out primal solution (which is what we want)
+        // Not sure if there's any difference in implementations there *shrugs* but this is what the examples call so...
+        lp.dual();
+
+        // For debugging
+        // cout << "In lp solver:" << endl;
+        // cout << "Obj values = " << lp.objectiveValue() << endl;
+        // const double *soltn = lp.primalColumnSolution();
+        // for (int i=0; i<num_vars; i++) {
+        //     cout << "Var[" << i << "] = " << soltn[i] << endl;
+        // }
+        // cout << endl;
+
+        // Also seems like should use lp.numberPrimalInfeasibilities() to check actually got a solution
+        if (lp.numberPrimalInfeasibilities() > 0) {
+            throw runtime_error("Lin prog in convex hull cant be solved, its infeasible or unbounded.");
         }
 
-        // Check if optimal value was negative (meaning its dominated) or not
-        return lp.primal() <= 0.0;
+        // Read out result, objective in CLP is minimise -x
+        double x = -lp.objectiveValue();
+        return (x <= 0.0);
     };
+
+    /**
+     * Below is the original lemon implementation. Dont want to delete it because the interface is so nice and I wish 
+     * it worked :( 
+     * 
+     * TODO: add documentation for the below
+     * 
+     * For the LP solver, we use lemon https://lemon.cs.elte.hu/pub/tutorial/a00020.html, because it provides a really 
+     * clean symbolic interface to use. Really its a wrapper around other packages such as GLPK, Clp, Cbc, ILOG CPLEX 
+     * and SoPlex https://lemon.cs.elte.hu/trac/lemon/wiki/InstallLinux
+     */
+    // template <typename T>
+    // bool ConvexHull<T>::strongly_convex_dominated(
+    //     const unordered_set<TaggedPoint<T>>& ref_points, 
+    //     const TaggedPoint<T>& point) const
+    // {   
+    //     // Base case where lp will be unbounded and would throw an error
+    //     if (ref_points.size() == 0 || (ref_points.size() == 1 && ref_points.contains(point))) {
+    //         return false;
+    //     }
+
+    //     // Make lp
+    //     // Get n (number of points in 'ref_points' and dimension of vectors)
+    //     lemon::Lp lp;
+    //     int dim = point.point.size();
+
+    //     // Add variables for w and x
+    //     vector<lemon::Lp::Col> w;
+    //     for (int i=0; i<dim; i++) {
+    //         w.push_back(lp.addCol());
+    //         lp.colLowerBound(w[i], 0.0);
+    //         lp.colUpperBound(w[i], 1.0);
+    //     }
+    //     lemon::Lp::Col x = lp.addCol();
+
+    //     // Add row constrains for the inequality constraint above (take care to not include 'point')
+    //     for (const TaggedPoint<T>& ref_p : ref_points) {
+    //         if (ref_p == point) continue;
+    //         Eigen::ArrayXd diff = point.point - ref_p.point; // p-p_k
+
+    //         lemon::Lp::Expr row_expr = 0;
+    //         for (int i=0; i<dim; i++) {
+    //             row_expr += diff[i] * w[i];
+    //         }
+    //         row_expr += -1.0 * x;
+    //         lemon::Lp::Constr row_constr = (row_expr >= 0.0);
+    //         lp.addRow(row_constr);
+    //     }
+
+    //     // Add row constraint for the equality constraint
+    //     lemon::Lp::Expr row_expr = 0;
+    //     for (int i=0; i<dim; i++) {
+    //         row_expr += w[i];
+    //     };
+    //     lemon::Lp::Constr row_constr = (row_expr == 1.0);
+    //     lp.addRow(row_constr);
+
+    //     // Set objective (max x)
+    //     lp.max();
+    //     lp.obj(x);
+
+    //     // Solve 
+    //     lp.solve();
+    //     if (lp.primalType() != lemon::Lp::OPTIMAL) {
+    //         // cout << "Lemon is saying it didn't find optimal solution. From testing these cases it seems like this "
+    //         //     << "usually happens when it is actually feasible and should be returning true. For now, going to "
+    //         //     << "hackily just return true here. Here are the points for reference:"; 
+    //         // cout << "Point considering being pruned = " << point << endl;
+    //         // cout << "And set of reference points = " 
+    //         //      << thts::helper::unordered_set_pretty_print_string(ref_points) << endl;
+    //         // return true;
+
+    //         cout << "Getting error in linear programming solver." << endl;
+    //         cout << "Point considering being pruned = " << point << endl;
+    //         cout << "And set of reference points = " 
+    //              << thts::helper::unordered_set_pretty_print_string(ref_points) << endl;
+    //         cout << "And lp.primalType() == " << lp.primalType() << endl;
+    //         throw runtime_error("Lin prog in convex hull cant be solved. If not optimal its infeasible or unbounded");
+    //     }
+
+    //     // Check if optimal value was negative (meaning its dominated) or not
+    //     return lp.primal() <= 0.0;
+    // };
 
     /**
      * Prunes a set of 'points' to a set of points that form a Convex Hull
@@ -429,6 +580,23 @@ namespace thts {
     };
 
     /**
+     * Equality with another convex hull
+     */
+    template<typename T>
+    bool ConvexHull<T>::equals(const ConvexHull<T> &other) const 
+    {
+        if (size() != other.size()) {
+            return false;
+        }
+        for (const TaggedPoint<T> &p : ch_points) {
+            if (!other.ch_points.contains(p)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Get best action for recomnmending
     */
     template <typename T>
@@ -511,6 +679,11 @@ namespace std {
     template <typename T>
     ConvexHull<T> operator+(const Eigen::ArrayXd& v, const ConvexHull<T>& ch) {
         return ch.add(v);
+    }
+
+    template <typename T>
+    bool operator==(const ConvexHull<T>& lhs, const ConvexHull<T>& rhs) {
+        return lhs.equals(rhs);
     }
 
     template <typename T>

@@ -23,6 +23,17 @@ to use and interact with the classes. Additionally, plenty of functions have com
 
 
 
+## Compiling and Running 
+
+To compile code, will need to update some variables in the makefile for each machine to point at the right things.
+
+To run the code, also need to update variables in `export_local_paths.sh` appropriately and 
+run `source export_local_paths.sh` to setup the `PYTHONPATH` and `LD_LIBRARY_PATH` environment variables appropriately. 
+
+TODO: would like to try and automate this in the future if possible?
+
+
+
 ## Installing gtest
 Run the following in a bash shell starting from the root directory of this repository:
 ```
@@ -98,26 +109,45 @@ run `make` in `external/qhull`
 
 
 
+## Installing CLP
 
-## Installing lemon
+Was using lemon with GLPK (below) but some of the linear programs were being returned infeasible when feasible, and 
+couldn't replicate the issue to properly debug (returned feasible when trying to replicate). So going to move to CLP 
+from Coin-OR, as it seems better/more recently maintained.
 
-For the LP solver, we use lemon https://lemon.cs.elte.hu/pub/tutorial/a00020.html, because it provides a really 
+I followed the `coinbrew` installation from https://github.com/coin-or/Clp, starting from this directory:
+```
+cd external
+mkdir clp
+cd clp
+
+wget https://raw.githubusercontent.com/coin-or/coinbrew/master/coinbrew
+chmod u+x coinbrew
+./coinbrew fetch Clp@master
+./coinbrew build Clp
+``` 
+
+
+
+## ~~Installing lemon~~
+
+~~For the LP solver, we use lemon https://lemon.cs.elte.hu/pub/tutorial/a00020.html, because it provides a really 
 clean symbolic interface to use. Really its a wrapper around other packages such as GLPK, Clp, Cbc, ILOG CPLEX 
 and SoPlex https://lemon.cs.elte.hu/trac/lemon/wiki/InstallLinux. So, it gives a clean and easy interface, to other 
-packages that have already done a lot of hard coding work.
+packages that have already done a lot of hard coding work.~~
 
-Originally tried google's OR tools, but the code base was huge, more fiddly to work with and get running. Google's 
+~~Originally tried google's OR tools, but the code base was huge, more fiddly to work with and get running. Google's 
 OR tools provides a really nice python interface, which is similar to Lemon's, but the C++ interface is a lot uglier, 
-hence why moving to lemon after some more research.
+hence why moving to lemon after some more research.~~
 
-First make sure that `glpk` or your linear program solver of choice (which is compatible with lemon) is installed. To 
-install `glpk` I had to run:
+~~First make sure that `glpk` or your linear program solver of choice (which is compatible with lemon) is installed. To 
+install `glpk` I had to run:~~
 ```
 sudo apt-get install glpk-doc glpk-utils libglpk-dev libglpk40
 ```
 
-To install lemon (which cmake will find glpk or the other linear solver installed), change to the lemon directory, 
-make a build folder and run the cmake and make commands:
+~~To install lemon (which cmake will find glpk or the other linear solver installed), change to the lemon directory, 
+make a build folder and run the cmake and make commands:~~
 ```
 cd external/lemon-1.3.1
 mkdir build

@@ -3,7 +3,7 @@ CXX = g++
 
 
 #####
-# Defining targets, sources and flags
+# Defining sources 
 #####
 
 SRC_DIR = src
@@ -46,29 +46,66 @@ MAIN_OBJECTS = $(patsubst main/%.cpp, bin/main/%.o, $(MAIN_SOURCES))
 
 GTEST = external/googletest/build/lib/libgtest_main.a
 
+
+
+#####
+# Defining flags and targets 
+#####
+
+# Variables that need to get updated per machine
+CONDA_ENV_NAME = thts3.12
+PYTHON_WITH_VER = python3.12
 ANACONDA_ENVS_HOME = /home/michael/anaconda3/envs
-# ANACONDA_ENVS_HOME = /jmain02/home/J2AD008/wga37/mmp10-wga37/anaconda3/envs
 
-
-INCLUDES = -I. -Iinclude -Isrc -Iexternal -Iexternal/eigen -Iexternal/qhull/src -Iexternal/lemon-1.3.1/build/lemon/include
-TEST_INCLUDES = -Iexternal/googletest/build/include
-INCLUDES += -Iexternal/pybind11/include $$(python3.12 -m pybind11 --includes) -Ipy
-INCLUDES += -I$(ANACONDA_ENVS_HOME)/thts3.12/include/python3.12
+# Includes
+INCLUDES = -I. -Iinclude -Isrc -Iexternal 
+INCLUDES += -Iexternal/eigen 
+INCLUDES += -Iexternal/qhull/src 
+# INCLUDES += -Iexternal/lemon-1.3.1/build/lemon/include # no longer using lemon
 INCLUDES += -Iexternal/bayesopt/include
+INCLUDES += -Iexternal/clp/dist/include
 
+# Includes for using pybind11
+INCLUDES += -Iexternal/pybind11/include $$(python -m pybind11 --includes) -Ipy
+INCLUDES += -I$(ANACONDA_ENVS_HOME)/$(CONDA_ENV_NAME)/include/$(PYTHON_WITH_VER)
+
+# Includes for tests
+TEST_INCLUDES = -Iexternal/googletest/build/include
+
+# C++ flags
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20 
 CPPFLAGS += -O3
+
+# C++ flags for building pybind11 executable/library
 PY_LIB_CPPFLAGS += -fPIC -fvisibility=hidden # needed to create shared library
 PY_EX_CPPFLAGS += -pie -fPIE # needed to create executable
+
+# C++ flags for tests + debugging
 TEST_CPPFLAGS = 
 CPPFLAGS_DEBUG = -g -ggdb3
 
-LDFLAGS = -Lexternal/qhull/lib -L/usr/lib/x86_64-linux-gnu -Lexternal/lemon-1.3.1/build/lemon/lib -Lexternal/bayesopt/build/lib
-LDFLAGS += -lqhullcpp -lqhullstatic_r -lemon -lglpk -lpthread -lbayesopt -lnlopt
+# ld flags
+LDFLAGS = -Lexternal/qhull/lib 
+# LDFLAGS += -L/usr/lib/x86_64-linux-gnu  # Where GLPK library is
+# LDFLAGS += -Lexternal/lemon-1.3.1/build/lemon/lib 
+LDFLAGS += -Lexternal/bayesopt/build/lib
+LDFLAGS += -Lexternal/clp/dist/lib
+LDFLAGS += -lqhullcpp -lqhullstatic_r 
+# LDFLAGS += -lemon # no longer using lemon
+# LDFLAGS += -lglpk # no longer using glpk
+LDFLAGS += -lpthread 
+LDFLAGS += -lbayesopt -lnlopt
+LDFLAGS += -lClp -lCoinUtils
+
+# ld flags for building with pybind11
 PY_LD_LOCS =  -L$(ANACONDA_ENVS_HOME)/thts3.12/lib
 PY_LDFLAGS = $(PY_LD_LOCS) -lpython3.12
-TEST_LDFLAGS = -Lexternal/googletest/build/lib -lgtest -lgtest_main -lgmock
 
+# ld flags for tests
+TEST_LDFLAGS = -Lexternal/googletest/build/lib 
+TEST_LDFLAGS += -lgtest -lgtest_main -lgmock
+
+# targets
 TARGET_THTS = thts
 TARGET_THTS_TEST = thts-test
 TARGET_THTS_TEST_DEBUG = thts-test-debug
@@ -81,6 +118,7 @@ TARGET_MO_EXPR_DEBUG = moexpr-debug
 TARGET_PY_ENV_SERVER = py_env_server
 TARGET_PY_ENV_SERVER_DEBUG = py_env_server-debug
 
+# python lib target
 THTS_PY_LIB_FULL_NAME = thts$$(python3.12-config --extension-suffix)
 
 
@@ -90,7 +128,7 @@ THTS_PY_LIB_FULL_NAME = thts$$(python3.12-config --extension-suffix)
 #####
 
 # Default, build everything
-all: $(TARGET_THTS_TEST) $(TARGET_THTS_PY_EX) $(TARGET_MO_EXPR) $(TARGET_PY_ENV_SERVER)
+all: $(TARGET_THTS_PY_EX) $(TARGET_MO_EXPR) $(TARGET_PY_ENV_SERVER) $(TARGET_THTS_TEST) 
 
 
 
