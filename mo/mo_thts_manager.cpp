@@ -1,5 +1,7 @@
 #include "mo/mo_thts_manager.h"
 
+#include <sstream>
+
 using namespace std;
 
 namespace thts {
@@ -27,19 +29,29 @@ namespace thts {
 
     MoHeuristicFnPtr MoThtsManager::get_default_mo_zero_heuristic_fn() {
         switch (reward_dim) {
-            case 2: return helper::mo_zero_heuristic_fn<2>;
-            case 3: return helper::mo_zero_heuristic_fn<3>;
-            case 4: return helper::mo_zero_heuristic_fn<4>;
-            case 5: return helper::mo_zero_heuristic_fn<5>;
-            case 6: return helper::mo_zero_heuristic_fn<6>;
-            case 7: return helper::mo_zero_heuristic_fn<7>;
-            case 8: return helper::mo_zero_heuristic_fn<8>;
-            case 9: return helper::mo_zero_heuristic_fn<9>;
-            default: throw std::runtime_error(
-                        "get_default_mo_zero_heuristic_fn doesnt contain the reward dimension you're trying to "
-                        "use in include/multi_objective/mo_thts_manager, add a case to the switch block so the "
-                        "compiler will generate the zero heuristic function with appropriate dimension you are "
-                        "trying to use.");
+            case 2: 
+                return helper::mo_zero_heuristic_fn<2>;
+            case 3: 
+                return helper::mo_zero_heuristic_fn<3>;
+            case 4: 
+                return helper::mo_zero_heuristic_fn<4>;
+            case 5: 
+                return helper::mo_zero_heuristic_fn<5>;
+            case 6: 
+                return helper::mo_zero_heuristic_fn<6>;
+            case 7: 
+                return helper::mo_zero_heuristic_fn<7>;
+            case 8: 
+                return helper::mo_zero_heuristic_fn<8>;
+            case 9: 
+                return helper::mo_zero_heuristic_fn<9>;
+            default: 
+                stringstream ss;
+                ss << "get_default_mo_zero_heuristic_fn doesnt contain the reward dimension (" << reward_dim << ") "
+                    << "you're trying to use in include/multi_objective/mo_thts_manager, add a case to the switch "
+                    << "block so the compiler will generate the zero heuristic function with appropriate dimension you "
+                    << "are trying to use.";
+                throw runtime_error(ss.str());
         }
     }
 }

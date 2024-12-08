@@ -1,6 +1,6 @@
 #pragma once
 
-#include "py/mo_py_multiprocessing_thts_env.h"
+#include "py/mo_gym_multiprocessing_thts_env.h"
 
 
 namespace thts::python {
@@ -8,22 +8,18 @@ namespace thts::python {
     using namespace thts;
     namespace py = pybind11;
 
-    // ID to identify this env for server processes
-    static std::string MOGYM_ENV_SERVER_ID = "mo_gym_mp_env";
-
     /** 
      * Gym
      */
-    class MoGymMultiprocessingThtsEnv : public MoPyMultiprocessingThtsEnv {
+    class TimedMoGymMultiprocessingThtsEnv : public MoGymMultiprocessingThtsEnv {
 
         protected:
-            std::string gym_env_id;
 
         public:
             /**
              * Constructor
              */
-            MoGymMultiprocessingThtsEnv(
+            TimedMoGymMultiprocessingThtsEnv(
                 std::shared_ptr<PickleWrapper> pickle_wrapper,
                 std::string& gym_env_id,
                 bool is_server_process=false);
@@ -31,7 +27,7 @@ namespace thts::python {
             /**
              * Private copy constructor to implement 
             */
-            MoGymMultiprocessingThtsEnv(MoGymMultiprocessingThtsEnv& other);
+            TimedMoGymMultiprocessingThtsEnv(TimedMoGymMultiprocessingThtsEnv& other);
 
             /**
              * Clone - virtual copy constructor idiom
@@ -42,6 +38,13 @@ namespace thts::python {
              * Override id so "py_env_server" program can identify it needs to use this env.
              */
             virtual std::string get_multiprocessing_env_type_id() override;
-            virtual void fill_multiprocessing_args(std::vector<std::string>& args, int tid) override;
+
+            /**
+             * Override get_mo_reward so can add an additional time cost to it
+             */
+            virtual Eigen::ArrayXd get_mo_reward(
+                std::shared_ptr<const PyState> state, 
+                std::shared_ptr<const PyAction> action,
+                ThtsEnvContext& ctx) const override;
     };
 }

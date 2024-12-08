@@ -20,7 +20,7 @@ namespace thts {
     /**
      * Performs hyperparameter search corresponding to experiment id 'expr_id'
      */
-    void run_hp_opt(std::string expr_id);
+    void run_hp_opt(std::string expr_id_prefix);
 
     /**
      * Computes an estimate for the noise parameter of bayesopt for environment with 'env_id' using a random policy 

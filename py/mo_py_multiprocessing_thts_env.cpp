@@ -40,8 +40,9 @@ namespace thts::python {
             PyMultiprocessingThtsEnv(pickle_wrapper, module_name, class_name, constructor_kw_args, is_server_process),
             MoThtsEnv(2,true)
     {
+        py::gil_scoped_acquire acquire;
         _is_fully_observable = py_thts_env->attr("is_fully_observable")().cast<bool>();
-        reward_dim = py_thts_env->attr("get_reward_dim")().cast<bool>();
+        reward_dim = py_thts_env->attr("get_reward_dim")().cast<int>();
     }
 
     MoPyMultiprocessingThtsEnv::MoPyMultiprocessingThtsEnv(MoPyMultiprocessingThtsEnv& other) :

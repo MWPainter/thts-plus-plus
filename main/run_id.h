@@ -22,40 +22,7 @@ static const std::string DEBUG_ENV_1_ID = "debug_env_1"; // not stoch + 2 rew
 static const std::string DEBUG_ENV_2_ID = "debug_env_2"; // stoch + 2 rew
 static const std::string DEBUG_ENV_3_ID = "debug_env_3"; // not stoch + 4 rew
 static const std::string DEBUG_ENV_4_ID = "debug_env_4"; // stoch + 4 rew
-static const std::string DEBUG_PY_ENV_1_ID = "py_debug_env_1"; // not stoch + 2 rew
-static const std::string DEBUG_PY_ENV_2_ID = "py_debug_env_2"; // stoch + 2 rew
-static const std::string DEBUG_PY_ENV_3_ID = "py_debug_env_3"; // not stoch + 4 rew
-static const std::string DEBUG_PY_ENV_4_ID = "py_debug_env_4"; // stoch + 4 rew
 
-// env ids - toy/tree
-// TODO: implement + integrate tree envs to demonstrate things
-
-// env ids - mo gymnasium (discr obs / discr act)
-static const std::string DST_ENV_ID = "deep-sea-treasure-v0";                   // 50x + 70x
-static const std::string DST_CONC_ENV_ID = "deep-sea-treasure-concave-v0";      // 51x + 71x
-static const std::string DST_MIRR_ENV_ID = "deep-sea-treasure-mirrored-v0";     // 52x + 72x
-static const std::string RESOURCE_GATHER_ENV_ID = "resource-gathering-v0";      // 53x + 73x
-static const std::string BREAKABLE_BOTTLES_ENV_ID = "breakable-bottles-v0";     // 55x + 75x
-static const std::string FRUIT_TREE_ENV_ID = "fruit-tree-v0";                   // 56x + 76x
-static const std::string FOUR_ROOM_ENV_ID = "four-room-v0";                     // 57x + 77x
-
-// env ids - mo gymnasium (cts obs / discr act)
-static const std::string MOUNTAIN_CAR_ENV_ID = "mo-mountaincar-v0";             // 59x + 79x
-static const std::string LUNAR_LANDER_ENV_ID = "mo-lunar-lander-v2";            // 60x + 80x
-static const std::string MINECART_ENV_ID = "minecart-v0";                       // 61x + 81x
-static const std::string HIGHWAY_ENV_ID = "mo-highway-v0";                      // 62x + 82x
-static const std::string HIGHWAY_FAST_ENV_ID = "mo-highway-fast-v0";            // 63x + 83x
-
-// env ids - mo gymnasium (with extra time cost)
-static const std::string RESOURCE_GATHER_TIMED_ENV_ID = "resource-gathering-timed-v0";  // 54x + 74x
-static const std::string FOUR_ROOM_TIMED_ENV_ID = "four-room-timed-v0";                 // 58x + 78x
-static const std::unordered_map<std::string,std::string> TIMED_ENV_ID_TO_GYM_ID =
-{
-    {RESOURCE_GATHER_TIMED_ENV_ID, RESOURCE_GATHER_ENV_ID},
-    {FOUR_ROOM_TIMED_ENV_ID, FOUR_ROOM_ENV_ID},
-};
-
-// lists of envs - debug envs
 static const std::unordered_set<std::string> DEBUG_ENVS =
 {
      DEBUG_ENV_1_ID,
@@ -64,7 +31,11 @@ static const std::unordered_set<std::string> DEBUG_ENVS =
      DEBUG_ENV_4_ID,
 };
 
-// lists of envs - debug py envs
+static const std::string DEBUG_PY_ENV_1_ID = "py_debug_env_1"; // not stoch + 2 rew
+static const std::string DEBUG_PY_ENV_2_ID = "py_debug_env_2"; // stoch + 2 rew
+static const std::string DEBUG_PY_ENV_3_ID = "py_debug_env_3"; // not stoch + 4 rew
+static const std::string DEBUG_PY_ENV_4_ID = "py_debug_env_4"; // stoch + 4 rew
+
 static const std::unordered_set<std::string> DEBUG_PY_ENVS =
 {
      DEBUG_PY_ENV_1_ID,
@@ -73,26 +44,101 @@ static const std::unordered_set<std::string> DEBUG_PY_ENVS =
      DEBUG_PY_ENV_4_ID,
 };
 
-// lists of envs - toy envas
+// env ids - toy/tree
+// TODO: implement + integrate tree envs to demonstrate things
 static const std::unordered_set<std::string> TOY_ENVS =
 {
 };
 
-// lists of envs - mo gymnasium envs
+// env ids - mo gymnasium (discr obs / discr act)
+static const std::string DST_ENV_ID = "deep-sea-treasure-v0";                   // unused (using improved DST vamplew wrapper)            
+static const std::string DST_CONC_ENV_ID = "deep-sea-treasure-concave-v0";      // unused (using improved DST vamplew wrapper)
+static const std::string DST_MIRR_ENV_ID = "deep-sea-treasure-mirrored-v0";     // unused (using improved DST vamplew wrapper)
+static const std::string RESOURCE_GATHER_ENV_ID = "resource-gathering-v0";      // 38x + 68x
+static const std::string BREAKABLE_BOTTLES_ENV_ID = "breakable-bottles-v0";     // 37x + 67x
+static const std::string FRUIT_TREE_ENV_ID = "fruit-tree-v0";                   // unused (using custom copy with opt for stoch)
+static const std::string FOUR_ROOM_ENV_ID = "four-room-v0";                     // 40x + 70x
+
+// env ids - mo gymnasium (cts obs / discr act)
+static const std::string MOUNTAIN_CAR_ENV_ID = "mo-mountaincar-v0";             
+static const std::string LUNAR_LANDER_ENV_ID = "mo-lunar-lander-v2";         
+static const std::string MINECART_DETERMINISTIC_ENV_ID = "minecart-deterministic-v0";       // 50x + 80x      
+static const std::string MINECART_ENV_ID = "minecart-v0";                                   // 51x + 81x
+static const std::string HIGHWAY_ENV_ID = "mo-highway-v0";                 
+
+// list of mo gymnasium envs
 static const std::unordered_set<std::string> MO_GYM_ENVS =
 {
-     DST_ENV_ID,
-     DST_CONC_ENV_ID,
-     DST_MIRR_ENV_ID,
-     RESOURCE_GATHER_ENV_ID,
-     BREAKABLE_BOTTLES_ENV_ID,
-     FRUIT_TREE_ENV_ID,
-     FOUR_ROOM_ENV_ID,
-     MOUNTAIN_CAR_ENV_ID,
-     LUNAR_LANDER_ENV_ID,
-     MINECART_ENV_ID,
-     HIGHWAY_ENV_ID,
-     HIGHWAY_FAST_ENV_ID,
+    DST_ENV_ID,
+    DST_CONC_ENV_ID,
+    DST_MIRR_ENV_ID,
+    RESOURCE_GATHER_ENV_ID,
+    BREAKABLE_BOTTLES_ENV_ID,
+    FRUIT_TREE_ENV_ID,
+    FOUR_ROOM_ENV_ID,
+    MOUNTAIN_CAR_ENV_ID,
+    LUNAR_LANDER_ENV_ID,
+    MINECART_DETERMINISTIC_ENV_ID,
+    MINECART_ENV_ID,
+    HIGHWAY_ENV_ID,
+};           
+
+// env ids - mo gymnasium (with extra time cost)
+static const std::string RESOURCE_GATHER_TIMED_ENV_ID = "resource-gathering-timed-v0";      // 39x + 69x
+static const std::string FOUR_ROOM_TIMED_ENV_ID = "four-room-timed-v0";                     // 41x + 71x
+
+// list of envs - (timed) mo gymnasium envs (with map to underlying gym env)           
+static const std::unordered_map<std::string,std::string> TIMED_ENV_ID_TO_GYM_ID =
+{
+    {RESOURCE_GATHER_TIMED_ENV_ID, RESOURCE_GATHER_ENV_ID},
+    {FOUR_ROOM_TIMED_ENV_ID, FOUR_ROOM_ENV_ID},
+};
+
+// env ids - custom python envs (adaptations of mo gym envs)
+static const std::string FRUIT_TREE_7_ENV_ID = "fruit-tree-depth-7";                    // 34x + 64x
+static const std::string FRUIT_TREE_STOCH_5_ENV_ID = "fruit-tree-stoch-depth-5";        // 35x + 65x
+static const std::string FRUIT_TREE_STOCH_7_ENV_ID = "fruit-tree-stoch-depth-7";        // 36x + 66x
+
+static const std::string IMPROVED_DST_ENV_ID = "deep-sea-treasure-improved";                // 30x + 60x
+static const std::string IMPROVED_STOCH_DST_ENV_ID = "deep-sea-treasure-improved-stoch";    // 31x + 61x
+static const std::string VAMPLEW_DST_ENV_ID = "deep-sea-treasure-vamplew";                  // 32x + 62x
+static const std::string VAMPLEW_STOCH_DST_ENV_ID = "deep-sea-treasure-vamplew-stoch";      // 33x + 63x
+
+static const std::unordered_set<std::string> PY_ENVS =
+{
+    FRUIT_TREE_7_ENV_ID,
+    FRUIT_TREE_STOCH_5_ENV_ID,
+    FRUIT_TREE_STOCH_7_ENV_ID,
+    IMPROVED_DST_ENV_ID,
+    IMPROVED_STOCH_DST_ENV_ID,
+    VAMPLEW_DST_ENV_ID,
+    VAMPLEW_STOCH_DST_ENV_ID,
+};
+
+// env ids - max trial length
+static const std::unordered_map<std::string,int> ENV_ID_MAX_TRIAL_LEN = 
+{
+    {DST_ENV_ID,50},
+    {DST_CONC_ENV_ID,50},
+    {DST_MIRR_ENV_ID,50},
+    {RESOURCE_GATHER_ENV_ID,50},
+    {RESOURCE_GATHER_TIMED_ENV_ID,50},
+    {BREAKABLE_BOTTLES_ENV_ID,50},
+    {FRUIT_TREE_ENV_ID,50},
+    {FOUR_ROOM_ENV_ID,50},
+    {FOUR_ROOM_TIMED_ENV_ID,50},
+    {MOUNTAIN_CAR_ENV_ID,50},
+    {LUNAR_LANDER_ENV_ID,50},
+    {MINECART_DETERMINISTIC_ENV_ID,50},
+    {MINECART_ENV_ID,50},
+    {HIGHWAY_ENV_ID,50},
+    {FRUIT_TREE_7_ENV_ID,50},
+    {FRUIT_TREE_STOCH_5_ENV_ID,50},
+    {FRUIT_TREE_STOCH_7_ENV_ID,50},
+    {IMPROVED_DST_ENV_ID,50},
+    {IMPROVED_STOCH_DST_ENV_ID,50},
+    {VAMPLEW_DST_ENV_ID,50},
+    {VAMPLEW_STOCH_DST_ENV_ID,50},
 };
 
 // alg ids 
@@ -124,75 +170,235 @@ static const std::string DEBUG_CHMCTS_HP_OPT_EXPR_ID = "021_debug_chmcts_hp";
 static const std::string DEBUG_SMBTS_HP_OPT_EXPR_ID = "022_debug_smbts_hp";
 static const std::string DEBUG_SMDENTS_HP_OPT_EXPR_ID = "023_debug_smdents_hp";
 
-// expr ids - toy/tree (1xx + 2xx = hyperparam tuning)
+// expr ids - toy/tree (1xx = hyperparam tuning)
 // TODO
 
 
-// expr ids - toy/tree (3xx + 4xx = eval)
+// expr ids - toy/tree (2xx = eval)
 // TODO
 
-// expr ids - mo gymnasium (5xx + 6xx = hyperparam tuning)
+// expr ids - mo gymnasium + custom envs (3xx + 4xx + 5xx = hyperparam tuning)
 // - deep sea treasure
-static const std::string HP_OPT_DST_CZT_EXPR_ID = "500_hp_opt_dst_czt";
-static const std::string HP_OPT_DST_CHMCTS_EXPR_ID = "501_hp_opt_dst_chmcts";
-static const std::string HP_OPT_DST_SMBTS_EXPR_ID = "502_hp_opt_dst_smbts";
-static const std::string HP_OPT_DST_SMDENTS_EXPR_ID = "503_hp_opt_dst_smdents";
-// - breakable bottles
-static const std::string HP_OPT_BB_CZT_EXPR_ID = "550_hp_opt_bb_czt";
-static const std::string HP_OPT_BB_CHMCTS_EXPR_ID = "551_hp_opt_bb_chmcts";
-static const std::string HP_OPT_BB_SMBTS_EXPR_ID = "552_hp_opt_bb_smbts";
-static const std::string HP_OPT_BB_SMDENTS_EXPR_ID = "553_hp_opt_bb_smdents";
+static const std::string HP_OPT_DST_CZT_EXPR_ID = "300_hp_opt_deep_sea_treasure_czt";
+static const std::string HP_OPT_DST_CHMCTS_EXPR_ID = "301_hp_opt_deep_sea_treasure_chmcts";
+static const std::string HP_OPT_DST_SMBTS_EXPR_ID = "302_hp_opt_deep_sea_treasure_smbts";
+static const std::string HP_OPT_DST_SMDENTS_EXPR_ID = "303_hp_opt_deep_sea_treasure_smdents";
+// - deep sea treasure (stochastic)
+static const std::string HP_OPT_DST_STOCH_CZT_EXPR_ID = "310_hp_opt_deep_sea_treasure_stoch_czt";
+static const std::string HP_OPT_DST_STOCH_CHMCTS_EXPR_ID = "311_hp_opt_deep_sea_treasure_stoch_chmcts";
+static const std::string HP_OPT_DST_STOCH_SMBTS_EXPR_ID = "312_hp_opt_deep_sea_treasure_stoch_smbts";
+static const std::string HP_OPT_DST_STOCH_SMDENTS_EXPR_ID = "313_hp_opt_deep_sea_treasure_stoch_smdents";
+// - improved deep sea treasure
+static const std::string HP_OPT_DST_IMPR_CZT_EXPR_ID = "320_hp_opt_deep_sea_treasure_impr_czt";
+static const std::string HP_OPT_DST_IMPR_CHMCTS_EXPR_ID = "321_hp_opt_deep_sea_treasure_impr_chmcts";
+static const std::string HP_OPT_DST_IMPR_SMBTS_EXPR_ID = "322_hp_opt_deep_sea_treasure_impr_smbts";
+static const std::string HP_OPT_DST_IMPR_SMDENTS_EXPR_ID = "323_hp_opt_deep_sea_treasure_impr_smdents";
+// - improved deep sea treasure (stochastic)
+static const std::string HP_OPT_DST_IMPR_STOCH_CZT_EXPR_ID = "330_hp_opt_deep_sea_treasure_impr_stoch_czt";
+static const std::string HP_OPT_DST_IMPR_STOCH_CHMCTS_EXPR_ID = "331_hp_opt_deep_sea_treasure_impr_stoch_chmcts";
+static const std::string HP_OPT_DST_IMPR_STOCH_SMBTS_EXPR_ID = "332_hp_opt_deep_sea_treasure_impr_stoch_smbts";
+static const std::string HP_OPT_DST_IMPR_STOCH_SMDENTS_EXPR_ID = "333_hp_opt_deep_sea_treasure_impr_stoch_smdents";
 // - fruit tree
-static const std::string HP_OPT_FT_CZT_EXPR_ID = "560_hp_opt_ft_czt";
-static const std::string HP_OPT_FT_CHMCTS_EXPR_ID = "561_hp_opt_ft_chmcts";
-static const std::string HP_OPT_FT_SMBTS_EXPR_ID = "562_hp_opt_ft_smbts";
-static const std::string HP_OPT_FT_SMDENTS_EXPR_ID = "563_hp_opt_ft_smdents";
-// - four room (timed)
-static const std::string HP_OPT_FOUR_T_CZT_EXPR_ID = "580_hp_opt_four_czt";
-static const std::string HP_OPT_FOUR_T_CHMCTS_EXPR_ID = "581_hp_opt_four_chmcts";
-static const std::string HP_OPT_FOUR_T_SMBTS_EXPR_ID = "582_hp_opt_four_smbts";
-static const std::string HP_OPT_FOUR_T_SMDENTS_EXPR_ID = "583_hp_opt_four_smdents";
-// - minecart
-static const std::string HP_OPT_MINE_CZT_EXPR_ID = "610_hp_opt_mine_czt";
-static const std::string HP_OPT_MINE_CHMCTS_EXPR_ID = "611_hp_opt_mine_chmcts";
-static const std::string HP_OPT_MINE_SMBTS_EXPR_ID = "612_hp_opt_mine_smbts";
-static const std::string HP_OPT_MINE_SMDENTS_EXPR_ID = "613_hp_opt_mine_smdents";
+static const std::string HP_OPT_FT_CZT_EXPR_ID = "340_hp_opt_fruit_tree_czt";
+static const std::string HP_OPT_FT_CHMCTS_EXPR_ID = "341_hp_opt_fruit_tree_chmcts";
+static const std::string HP_OPT_FT_SMBTS_EXPR_ID = "342_hp_opt_fruit_tree_smbts";
+static const std::string HP_OPT_FT_SMDENTS_EXPR_ID = "343_hp_opt_fruit_tree_smdents";
+// - fruit tree (stochastic, depth 5)
+static const std::string HP_OPT_FT_S5_CZT_EXPR_ID = "350_hp_opt_fruit_tree_stoch_5_czt";
+static const std::string HP_OPT_FT_S5_CHMCTS_EXPR_ID = "351_hp_opt_fruit_tree_stoch_5_chmcts";
+static const std::string HP_OPT_FT_S5_SMBTS_EXPR_ID = "352_hp_opt_fruit_tree_stoch_5_smbts";
+static const std::string HP_OPT_FT_S5_SMDENTS_EXPR_ID = "353_hp_opt_fruit_tree_stoch_5_smdents";
+// - fruit tree (stochastic, depth 7)
+static const std::string HP_OPT_FT_S7_CZT_EXPR_ID = "360_hp_opt_fruit_tree_stoch_7_czt";
+static const std::string HP_OPT_FT_S7_CHMCTS_EXPR_ID = "361_hp_opt_fruit_tree_stoch_7_chmcts";
+static const std::string HP_OPT_FT_S7_SMBTS_EXPR_ID = "362_hp_opt_fruit_tree_stoch_7_smbts";
+static const std::string HP_OPT_FT_S7_SMDENTS_EXPR_ID = "363_hp_opt_fruit_tree_stoch_7_smdents";
+// - breakable bottles
+static const std::string HP_OPT_BB_CZT_EXPR_ID = "370_hp_opt_breakable_bottles_czt";
+static const std::string HP_OPT_BB_CHMCTS_EXPR_ID = "371_hp_opt_breakable_bottles_chmcts";
+static const std::string HP_OPT_BB_SMBTS_EXPR_ID = "372_hp_opt_breakable_bottles_smbts";
+static const std::string HP_OPT_BB_SMDENTS_EXPR_ID = "373_hp_opt_breakable_bottles_smdents";
+// - resource gathering
+static const std::string HP_OPT_RG_CZT_EXPR_ID = "380_hp_opt_resource_gathering_czt";
+static const std::string HP_OPT_RG_CHMCTS_EXPR_ID = "381_hp_opt_resource_gathering_chmcts";
+static const std::string HP_OPT_RG_SMBTS_EXPR_ID = "382_hp_opt_resource_gathering_smbts";
+static const std::string HP_OPT_RG_SMDENTS_EXPR_ID = "383_hp_opt_resource_gathering_smdents";
+// - resource gathering - timed
+static const std::string HP_OPT_RG_TIMED_CZT_EXPR_ID = "390_hp_opt_resource_gathering_timed_czt";
+static const std::string HP_OPT_RG_TIMED_CHMCTS_EXPR_ID = "391_hp_opt_resource_gathering_timed_chmcts";
+static const std::string HP_OPT_RG_TIMED_SMBTS_EXPR_ID = "392_hp_opt_resource_gathering_timed_smbts";
+static const std::string HP_OPT_RG_TIMED_SMDENTS_EXPR_ID = "393_hp_opt_resource_gathering_timed_smdents";
+// - four room
+static const std::string HP_OPT_4R_CZT_EXPR_ID = "400_hp_opt_four_room_czt";
+static const std::string HP_OPT_4R_CHMCTS_EXPR_ID = "401_hp_opt_four_room_chmcts";
+static const std::string HP_OPT_4R_SMBTS_EXPR_ID = "402_hp_opt_four_room_smbts";
+static const std::string HP_OPT_4R_SMDENTS_EXPR_ID = "403_hp_opt_four_room_smdents";
+// - four room - timed
+static const std::string HP_OPT_4R_TIMED_CZT_EXPR_ID = "410_hp_opt_four_room_timed_czt";
+static const std::string HP_OPT_4R_TIMED_CHMCTS_EXPR_ID = "411_hp_opt_four_room_timed_chmcts";
+static const std::string HP_OPT_4R_TIMED_SMBTS_EXPR_ID = "412_hp_opt_four_room_timed_smbts";
+static const std::string HP_OPT_4R_TIMED_SMDENTS_EXPR_ID = "413_hp_opt_four_room_timed_smdents";
+// - minecart - deterministic
+static const std::string HP_OPT_MINECART_DET_CZT_EXPR_ID = "500_hp_opt_minecart_deterministic_czt";
+static const std::string HP_OPT_MINECART_DET_CHMCTS_EXPR_ID = "501_hp_opt_minecart_deterministic_chmcts";
+static const std::string HP_OPT_MINECART_DET_SMBTS_EXPR_ID = "502_hp_opt_minecart_deterministic_smbts";
+static const std::string HP_OPT_MINECART_DET_SMDENTS_EXPR_ID = "503_hp_opt_minecart_deterministic_smdents";
+// - minecart 
+static const std::string HP_OPT_MINECART_CZT_EXPR_ID = "510_hp_opt_minecart_czt";
+static const std::string HP_OPT_MINECART_CHMCTS_EXPR_ID = "511_hp_opt_minecart_chmcts";
+static const std::string HP_OPT_MINECART_SMBTS_EXPR_ID = "512_hp_opt_minecart_smbts";
+static const std::string HP_OPT_MINECART_SMDENTS_EXPR_ID = "513_hp_opt_minecart_smdents";
 
-// expr ids - mo gymnasium (7xx + 8xx = eval)
-static const std::string EVAL_DST_EXPR_ID = "700_dst";
+// expr ids - mo gymnasium + custom envs (6xx + 7xx + 8xx = eval)
+static const std::string EVAL_DST_EXPR_ID = "600_dst";
 
 // expr ids - lists of czt / chmcts / bts / dents expr_ids
-static std::unordered_map<std::string,std::string> HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID =
+static const std::unordered_map<std::string,std::string> HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID =
 {
-    {HP_OPT_DST_CZT_EXPR_ID,        DST_ENV_ID},
-    {HP_OPT_BB_CZT_EXPR_ID,         BREAKABLE_BOTTLES_ENV_ID},
-    {HP_OPT_FT_CZT_EXPR_ID,         FRUIT_TREE_ENV_ID},
-    {HP_OPT_FOUR_T_CZT_EXPR_ID,     FOUR_ROOM_TIMED_ENV_ID},
-    {HP_OPT_MINE_CZT_EXPR_ID,       MINECART_ENV_ID},
+    {HP_OPT_DST_CZT_EXPR_ID,                VAMPLEW_DST_ENV_ID},
+    {HP_OPT_DST_STOCH_CZT_EXPR_ID,          VAMPLEW_STOCH_DST_ENV_ID},
+    {HP_OPT_DST_IMPR_CZT_EXPR_ID,           IMPROVED_DST_ENV_ID},
+    {HP_OPT_DST_IMPR_STOCH_CZT_EXPR_ID,     IMPROVED_STOCH_DST_ENV_ID},
+    {HP_OPT_FT_CZT_EXPR_ID,                 FRUIT_TREE_7_ENV_ID},
+    {HP_OPT_FT_S5_CZT_EXPR_ID,              FRUIT_TREE_STOCH_5_ENV_ID},
+    {HP_OPT_FT_S7_CZT_EXPR_ID,              FRUIT_TREE_STOCH_7_ENV_ID},
+    {HP_OPT_BB_CZT_EXPR_ID,                 BREAKABLE_BOTTLES_ENV_ID},
+    {HP_OPT_RG_CZT_EXPR_ID,                 RESOURCE_GATHER_ENV_ID},
+    {HP_OPT_RG_TIMED_CZT_EXPR_ID,           RESOURCE_GATHER_TIMED_ENV_ID},
+    {HP_OPT_4R_CZT_EXPR_ID,                 FOUR_ROOM_ENV_ID},
+    {HP_OPT_4R_TIMED_CZT_EXPR_ID,           FOUR_ROOM_TIMED_ENV_ID},
+    {HP_OPT_MINECART_DET_CZT_EXPR_ID,       MINECART_DETERMINISTIC_ENV_ID},
+    {HP_OPT_MINECART_CZT_EXPR_ID,           MINECART_ENV_ID},
 };
-static std::unordered_map<std::string,std::string> HP_OPT_MOGYM_CHMCTS_EXPR_ID_TO_ENV_ID =
+static const std::unordered_map<std::string,std::string> HP_OPT_MOGYM_CHMCTS_EXPR_ID_TO_ENV_ID =
 {
-    {HP_OPT_DST_CHMCTS_EXPR_ID,     DST_ENV_ID},
-    {HP_OPT_BB_CHMCTS_EXPR_ID,      BREAKABLE_BOTTLES_ENV_ID},
-    {HP_OPT_FT_CHMCTS_EXPR_ID,      FRUIT_TREE_ENV_ID},
-    {HP_OPT_FOUR_T_CHMCTS_EXPR_ID,  FOUR_ROOM_TIMED_ENV_ID},
-    {HP_OPT_MINE_CHMCTS_EXPR_ID,    MINECART_ENV_ID},
+    {HP_OPT_DST_CHMCTS_EXPR_ID,                VAMPLEW_DST_ENV_ID},
+    {HP_OPT_DST_STOCH_CHMCTS_EXPR_ID,          VAMPLEW_STOCH_DST_ENV_ID},
+    {HP_OPT_DST_IMPR_CHMCTS_EXPR_ID,           IMPROVED_DST_ENV_ID},
+    {HP_OPT_DST_IMPR_STOCH_CHMCTS_EXPR_ID,     IMPROVED_STOCH_DST_ENV_ID},
+    {HP_OPT_FT_CHMCTS_EXPR_ID,                 FRUIT_TREE_7_ENV_ID},
+    {HP_OPT_FT_S5_CHMCTS_EXPR_ID,              FRUIT_TREE_STOCH_5_ENV_ID},
+    {HP_OPT_FT_S7_CHMCTS_EXPR_ID,              FRUIT_TREE_STOCH_7_ENV_ID},
+    {HP_OPT_BB_CHMCTS_EXPR_ID,                 BREAKABLE_BOTTLES_ENV_ID},
+    {HP_OPT_RG_CHMCTS_EXPR_ID,                 RESOURCE_GATHER_ENV_ID},
+    {HP_OPT_RG_TIMED_CHMCTS_EXPR_ID,           RESOURCE_GATHER_TIMED_ENV_ID},
+    {HP_OPT_4R_CHMCTS_EXPR_ID,                 FOUR_ROOM_ENV_ID},
+    {HP_OPT_4R_TIMED_CHMCTS_EXPR_ID,           FOUR_ROOM_TIMED_ENV_ID},
+    {HP_OPT_MINECART_DET_CHMCTS_EXPR_ID,       MINECART_DETERMINISTIC_ENV_ID},
+    {HP_OPT_MINECART_CHMCTS_EXPR_ID,           MINECART_ENV_ID},
 };
-static std::unordered_map<std::string,std::string> HP_OPT_MOGYM_SMBTS_EXPR_ID_TO_ENV_ID =
+static const std::unordered_map<std::string,std::string> HP_OPT_MOGYM_SMBTS_EXPR_ID_TO_ENV_ID =
 {   
-    {HP_OPT_DST_SMBTS_EXPR_ID,      DST_ENV_ID},
-    {HP_OPT_BB_SMBTS_EXPR_ID,       BREAKABLE_BOTTLES_ENV_ID},
-    {HP_OPT_FT_SMBTS_EXPR_ID,       FRUIT_TREE_ENV_ID},
-    {HP_OPT_FOUR_T_SMBTS_EXPR_ID,   FOUR_ROOM_TIMED_ENV_ID},
-    {HP_OPT_MINE_SMBTS_EXPR_ID,     MINECART_ENV_ID},
+    {HP_OPT_DST_SMBTS_EXPR_ID,                VAMPLEW_DST_ENV_ID},
+    {HP_OPT_DST_STOCH_SMBTS_EXPR_ID,          VAMPLEW_STOCH_DST_ENV_ID},
+    {HP_OPT_DST_IMPR_SMBTS_EXPR_ID,           IMPROVED_DST_ENV_ID},
+    {HP_OPT_DST_IMPR_STOCH_SMBTS_EXPR_ID,     IMPROVED_STOCH_DST_ENV_ID},
+    {HP_OPT_FT_SMBTS_EXPR_ID,                 FRUIT_TREE_7_ENV_ID},
+    {HP_OPT_FT_S5_SMBTS_EXPR_ID,              FRUIT_TREE_STOCH_5_ENV_ID},
+    {HP_OPT_FT_S7_SMBTS_EXPR_ID,              FRUIT_TREE_STOCH_7_ENV_ID},
+    {HP_OPT_BB_SMBTS_EXPR_ID,                 BREAKABLE_BOTTLES_ENV_ID},
+    {HP_OPT_RG_SMBTS_EXPR_ID,                 RESOURCE_GATHER_ENV_ID},
+    {HP_OPT_RG_TIMED_SMBTS_EXPR_ID,           RESOURCE_GATHER_TIMED_ENV_ID},
+    {HP_OPT_4R_SMBTS_EXPR_ID,                 FOUR_ROOM_ENV_ID},
+    {HP_OPT_4R_TIMED_SMBTS_EXPR_ID,           FOUR_ROOM_TIMED_ENV_ID},
+    {HP_OPT_MINECART_DET_SMBTS_EXPR_ID,       MINECART_DETERMINISTIC_ENV_ID},
+    {HP_OPT_MINECART_SMBTS_EXPR_ID,           MINECART_ENV_ID},
 };
-static std::unordered_map<std::string,std::string> HP_OPT_MOGYM_SMDENTS_EXPR_ID_TO_ENV_ID =
+static const std::unordered_map<std::string,std::string> HP_OPT_MOGYM_SMDENTS_EXPR_ID_TO_ENV_ID =
 {
-    {HP_OPT_DST_SMDENTS_EXPR_ID,        DST_ENV_ID},
-    {HP_OPT_BB_SMDENTS_EXPR_ID,         BREAKABLE_BOTTLES_ENV_ID},
-    {HP_OPT_FT_SMDENTS_EXPR_ID,         FRUIT_TREE_ENV_ID},
-    {HP_OPT_FOUR_T_SMDENTS_EXPR_ID,     FOUR_ROOM_TIMED_ENV_ID},
-    {HP_OPT_MINE_SMDENTS_EXPR_ID,       MINECART_ENV_ID},
+    {HP_OPT_DST_SMDENTS_EXPR_ID,                VAMPLEW_DST_ENV_ID},
+    {HP_OPT_DST_STOCH_SMDENTS_EXPR_ID,          VAMPLEW_STOCH_DST_ENV_ID},
+    {HP_OPT_DST_IMPR_SMDENTS_EXPR_ID,           IMPROVED_DST_ENV_ID},
+    {HP_OPT_DST_IMPR_STOCH_SMDENTS_EXPR_ID,     IMPROVED_STOCH_DST_ENV_ID},
+    {HP_OPT_FT_SMDENTS_EXPR_ID,                 FRUIT_TREE_7_ENV_ID},
+    {HP_OPT_FT_S5_SMDENTS_EXPR_ID,              FRUIT_TREE_STOCH_5_ENV_ID},
+    {HP_OPT_FT_S7_SMDENTS_EXPR_ID,              FRUIT_TREE_STOCH_7_ENV_ID},
+    {HP_OPT_BB_SMDENTS_EXPR_ID,                 BREAKABLE_BOTTLES_ENV_ID},
+    {HP_OPT_RG_SMDENTS_EXPR_ID,                 RESOURCE_GATHER_ENV_ID},
+    {HP_OPT_RG_TIMED_SMDENTS_EXPR_ID,           RESOURCE_GATHER_TIMED_ENV_ID},
+    {HP_OPT_4R_SMDENTS_EXPR_ID,                 FOUR_ROOM_ENV_ID},
+    {HP_OPT_4R_TIMED_SMDENTS_EXPR_ID,           FOUR_ROOM_TIMED_ENV_ID},
+    {HP_OPT_MINECART_DET_SMDENTS_EXPR_ID,       MINECART_DETERMINISTIC_ENV_ID},
+    {HP_OPT_MINECART_SMDENTS_EXPR_ID,           MINECART_ENV_ID},
+};
+
+// list of all expr ids
+static const std::unordered_set<std::string> ALL_EXPR_IDS = 
+{
+    DEBUG_EXPR_ID,
+    DEBUG_ENV_1_EXPR_ID,
+    DEBUG_PY_ENV_1_EXPR_ID,
+    DEBUG_ENV_2_EXPR_ID,
+    DEBUG_PY_ENV_2_EXPR_ID,
+    DEBUG_ENV_3_EXPR_ID,
+    DEBUG_PY_ENV_3_EXPR_ID,
+    DEBUG_ENV_4_EXPR_ID,
+    DEBUG_PY_ENV_4_EXPR_ID,
+    POC_DST_EXPR_ID,
+    POC_FT_EXPR_ID,
+    DEBUG_CZT_HP_OPT_EXPR_ID,
+    DEBUG_CHMCTS_HP_OPT_EXPR_ID,
+    DEBUG_SMBTS_HP_OPT_EXPR_ID,
+    DEBUG_SMDENTS_HP_OPT_EXPR_ID,
+
+    HP_OPT_DST_CZT_EXPR_ID,
+    HP_OPT_DST_CHMCTS_EXPR_ID,
+    HP_OPT_DST_SMBTS_EXPR_ID,
+    HP_OPT_DST_SMDENTS_EXPR_ID,
+    HP_OPT_DST_STOCH_CZT_EXPR_ID,
+    HP_OPT_DST_STOCH_CHMCTS_EXPR_ID,
+    HP_OPT_DST_STOCH_SMBTS_EXPR_ID,
+    HP_OPT_DST_STOCH_SMDENTS_EXPR_ID,
+    HP_OPT_DST_IMPR_CZT_EXPR_ID,
+    HP_OPT_DST_IMPR_CHMCTS_EXPR_ID,
+    HP_OPT_DST_IMPR_SMBTS_EXPR_ID,
+    HP_OPT_DST_IMPR_SMDENTS_EXPR_ID,
+    HP_OPT_DST_IMPR_STOCH_CZT_EXPR_ID,
+    HP_OPT_DST_IMPR_STOCH_CHMCTS_EXPR_ID,
+    HP_OPT_DST_IMPR_STOCH_SMBTS_EXPR_ID,
+    HP_OPT_DST_IMPR_STOCH_SMDENTS_EXPR_ID,
+    HP_OPT_FT_CZT_EXPR_ID,
+    HP_OPT_FT_CHMCTS_EXPR_ID,
+    HP_OPT_FT_SMBTS_EXPR_ID,
+    HP_OPT_FT_SMDENTS_EXPR_ID,
+    HP_OPT_FT_S5_CZT_EXPR_ID,
+    HP_OPT_FT_S5_CHMCTS_EXPR_ID,
+    HP_OPT_FT_S5_SMBTS_EXPR_ID,
+    HP_OPT_FT_S5_SMDENTS_EXPR_ID,
+    HP_OPT_FT_S7_CZT_EXPR_ID,
+    HP_OPT_FT_S7_CHMCTS_EXPR_ID,
+    HP_OPT_FT_S7_SMBTS_EXPR_ID,
+    HP_OPT_FT_S7_SMDENTS_EXPR_ID,
+    HP_OPT_BB_CZT_EXPR_ID,
+    HP_OPT_BB_CHMCTS_EXPR_ID,
+    HP_OPT_BB_SMBTS_EXPR_ID,
+    HP_OPT_BB_SMDENTS_EXPR_ID,
+    HP_OPT_RG_CZT_EXPR_ID,
+    HP_OPT_RG_CHMCTS_EXPR_ID,
+    HP_OPT_RG_SMBTS_EXPR_ID,
+    HP_OPT_RG_SMDENTS_EXPR_ID,
+    HP_OPT_RG_TIMED_CZT_EXPR_ID,
+    HP_OPT_RG_TIMED_CHMCTS_EXPR_ID,
+    HP_OPT_RG_TIMED_SMBTS_EXPR_ID,
+    HP_OPT_RG_TIMED_SMDENTS_EXPR_ID,
+    HP_OPT_4R_CZT_EXPR_ID,
+    HP_OPT_4R_CHMCTS_EXPR_ID,
+    HP_OPT_4R_SMBTS_EXPR_ID,
+    HP_OPT_4R_SMDENTS_EXPR_ID,
+    HP_OPT_4R_TIMED_CZT_EXPR_ID,
+    HP_OPT_4R_TIMED_CHMCTS_EXPR_ID,
+    HP_OPT_4R_TIMED_SMBTS_EXPR_ID,
+    HP_OPT_4R_TIMED_SMDENTS_EXPR_ID,
+    HP_OPT_MINECART_DET_CZT_EXPR_ID,
+    HP_OPT_MINECART_DET_CHMCTS_EXPR_ID,
+    HP_OPT_MINECART_DET_SMBTS_EXPR_ID,
+    HP_OPT_MINECART_DET_SMDENTS_EXPR_ID,
+    HP_OPT_MINECART_CZT_EXPR_ID,
+    HP_OPT_MINECART_CHMCTS_EXPR_ID,
+    HP_OPT_MINECART_SMBTS_EXPR_ID,
+    HP_OPT_MINECART_SMDENTS_EXPR_ID,
+
+    EVAL_DST_EXPR_ID,
 };
 
 // param ids
@@ -212,7 +418,7 @@ static const std::string SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID = "smdents_entropy_t
 static const std::string SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID = "smdents_entropy_temp_visits_scale";
 
 // relevant alg ids -> param ids
-static std::unordered_map<std::string,std::vector<std::string>> RELEVANT_PARAM_IDS =
+static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_PARAM_IDS =
 {
     {CZT_ALG_ID,
         {
@@ -253,12 +459,12 @@ static std::unordered_map<std::string,std::vector<std::string>> RELEVANT_PARAM_I
 };
 
 // List of boolean + int param ids
-static std::unordered_set<std::string> BOOLEAN_PARAM_IDS =
+static const std::unordered_set<std::string> BOOLEAN_PARAM_IDS =
 {
     SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID,
 };
 
-static std::unordered_set<std::string> INTEGER_PARAM_IDS =
+static const std::unordered_set<std::string> INTEGER_PARAM_IDS =
 {
     CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID,
     // SM_MAX_DEPTH,
@@ -267,6 +473,11 @@ static std::unordered_set<std::string> INTEGER_PARAM_IDS =
 
 
 namespace thts {
+    /**
+     * Lookup expr_id from prefix
+     */
+    std::string lookup_expr_id_from_prefix(std::string expr_id_prefix);
+
     /**
      * Create the env corresponding to 'env_id' and return is
      */
@@ -288,7 +499,7 @@ namespace thts {
      * Returns the max value possible in the environment 
      * (Same as get_env_min_value, but for maximum)
     */
-    Eigen::ArrayXd get_env_max_value(std::string env_id);
+    Eigen::ArrayXd get_env_max_value(std::string env_id, int max_trial_length);
 
     /**
      * Struct to wrap all the params for a eval run
@@ -415,7 +626,7 @@ namespace thts {
     /**
      * Get a list of run id's from an experiment id
     */
-    std::shared_ptr<std::vector<RunID>> get_run_ids_from_expr_id(std::string expr_id);
+    std::shared_ptr<std::vector<RunID>> get_run_ids_from_expr_id_prefix(std::string expr_id_prefix);
 
     /**
      * Class for running hyperparam optimisation

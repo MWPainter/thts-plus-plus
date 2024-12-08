@@ -53,7 +53,7 @@ GTEST = external/googletest/build/lib/libgtest_main.a
 #####
 
 # Variables that need to get updated per machine
-CONDA_ENV_NAME = thts3.12
+CONDA_ENV_NAME = thts++mo
 PYTHON_WITH_VER = python3.12
 ANACONDA_ENVS_HOME = /home/michael/anaconda3/envs
 

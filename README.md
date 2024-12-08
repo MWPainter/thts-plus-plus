@@ -72,6 +72,14 @@ git submodule init
 git submodule update
 ```
 
+Should be able to copy development setup with
+```
+conda create -n thts++mo python=3.12
+pip install -r requirements.txt
+```
+
+#### Previous notes on installing pybind were:
+
 Then we're using Anaconda3 to create a python virtual environment. Assuming we already have Anaconda3 installed, 
 make a new virtual env called `thts++` with:
 ```

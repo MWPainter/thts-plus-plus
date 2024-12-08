@@ -45,7 +45,7 @@ namespace thts {
     */
     string get_params_string_helper(RunID& run_id) {
         stringstream ss;
-        vector<string> &relevant_param_ids = RELEVANT_PARAM_IDS.at(run_id.alg_id);
+        const vector<string> &relevant_param_ids = RELEVANT_PARAM_IDS.at(run_id.alg_id);
         unordered_set<string> relevant_param_ids_set(relevant_param_ids.begin(),relevant_param_ids.end());
         for (pair<string,double> param_val_entry : run_id.alg_params) {
             if (!relevant_param_ids_set.contains(param_val_entry.first)) {
@@ -197,7 +197,7 @@ namespace thts {
         shared_ptr<MoThtsManager> thts_manager,
         RunID& run_id) 
     {   
-        shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(root_node, env, thts_manager);  
+        shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(root_node, env, thts_manager);
         MoMCEvaluator evaluator(
             eval_policy, run_id.max_trial_length, thts_manager, run_id.get_env_min_value(), run_id.get_env_max_value());
         evaluator.run_rollouts(run_id.rollouts_per_mc_eval, run_id.eval_threads);
@@ -439,7 +439,10 @@ namespace thts {
     /**
      * Runs hyperparameter opt for 'expr_id'
      */
-    void run_hp_opt(string expr_id) {
+    void run_hp_opt(string expr_id_prefix) {
+        // Lookup expr_id
+        string expr_id = lookup_expr_id_from_prefix(expr_id_prefix);
+
         // timestamp, so can rerun with same params and keep both results
         time_t expr_timestamp = std::time(nullptr);
         
@@ -531,7 +534,7 @@ namespace thts {
             max_trial_length[env_id], 
             dummy_manager, 
             get_env_min_value(env_id, max_trial_length[env_id]), 
-            get_env_max_value(env_id));
+            get_env_max_value(env_id, max_trial_length[env_id]));
         evaluator.run_rollouts(rollouts_per_mc_eval[env_id], eval_threads[env_id]);
         double mean = evaluator.get_mean_mo_ctx_return();
         double std_dev = evaluator.get_stddev_mean_mo_ctx_return();

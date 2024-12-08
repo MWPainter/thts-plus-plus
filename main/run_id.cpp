@@ -14,10 +14,12 @@
 
 #include "py/pickle_wrapper.h"
 #include "py/mo_gym_multiprocessing_thts_env.h"
+#include "py/timed_mo_gym_multiprocessing_thts_env.h"
 
 #include "test/mo/test_mo_thts_env.h"
 #include "py/mo_py_multiprocessing_thts_env.h"
 
+#include <sstream>
 #include <stdexcept>
 
 using namespace std;
@@ -31,6 +33,20 @@ namespace py = pybind11;
 namespace thts {
 
     /**
+     * Lookup expr_id from prefix
+     */
+    string lookup_expr_id_from_prefix(string expr_id_prefix) 
+    {
+        for (const string& expr_id : ALL_EXPR_IDS) {
+            if (expr_id.starts_with(expr_id_prefix)) {
+                return expr_id;
+            }
+        }
+        throw runtime_error(
+            "Error looking up expr_id from prefix. Either forgot to add expr_id to 'ALL_EXPR_IDS' list or typo?");
+    }
+
+    /**
      * Create and return the env
     */
     shared_ptr<MoThtsEnv> get_env(string env_id) 
@@ -38,6 +54,48 @@ namespace thts {
         if (MO_GYM_ENVS.contains(env_id)) {
             shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
             return make_shared<MoGymMultiprocessingThtsEnv>(pickle_wrapper, env_id);
+        }
+
+        if (TIMED_ENV_ID_TO_GYM_ID.contains(env_id)) {
+            string underlying_gym_env_id = string(TIMED_ENV_ID_TO_GYM_ID.at(env_id));
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            return make_shared<TimedMoGymMultiprocessingThtsEnv>(pickle_wrapper, underlying_gym_env_id);
+        }
+
+        if (env_id == FRUIT_TREE_7_ENV_ID || 
+            env_id == FRUIT_TREE_STOCH_5_ENV_ID || 
+            env_id == FRUIT_TREE_STOCH_7_ENV_ID)
+        {
+            py::gil_scoped_acquire acquire;
+            string module_name = "custom_fruit_tree";
+            string class_name = "StochFruitTreeThtsEnv";
+            py::dict kw_args;
+            kw_args["depth"] = to_string((env_id == FRUIT_TREE_STOCH_5_ENV_ID) ? 5 : 7);
+            kw_args["action_noise"] = to_string((env_id == FRUIT_TREE_7_ENV_ID) ? 0.0 : 0.2);
+
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            return make_shared<MoPyMultiprocessingThtsEnv>(
+                pickle_wrapper, module_name, class_name, make_shared<py::dict>(kw_args));
+        }
+
+        if (env_id == IMPROVED_DST_ENV_ID ||
+            env_id == IMPROVED_STOCH_DST_ENV_ID ||
+            env_id == VAMPLEW_DST_ENV_ID ||
+            env_id == VAMPLEW_STOCH_DST_ENV_ID)
+        {
+            py::gil_scoped_acquire acquire;
+            string module_name = "custom_deep_sea_treasure";
+            string class_name = "ImprovedDeepSeaTreasureThtsEnv";
+            bool is_stoch = (env_id == IMPROVED_STOCH_DST_ENV_ID || env_id == VAMPLEW_STOCH_DST_ENV_ID);
+            bool is_vamplew = (env_id == VAMPLEW_DST_ENV_ID || env_id == VAMPLEW_STOCH_DST_ENV_ID);
+            py::dict kw_args;
+            kw_args["swept_by_current_prob"] = to_string(is_stoch ? 0.2 : 0.0);
+            kw_args["is_vamplew"] = to_string(is_vamplew);
+
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            return make_shared<MoPyMultiprocessingThtsEnv>(
+                pickle_wrapper, module_name, class_name, make_shared<py::dict>(kw_args));
+            
         }
 
         if (DEBUG_ENVS.contains(env_id)) {
@@ -58,16 +116,18 @@ namespace thts {
             string module_name = "mo_test_env";
             string class_name = "MoPyTestThtsEnv";
             py::dict kw_args;
-            kw_args["walk_len"] = walk_len; 
-            kw_args["wrong_dir_prob"] = wrong_dir_prob;
-            kw_args["add_extra_rewards"] = add_extra_rewards;
+            kw_args["walk_len"] = to_string(walk_len); 
+            kw_args["wrong_dir_prob"] = to_string(wrong_dir_prob);
+            kw_args["add_extra_rewards"] = to_string(add_extra_rewards);
 
             shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-            return make_shared<MoPyMultiprocessingThtsEnv>(
+            return make_shared<MoPyMultiprocessingThtsEnv>( 
                 pickle_wrapper, module_name, class_name, make_shared<py::dict>(kw_args));
         }
 
-        throw runtime_error("Error in get_env");
+        stringstream ss;
+        ss << "Error in get_env for env_id = " << env_id;
+        throw runtime_error(ss.str());
     }
     
     /**
@@ -75,7 +135,10 @@ namespace thts {
      */
     bool is_python_env(string env_id) 
     {
-        return MO_GYM_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id);
+        return (MO_GYM_ENVS.contains(env_id) 
+            || DEBUG_PY_ENVS.contains(env_id) 
+            || PY_ENVS.contains(env_id) 
+            || TIMED_ENV_ID_TO_GYM_ID.contains(env_id));
     }
 
     /**
@@ -90,8 +153,105 @@ namespace thts {
             min_val[1] = -1.0 * max_trial_length;
             return min_val;
         }
+        if (env_id == DST_CONC_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
+            min_val[0] = 0.0;
+            min_val[1] = -1.0 * max_trial_length;
+            return min_val;
+        }
+        if (env_id == DST_MIRR_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
+            min_val[0] = 0.0;
+            min_val[1] = -1.0 * max_trial_length;
+            return min_val;
+        }
+        if (env_id == RESOURCE_GATHER_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
+            min_val[0] = -1.0;
+            min_val[1] = 0.0;
+            min_val[2] = 0.0;
+            return min_val;
+        }
+        if (env_id == RESOURCE_GATHER_TIMED_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(4);
+            min_val[0] = -1.0;
+            min_val[1] = 0.0;
+            min_val[2] = 0.0;
+            min_val[3] = -1.0 * max_trial_length;
+            return min_val;
+        }
+        if (env_id == BREAKABLE_BOTTLES_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
+            min_val[0] = -1.0 * max_trial_length;
+            min_val[1] = 0.0;
+            min_val[2] = -1.0;
+            return min_val;
+        }
         if (env_id == FRUIT_TREE_ENV_ID) {
             return Eigen::ArrayXd::Zero(6);
+        }
+        if (env_id == FOUR_ROOM_ENV_ID) {
+            return Eigen::ArrayXd::Zero(3);
+        }
+        if (env_id == FOUR_ROOM_TIMED_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(4);
+            min_val[0] = 0.0;
+            min_val[1] = 0.0;
+            min_val[2] = 0.0;
+            min_val[3] = -1.0 * max_trial_length;
+            return min_val;
+        }
+        if (env_id == MOUNTAIN_CAR_ENV_ID) {
+            return Eigen::ArrayXd::Ones(3) * -1.0 * max_trial_length;
+        }
+        if (env_id == MINECART_DETERMINISTIC_ENV_ID || env_id == MINECART_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
+            min_val[0] = 0.0;
+            min_val[1] = 0.0;
+            min_val[2] = -1.0;
+            return min_val;
+        }
+        if (env_id == HIGHWAY_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
+            min_val[0] = 0.0;
+            min_val[1] = 0.0;
+            min_val[2] = -1.0;
+            return min_val;
+        }
+        if (env_id == FRUIT_TREE_7_ENV_ID) {
+            return Eigen::ArrayXd::Zero(6);
+        }
+        if (env_id == FRUIT_TREE_STOCH_5_ENV_ID) {
+            return Eigen::ArrayXd::Zero(6);
+        }
+        if (env_id == FRUIT_TREE_STOCH_7_ENV_ID) {
+            return Eigen::ArrayXd::Zero(6);
+        }
+        if (env_id == IMPROVED_DST_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
+            min_val[0] = 0.0;
+            min_val[1] = -1.0 * max_trial_length;
+            min_val[2] = -9.0 * max_trial_length;
+            return min_val;
+        }
+        if (env_id == IMPROVED_STOCH_DST_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
+            min_val[0] = 0.0;
+            min_val[1] = -1.0 * max_trial_length;
+            min_val[2] = -9.0 * max_trial_length;
+            return min_val;
+        }
+        if (env_id == VAMPLEW_DST_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
+            min_val[0] = 0.0;
+            min_val[1] = -1.0 * max_trial_length;
+            return min_val;
+        }
+        if (env_id == VAMPLEW_STOCH_DST_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
+            min_val[0] = 0.0;
+            min_val[1] = -1.0 * max_trial_length;
+            return min_val;
         }
 
 
@@ -116,14 +276,16 @@ namespace thts {
             return min_val;
         }
 
-        throw runtime_error("Error in get_env_min_value");
+        stringstream ss;
+        ss << "Error in get_env_min_value for env_id = " << env_id;
+        throw runtime_error(ss.str());
     }
 
     /**
      * Get max value
      * See https://mo-gymnasium.farama.org/ for env defs
     */
-    Eigen::ArrayXd get_env_max_value(string env_id) 
+    Eigen::ArrayXd get_env_max_value(string env_id, int max_trial_length) 
     {
         if (env_id == DST_ENV_ID) {
             Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
@@ -131,8 +293,105 @@ namespace thts {
             max_val[1] = 0.0;
             return max_val;
         }
+        if (env_id == DST_CONC_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
+            max_val[0] = 124.0;
+            max_val[1] = 0.0;
+            return max_val;
+        }
+        if (env_id == DST_MIRR_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
+            max_val[0] = 124.0;
+            max_val[1] = 0.0;
+            return max_val;
+        }
+        if (env_id == RESOURCE_GATHER_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
+            max_val[0] = 0.0;
+            max_val[1] = 1.0;
+            max_val[2] = 1.0;
+            return max_val;
+        }
+        if (env_id == RESOURCE_GATHER_TIMED_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(4);
+            max_val[0] = 0.0;
+            max_val[1] = 1.0;
+            max_val[2] = 1.0;
+            max_val[3] = 0.0;
+            return max_val;
+        }
+        if (env_id == BREAKABLE_BOTTLES_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
+            max_val[0] = 0.0;
+            max_val[1] = 50.0;
+            max_val[2] = 0.0;
+            return max_val;
+        }
         if (env_id == FRUIT_TREE_ENV_ID) {
             return Eigen::ArrayXd::Ones(6) * 10.0;
+        }
+        if (env_id == FOUR_ROOM_ENV_ID) {
+            return Eigen::ArrayXd::Ones(3) * 4.0;
+        }
+        if (env_id == FOUR_ROOM_TIMED_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(4);
+            max_val[0] = 4.0;
+            max_val[1] = 4.0;
+            max_val[2] = 4.0;
+            max_val[3] = 0.0;
+            return max_val;
+        }
+        if (env_id == MOUNTAIN_CAR_ENV_ID) {
+            return Eigen::ArrayXd::Zero(3);
+        }
+        if (env_id == MINECART_DETERMINISTIC_ENV_ID || env_id == MINECART_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
+            max_val[0] = 1.5;
+            max_val[1] = 1.5;
+            max_val[2] = 0.0;
+            return max_val;
+        }
+        if (env_id == HIGHWAY_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
+            max_val[0] = 1.0;
+            max_val[1] = 1.0;
+            max_val[2] = 0.0;
+            return max_val;
+        }
+        if (env_id == FRUIT_TREE_7_ENV_ID) {
+            return Eigen::ArrayXd::Ones(6) * 10.0;
+        }
+        if (env_id == FRUIT_TREE_STOCH_5_ENV_ID) {
+            return Eigen::ArrayXd::Ones(6) * 10.0;
+        }
+        if (env_id == FRUIT_TREE_STOCH_7_ENV_ID) {
+            return Eigen::ArrayXd::Ones(6) * 10.0;
+        }
+        if (env_id == IMPROVED_DST_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
+            max_val[0] = 124.0;
+            max_val[1] = 0.0;
+            max_val[2] = 0.0;
+            return max_val;
+        }
+        if (env_id == IMPROVED_STOCH_DST_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
+            max_val[0] = 124.0;
+            max_val[1] = 0.0;
+            max_val[2] = 0.0;
+            return max_val;
+        }
+        if (env_id == VAMPLEW_DST_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
+            max_val[0] = 124.0;
+            max_val[1] = 0.0;
+            return max_val;
+        }
+        if (env_id == VAMPLEW_STOCH_DST_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
+            max_val[0] = 124.0;
+            max_val[1] = 0.0;
+            return max_val;
         }
                 
         if (DEBUG_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id)) {
@@ -156,7 +415,9 @@ namespace thts {
             return max_val;
         }
 
-        throw runtime_error("Error in get_env_max_value");
+        stringstream ss;
+        ss << "Error in get_env_max_value for env_id = " << env_id;
+        throw runtime_error(ss.str());
     }
 
     /**
@@ -321,7 +582,9 @@ namespace thts {
             return make_shared<SmtDentsManager>(manager_args);
         }
 
-        throw runtime_error("Error in RunID get_thts_manager");
+        stringstream ss;
+        ss << "Error in RunID get_thts_manager for alg_id = " << alg_id;
+        throw runtime_error(ss.str());
     }
 
     /**
@@ -346,7 +609,9 @@ namespace thts {
             return make_shared<SmtDentsDNode>(smdents_manager, env->get_initial_state_itfc(), 0, 0);
         }
 
-        throw runtime_error("Error in RunID get_root_search_node");
+        stringstream ss;
+        ss << "Error in RunID get_root_search_node for alg_id = " << alg_id;
+        throw runtime_error(ss.str());
     }
 
     /**
@@ -364,7 +629,7 @@ namespace thts {
     */
     Eigen::ArrayXd RunID::get_env_max_value() 
     {
-        return thts::get_env_max_value(env_id);
+        return thts::get_env_max_value(env_id, max_trial_length);
     }
 
     /**
@@ -378,8 +643,9 @@ namespace thts {
     /**
      * Gets a list of RunID objects from a given expr id
     */
-    shared_ptr<vector<RunID>> get_run_ids_from_expr_id(string expr_id) 
-    {
+    shared_ptr<vector<RunID>> get_run_ids_from_expr_id_prefix(string expr_id_prefix) 
+    {   
+        string expr_id = lookup_expr_id_from_prefix(expr_id_prefix);
         shared_ptr<vector<RunID>> run_ids = make_shared<vector<RunID>>();
 
         // expr_id: 000_debug 
@@ -737,7 +1003,9 @@ namespace thts {
             return run_ids;
         }
 
-        throw runtime_error("Error in get_run_ids_from_expr_id");
+        stringstream ss;
+        ss << "Error in get_run_ids_from_expr_id for expr_id = " << expr_id;
+        throw runtime_error(ss.str());
     }
 
     /**
@@ -758,13 +1026,13 @@ namespace thts {
         int eval_threads,
         bayesopt::Parameters params,
         ofstream &results_fs) :
-            bayesopt::ContinuousModel(RELEVANT_PARAM_IDS[alg_id].size(), params),
-            num_hyperparams(RELEVANT_PARAM_IDS[alg_id].size()),
+            bayesopt::ContinuousModel(RELEVANT_PARAM_IDS.at(alg_id).size(), params),
+            num_hyperparams(RELEVANT_PARAM_IDS.at(alg_id).size()),
             env_id(env_id),
             expr_id(expr_id),
             expr_timestamp(expr_timestamp),
             alg_id(alg_id),
-            alg_param_ids(RELEVANT_PARAM_IDS[alg_id]),
+            alg_param_ids(RELEVANT_PARAM_IDS.at(alg_id)),
             alg_params_min_max(alg_params_min_max),
             search_runtime(search_runtime),
             max_trial_length(max_trial_length),
@@ -806,7 +1074,7 @@ namespace thts {
 
     bool HyperparamOptimiser::is_python_env() 
     {
-        return MO_GYM_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id);
+        return thts::is_python_env(env_id);
     }
 
     unordered_map<string, double> HyperparamOptimiser::get_alg_params_from_bayesopt_vec(bayesopt::vectord vec)
@@ -890,7 +1158,7 @@ namespace thts {
         
         // hyperparams (with sample number (hp_opt_iter) and eval at start/end)
         results_fs << "hp_opt_iter,";
-        for (string param_id : alg_param_ids) {
+        for (string& param_id : alg_param_ids) {
             results_fs << param_id << ",";
         } 
         results_fs << "eval(mc_estimate_expected_utility),best_eval_so_far" << endl;
@@ -1026,18 +1294,18 @@ namespace thts {
 
 
 
-        // expr_id: 5x0 + 6x0 
+        // expr_id: 3x0 + 4x0 + 5x0
         // initial mo gym hyperparam opt for czt
         if (HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID.contains(expr_id)) {
             string alg_id = CZT_ALG_ID;
             unordered_map<string, pair<double,double>> alg_params_min_max = {
                 {CZT_BIAS_PARAM_ID, make_pair(0.01, 100.0)},
-                {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(5.0, 100.0)},
+                {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
             };
 
-            string env_id = HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID[expr_id];
-            double search_runtime = 20.0;
-            int max_trial_length = 50;
+            string env_id = HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID.at(expr_id);
+            double search_runtime = 30.0;
+            int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
             double eval_delta = 1.0;
             int rollouts_per_mc_eval = 1024;
             int num_repeats = 5;
@@ -1070,7 +1338,7 @@ namespace thts {
             );
         }
 
-        // expr_id: 5x1 + 6x1
+        // expr_id: 3x1 + 4x1 + 5x1
         // initial mo gym hyperparam opt for chmcts
         if (HP_OPT_MOGYM_CHMCTS_EXPR_ID_TO_ENV_ID.contains(expr_id)) {
             string alg_id = CHMCTS_ALG_ID;
@@ -1079,9 +1347,9 @@ namespace thts {
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(5.0, 100.0)},
             };
 
-            string env_id = HP_OPT_MOGYM_CHMCTS_EXPR_ID_TO_ENV_ID[expr_id];
-            double search_runtime = 20.0;
-            int max_trial_length = 50;
+            string env_id = HP_OPT_MOGYM_CHMCTS_EXPR_ID_TO_ENV_ID.at(expr_id);
+            double search_runtime = 30.0;
+            int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
             double eval_delta = 1.0;
             int rollouts_per_mc_eval = 1024;
             int num_repeats = 5;
@@ -1114,7 +1382,7 @@ namespace thts {
             );
         }
 
-        // expr_id: 5x2 + 6x2
+        // expr_id: 3x2 + 4x2 + 5x2
         // initial mo gym hyperparam opt for smbts
         if (HP_OPT_MOGYM_SMBTS_EXPR_ID_TO_ENV_ID.contains(expr_id)) {
             string alg_id = SMBTS_ALG_ID;
@@ -1128,9 +1396,9 @@ namespace thts {
                 {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
             };
 
-            string env_id = HP_OPT_MOGYM_SMBTS_EXPR_ID_TO_ENV_ID[expr_id];
-            double search_runtime = 20.0;
-            int max_trial_length = 50;
+            string env_id = HP_OPT_MOGYM_SMBTS_EXPR_ID_TO_ENV_ID.at(expr_id);
+            double search_runtime = 30.0;
+            int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
             double eval_delta = 1.0;
             int rollouts_per_mc_eval = 1024;
             int num_repeats = 5;
@@ -1163,7 +1431,7 @@ namespace thts {
             );
         }
 
-        // expr_id: 5x3 + 6x3
+        // expr_id: 3x3 + 4x3 + 5x3
         // initial mo gym hyperparam opt for smdents
         if (HP_OPT_MOGYM_SMDENTS_EXPR_ID_TO_ENV_ID.contains(expr_id)) {
             string alg_id = SMDENTS_ALG_ID;
@@ -1179,9 +1447,9 @@ namespace thts {
                 {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
             };
 
-            string env_id = HP_OPT_MOGYM_SMDENTS_EXPR_ID_TO_ENV_ID[expr_id];
-            double search_runtime = 20.0;
-            int max_trial_length = 50;
+            string env_id = HP_OPT_MOGYM_SMDENTS_EXPR_ID_TO_ENV_ID.at(expr_id);
+            double search_runtime = 30.0;
+            int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
             double eval_delta = 1.0;
             int rollouts_per_mc_eval = 1024;
             int num_repeats = 5;
@@ -1214,11 +1482,9 @@ namespace thts {
             );
         }
 
-
-
-
-
-        throw runtime_error("Error in get_hyperparam_optimiser_from_expr_id");
+        stringstream ss;
+        ss << "Error in get_hyperparam_optimiser_from_expr_id for expr_id = " << expr_id;
+        throw runtime_error(ss.str());
     };
 
 

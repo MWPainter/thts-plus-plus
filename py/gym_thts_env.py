@@ -1,26 +1,13 @@
 from py_thts_env import PyThtsEnv
 import gymnasium as gym
 
-def convert_numpy_array_to_int_list(arr):
-    try:
-        return [float(a) for a in arr]
-    except:
-        return arr
-
-def convert_numpy_array_to_float_list(arr):
-    try:
-        return [float(a) for a in arr]
-    except:
-        return arr
-
 class GymThtsEnv(PyThtsEnv):
 
     def __init__(self, gym_env_id):
         self.fully_observable = True # might not be, but we dont have partial obs stuff implemented yet TODO?
         self.gym_env_id=gym_env_id
         self.env = gym.make(gym_env_id)
-        init_gym_state, _ = self.env.reset()
-        self.init_gym_state = convert_numpy_array_to_int_list(init_gym_state)
+        self.init_gym_state, _ = self.env.reset()
 
         self.rollout_state_cache = {}
         self.rollout_action_cache = {}
@@ -30,8 +17,7 @@ class GymThtsEnv(PyThtsEnv):
         """
         Reset any per trial state held in this env here
         """
-        init_gym_state, _ = self.env.reset()
-        self.init_gym_state = convert_numpy_array_to_int_list(init_gym_state)
+        self.init_gym_state, _ = self.env.reset()
         self.rollout_state_cache = {}
         self.rollout_action_cache = {}
         self.rollout_reward_cache = {}
@@ -55,7 +41,7 @@ class GymThtsEnv(PyThtsEnv):
         """
         Returns a list of valid action objects that can be taken from 'state'
         """
-        return [i for i in range(self.env.action_space.n)]
+        return list(range(self.env.action_space.n))
 
     def get_transition_distribution(self, state, action):
         """
@@ -114,5 +100,5 @@ class GymThtsEnv(PyThtsEnv):
         obs, reward, terminated, truncated, _info = self.env.step(action)
         self.rollout_action_cache[timestep] = action
         self.rollout_reward_cache[timestep] = reward
-        self.rollout_state_cache[timestep+1] = (convert_numpy_array_to_int_list(obs), (terminated or truncated), timestep+1)
+        self.rollout_state_cache[timestep+1] = (obs, (terminated or truncated), timestep+1)
     
