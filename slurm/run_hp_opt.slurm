@@ -31,5 +31,5 @@ echo Running experiment ${EXPR_ID}
 cd $CODE_DIR                        # Get to code
 source setup_remote_shell.sh        # Load modules and setup shell on remote
 source export_local_paths.sh        # Setup $PYTHONPATH and $LD_LIBRARY_PATH environment variables 
-ipcrm -v -a                         # Make sure shared memory clear
+# ipcrm -v -a                         # Make sure shared memory clear
 ./moexpr opt $EXPR_ID               # Run
