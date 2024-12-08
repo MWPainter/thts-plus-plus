@@ -25,6 +25,7 @@ CODE_DIR="/jmain02/home/J2AD008/wga37/mmp10-wga37/mo/thts-plus-plus"
 
 echo Running experiment ${EXPR_ID}
 
-cd $CODE_DIR
-source setup_jade_devel_shell.sh
-./moexpr opt $EXPR_ID
+cd $CODE_DIR                        # Get to code
+source setup_jade_devel_shell.sh    # Setup shell (load conda envs etc)
+ipcrm -v -a                         # Make sure shared memory clear
+./moexpr opt $EXPR_ID               # Run

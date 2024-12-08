@@ -2,26 +2,11 @@ from py_thts_env import PyThtsEnv
 import mo_gymnasium as mo_gym
 import numpy as np
 
-def convert_numpy_array_to_int_list(arr):
-    try:
-        return [float(a) for a in arr]
-    except:
-        return arr
-
 def convert_numpy_array_to_float_list(arr):
     try:
         return [float(a) for a in arr]
     except:
         return arr
-
-
-# [0] is to get gym state
-def state_eq(s1, s2):
-    for x,y in zip(s1[0],s2[0]):
-        if x != y:
-            return False
-    return True
-
 
 class MoGymThtsEnv(PyThtsEnv):
 
@@ -31,9 +16,8 @@ class MoGymThtsEnv(PyThtsEnv):
         self.env = mo_gym.make(mo_gym_env_id)
         _, _ = self.env.reset()
         _, reward, _, _, _ = self.env.step(0)
-        init_gym_state, _ = self.env.reset()
-        self.init_gym_state = convert_numpy_array_to_int_list(init_gym_state)
-        self.reward_dim = reward.shape[0]
+        self.init_gym_state, _ = self.env.reset()
+        self.reward_dim = np.asarray(reward).shape[0]
 
         self.rollout_state_cache = {}
         self.rollout_action_cache = {}
@@ -47,8 +31,7 @@ class MoGymThtsEnv(PyThtsEnv):
         """
         Reset any per trial state held in this env here
         """
-        init_gym_state, _ = self.env.reset()
-        self.init_gym_state = convert_numpy_array_to_int_list(init_gym_state)
+        self.init_gym_state, _ = self.env.reset()
         self.rollout_state_cache = {}
         self.rollout_action_cache = {}
         self.rollout_reward_cache = {}
@@ -72,7 +55,7 @@ class MoGymThtsEnv(PyThtsEnv):
         """
         Returns a list of valid action objects that can be taken from 'state'
         """
-        return [i for i in range(self.env.action_space.n)]
+        return list(range(self.env.action_space.n))
 
     def get_transition_distribution(self, state, action):
         """
@@ -132,6 +115,6 @@ class MoGymThtsEnv(PyThtsEnv):
         obs, reward, terminated, truncated, _info = self.env.step(action)
         self.rollout_action_cache[timestep] = action
         self.rollout_reward_cache[timestep] = convert_numpy_array_to_float_list(reward)
-        self.rollout_state_cache[timestep+1] = (convert_numpy_array_to_int_list(obs), (terminated or truncated), timestep+1)
+        self.rollout_state_cache[timestep+1] = (obs, (terminated or truncated), timestep+1)
 
     

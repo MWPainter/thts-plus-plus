@@ -1,0 +1,1 @@
+ipcrm -v -a

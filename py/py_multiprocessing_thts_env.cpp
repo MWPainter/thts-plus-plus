@@ -11,6 +11,8 @@
 #include <sys/prctl.h>
 #include <sys/wait.h>
 
+#include <iostream>
+
 namespace py = pybind11;
 using namespace std; 
 

@@ -13,8 +13,6 @@
 #include "py/mo_py_multiprocessing_thts_env.h"
 #include "py/py_multiprocessing_thts_env.h"
 
-#include <iostream>
-
 using namespace std;
 namespace py = pybind11;
 using namespace thts;
@@ -60,7 +58,7 @@ int main(int argc, char* argv[])
         for (int i=5; i<argc; i+=2) {
             kw_args[py::cast(string(argv[i]))] = py::cast(string(argv[i+1]));
         }
-        thts_env = make_unique<PyMultiprocessingThtsEnv>(
+        thts_env = make_unique<MoPyMultiprocessingThtsEnv>(
             pickle_wrapper, module_name, class_name, make_shared<py::dict>(kw_args), true);
     }
 

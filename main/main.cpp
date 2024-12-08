@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (string(argv[1]) == "eval") {
-        shared_ptr<vector<RunID>> run_ids = thts::get_run_ids_from_expr_id(argv[2]);
+        shared_ptr<vector<RunID>> run_ids = thts::get_run_ids_from_expr_id_prefix(argv[2]);
         thts::run_exprs(run_ids);
     } else if (string(argv[1]) == "opt") {  
         thts::run_hp_opt(argv[2]);

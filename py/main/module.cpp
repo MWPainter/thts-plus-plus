@@ -1639,7 +1639,7 @@ int main(int argc, char *argv[]) {
     /**
      * Testing python mo gym envs
     */
-    // mo_gym_env_test();
+    mo_gym_env_test();
 
     /**
      * Testing Eigen SVD
@@ -1658,8 +1658,8 @@ int main(int argc, char *argv[]) {
     /**
      * Testing chmcts
     */
-    chmcts_test();
-    chmcts_4d_test();
+    // chmcts_test();
+    // chmcts_4d_test();
 
     /**
      * Debugging Convex hull linear programs
