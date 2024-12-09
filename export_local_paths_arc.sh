@@ -1,5 +1,5 @@
 # Need to specify where the python libraries are on each machine
-anaconda_env_lib_dir="/home/pemb5587/anaconda3/envs/thts++mo/lib"
+anaconda_env_lib_dir="/data/engs-goals/pemb5587/anaconda3/envs/thts++mo/lib"
 
 dirname=$(readlink -f -- $(dirname "${BASH_SOURCE[0]}"))
 

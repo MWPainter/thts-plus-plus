@@ -40,7 +40,8 @@ namespace thts::python::helper {
             stringstream ss;
             ss << "Error creating filesystem semaphores (try running 'ipcrm -v -a' to clear unix semaphores and "
                << "rerunning), errno: " << errno;
-            throw runtime_error(ss.str());
+            // throw runtime_error(ss.str());
+            throw runtime_error("Error creating filesystem semaphores (try running 'ipcrm -v -a");
         }
 
         // If getting semaphores from server process, they should be initialised already

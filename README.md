@@ -33,6 +33,22 @@ TODO: would like to try and automate this in the future if possible?
 
 
 
+Conda env:
+```
+conda create -n thts++mo python=3.12
+conda activate thts++mo
+pip install -r requirements.txt
+```
+
+
+If desktop gcc etc dont work, then the following should work, but not great fro development because these compilers 
+dont seem to display runtime_error's error messages.
+```
+conda install -c conda-forge gcc=11.2 gxx=11.2 cmake=3.26.4
+```
+
+
+
 ## Installing gtest
 Run the following in a bash shell starting from the root directory of this repository:
 ```
@@ -175,7 +191,8 @@ https://rmcantin.github.io/bayesopt/html/install.html
 Turns out apt-get'ing boost libraries downloads v1.74, which is a version where trying to create a vector will cause 
 compiler errors... Tried doing ppa stuff to get an updated version but it just broke my apt-get. Resorted to 
 downloading lastest tar.gz from here: https://www.boost.org/users/history/version_1_86_0.html, then unpacking and 
-copying the files inside the "boost" folder to "/usr/include/boost" where it would be installed anyway. Going to 
+copying the files inside the "boost" folder to 
+"/usr/include/boost" where it would be installed anyway. Going to 
 have to remember that if ever want to remove/update it, that need to delete this folder manually. And also it doesn't 
 need compiling because boost is mostly header only (appart from a few parts which I hope we're not using or ever going 
 to use).
