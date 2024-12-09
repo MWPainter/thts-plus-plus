@@ -55,8 +55,8 @@ GTEST = external/googletest/build/lib/libgtest_main.a
 # Variables that need to get updated per machine
 CONDA_ENV_NAME = thts++mo
 PYTHON_WITH_VER = python3.12
-ANACONDA_ENVS_HOME = /data/engs-goals/pemb5587/anaconda3/envs
-BOOST_INCLUDE_DIR = /home/pemb5587/cpp_include/
+ANACONDA_ENVS_HOME = /home/michael/anaconda3/envs
+BOOST_INCLUDE_DIR = /home/michael/cpp_include
 
 # Includes
 INCLUDES = -I. -Iinclude -Isrc -Iexternal 

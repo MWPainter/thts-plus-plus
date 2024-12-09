@@ -24,7 +24,7 @@
 # As we're comparing performance w.r.t time, want consistent CPU speeds
 # Following https://arc-user-guide.readthedocs.io/en/latest/arc-systems.html 
 # Want htc-c[005-046], as they all have same CPU + clock speed
-#SBATCH --nodelist=htc-c[001-046]
+#SBATCH --nodelist=htc-c[005-046]
 
 
 HOME_DIR="/home/pemb5587"
@@ -32,9 +32,11 @@ CODE_DIR="/home/pemb5587/thts-plus-plus"
 
 echo Running experiment ${EXPR_ID}
 
-# Run code
-cd $CODE_DIR                        # Get to code
-source setup_remote_shell.sh        # Load modules and setup shell on remote
-source export_local_paths.sh        # Setup $PYTHONPATH and $LD_LIBRARY_PATH environment variables 
-# ipcrm -v -a                         # Make sure shared memory clear
-./moexpr opt $EXPR_ID               # Run
+cd $HOME_DIR      
+source .bashrc                          # Make sure conda loaded
+
+cd $CODE_DIR                            # Get to code
+source setup_arc_shell.sh               # Load conda env and modules 
+source export_local_paths_arc.sh        # Setup $PYTHONPATH and $LD_LIBRARY_PATH environment variables 
+# ipcrm -v -a                           # Make sure shared memory clear
+./moexpr opt $EXPR_ID                   # Run

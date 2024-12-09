@@ -56,6 +56,7 @@ GTEST = external/googletest/build/lib/libgtest_main.a
 CONDA_ENV_NAME = thts++mo
 PYTHON_WITH_VER = python3.12
 ANACONDA_ENVS_HOME = /home/michael/anaconda3/envs
+BOOST_INCLUDE_DIR = /home/michael/cpp_include
 
 # Includes
 INCLUDES = -I. -Iinclude -Isrc -Iexternal 
@@ -64,6 +65,7 @@ INCLUDES += -Iexternal/qhull/src
 # INCLUDES += -Iexternal/lemon-1.3.1/build/lemon/include # no longer using lemon
 INCLUDES += -Iexternal/bayesopt/include
 INCLUDES += -Iexternal/clp/dist/include
+INCLUDES += -I$(BOOST_INCLUDE_DIR) 
 
 # Includes for using pybind11
 INCLUDES += -Iexternal/pybind11/include $$(python -m pybind11 --includes) -Ipy
@@ -74,7 +76,7 @@ TEST_INCLUDES = -Iexternal/googletest/build/include
 
 # C++ flags
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20 
-CPPFLAGS += -O3
+# CPPFLAGS += -O3
 
 # C++ flags for building pybind11 executable/library
 PY_LIB_CPPFLAGS += -fPIC -fvisibility=hidden # needed to create shared library
@@ -98,7 +100,7 @@ LDFLAGS += -lbayesopt -lnlopt
 LDFLAGS += -lClp -lCoinUtils
 
 # ld flags for building with pybind11
-PY_LD_LOCS =  -L$(ANACONDA_ENVS_HOME)/thts3.12/lib
+PY_LD_LOCS =  -L$(ANACONDA_ENVS_HOME)/$(CONDA_ENV_NAME)/lib
 PY_LDFLAGS = $(PY_LD_LOCS) -lpython3.12
 
 # ld flags for tests
