@@ -21,6 +21,11 @@
 # Use a small partition
 #SBATCH --partition=short
 
+# As we're comparing performance w.r.t time, want consistent CPU speeds
+# Following https://arc-user-guide.readthedocs.io/en/latest/arc-systems.html 
+# Want htc-c[005-046], as they all have same CPU + clock speed
+#SBATCH --nodelist=htc-c[001-046]
+
 
 HOME_DIR="/home/pemb5587"
 CODE_DIR="/home/pemb5587/thts-plus-plus"
