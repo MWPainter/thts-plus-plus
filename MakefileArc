@@ -77,7 +77,10 @@ TEST_INCLUDES = -Iexternal/googletest/build/include
 # C++ flags
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20 
 CPPFLAGS += -O3
-CPPFLAGS += -D_GLIBCXX_USE_CXX11_ABI=1
+
+# arc had some weird "ABI" linking issues, apparently this fix (this wasnt exacty problem, but using the flag helped :) 
+# https://stackoverflow.com/questions/33394934/converting-std-cxx11string-to-stdstring
+CPPFLAGS += -D_GLIBCXX_USE_CXX11_ABI=0 
 
 # C++ flags for building pybind11 executable/library
 PY_LIB_CPPFLAGS += -fPIC -fvisibility=hidden # needed to create shared library
@@ -102,7 +105,7 @@ LDFLAGS += -lClp -lCoinUtils
 
 # ld flags for building with pybind11
 PY_LD_LOCS =  -L$(ANACONDA_ENVS_HOME)/$(CONDA_ENV_NAME)/lib
-PY_LDFLAGS = $(PY_LD_LOCS) -lpython3.12
+PY_LDFLAGS = $(PY_LD_LOCS) -l$(PYTHON_WITH_VER)
 
 # ld flags for tests
 TEST_LDFLAGS = -Lexternal/googletest/build/lib 
