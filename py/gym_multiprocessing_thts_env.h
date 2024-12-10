@@ -25,6 +25,7 @@ namespace thts::python {
              */
             GymMultiprocessingThtsEnv(
                 std::shared_ptr<PickleWrapper> pickle_wrapper,
+                std::string& thts_unique_filename,
                 std::string& gym_env_id,
                 bool is_server_process=false);
 

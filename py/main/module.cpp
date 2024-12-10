@@ -83,7 +83,7 @@ void pickle_test() {
 
 // testing unix semiphores interface we defined
 void sem_test() {
-    key_t key = thts::python::helper::get_unix_key(0);
+    key_t key = thts::python::helper::get_unix_key();
     int semid = thts::python::helper::init_sem(key, 1);
 
     pid_t pid = fork();
@@ -111,7 +111,7 @@ void sem_test() {
 
 // testing that python interpreter is copied on a fork
 void pickle_multiproc_test() {
-    key_t key = thts::python::helper::get_unix_key(0);
+    key_t key = thts::python::helper::get_unix_key();
     int semid = thts::python::helper::init_sem(key, 1);
 
     // acquire before, so sem is = 0
@@ -197,7 +197,7 @@ void pickle_multiproc_test() {
 // updating an integer in a piece of shared memory
 // this requires semaphores, so this is an adaption of the semaphore test
 void shared_mem_test() {
-    key_t key = thts::python::helper::get_unix_key(0);
+    key_t key = thts::python::helper::get_unix_key();
     int semid = thts::python::helper::init_sem(key, 1);
     int shmid = thts::python::helper::init_shared_mem(key,1024);
     int* shared_int = (int*) thts::python::helper::get_shared_mem_ptr(shmid);
@@ -263,13 +263,15 @@ void shared_mem_destroy_test() {
     // There also seems to be a limit on semaphores, but not been running into that
     vector<shared_ptr<SharedMemWrapper>> smw_vec;
     for (int i=0; i<100; i++) {
-        smw_vec.push_back(make_shared<SharedMemWrapper>(i,1024));
+        string a_filename = "/";
+        smw_vec.push_back(make_shared<SharedMemWrapper>(a_filename,i,1024));
         smw_vec[i].reset();
     }
     for (int j=0; j<50; j++) {
         for (int i=0; i<100; i++) {
             // cout << j*100 + i << endl;
-            smw_vec[i] = make_shared<SharedMemWrapper>(i,1024);
+            string a_filename = "/";
+            smw_vec[i] = make_shared<SharedMemWrapper>(a_filename,i,1024);
         }
         for (int i=0; i<100; i++) {
             smw_vec[i].reset();
@@ -340,6 +342,7 @@ void py_thts_env_test(double alpha, bool use_python_env) {
         py::gil_scoped_acquire acq;
 
         shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+        string thts_unique_filename = "/";
 
         // py::module_ py_thts_env_module = py::module_::import("test_env"); 
         // py::object py_thts_env = py_thts_env_module.attr("PyTestThtsEnv")(env_size, stay_prob);
@@ -356,7 +359,7 @@ void py_thts_env_test(double alpha, bool use_python_env) {
         kw_args["grid_size"] = to_string(env_size);
         kw_args["stay_prob"] = to_string(stay_prob);
         thts_env = make_shared<PyMultiprocessingThtsEnv>(
-            pickle_wrapper, "test_env", "PyTestThtsEnv", make_shared<py::dict>(kw_args));
+            pickle_wrapper, thts_unique_filename, "test_env", "PyTestThtsEnv", make_shared<py::dict>(kw_args));
     } else {
         thts_env = make_shared<thts::python::TestThtsEnv>(env_size, stay_prob);
     }
@@ -632,7 +635,9 @@ void gym_env_test() {
 
     // Make py env (making a py::object of python thts env, and pass into constructor)
     shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-    shared_ptr<ThtsEnv> thts_env = make_shared<GymMultiprocessingThtsEnv>(pickle_wrapper, gym_env_id);
+    string thts_unique_filename = "/";
+    shared_ptr<ThtsEnv> thts_env = make_shared<GymMultiprocessingThtsEnv>(
+        pickle_wrapper, thts_unique_filename, gym_env_id);
 
     // Make thts manager with the py env (same as c++ (use unit tests))
     // But protect with GIL for any python ops in creating things
@@ -687,7 +692,7 @@ void gym_env_test() {
     // root_node.reset();
 }
 
-void mo_gym_env_test() {
+void mo_gym_env_test(string thts_unique_filename="/") {
     py::gil_scoped_release release;
 
     // params
@@ -702,7 +707,7 @@ void mo_gym_env_test() {
     string mo_gym_env_id = "deep-sea-treasure-v0";
     shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
     shared_ptr<MoGymMultiprocessingThtsEnv> thts_env = make_shared<MoGymMultiprocessingThtsEnv>(
-        pickle_wrapper, mo_gym_env_id);
+        pickle_wrapper, thts_unique_filename, mo_gym_env_id);
 
     // Make thts manager 
     shared_ptr<CztManagerArgs> args = make_shared<CztManagerArgs>(thts_env);
@@ -1665,6 +1670,15 @@ int main(int argc, char *argv[]) {
      * Debugging Convex hull linear programs
      */
     // ch_lin_prog_debugging();
+
+    /**
+     * Testing being able to run multiple thts instances at once
+     * 
+     * NB: argv[1] needs to be an existing filename. 
+     * I tried running with ./pyex /usr and ./pyex /bin simultaneously
+     * And tested trying to run a second ./pyex /usr gets a runtime error
+    */
+    // mo_gym_env_test(argv[1]);
 
     return 0;
 }

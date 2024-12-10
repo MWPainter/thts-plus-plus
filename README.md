@@ -129,7 +129,12 @@ Header only library, nothing to be done
 
 ## Installing qhull
 
-run `make` in `external/qhull`
+run the following in `external/qhull`:
+```
+mkdir qhull_build
+cmake .. -DCMAKE_INSTALL_PREFIX=.
+make install
+```
 
 
 
@@ -203,11 +208,10 @@ I also like having the build directory and not installing globally, so did:
 cd external/bayesopt
 mkdir build
 cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=.
+cmake .. -DCMAKE_INSTALL_PREFIX=. -DCMAKE_CXX_STANDARD=20
 make install
 ```
 
-I also added the line `set(CMAKE_CXX_STANDARD 20) # thts++ change: updated standard to c++20` to the bayesopt `cmakelists.txt`
 
 Wasnt so simple getting it to work on jade, needed the entire library, not just the include (header) files, and had to install fresh rather than copying header files. Not sure why.
 

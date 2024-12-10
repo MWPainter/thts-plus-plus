@@ -76,7 +76,7 @@ TEST_INCLUDES = -Iexternal/googletest/build/include
 
 # C++ flags
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20 
-# CPPFLAGS += -O3
+CPPFLAGS += -O3
 
 # C++ flags for building pybind11 executable/library
 PY_LIB_CPPFLAGS += -fPIC -fvisibility=hidden # needed to create shared library
@@ -87,7 +87,7 @@ TEST_CPPFLAGS =
 CPPFLAGS_DEBUG = -g -ggdb3
 
 # ld flags
-LDFLAGS = -Lexternal/qhull/lib 
+LDFLAGS = -Lexternal/qhull/qhull_build/lib 
 # LDFLAGS += -L/usr/lib/x86_64-linux-gnu  # Where GLPK library is
 # LDFLAGS += -Lexternal/lemon-1.3.1/build/lemon/lib 
 LDFLAGS += -Lexternal/bayesopt/build/lib

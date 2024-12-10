@@ -53,6 +53,8 @@ namespace thts::python {
      *          A pybind11 py::object pointing to the python implementation an environment
      *      pickle_wrapper:
      *          Pointer to a PickleWrapper for translating between C++ strings and py::objects using Python's pickle
+     *      thts_unique_filename:
+     *          A filename that is unique for this instance of THTS. Required for 'shared_mem_wrapper' to work.
      *      shared_mem_wrapper:
      *          Class that contains all of the logic to create, manage and interact with shared memory for 
      *          inter process comms.
@@ -83,6 +85,7 @@ namespace thts::python {
         protected:
             std::shared_ptr<py::object> py_thts_env;
             std::shared_ptr<PickleWrapper> pickle_wrapper;
+            std::string thts_unique_filename;
             std::shared_ptr<SharedMemWrapper> shared_mem_wrapper;
             size_t shared_memory_size_in_bytes;
             pid_t child_pid;
@@ -101,6 +104,7 @@ namespace thts::python {
              */
             PyMultiprocessingThtsEnv(
                 std::shared_ptr<PickleWrapper> pickle_wrapper,
+                std::string& thts_unique_filename,
                 std::shared_ptr<py::object> py_thts_env,
                 bool is_server_process=false,
                 size_t shared_memory_size_in_bytes=1024*1024);
@@ -111,6 +115,7 @@ namespace thts::python {
         public:
             PyMultiprocessingThtsEnv(
                 std::shared_ptr<PickleWrapper> pickle_wrapper,
+                std::string& thts_unique_filename,
                 std::string module_name,
                 std::string class_name,
                 std::shared_ptr<py::dict> constructor_kw_args,

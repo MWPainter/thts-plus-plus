@@ -33,394 +33,6 @@ namespace py = pybind11;
 namespace thts {
 
     /**
-     * Lookup expr_id from prefix
-     */
-    string lookup_expr_id_from_prefix(string expr_id_prefix) 
-    {
-        for (const string& expr_id : ALL_EXPR_IDS) {
-            if (expr_id.starts_with(expr_id_prefix)) {
-                return expr_id;
-            }
-        }
-        throw runtime_error(
-            "Error looking up expr_id from prefix. Either forgot to add expr_id to 'ALL_EXPR_IDS' list or typo?");
-    }
-
-    /**
-     * Create and return the env
-    */
-    shared_ptr<MoThtsEnv> get_env(string env_id) 
-    {
-        if (MO_GYM_ENVS.contains(env_id)) {
-            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-            return make_shared<MoGymMultiprocessingThtsEnv>(pickle_wrapper, env_id);
-        }
-
-        if (TIMED_ENV_ID_TO_GYM_ID.contains(env_id)) {
-            string underlying_gym_env_id = string(TIMED_ENV_ID_TO_GYM_ID.at(env_id));
-            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-            return make_shared<TimedMoGymMultiprocessingThtsEnv>(pickle_wrapper, underlying_gym_env_id);
-        }
-
-        if (env_id == FRUIT_TREE_7_ENV_ID || 
-            env_id == FRUIT_TREE_STOCH_5_ENV_ID || 
-            env_id == FRUIT_TREE_STOCH_7_ENV_ID)
-        {
-            py::gil_scoped_acquire acquire;
-            string module_name = "custom_fruit_tree";
-            string class_name = "StochFruitTreeThtsEnv";
-            py::dict kw_args;
-            kw_args["depth"] = to_string((env_id == FRUIT_TREE_STOCH_5_ENV_ID) ? 5 : 7);
-            kw_args["action_noise"] = to_string((env_id == FRUIT_TREE_7_ENV_ID) ? 0.0 : 0.2);
-
-            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-            return make_shared<MoPyMultiprocessingThtsEnv>(
-                pickle_wrapper, module_name, class_name, make_shared<py::dict>(kw_args));
-        }
-
-        if (env_id == IMPROVED_DST_ENV_ID ||
-            env_id == IMPROVED_STOCH_DST_ENV_ID ||
-            env_id == VAMPLEW_DST_ENV_ID ||
-            env_id == VAMPLEW_STOCH_DST_ENV_ID)
-        {
-            py::gil_scoped_acquire acquire;
-            string module_name = "custom_deep_sea_treasure";
-            string class_name = "ImprovedDeepSeaTreasureThtsEnv";
-            bool is_stoch = (env_id == IMPROVED_STOCH_DST_ENV_ID || env_id == VAMPLEW_STOCH_DST_ENV_ID);
-            bool is_vamplew = (env_id == VAMPLEW_DST_ENV_ID || env_id == VAMPLEW_STOCH_DST_ENV_ID);
-            py::dict kw_args;
-            kw_args["swept_by_current_prob"] = to_string(is_stoch ? 0.2 : 0.0);
-            kw_args["is_vamplew"] = to_string(is_vamplew);
-
-            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-            return make_shared<MoPyMultiprocessingThtsEnv>(
-                pickle_wrapper, module_name, class_name, make_shared<py::dict>(kw_args));
-            
-        }
-
-        if (DEBUG_ENVS.contains(env_id)) {
-            int walk_len = 10;
-            bool stochastic = (env_id == DEBUG_ENV_2_ID) || (env_id == DEBUG_ENV_4_ID);
-            double wrong_dir_prob = stochastic ? 0.25 : 0.0;
-            bool add_extra_rewards = (env_id == DEBUG_ENV_3_ID) || (env_id == DEBUG_ENV_4_ID);
-            return make_shared<TestMoThtsEnv>(walk_len, wrong_dir_prob, add_extra_rewards);
-        }
-
-        if (DEBUG_PY_ENVS.contains(env_id)) {
-            int walk_len = 10;
-            bool stochastic = (env_id == DEBUG_PY_ENV_2_ID) || (env_id == DEBUG_PY_ENV_4_ID);
-            double wrong_dir_prob = stochastic ? 0.25 : 0.0;
-            bool add_extra_rewards = (env_id == DEBUG_PY_ENV_3_ID) || (env_id == DEBUG_PY_ENV_4_ID);
-
-            py::gil_scoped_acquire acquire;
-            string module_name = "mo_test_env";
-            string class_name = "MoPyTestThtsEnv";
-            py::dict kw_args;
-            kw_args["walk_len"] = to_string(walk_len); 
-            kw_args["wrong_dir_prob"] = to_string(wrong_dir_prob);
-            kw_args["add_extra_rewards"] = to_string(add_extra_rewards);
-
-            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-            return make_shared<MoPyMultiprocessingThtsEnv>( 
-                pickle_wrapper, module_name, class_name, make_shared<py::dict>(kw_args));
-        }
-
-        stringstream ss;
-        ss << "Error in get_env for env_id = " << env_id;
-        throw runtime_error(ss.str());
-    }
-    
-    /**
-     * Checks if env corresponding to 'env_id' is a python env
-     */
-    bool is_python_env(string env_id) 
-    {
-        return (MO_GYM_ENVS.contains(env_id) 
-            || DEBUG_PY_ENVS.contains(env_id) 
-            || PY_ENVS.contains(env_id) 
-            || TIMED_ENV_ID_TO_GYM_ID.contains(env_id));
-    }
-
-    /**
-     * Get min value
-     * See https://mo-gymnasium.farama.org/ for env defs
-    */
-    Eigen::ArrayXd get_env_min_value(string env_id, int max_trial_length) 
-    {
-        if (env_id == DST_ENV_ID) {
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
-            min_val[0] = 0.0;
-            min_val[1] = -1.0 * max_trial_length;
-            return min_val;
-        }
-        if (env_id == DST_CONC_ENV_ID) {
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
-            min_val[0] = 0.0;
-            min_val[1] = -1.0 * max_trial_length;
-            return min_val;
-        }
-        if (env_id == DST_MIRR_ENV_ID) {
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
-            min_val[0] = 0.0;
-            min_val[1] = -1.0 * max_trial_length;
-            return min_val;
-        }
-        if (env_id == RESOURCE_GATHER_ENV_ID) {
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
-            min_val[0] = -1.0;
-            min_val[1] = 0.0;
-            min_val[2] = 0.0;
-            return min_val;
-        }
-        if (env_id == RESOURCE_GATHER_TIMED_ENV_ID) {
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(4);
-            min_val[0] = -1.0;
-            min_val[1] = 0.0;
-            min_val[2] = 0.0;
-            min_val[3] = -1.0 * max_trial_length;
-            return min_val;
-        }
-        if (env_id == BREAKABLE_BOTTLES_ENV_ID) {
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
-            min_val[0] = -1.0 * max_trial_length;
-            min_val[1] = 0.0;
-            min_val[2] = -1.0;
-            return min_val;
-        }
-        if (env_id == FRUIT_TREE_ENV_ID) {
-            return Eigen::ArrayXd::Zero(6);
-        }
-        if (env_id == FOUR_ROOM_ENV_ID) {
-            return Eigen::ArrayXd::Zero(3);
-        }
-        if (env_id == FOUR_ROOM_TIMED_ENV_ID) {
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(4);
-            min_val[0] = 0.0;
-            min_val[1] = 0.0;
-            min_val[2] = 0.0;
-            min_val[3] = -1.0 * max_trial_length;
-            return min_val;
-        }
-        if (env_id == MOUNTAIN_CAR_ENV_ID) {
-            return Eigen::ArrayXd::Ones(3) * -1.0 * max_trial_length;
-        }
-        if (env_id == MINECART_DETERMINISTIC_ENV_ID || env_id == MINECART_ENV_ID) {
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
-            min_val[0] = 0.0;
-            min_val[1] = 0.0;
-            min_val[2] = -1.0;
-            return min_val;
-        }
-        if (env_id == HIGHWAY_ENV_ID) {
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
-            min_val[0] = 0.0;
-            min_val[1] = 0.0;
-            min_val[2] = -1.0;
-            return min_val;
-        }
-        if (env_id == FRUIT_TREE_7_ENV_ID) {
-            return Eigen::ArrayXd::Zero(6);
-        }
-        if (env_id == FRUIT_TREE_STOCH_5_ENV_ID) {
-            return Eigen::ArrayXd::Zero(6);
-        }
-        if (env_id == FRUIT_TREE_STOCH_7_ENV_ID) {
-            return Eigen::ArrayXd::Zero(6);
-        }
-        if (env_id == IMPROVED_DST_ENV_ID) {
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
-            min_val[0] = 0.0;
-            min_val[1] = -1.0 * max_trial_length;
-            min_val[2] = -9.0 * max_trial_length;
-            return min_val;
-        }
-        if (env_id == IMPROVED_STOCH_DST_ENV_ID) {
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
-            min_val[0] = 0.0;
-            min_val[1] = -1.0 * max_trial_length;
-            min_val[2] = -9.0 * max_trial_length;
-            return min_val;
-        }
-        if (env_id == VAMPLEW_DST_ENV_ID) {
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
-            min_val[0] = 0.0;
-            min_val[1] = -1.0 * max_trial_length;
-            return min_val;
-        }
-        if (env_id == VAMPLEW_STOCH_DST_ENV_ID) {
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
-            min_val[0] = 0.0;
-            min_val[1] = -1.0 * max_trial_length;
-            return min_val;
-        }
-
-
-        if (DEBUG_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id)) {
-            unordered_set<string> four_d_envs = 
-            {
-                DEBUG_ENV_3_ID,
-                DEBUG_ENV_4_ID,
-                DEBUG_PY_ENV_3_ID,
-                DEBUG_PY_ENV_4_ID,
-            };
-            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
-            if (four_d_envs.contains(env_id)) {
-                min_val = Eigen::ArrayXd(4);
-            }
-            min_val[0] = -10.0;
-            min_val[1] = -10.0;
-            if (four_d_envs.contains(env_id)) {
-                min_val[2] = 0.0;
-                min_val[3] = 0.0;
-            }
-            return min_val;
-        }
-
-        stringstream ss;
-        ss << "Error in get_env_min_value for env_id = " << env_id;
-        throw runtime_error(ss.str());
-    }
-
-    /**
-     * Get max value
-     * See https://mo-gymnasium.farama.org/ for env defs
-    */
-    Eigen::ArrayXd get_env_max_value(string env_id, int max_trial_length) 
-    {
-        if (env_id == DST_ENV_ID) {
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
-            max_val[0] = 23.7;
-            max_val[1] = 0.0;
-            return max_val;
-        }
-        if (env_id == DST_CONC_ENV_ID) {
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
-            max_val[0] = 124.0;
-            max_val[1] = 0.0;
-            return max_val;
-        }
-        if (env_id == DST_MIRR_ENV_ID) {
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
-            max_val[0] = 124.0;
-            max_val[1] = 0.0;
-            return max_val;
-        }
-        if (env_id == RESOURCE_GATHER_ENV_ID) {
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
-            max_val[0] = 0.0;
-            max_val[1] = 1.0;
-            max_val[2] = 1.0;
-            return max_val;
-        }
-        if (env_id == RESOURCE_GATHER_TIMED_ENV_ID) {
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(4);
-            max_val[0] = 0.0;
-            max_val[1] = 1.0;
-            max_val[2] = 1.0;
-            max_val[3] = 0.0;
-            return max_val;
-        }
-        if (env_id == BREAKABLE_BOTTLES_ENV_ID) {
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
-            max_val[0] = 0.0;
-            max_val[1] = 50.0;
-            max_val[2] = 0.0;
-            return max_val;
-        }
-        if (env_id == FRUIT_TREE_ENV_ID) {
-            return Eigen::ArrayXd::Ones(6) * 10.0;
-        }
-        if (env_id == FOUR_ROOM_ENV_ID) {
-            return Eigen::ArrayXd::Ones(3) * 4.0;
-        }
-        if (env_id == FOUR_ROOM_TIMED_ENV_ID) {
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(4);
-            max_val[0] = 4.0;
-            max_val[1] = 4.0;
-            max_val[2] = 4.0;
-            max_val[3] = 0.0;
-            return max_val;
-        }
-        if (env_id == MOUNTAIN_CAR_ENV_ID) {
-            return Eigen::ArrayXd::Zero(3);
-        }
-        if (env_id == MINECART_DETERMINISTIC_ENV_ID || env_id == MINECART_ENV_ID) {
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
-            max_val[0] = 1.5;
-            max_val[1] = 1.5;
-            max_val[2] = 0.0;
-            return max_val;
-        }
-        if (env_id == HIGHWAY_ENV_ID) {
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
-            max_val[0] = 1.0;
-            max_val[1] = 1.0;
-            max_val[2] = 0.0;
-            return max_val;
-        }
-        if (env_id == FRUIT_TREE_7_ENV_ID) {
-            return Eigen::ArrayXd::Ones(6) * 10.0;
-        }
-        if (env_id == FRUIT_TREE_STOCH_5_ENV_ID) {
-            return Eigen::ArrayXd::Ones(6) * 10.0;
-        }
-        if (env_id == FRUIT_TREE_STOCH_7_ENV_ID) {
-            return Eigen::ArrayXd::Ones(6) * 10.0;
-        }
-        if (env_id == IMPROVED_DST_ENV_ID) {
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
-            max_val[0] = 124.0;
-            max_val[1] = 0.0;
-            max_val[2] = 0.0;
-            return max_val;
-        }
-        if (env_id == IMPROVED_STOCH_DST_ENV_ID) {
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
-            max_val[0] = 124.0;
-            max_val[1] = 0.0;
-            max_val[2] = 0.0;
-            return max_val;
-        }
-        if (env_id == VAMPLEW_DST_ENV_ID) {
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
-            max_val[0] = 124.0;
-            max_val[1] = 0.0;
-            return max_val;
-        }
-        if (env_id == VAMPLEW_STOCH_DST_ENV_ID) {
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
-            max_val[0] = 124.0;
-            max_val[1] = 0.0;
-            return max_val;
-        }
-                
-        if (DEBUG_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id)) {
-            unordered_set<string> four_d_envs = 
-            {
-                DEBUG_ENV_3_ID,
-                DEBUG_ENV_4_ID,
-                DEBUG_PY_ENV_3_ID,
-                DEBUG_PY_ENV_4_ID,
-            };
-            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
-            if (four_d_envs.contains(env_id)) {
-                max_val = Eigen::ArrayXd(4);
-            }
-            max_val[0] = -5.0;
-            max_val[1] = -5.0;
-            if (four_d_envs.contains(env_id)) {
-                max_val[2] = 2.0;
-                max_val[3] = 2.0;
-            }
-            return max_val;
-        }
-
-        stringstream ss;
-        ss << "Error in get_env_max_value for env_id = " << env_id;
-        throw runtime_error(ss.str());
-    }
-
-    /**
      * Default constructor
     */
     RunID::RunID() {}
@@ -501,6 +113,11 @@ namespace thts {
         }
     }
 
+    string RunID::get_results_dir() 
+    {
+        return thts::get_results_dir(*this);
+    }
+
     bool RunID::is_python_env() 
     {
         return thts::is_python_env(env_id);
@@ -508,7 +125,7 @@ namespace thts {
 
     shared_ptr<MoThtsEnv> RunID::get_env() 
     {
-        return thts::get_env(env_id);
+        return thts::get_env(*this);
     }
 
     /**
@@ -1486,6 +1103,430 @@ namespace thts {
         ss << "Error in get_hyperparam_optimiser_from_expr_id for expr_id = " << expr_id;
         throw runtime_error(ss.str());
     };
+
+    /**
+     * Lookup expr_id from prefix
+     */
+    string lookup_expr_id_from_prefix(string expr_id_prefix) 
+    {
+        for (const string& expr_id : ALL_EXPR_IDS) {
+            if (expr_id.starts_with(expr_id_prefix)) {
+                return expr_id;
+            }
+        }
+        throw runtime_error(
+            "Error looking up expr_id from prefix. Either forgot to add expr_id to 'ALL_EXPR_IDS' list or typo?");
+    }
+    
+    /**
+     * Helper to make a string of:
+     * "param1=val1/param2=val2/.../paramN=valN/"
+     * Old version output:
+     * "param1=val1,param2=val2,...,paramN=valN",
+     * but lead to filenames that were too long
+    */
+    string get_params_string_helper(RunID& run_id) {
+        stringstream ss;
+        const vector<string> &relevant_param_ids = RELEVANT_PARAM_IDS.at(run_id.alg_id);
+        unordered_set<string> relevant_param_ids_set(relevant_param_ids.begin(),relevant_param_ids.end());
+        for (pair<string,double> param_val_entry : run_id.alg_params) {
+            if (!relevant_param_ids_set.contains(param_val_entry.first)) {
+                continue;
+            }
+            ss << param_val_entry.first << "=" << param_val_entry.second << "/";
+        }
+        return ss.str();
+    }
+
+    /**
+     * Gets the results directory for this run (doesn't check/make)
+    */
+    string get_results_dir(RunID& run_id) {
+        stringstream ss;
+        ss << "results/" 
+            << run_id.expr_id << "_" << run_id.expr_timestamp << "/" 
+            << run_id.env_id << "/" 
+            << run_id.alg_id << "/"
+            << get_params_string_helper(run_id);
+        return ss.str();
+    }
+    
+    /**
+     * Checks if env corresponding to 'env_id' is a python env
+     */
+    bool is_python_env(string env_id) 
+    {
+        return (MO_GYM_ENVS.contains(env_id) 
+            || DEBUG_PY_ENVS.contains(env_id) 
+            || PY_ENVS.contains(env_id) 
+            || TIMED_ENV_ID_TO_GYM_ID.contains(env_id));
+    }
+
+    /**
+     * Create and return the env
+    */
+    shared_ptr<MoThtsEnv> get_env(RunID& run_id) 
+    {
+        string thts_unique_filename = get_results_dir(run_id);
+        string& env_id = run_id.env_id;
+
+        if (MO_GYM_ENVS.contains(env_id)) {
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            return make_shared<MoGymMultiprocessingThtsEnv>(pickle_wrapper, thts_unique_filename, env_id);
+        }
+
+        if (TIMED_ENV_ID_TO_GYM_ID.contains(env_id)) {
+            string underlying_gym_env_id = string(TIMED_ENV_ID_TO_GYM_ID.at(env_id));
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            return make_shared<TimedMoGymMultiprocessingThtsEnv>(pickle_wrapper, thts_unique_filename, underlying_gym_env_id);
+        }
+
+        if (env_id == FRUIT_TREE_7_ENV_ID || 
+            env_id == FRUIT_TREE_STOCH_5_ENV_ID || 
+            env_id == FRUIT_TREE_STOCH_7_ENV_ID)
+        {
+            py::gil_scoped_acquire acquire;
+            string module_name = "custom_fruit_tree";
+            string class_name = "StochFruitTreeThtsEnv";
+            py::dict kw_args;
+            kw_args["depth"] = to_string((env_id == FRUIT_TREE_STOCH_5_ENV_ID) ? 5 : 7);
+            kw_args["action_noise"] = to_string((env_id == FRUIT_TREE_7_ENV_ID) ? 0.0 : 0.2);
+
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            return make_shared<MoPyMultiprocessingThtsEnv>(
+                pickle_wrapper, thts_unique_filename, module_name, class_name, make_shared<py::dict>(kw_args));
+        }
+
+        if (env_id == IMPROVED_DST_ENV_ID ||
+            env_id == IMPROVED_STOCH_DST_ENV_ID ||
+            env_id == VAMPLEW_DST_ENV_ID ||
+            env_id == VAMPLEW_STOCH_DST_ENV_ID)
+        {
+            py::gil_scoped_acquire acquire;
+            string module_name = "custom_deep_sea_treasure";
+            string class_name = "ImprovedDeepSeaTreasureThtsEnv";
+            bool is_stoch = (env_id == IMPROVED_STOCH_DST_ENV_ID || env_id == VAMPLEW_STOCH_DST_ENV_ID);
+            bool is_vamplew = (env_id == VAMPLEW_DST_ENV_ID || env_id == VAMPLEW_STOCH_DST_ENV_ID);
+            py::dict kw_args;
+            kw_args["swept_by_current_prob"] = to_string(is_stoch ? 0.2 : 0.0);
+            kw_args["is_vamplew"] = to_string(is_vamplew);
+
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            return make_shared<MoPyMultiprocessingThtsEnv>(
+                pickle_wrapper, thts_unique_filename, module_name, class_name, make_shared<py::dict>(kw_args));
+            
+        }
+
+        if (DEBUG_ENVS.contains(env_id)) {
+            int walk_len = 10;
+            bool stochastic = (env_id == DEBUG_ENV_2_ID) || (env_id == DEBUG_ENV_4_ID);
+            double wrong_dir_prob = stochastic ? 0.25 : 0.0;
+            bool add_extra_rewards = (env_id == DEBUG_ENV_3_ID) || (env_id == DEBUG_ENV_4_ID);
+            return make_shared<TestMoThtsEnv>(walk_len, wrong_dir_prob, add_extra_rewards);
+        }
+
+        if (DEBUG_PY_ENVS.contains(env_id)) {
+            int walk_len = 10;
+            bool stochastic = (env_id == DEBUG_PY_ENV_2_ID) || (env_id == DEBUG_PY_ENV_4_ID);
+            double wrong_dir_prob = stochastic ? 0.25 : 0.0;
+            bool add_extra_rewards = (env_id == DEBUG_PY_ENV_3_ID) || (env_id == DEBUG_PY_ENV_4_ID);
+
+            py::gil_scoped_acquire acquire;
+            string module_name = "mo_test_env";
+            string class_name = "MoPyTestThtsEnv";
+            py::dict kw_args;
+            kw_args["walk_len"] = to_string(walk_len); 
+            kw_args["wrong_dir_prob"] = to_string(wrong_dir_prob);
+            kw_args["add_extra_rewards"] = to_string(add_extra_rewards);
+
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            return make_shared<MoPyMultiprocessingThtsEnv>( 
+                pickle_wrapper, thts_unique_filename, module_name, class_name, make_shared<py::dict>(kw_args));
+        }
+
+        stringstream ss;
+        ss << "Error in get_env for env_id = " << env_id;
+        throw runtime_error(ss.str());
+    }
+
+    /**
+     * Get min value
+     * See https://mo-gymnasium.farama.org/ for env defs
+    */
+    Eigen::ArrayXd get_env_min_value(string env_id, int max_trial_length) 
+    {
+        if (env_id == DST_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
+            min_val[0] = 0.0;
+            min_val[1] = -1.0 * max_trial_length;
+            return min_val; 
+        }
+        if (env_id == DST_CONC_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
+            min_val[0] = 0.0;
+            min_val[1] = -1.0 * max_trial_length;
+            return min_val;
+        }
+        if (env_id == DST_MIRR_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
+            min_val[0] = 0.0;
+            min_val[1] = -1.0 * max_trial_length;
+            return min_val;
+        }
+        if (env_id == RESOURCE_GATHER_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
+            min_val[0] = -1.0;
+            min_val[1] = 0.0;
+            min_val[2] = 0.0;
+            return min_val;
+        }
+        if (env_id == RESOURCE_GATHER_TIMED_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(4);
+            min_val[0] = -1.0;
+            min_val[1] = 0.0;
+            min_val[2] = 0.0;
+            min_val[3] = -1.0 * max_trial_length;
+            return min_val;
+        }
+        if (env_id == BREAKABLE_BOTTLES_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
+            min_val[0] = -1.0 * max_trial_length;
+            min_val[1] = 0.0;
+            min_val[2] = -1.0;
+            return min_val;
+        }
+        if (env_id == FRUIT_TREE_ENV_ID) {
+            return Eigen::ArrayXd::Zero(6);
+        }
+        if (env_id == FOUR_ROOM_ENV_ID) {
+            return Eigen::ArrayXd::Zero(3);
+        }
+        if (env_id == FOUR_ROOM_TIMED_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(4);
+            min_val[0] = 0.0;
+            min_val[1] = 0.0;
+            min_val[2] = 0.0;
+            min_val[3] = -1.0 * max_trial_length;
+            return min_val;
+        }
+        if (env_id == MOUNTAIN_CAR_ENV_ID) {
+            return Eigen::ArrayXd::Ones(3) * -1.0 * max_trial_length;
+        }
+        if (env_id == MINECART_DETERMINISTIC_ENV_ID || env_id == MINECART_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
+            min_val[0] = 0.0;
+            min_val[1] = 0.0;
+            min_val[2] = -1.0;
+            return min_val;
+        }
+        if (env_id == HIGHWAY_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
+            min_val[0] = 0.0;
+            min_val[1] = 0.0;
+            min_val[2] = -1.0;
+            return min_val;
+        }
+        if (env_id == FRUIT_TREE_7_ENV_ID) {
+            return Eigen::ArrayXd::Zero(6);
+        }
+        if (env_id == FRUIT_TREE_STOCH_5_ENV_ID) {
+            return Eigen::ArrayXd::Zero(6);
+        }
+        if (env_id == FRUIT_TREE_STOCH_7_ENV_ID) {
+            return Eigen::ArrayXd::Zero(6);
+        }
+        if (env_id == IMPROVED_DST_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
+            min_val[0] = 0.0;
+            min_val[1] = -1.0 * max_trial_length;
+            min_val[2] = -9.0 * max_trial_length;
+            return min_val;
+        }
+        if (env_id == IMPROVED_STOCH_DST_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
+            min_val[0] = 0.0;
+            min_val[1] = -1.0 * max_trial_length;
+            min_val[2] = -9.0 * max_trial_length;
+            return min_val;
+        }
+        if (env_id == VAMPLEW_DST_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
+            min_val[0] = 0.0;
+            min_val[1] = -1.0 * max_trial_length;
+            return min_val;
+        }
+        if (env_id == VAMPLEW_STOCH_DST_ENV_ID) {
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
+            min_val[0] = 0.0;
+            min_val[1] = -1.0 * max_trial_length;
+            return min_val;
+        }
+
+
+        if (DEBUG_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id)) {
+            unordered_set<string> four_d_envs = 
+            {
+                DEBUG_ENV_3_ID,
+                DEBUG_ENV_4_ID,
+                DEBUG_PY_ENV_3_ID,
+                DEBUG_PY_ENV_4_ID,
+            };
+            Eigen::ArrayXd min_val = Eigen::ArrayXd(2);
+            if (four_d_envs.contains(env_id)) {
+                min_val = Eigen::ArrayXd(4);
+            }
+            min_val[0] = -10.0;
+            min_val[1] = -10.0;
+            if (four_d_envs.contains(env_id)) {
+                min_val[2] = 0.0;
+                min_val[3] = 0.0;
+            }
+            return min_val;
+        }
+
+        stringstream ss;
+        ss << "Error in get_env_min_value for env_id = " << env_id;
+        throw runtime_error(ss.str());
+    }
+
+    /**
+     * Get max value
+     * See https://mo-gymnasium.farama.org/ for env defs
+    */
+    Eigen::ArrayXd get_env_max_value(string env_id, int max_trial_length) 
+    {
+        if (env_id == DST_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
+            max_val[0] = 23.7;
+            max_val[1] = 0.0;
+            return max_val;
+        }
+        if (env_id == DST_CONC_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
+            max_val[0] = 124.0;
+            max_val[1] = 0.0;
+            return max_val;
+        }
+        if (env_id == DST_MIRR_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
+            max_val[0] = 124.0;
+            max_val[1] = 0.0;
+            return max_val;
+        }
+        if (env_id == RESOURCE_GATHER_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
+            max_val[0] = 0.0;
+            max_val[1] = 1.0;
+            max_val[2] = 1.0;
+            return max_val;
+        }
+        if (env_id == RESOURCE_GATHER_TIMED_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(4);
+            max_val[0] = 0.0;
+            max_val[1] = 1.0;
+            max_val[2] = 1.0;
+            max_val[3] = 0.0;
+            return max_val;
+        }
+        if (env_id == BREAKABLE_BOTTLES_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
+            max_val[0] = 0.0;
+            max_val[1] = 50.0;
+            max_val[2] = 0.0;
+            return max_val;
+        }
+        if (env_id == FRUIT_TREE_ENV_ID) {
+            return Eigen::ArrayXd::Ones(6) * 10.0;
+        }
+        if (env_id == FOUR_ROOM_ENV_ID) {
+            return Eigen::ArrayXd::Ones(3) * 4.0;
+        }
+        if (env_id == FOUR_ROOM_TIMED_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(4);
+            max_val[0] = 4.0;
+            max_val[1] = 4.0;
+            max_val[2] = 4.0;
+            max_val[3] = 0.0;
+            return max_val;
+        }
+        if (env_id == MOUNTAIN_CAR_ENV_ID) {
+            return Eigen::ArrayXd::Zero(3);
+        }
+        if (env_id == MINECART_DETERMINISTIC_ENV_ID || env_id == MINECART_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
+            max_val[0] = 1.5;
+            max_val[1] = 1.5;
+            max_val[2] = 0.0;
+            return max_val;
+        }
+        if (env_id == HIGHWAY_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
+            max_val[0] = 1.0;
+            max_val[1] = 1.0;
+            max_val[2] = 0.0;
+            return max_val;
+        }
+        if (env_id == FRUIT_TREE_7_ENV_ID) {
+            return Eigen::ArrayXd::Ones(6) * 10.0;
+        }
+        if (env_id == FRUIT_TREE_STOCH_5_ENV_ID) {
+            return Eigen::ArrayXd::Ones(6) * 10.0;
+        }
+        if (env_id == FRUIT_TREE_STOCH_7_ENV_ID) {
+            return Eigen::ArrayXd::Ones(6) * 10.0;
+        }
+        if (env_id == IMPROVED_DST_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
+            max_val[0] = 124.0;
+            max_val[1] = 0.0;
+            max_val[2] = 0.0;
+            return max_val;
+        }
+        if (env_id == IMPROVED_STOCH_DST_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(3);
+            max_val[0] = 124.0;
+            max_val[1] = 0.0;
+            max_val[2] = 0.0;
+            return max_val;
+        }
+        if (env_id == VAMPLEW_DST_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
+            max_val[0] = 124.0;
+            max_val[1] = 0.0;
+            return max_val;
+        }
+        if (env_id == VAMPLEW_STOCH_DST_ENV_ID) {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
+            max_val[0] = 124.0;
+            max_val[1] = 0.0;
+            return max_val;
+        }
+                
+        if (DEBUG_ENVS.contains(env_id) || DEBUG_PY_ENVS.contains(env_id)) {
+            unordered_set<string> four_d_envs = 
+            {
+                DEBUG_ENV_3_ID,
+                DEBUG_ENV_4_ID,
+                DEBUG_PY_ENV_3_ID,
+                DEBUG_PY_ENV_4_ID,
+            };
+            Eigen::ArrayXd max_val = Eigen::ArrayXd(2);
+            if (four_d_envs.contains(env_id)) {
+                max_val = Eigen::ArrayXd(4);
+            }
+            max_val[0] = -5.0;
+            max_val[1] = -5.0;
+            if (four_d_envs.contains(env_id)) {
+                max_val[2] = 2.0;
+                max_val[3] = 2.0;
+            }
+            return max_val;
+        }
+
+        stringstream ss;
+        ss << "Error in get_env_max_value for env_id = " << env_id;
+        throw runtime_error(ss.str());
+    }
 
 
 

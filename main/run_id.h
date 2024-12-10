@@ -474,34 +474,6 @@ static const std::unordered_set<std::string> INTEGER_PARAM_IDS =
 
 namespace thts {
     /**
-     * Lookup expr_id from prefix
-     */
-    std::string lookup_expr_id_from_prefix(std::string expr_id_prefix);
-
-    /**
-     * Create the env corresponding to 'env_id' and return is
-     */
-    std::shared_ptr<MoThtsEnv> get_env(std::string env_id);
-
-    /**
-     * Checks if env corresponding to 'env_id' is a python env
-     */
-    bool is_python_env(std::string env_id);
-
-    /**
-     * The minimum value possible in the environment
-     * Useful for setting default values
-     * (Note min value for each independent objective, which isn't necessarily achievable)
-    */
-    Eigen::ArrayXd get_env_min_value(std::string env_id, int max_trial_length);
-
-    /**
-     * Returns the max value possible in the environment 
-     * (Same as get_env_min_value, but for maximum)
-    */
-    Eigen::ArrayXd get_env_max_value(std::string env_id, int max_trial_length);
-
-    /**
      * Struct to wrap all the params for a eval run
      * 
      * Member variables - env/alg params:
@@ -582,6 +554,11 @@ namespace thts {
                 int num_repeats,
                 int num_threads,
                 int eval_threads);
+
+            /**
+             * A unique results directory for each RunID
+             */
+            std::string get_results_dir();
 
             /**
              * Returns if the env we are using is a python env
@@ -706,4 +683,37 @@ namespace thts {
     */
     std::shared_ptr<HyperparamOptimiser> get_hyperparam_optimiser_from_expr_id(
         std::string expr_id, std::time_t expr_timestamp, std::ofstream &hp_opt_fs);
+
+    /**
+     * Lookup expr_id from prefix
+     */
+    std::string lookup_expr_id_from_prefix(std::string expr_id_prefix);
+
+    /**
+     * A unique results directory for each RunID
+     */
+    std::string get_results_dir(RunID& run_id);
+
+    /**
+     * Checks if env corresponding to 'env_id' is a python env
+     */
+    bool is_python_env(std::string env_id);
+
+    /**
+     * Create the env corresponding to 'env_id' and return is
+     */
+    std::shared_ptr<MoThtsEnv> get_env(RunID& run_id);
+
+    /**
+     * The minimum value possible in the environment
+     * Useful for setting default values
+     * (Note min value for each independent objective, which isn't necessarily achievable)
+    */
+    Eigen::ArrayXd get_env_min_value(std::string env_id, int max_trial_length);
+
+    /**
+     * Returns the max value possible in the environment 
+     * (Same as get_env_min_value, but for maximum)
+    */
+    Eigen::ArrayXd get_env_max_value(std::string env_id, int max_trial_length);
 }

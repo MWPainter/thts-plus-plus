@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <mutex>
+#include <string>
 
 #include <sys/sem.h>
 #include <sys/shm.h>
@@ -17,7 +18,7 @@ namespace thts::python::helper {
      * Basically a wrapper around ftok for our application
     */
     key_t get_unix_key();
-    key_t get_unix_key(int tid);
+    key_t get_unix_key(std::string& thts_unique_filename, int tid);
 
     /**
      * Initialise unix semaphores for Unix Multiprocessing

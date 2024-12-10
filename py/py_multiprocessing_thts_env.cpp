@@ -25,12 +25,14 @@ namespace thts::python {
 
     PyMultiprocessingThtsEnv::PyMultiprocessingThtsEnv(
         shared_ptr<PickleWrapper> pickle_wrapper,
+        string& thts_unique_filename,
         shared_ptr<py::object> py_thts_env,
         bool is_server_process,
         size_t shared_memory_size_in_bytes) :
             ThtsEnv((py_thts_env != nullptr) ? helper::call_py_getter<bool>(py_thts_env,"is_fully_observable") : true),
             py_thts_env(py_thts_env),
             pickle_wrapper(pickle_wrapper),
+            thts_unique_filename(thts_unique_filename),
             shared_mem_wrapper(),
             shared_memory_size_in_bytes(shared_memory_size_in_bytes),
             child_pid(0),
@@ -43,6 +45,7 @@ namespace thts::python {
 
     PyMultiprocessingThtsEnv::PyMultiprocessingThtsEnv(
         shared_ptr<PickleWrapper> pickle_wrapper,
+        string& thts_unique_filename,
         string module_name,
         string class_name,
         shared_ptr<py::dict> constructor_kw_args,
@@ -51,6 +54,7 @@ namespace thts::python {
             ThtsEnv(),
             py_thts_env(nullptr),
             pickle_wrapper(pickle_wrapper),
+            thts_unique_filename(thts_unique_filename),
             shared_mem_wrapper(),
             shared_memory_size_in_bytes(shared_memory_size_in_bytes),
             child_pid(0),
@@ -70,6 +74,7 @@ namespace thts::python {
         ThtsEnv(other._is_fully_observable),
         py_thts_env(other.py_thts_env),
         pickle_wrapper(other.pickle_wrapper),
+        thts_unique_filename(other.thts_unique_filename),
         shared_mem_wrapper(),
         shared_memory_size_in_bytes(other.shared_memory_size_in_bytes),
         child_pid(0),
@@ -118,7 +123,7 @@ namespace thts::python {
                 "Calling start_python_server in PyMultiprocessingThtsEnv with server process already running.");
         }
 
-        shared_mem_wrapper = make_shared<SharedMemWrapper>(tid, shared_memory_size_in_bytes);
+        shared_mem_wrapper = make_shared<SharedMemWrapper>(thts_unique_filename, tid, shared_memory_size_in_bytes);
         pid_t ppid_before_fork = getpid();
         pid_t pid = fork();
         if (pid == 0) {
@@ -162,6 +167,7 @@ namespace thts::python {
                 "in the new process.");
         }
         args.push_back(get_multiprocessing_env_type_id());
+        args.push_back(thts_unique_filename);
         args.push_back(to_string(tid));
         args.push_back(module_name);
         args.push_back(class_name);
@@ -178,7 +184,9 @@ namespace thts::python {
      * hold the gil in the forked python interpreter for the duration of the server process
      */
     void PyMultiprocessingThtsEnv::server_main(int tid) {
-        shared_mem_wrapper = make_shared<SharedMemWrapper>(tid, shared_memory_size_in_bytes, true);
+        shared_mem_wrapper = make_shared<SharedMemWrapper>(
+            thts_unique_filename, tid, shared_memory_size_in_bytes, true);
+
         while(true) {
             shared_mem_wrapper->server_wait_for_rpc_call();
             int rpc_id = shared_mem_wrapper->rpc_id;

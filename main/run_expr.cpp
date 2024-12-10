@@ -35,39 +35,6 @@ using namespace thts::python;
 static const string HP_OPT_RESULTS_DIR = "hp_opt/";
 
 namespace thts {
-    
-    /**
-     * Helper to make a string of:
-     * "param1=val1/param2=val2/.../paramN=valN/"
-     * Old version output:
-     * "param1=val1,param2=val2,...,paramN=valN",
-     * but lead to filenames that were too long
-    */
-    string get_params_string_helper(RunID& run_id) {
-        stringstream ss;
-        const vector<string> &relevant_param_ids = RELEVANT_PARAM_IDS.at(run_id.alg_id);
-        unordered_set<string> relevant_param_ids_set(relevant_param_ids.begin(),relevant_param_ids.end());
-        for (pair<string,double> param_val_entry : run_id.alg_params) {
-            if (!relevant_param_ids_set.contains(param_val_entry.first)) {
-                continue;
-            }
-            ss << param_val_entry.first << "=" << param_val_entry.second << "/";
-        }
-        return ss.str();
-    }
-
-    /**
-     * Gets the results directory for this run (doesn't check/make)
-    */
-    string get_results_dir(RunID& run_id) {
-        stringstream ss;
-        ss << "results/" 
-            << run_id.env_id << "/" 
-            << run_id.expr_id << "_" << run_id.expr_timestamp << "/" 
-            << run_id.alg_id << "/"
-            << get_params_string_helper(run_id);
-        return ss.str();
-    }
 
     /**
      * Returns the results directory to use for this run, making sure that it exists, and creating it if it doesnt
@@ -512,7 +479,9 @@ namespace thts {
         }
 
         // Create env
-        shared_ptr<MoThtsEnv> env = get_env(env_id);
+        unordered_map<string,double> psuedo_alg_params;
+        RunID psuedo_run_id(env_id,"psuedo_expr_id",0,"psuedo_alg_id",psuedo_alg_params,1.0,10,0.1,10,1,1,1);
+        shared_ptr<MoThtsEnv> env = get_env(psuedo_run_id);
         MoThtsManagerArgs dummy_manager_args(env);
         dummy_manager_args.num_envs = eval_threads[env_id];
         dummy_manager_args.seed = 60415;
