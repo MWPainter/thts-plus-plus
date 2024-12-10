@@ -10,6 +10,7 @@ make install
 
 cd $dirname/external/qhull
 mkdir qhull_build
+cd qhull_build
 cmake .. -DCMAKE_INSTALL_PREFIX=. -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_FLAGS='-D_GLIBCXX_USE_CXX11_ABI=0'
 make install
 
