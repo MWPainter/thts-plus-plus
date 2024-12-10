@@ -101,7 +101,7 @@ LDFLAGS += -lClp -lCoinUtils
 
 # ld flags for building with pybind11
 PY_LD_LOCS =  -L$(ANACONDA_ENVS_HOME)/$(CONDA_ENV_NAME)/lib
-PY_LDFLAGS = $(PY_LD_LOCS) -lpython3.12
+PY_LDFLAGS = $(PY_LD_LOCS) -l$(PYTHON_WITH_VER)
 
 # ld flags for tests
 TEST_LDFLAGS = -Lexternal/googletest/build/lib 
