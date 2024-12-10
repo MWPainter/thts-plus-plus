@@ -10,6 +10,7 @@ make install
 
 cd $dirname/external/qhull
 mkdir qhull_build
+cd qhull_build
 cmake .. -DCMAKE_INSTALL_PREFIX=. -DCMAKE_CXX_STANDARD=20
 make install
 
