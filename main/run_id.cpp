@@ -746,7 +746,7 @@ namespace thts {
             num_threads,
             eval_threads
         );
-        double eval = thts::run_expr(run_id);
+        double eval = thts::run_expr(run_id, false);
         if (eval > best_eval) {
             best_eval = eval;
             best_alg_params = alg_params;
@@ -921,9 +921,9 @@ namespace thts {
             };
 
             string env_id = HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID.at(expr_id);
-            double search_runtime = 30.0;
+            double search_runtime = 20.0;
             int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
-            double eval_delta = 1.0;
+            double eval_delta = 5.0;
             int rollouts_per_mc_eval = 1024;
             int num_repeats = 5;
             int num_threads = 16;
@@ -961,13 +961,13 @@ namespace thts {
             string alg_id = CHMCTS_ALG_ID;
             unordered_map<string, pair<double,double>> alg_params_min_max = {
                 {CZT_BIAS_PARAM_ID, make_pair(0.01, 100.0)},
-                {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(5.0, 100.0)},
+                {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
             };
 
             string env_id = HP_OPT_MOGYM_CHMCTS_EXPR_ID_TO_ENV_ID.at(expr_id);
-            double search_runtime = 30.0;
+            double search_runtime = 20.0;
             int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
-            double eval_delta = 1.0;
+            double eval_delta = 5.0;
             int rollouts_per_mc_eval = 1024;
             int num_repeats = 5;
             int num_threads = 16;
@@ -1014,9 +1014,9 @@ namespace thts {
             };
 
             string env_id = HP_OPT_MOGYM_SMBTS_EXPR_ID_TO_ENV_ID.at(expr_id);
-            double search_runtime = 30.0;
+            double search_runtime = 20.0;
             int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
-            double eval_delta = 1.0;
+            double eval_delta = 5.0;
             int rollouts_per_mc_eval = 1024;
             int num_repeats = 5;
             int num_threads = 16;
@@ -1065,9 +1065,9 @@ namespace thts {
             };
 
             string env_id = HP_OPT_MOGYM_SMDENTS_EXPR_ID_TO_ENV_ID.at(expr_id);
-            double search_runtime = 30.0;
+            double search_runtime = 20.0;
             int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
-            double eval_delta = 1.0;
+            double eval_delta = 5.0;
             int rollouts_per_mc_eval = 1024;
             int num_repeats = 5;
             int num_threads = 16;

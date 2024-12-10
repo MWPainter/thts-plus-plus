@@ -20,7 +20,7 @@ cd clp
 wget https://raw.githubusercontent.com/coin-or/coinbrew/master/coinbrew
 chmod u+x coinbrew
 ./coinbrew fetch Clp@master
-./coinbrew build Clp
+./coinbrew build Clp ADD_CXXFLAGS='-D_GLIBCXX_USE_CXX11_ABI=0'
 
 cd $dirname/external/bayesopt
 mkdir build

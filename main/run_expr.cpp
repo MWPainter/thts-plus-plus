@@ -246,7 +246,7 @@ namespace thts {
      * 
      * We dont try to gracefully exit
     */
-    double run_expr(RunID& run_id) {
+    double run_expr(RunID& run_id, bool eval_at_zero_trials) {
         // create results dir + eval file
         create_results_dir(run_id);
         string eval_filename = get_mc_eval_results_filename(run_id);
@@ -278,16 +278,18 @@ namespace thts {
 
             // eval at 0 trials
             double mean, stddev, normalised_mean, normalised_stddev;
-            run_mc_eval(
-                mean, 
-                stddev, 
-                normalised_mean, 
-                normalised_stddev, 
-                env, 
-                root_node, 
-                thts_manager, 
-                run_id);
-            write_eval_line(eval_file, replicate, 0.0, 0, mean, stddev, normalised_mean, normalised_stddev);
+            if (eval_at_zero_trials) {
+                run_mc_eval(
+                    mean, 
+                    stddev, 
+                    normalised_mean, 
+                    normalised_stddev, 
+                    env, 
+                    root_node, 
+                    thts_manager, 
+                    run_id);
+                write_eval_line(eval_file, replicate, 0.0, 0, mean, stddev, normalised_mean, normalised_stddev);
+            }
 
             // run trials, evaluating every eval delta
             double search_time_elapsed = 0.0;
