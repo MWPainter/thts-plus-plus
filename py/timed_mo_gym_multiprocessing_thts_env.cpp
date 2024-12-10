@@ -15,9 +15,10 @@ namespace thts::python {
      */
     TimedMoGymMultiprocessingThtsEnv::TimedMoGymMultiprocessingThtsEnv(
         shared_ptr<PickleWrapper> pickle_wrapper,
+        string& thts_unique_filename,
         string& gym_env_id,
         bool is_server_process) :
-            MoGymMultiprocessingThtsEnv(pickle_wrapper, gym_env_id)
+            MoGymMultiprocessingThtsEnv(pickle_wrapper, thts_unique_filename, gym_env_id)
     {
         py::gil_scoped_acquire acquire;
         reward_dim = py_thts_env->attr("get_reward_dim")().cast<int>() + 1;

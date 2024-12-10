@@ -9,7 +9,9 @@ make
 make install
 
 cd $dirname/external/qhull
-make
+mkdir qhull_build
+cmake .. -DCMAKE_INSTALL_PREFIX=.
+make install
 
 cd $dirname/external
 mkdir clp
@@ -22,5 +24,5 @@ chmod u+x coinbrew
 cd $dirname/external/bayesopt
 mkdir build
 cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=. -DBoost_INCLUDE_DIR=$Boost_INCLUDE_DIR
+cmake .. -DCMAKE_INSTALL_PREFIX=. -DBoost_INCLUDE_DIR=$Boost_INCLUDE_DIR -DCMAKE_CXX_STANDARD=20
 make install

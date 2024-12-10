@@ -6,19 +6,20 @@ using namespace std;
 namespace py = pybind11;
 
 namespace thts::python {
-    SharedMemWrapper::SharedMemWrapper(int tid, int shared_mem_size_in_bytes, bool is_server_process) :
-        unix_key(thts::python::helper::get_unix_key(tid)),
-        semid(thts::python::helper::init_sem(unix_key, 2, is_server_process)),
-        shmid(thts::python::helper::init_shared_mem(unix_key, shared_mem_size_in_bytes, is_server_process)),
-        shared_mem_size(shared_mem_size_in_bytes),
-        shared_mem_ptr(thts::python::helper::get_shared_mem_ptr(shmid)),
-        shared_mem_end_ptr(nullptr),
-        is_server_process(is_server_process),
-        rpc_id(),
-        value_type(),
-        strings(nullptr),
-        doubles(nullptr),
-        prob_distr(nullptr)
+    SharedMemWrapper::SharedMemWrapper(
+        std::string& thts_unique_filename, int tid, int shared_mem_size_in_bytes, bool is_server_process) :
+            unix_key(thts::python::helper::get_unix_key(thts_unique_filename,tid)),
+            semid(thts::python::helper::init_sem(unix_key, 2, is_server_process)),
+            shmid(thts::python::helper::init_shared_mem(unix_key, shared_mem_size_in_bytes, is_server_process)),
+            shared_mem_size(shared_mem_size_in_bytes),
+            shared_mem_ptr(thts::python::helper::get_shared_mem_ptr(shmid)),
+            shared_mem_end_ptr(nullptr),
+            is_server_process(is_server_process),
+            rpc_id(),
+            value_type(),
+            strings(nullptr),
+            doubles(nullptr),
+            prob_distr(nullptr)
     {
         // acquire the sems by default (if client process)
         if (!is_server_process) {

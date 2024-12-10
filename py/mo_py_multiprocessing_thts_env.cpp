@@ -22,9 +22,10 @@ namespace thts::python {
 
     MoPyMultiprocessingThtsEnv::MoPyMultiprocessingThtsEnv(
         shared_ptr<PickleWrapper> pickle_wrapper,
+        string& thts_unique_filename,
         shared_ptr<py::object> py_thts_env,
         bool is_server_process) :
-            PyMultiprocessingThtsEnv(pickle_wrapper, py_thts_env, is_server_process),
+            PyMultiprocessingThtsEnv(pickle_wrapper, thts_unique_filename, py_thts_env, is_server_process),
             MoThtsEnv(
                 (py_thts_env != nullptr) ? helper::call_py_getter<int>(py_thts_env,"get_reward_dim")        : 2, 
                 (py_thts_env != nullptr) ? helper::call_py_getter<bool>(py_thts_env,"is_fully_observable")  : true)
@@ -33,11 +34,12 @@ namespace thts::python {
 
     MoPyMultiprocessingThtsEnv::MoPyMultiprocessingThtsEnv(
         shared_ptr<PickleWrapper> pickle_wrapper,
+        string& thts_unique_filename,
         string module_name,
         string class_name,
         shared_ptr<py::dict> constructor_kw_args,
         bool is_server_process) :
-            PyMultiprocessingThtsEnv(pickle_wrapper, module_name, class_name, constructor_kw_args, is_server_process),
+            PyMultiprocessingThtsEnv(pickle_wrapper, thts_unique_filename, module_name, class_name, constructor_kw_args, is_server_process),
             MoThtsEnv(2,true)
     {
         py::gil_scoped_acquire acquire;

@@ -334,8 +334,9 @@ namespace thts {
             kw_args["grid_size"] = env_size;
             kw_args["stay_prob"] = stay_prob;
             shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            string thts_unique_filename = "/";
             thts_env = make_shared<PyMultiprocessingThtsEnv>(
-                pickle_wrapper, module_name, class_name, make_shared<py::dict>(kw_args));
+                pickle_wrapper, thts_unique_filename, module_name, class_name, make_shared<py::dict>(kw_args));
         } 
 
         // Make thts manager with the py env 

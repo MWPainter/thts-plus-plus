@@ -28,6 +28,7 @@ namespace thts::python {
              */
             MoPyMultiprocessingThtsEnv(
                 std::shared_ptr<PickleWrapper> pickle_wrapper,
+                std::string& thts_unique_filename,
                 std::shared_ptr<py::object> py_thts_env,
                 bool is_server_process=false);
 
@@ -37,6 +38,7 @@ namespace thts::python {
              */
             MoPyMultiprocessingThtsEnv(
                 std::shared_ptr<PickleWrapper> pickle_wrapper,
+                std::string& thts_unique_filename,
                 std::string module_name,
                 std::string class_name,
                 std::shared_ptr<py::dict> constructor_kw_args,

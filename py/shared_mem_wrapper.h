@@ -28,6 +28,9 @@ namespace thts::python {
      * 
      * TODO: change name to SharedMemRpc or SharedMemRpcWrapper
      * 
+     * N.B. need 'program_unique_filename' in constructor for 'thts::helper::get_unix_key', which needs to be unique 
+     * for each instance of thts being run
+     * 
      * Member variables:
      *      unix_key:
      *          Key used as an id by unix to refer to semaphore and shared memory
@@ -78,7 +81,11 @@ namespace thts::python {
             std::shared_ptr<std::unordered_map<std::string,double>> prob_distr;
 
         public:
-            SharedMemWrapper(int tid, int shared_mem_size_in_bytes, bool is_server_process=false);
+            SharedMemWrapper(
+                std::string& thts_unique_filename, 
+                int tid, 
+                int shared_mem_size_in_bytes, 
+                bool is_server_process=false);
             virtual ~SharedMemWrapper();
 
             void breakpoint_add();
