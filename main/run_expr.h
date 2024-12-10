@@ -10,7 +10,7 @@ namespace thts {
     /**
      * Performs all of the (replicated) runs corresponding to 'run_id', returning avg expected utility over replicates
     */
-    double run_expr(RunID &run_id);
+    double run_expr(RunID &run_id, bool eval_at_zero_trials=true);
 
     /**
      * Performs all of the (replicated) runs corresponding to each 'run_id' in 'run_ids'
