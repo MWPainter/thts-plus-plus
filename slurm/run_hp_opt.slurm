@@ -32,8 +32,6 @@ CODE_DIR="/home/pemb5587/thts-plus-plus"
 
 echo Running experiment ${EXPR_ID}
 
-cd $HOME_DIR      
-source .bashrc                          # Make sure conda loaded
 
 cd $CODE_DIR                            # Get to code
 source setup_arc_shell.sh               # Load conda env and modules 
