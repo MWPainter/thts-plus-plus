@@ -24,7 +24,8 @@
 # As we're comparing performance w.r.t time, want consistent CPU speeds
 # Following https://arc-user-guide.readthedocs.io/en/latest/arc-systems.html 
 # Want htc-c[005-046], as they all have same CPU + clock speed
-#SBATCH --nodelist=htc-c[005-046]
+# Also 001-004 might be ok, but they're not on the specs list
+#SBATCH --exclude=htc-c[001-004],htc-c047,htc-g[001-052]
 
 
 HOME_DIR="/home/pemb5587"
