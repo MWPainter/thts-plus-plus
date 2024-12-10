@@ -24,8 +24,8 @@
 # As we're comparing performance w.r.t time, want consistent CPU speeds
 # Following https://arc-user-guide.readthedocs.io/en/latest/arc-systems.html 
 # Want htc-c[005-046], as they all have same CPU + clock speed
-# Also 001-004 might be ok, but they're not on the specs list
-#SBATCH --exclude=htc-c001,htc-c002,htc-c003,htc-c004,htc-c047
+# Tried to exclude htc-c[001-004] in case they have different spec, but seems like they dont exist
+#SBATCH --exclude=htc-c047
 ## htc-g[001-052] - should be avoided because we dont want to use gpu
 ## if we get allocated a htc-g at some point we'll cancel and type out a list of 52 nodes -.-
 
