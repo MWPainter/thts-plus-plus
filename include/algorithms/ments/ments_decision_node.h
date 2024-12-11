@@ -246,17 +246,6 @@ namespace thts {
                 const double trial_cumulative_return,
                 ThtsEnvContext& ctx);
 
-            /**
-             * Returns if the node is a sink node in the environment.
-             * 
-             * Used to decide if this node is (and always will be) a leaf of the tree (it has no possible nodes that 
-             * can be expanded).
-             * 
-             * Returns:
-             *      If this node corresponds to a 'sink state' in the environment
-             */
-            virtual bool is_sink() const;
-
         protected:
             /**
              * A helper function that makes a child node object on the heap and returns it. 

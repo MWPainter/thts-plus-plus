@@ -93,6 +93,12 @@ namespace thts {
              * I.e. sets distr[key] = weight.
             */
             void update(T key, double weight);
+
+            /**
+             * Updates the distribution with a completely new 'new_distr' mapping. If using the alias method, this will 
+             * always construct a new alias table
+            */
+            void update(std::shared_ptr<std::unordered_map<T,double>> new_distr);
         
         private:
             /**

@@ -1,0 +1,18 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: THTS++
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Michael
+    family-names: Painter
+    email: michaelpainter.thts@gmail.com
+repository-code: 'https://github.com/MWPainter/thts-plus-plus'
+abstract: >-
+  An open-source, parallelised extension of Trial-based
+  Heuristic Tree Search writen in C++. 
+version: '0.0'

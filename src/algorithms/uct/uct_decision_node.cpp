@@ -272,14 +272,6 @@ namespace thts {
     {
         backup_average_return(trial_cumulative_return_after_node);
     }
-
-    /**
-     * Checking if this node is a sink can be implemented faster than by calling the thts_env function to see if sink 
-     * state.
-     */
-    bool UctDNode::is_sink() const {
-        return actions->size() == 0;
-    }
     
     /**
      * Make a child

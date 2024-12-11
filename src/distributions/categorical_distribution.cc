@@ -54,6 +54,25 @@ namespace thts {
             num_updates = 0;
         }
     }
+
+    /**
+     * If using alias table, then should reconstruct it
+     * If size(distr) == size(new_distr), then call reconstruct_alias_table, which assumes size(distr) hasn't changed
+     * If distirubtion has changes in size (num outcomes), then clear alias table and construct from scratch
+    */
+    template <typename T>
+    void CategoricalDistribution<T>::update(shared_ptr<unordered_map<T,double>> new_distr) {
+        distr = new_distr;
+        num_updates = 0;
+        if (use_alias_method) {
+            if (new_distr->size() == distr->size()) {
+                reconstruct_alias_table(false);
+            } else {
+                alias_table.clear();
+                construct_alias_table();
+            }
+        }
+    }
     
     /**
      * Initial construction of the alias table. The only difference to this is that we initially fill the alias table 
