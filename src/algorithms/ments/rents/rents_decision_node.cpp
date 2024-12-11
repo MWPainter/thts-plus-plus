@@ -22,7 +22,10 @@ namespace thts {
                 state,
                 decision_depth,
                 decision_timestep,
-                static_pointer_cast<const MentsCNode>(parent))
+                static_pointer_cast<const MentsCNode>(parent)),
+            _node_distr_key(),
+            _parent_distr_key(),
+            cached_action_distr()
     {
         stringstream ss_n;
         ss_n << "d_" << decision_depth;
@@ -33,6 +36,9 @@ namespace thts {
             ss_p << "d_" << decision_depth-1;
             _parent_distr_key = ss_p.str();
         }
+
+        ThtsEnvContext spoof_ctx;
+        cached_action_distr = select_action_alias_tables_get_mixed_distr(spoof_ctx)->get_distr_map();
     }
 
     /**
@@ -40,7 +46,7 @@ namespace thts {
      * Or just null pointer if we're the root node
     */
     shared_ptr<ActionDistr> RentsDNode::get_parent_distr_from_context(ThtsEnvContext& ctx) const {
-        if (decision_depth < 1) return nullptr;
+        if (decision_depth < 1 || !ctx.contains_key(_parent_distr_key)) return nullptr;
         return ctx.get_value_ptr<ActionDistr>(_parent_distr_key);
     }
 
@@ -129,9 +135,35 @@ namespace thts {
         shared_ptr<ActionDistr> action_distr = make_shared<ActionDistr>();
         compute_action_distribution(*action_distr, ctx);
         put_node_distr_in_context(action_distr, ctx);
-        shared_ptr<const Action> selected_action = helper::sample_from_distribution(*action_distr, *thts_manager);
-        if (!has_child_node(selected_action)) {
-            create_child_node(selected_action);
+        shared_ptr<const Action> selected_action;
+        while (is_nullptr_or_should_skip_under_construction_child(selected_action)) {
+            selected_action = helper::sample_from_distribution(*action_distr, *thts_manager, false);
+            if (!has_child_node(selected_action)) {
+                create_child_node(selected_action);
+            }
+        }
+        return selected_action;
+    }
+
+    /**
+     * Add context stuff to select action alias tables
+    */
+    shared_ptr<const Action> RentsDNode::select_action_alias_tables(ThtsEnvContext& ctx) {
+        // Get mixed distribution
+        shared_ptr<MixedDistribution<shared_ptr<const Action>>> mixed_distr = 
+            select_action_alias_tables_get_mixed_distr(ctx);
+
+        // Put cached distribution in context
+        put_node_distr_in_context(cached_action_distr, ctx);
+
+        // Sample, and handle making child if need be, return
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        shared_ptr<const Action> selected_action;
+        while (is_nullptr_or_should_skip_under_construction_child(selected_action)) {
+            selected_action = mixed_distr->sample(manager);
+            if (!has_child_node(selected_action)) {
+                create_child_node(selected_action);
+            }
         }
         return selected_action;
     }
@@ -140,7 +172,58 @@ namespace thts {
      * Calls the rents implementation of select action
      */
     shared_ptr<const Action> RentsDNode::select_action(ThtsEnvContext& ctx) {
-        return select_action_rents(ctx);
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        shared_ptr<const Action> selected_action;
+        if (manager.alias_use_caching) {
+            selected_action = select_action_alias_tables(ctx);
+        } else {
+            selected_action = select_action_rents(ctx);
+        }
+        if (manager.use_max_heap) {
+            ctx.put_value_const(_action_selected_key, selected_action);
+        }
+        return selected_action;
+    }
+
+    /**
+     * Implement soft backup with auxilary variables to make it quick
+     * - see MentsDNode.cpp implementation for description of what this is doing
+     * - only changes are adding the 'parent_prob' into the 'child_term'
+    */
+    void RentsDNode::backup_soft_with_max_heap(ThtsEnvContext& ctx) {
+        num_backups++;
+
+        shared_ptr<const Action> selected_action = ctx.get_value_ptr_const<Action>(_action_selected_key);
+        RentsCNode& child = (RentsCNode&) *get_child_node(selected_action);
+        lock_guard<mutex> lg(child.node_lock);
+        
+        double old_child_term = sum_exp_child_terms[selected_action];
+        double old_max_value = 0.0;
+        if (max_heap->size() > 0) old_max_value = max_heap->peek_top_value();
+
+        double temp = get_temp();
+        double opp_coeff = is_opponent() ? -1.0 : 1.0;
+        double child_value = opp_coeff * child.soft_value;
+        max_heap->insert_or_assign(selected_action, child_value);
+        double max_value = max_heap->peek_top_value();
+        double parent_prob = get_parent_action_prob(get_parent_distr_from_context(ctx), selected_action);
+        double child_term = parent_prob * exp((child_value - max_value) / temp);
+        sum_exp_child_terms[selected_action] = child_term;
+
+        sum_exp_child_values -= old_child_term;
+        sum_exp_child_values *= exp((-max_value + old_max_value) / temp);
+        sum_exp_child_values += child_term;
+
+        soft_value = opp_coeff * (log(sum_exp_child_values) + max_value / temp);
+    }
+
+    /**
+     * Update alias tables in backup
+     * Update the cached action distribution in rents
+    */
+    void RentsDNode::backup_update_alias_tables(ThtsEnvContext& ctx) {
+        MentsDNode::backup_update_alias_tables(ctx);
+        cached_action_distr = select_action_alias_tables_get_mixed_distr(ctx)->get_distr_map();
     }
 
     /**

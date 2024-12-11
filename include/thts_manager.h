@@ -34,6 +34,7 @@ namespace thts {
         static const bool is_two_player_game_default = false;
         static const bool use_transposition_table_default = false;
         static const int num_transposition_table_mutexes_default = 1;
+        static const bool avoid_selecting_children_under_construction_default = false;
         static const int seed_default = 0;
         
         std::shared_ptr<ThtsEnv> thts_env;
@@ -47,6 +48,8 @@ namespace thts {
 
         int num_transposition_table_mutexes;
 
+        bool avoid_selecting_children_under_construction;
+
         int seed;
 
         ThtsManagerArgs(std::shared_ptr<ThtsEnv> thts_env) :
@@ -58,6 +61,7 @@ namespace thts {
             is_two_player_game(is_two_player_game_default),
             use_transposition_table(use_transposition_table_default),
             num_transposition_table_mutexes(num_transposition_table_mutexes_default),
+            avoid_selecting_children_under_construction(avoid_selecting_children_under_construction_default),
             seed(seed_default) {}
 
         virtual ~ThtsManagerArgs() = default;
@@ -175,6 +179,10 @@ namespace thts {
      *          cause bugs.
      *      is_two_player_game:
      *          If we are planning for a two player game, rather than a reward maximisation environment
+     *      avoid_selecting_children_under_construction:
+     *          Sometimes the heuristic function call takes a long time, and these function calls happen in the 
+     *          construction of decision nodes. In such cases it can be desirable to avoid selecting actions/outcomes 
+     *          that would lead to a search thread waiting on a slow heuristic fn call/node cunstruction.
      * Member variables (transposition table):
      *      dmap:
      *          A transposition table for decision nodes. Note that a transposition table for chance nodes is 
@@ -194,6 +202,7 @@ namespace thts {
             bool mcts_mode;
             bool use_transposition_table;
             bool is_two_player_game;
+            bool avoid_selecting_children_under_construction;
 
             DNodeTable dmap;
             std::vector<std::mutex> dmap_mutexes;
@@ -213,6 +222,7 @@ namespace thts {
                 mcts_mode(args.mcts_mode), 
                 use_transposition_table(args.use_transposition_table), 
                 is_two_player_game(args.is_two_player_game),
+                avoid_selecting_children_under_construction(args.avoid_selecting_children_under_construction),
                 dmap(),
                 dmap_mutexes(args.num_transposition_table_mutexes)
             {

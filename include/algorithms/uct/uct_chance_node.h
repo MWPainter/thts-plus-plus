@@ -37,7 +37,7 @@ namespace thts {
         protected:
             int num_backups;
             double avg_return;
-            std::shared_ptr<StateDistr> next_state_distr;
+            // std::shared_ptr<StateDistr> next_state_distr;
 
             /**
              * Handles the thts sample_observation function by randomly sampling.

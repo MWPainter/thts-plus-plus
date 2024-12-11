@@ -36,4 +36,9 @@ namespace thts {
         * f(m) = (1+exp(-5)) / (1+exp(m-5))
     */
     double decayed_temp_sigmoid(double scaled_visits);
+
+    /**
+     * Option for no decay, jkust returns 1.0.
+    */
+    double decayed_temp_no_decay(double scaled_visits);
 }

@@ -46,7 +46,9 @@ void run_est_integration_test(
     double stay_prob=0.0, 
     int print_tree_depth=0, 
     double temp=1.0, 
-    bool use_avg_returns=false) 
+    bool use_avg_returns=false,
+    bool use_alias_caching=false,
+    bool use_max_heap=false) 
 {
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
 
@@ -57,6 +59,9 @@ void run_est_integration_test(
     manager_args.mcts_mode = false;
     manager_args.temp = temp;
     manager_args.use_dp_value = !use_avg_returns;
+    manager_args.alias_use_caching = use_alias_caching;
+    manager_args.alias_recompute_freq = 1;
+    manager_args.use_max_heap = use_max_heap;
     shared_ptr<DentsManager> manager = make_shared<DentsManager>(manager_args);
     shared_ptr<EstDNode> root_node = make_shared<EstDNode>(manager, grid_env->get_initial_state_itfc(), 0, 0);
     ThtsPool uct_pool(manager, root_node, num_threads);
@@ -93,6 +98,10 @@ TEST(Est_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
     run_est_integration_test(2, 4, 10000, 0.1, 1, 0.5);
 }
 
+
+
+
+
 TEST(Est_WithAvgReturns_IntegrationTest, easy_grid_world) {
     run_est_integration_test(1, 1, 10000, 0.0, 2, 1.0, true);
 }
@@ -107,6 +116,45 @@ TEST(Est_WithAvgReturns_IntegrationTest, easy_grid_world_stochastic) {
 
 TEST(Est_WithAvgReturns_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
     run_est_integration_test(2, 4, 10000, 0.1, 1, 0.5, true);
+}
+
+
+
+
+
+TEST(Est_AliasTable_IntegrationTest, easy_grid_world) {
+    run_est_integration_test(1, 1, 10000, 0.0, 2, 1.0, false, true);
+}
+
+TEST(Est_AliasTable_IntegrationTest, easy_grid_world_multithreaded) {
+    run_est_integration_test(2, 4, 10000, 0.0, 1, 0.5, false, true);
+}
+
+TEST(Est_WithAvgReturns_AliasTable_IntegrationTest, easy_grid_world) {
+    run_est_integration_test(1, 1, 10000, 0.0, 2, 1.0, true, true);
+}
+
+TEST(Est_WithAvgReturns_AliasTable_IntegrationTest, easy_grid_world_multithreaded) {
+    run_est_integration_test(2, 4, 10000, 0.0, 1, 0.5, true, true);
+}
+
+
+
+
+TEST(Est_WithMaxHeap_IntegrationTest, easy_grid_world) {
+    run_est_integration_test(1, 1, 10000, 0.0, 2, 1.0, false, false, true);
+}
+
+TEST(Est_WithMaxHeap_IntegrationTest, easy_grid_world_multithreaded) {
+    run_est_integration_test(2, 4, 10000, 0.0, 1, 0.5, false, false, true);
+}
+
+TEST(Est_WithMaxHeap_IntegrationTest, easy_grid_world_stochastic) {
+    run_est_integration_test(1, 1, 10000, 0.1, 2, 1.0, false, false, true);
+}
+
+TEST(Est_WithMaxHeap_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
+    run_est_integration_test(2, 4, 10000, 0.1, 1, 0.5, false, false, true);
 }
 
 

@@ -9,6 +9,8 @@
 
 using namespace std; 
 
+static double EPS = 1e-16;
+
 namespace thts {
     /**
      * Constructor, 
@@ -38,6 +40,20 @@ namespace thts {
         ss << decision_depth;
         _selected_action_key = ss.str();
     }
+    
+    /**
+     * ++ hacky option for avg returns for go expr
+     * this therefore computes the tsallis entropy directly
+    */
+    double TentsDNode::compute_m_local_entropy(ActionDistr& policy, ThtsEnvContext& ctx) {
+        double policy_norm = 0.0;
+        for (pair<shared_ptr<const Action>,double> pr : policy) {
+            double prob = pr.second;
+            policy_norm += prob * prob;
+        }
+        m_local_entropy = 0.5 * (1.0 - policy_norm);
+        return m_local_entropy;
+    }
 
     /**
      * Get the value of Q(s,a)/temp from the best available source (see ments get_soft_q_value, tries child, then prior)
@@ -50,12 +66,16 @@ namespace thts {
 
     /**
      * Updates the tents mapping for 'action' to/from 'neq_q_value'
+     * 
+     * Alias tables somehow broke this. Don't think it's that critical as TENTS hasn't performed well so far, probably 
+     * not the worst if values are a bit off or inconsistent with alias method
     */
     void TentsDNode::update_maps(shared_ptr<const Action> action, double new_q_value) {
         double old_q_value = act_to_qval[action];
         act_to_qval.erase(action);
+        MentsManager& manager = (MentsManager&) *thts_manager;
         for (auto it=qval_to_act.find(old_q_value); it != qval_to_act.end(); it++) {
-            if (it->first != old_q_value) throw runtime_error("Error in updating Tents maps.");
+            if (it->first != old_q_value && !manager.alias_use_caching) throw runtime_error("Error in updating Tents maps.");
             if (it->second != action) continue;
             qval_to_act.erase(it);
             break;
@@ -102,7 +122,10 @@ namespace thts {
             sum_sparse_values += act_to_qval.at(action);
         }
 
-        double spmax_common_term = 0.5 * pow(sum_sparse_values-1.0, 2.0) / pow(sparse_action_set->size(), 2.0);
+        double spmax_common_term = 0.0;
+        if (sparse_action_set->size() > 0) {
+            spmax_common_term = 0.5 * pow(sum_sparse_values-1.0, 2.0) / pow(sparse_action_set->size(), 2.0);
+        }
         double spmax = 0.5;
         for (shared_ptr<const Action> action : *sparse_action_set) {
             double action_val = act_to_qval.at(action);
@@ -135,7 +158,10 @@ namespace thts {
         for (shared_ptr<const Action> action : *sparse_action_set) {
             sum_sparse_values += get_soft_q_value_over_temp(action);
         }
-        double common_term = (sum_sparse_values - 1.0) / sparse_action_set->size();
+        double common_term = 0.0;
+        if (sparse_action_set->size() > 0) {
+            common_term = (sum_sparse_values - 1.0) / sparse_action_set->size();
+        }
 
         // compute weights and store
         for (shared_ptr<const Action> action : *actions) {
@@ -144,6 +170,15 @@ namespace thts {
             action_weights[action] = weight;
             sum_action_weights += weight;
         }
+        
+        // If all action weights extremely small, then just make it uniform random, for numerical stability
+        if (sum_action_weights < EPS) {
+            double uniform_weight = 1.0 / actions->size();
+            for (shared_ptr<const Action> action : *actions) {
+                action_weights[action] = uniform_weight;
+            }
+            sum_action_weights = 1.0;
+        }
     }
 
     /**
@@ -151,7 +186,13 @@ namespace thts {
      * "{decision_depth}" -> selected_action
      */
     shared_ptr<const Action> TentsDNode::select_action(ThtsEnvContext& ctx) {
-        shared_ptr<const Action> selected_action = select_action_ments(ctx);
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        shared_ptr<const Action> selected_action;
+        if (manager.alias_use_caching) {
+            selected_action = select_action_alias_tables(ctx);
+        } else {
+            selected_action = select_action_ments(ctx);
+        }
         ctx.put_value_const(_selected_action_key, selected_action);
         return selected_action;
     }
@@ -195,6 +236,8 @@ namespace thts {
 
     /**
      * Calls the ments implementation of backup, performing soft backup
+     * 
+     * ++ hacky option for avg returns for go expr
      */
     void TentsDNode::backup(
         const vector<double>& trial_rewards_before_node, 
@@ -203,7 +246,26 @@ namespace thts {
         const double trial_cumulative_return,
         ThtsEnvContext& ctx) 
     {
-        backup_tents(ctx);
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        if (!manager.use_avg_return) {
+            backup_tents(ctx);
+            if (manager.alias_use_caching) {
+                backup_update_alias_tables(ctx);
+            }
+            return;
+        }
+
+        num_backups++;
+        backup_update_map(ctx);
+        backup_m_avg_return(trial_cumulative_return_after_node);
+        int alias_update_freq = manager.alias_recompute_freq * actions->size();
+        if (!manager.alias_use_caching || (num_backups % alias_update_freq) == 0) {
+            backup_entropy(ctx);
+        }
+        soft_value = m_avg_return + get_temp() * m_subtree_entropy;
+        if (manager.alias_use_caching) {
+            backup_update_alias_tables(ctx);
+        }
     }
 
     /**

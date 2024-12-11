@@ -4,9 +4,8 @@
 
 #include <cmath>
 #include <limits>
+#include <sstream>
 
-
-#include <iostream>
 using namespace std; 
     
 // Epsilon to be used as a minimum prob, if lower than this just set to zero
@@ -31,9 +30,19 @@ namespace thts {
                 static_pointer_cast<const ThtsCNode>(parent)),
             num_backups(0),
             soft_value(0.0),
-            actions(thts_manager->thts_env->get_valid_actions_itfc(state)),
+            // actions(thts_manager->thts_env->get_valid_actions_itfc(state)),
             policy_prior(),
-            psuedo_q_value_offset(0.0)
+            psuedo_q_value_offset(0.0),
+            m_avg_return(0.0),
+            m_local_entropy(0.0),
+            m_subtree_entropy(0.0),
+            alias_uniform_distr(),
+            alias_prior_distr(),
+            alias_action_distr(),
+            _action_selected_key(),
+            max_heap(nullptr),
+            sum_exp_child_terms(),
+            sum_exp_child_values(0.0)
     {
         if (thts_manager->heuristic_fn != nullptr) {
             soft_value = heuristic_value;
@@ -58,6 +67,59 @@ namespace thts {
                 }
                 psuedo_q_value_offset = thts_manager->psuedo_q_value_offset - mean_log_weight;
             }
+        }
+
+        stringstream ss;
+        ss << "a_" << decision_depth;
+        _action_selected_key = ss.str();
+
+        if (thts_manager->use_max_heap) {
+            max_heap = make_shared<MaxHeap<std::shared_ptr<const Action>>>();
+        }
+    }
+
+    /**
+     * hacky avg return backup
+    */
+    void MentsDNode::backup_m_avg_return(double cumulative_return) {
+        m_avg_return += (cumulative_return - m_avg_return) / num_backups;
+    }
+
+    /**
+     * hacky compute local entropy
+    */
+    double MentsDNode::compute_m_local_entropy(ActionDistr& policy, ThtsEnvContext& ctx) {
+        m_local_entropy = 0.0;
+        for (pair<shared_ptr<const Action>,double> pr : policy) {
+            double prob = pr.second;
+            if (prob == 0.0) continue;
+            m_local_entropy -= prob * log(prob);
+        }
+        return m_local_entropy;
+    }
+
+    /**
+     * hacky entropy backup
+    */
+    void MentsDNode::backup_entropy(ThtsEnvContext& ctx) {
+        // Get action distr
+        ActionDistr policy;
+        double sum_weights;
+        double normalisation_term;
+        lock_all_children();
+        compute_action_weights(policy, sum_weights, normalisation_term, ctx);
+        unlock_all_children();
+
+        // Update local entropy (updated the member var)
+        compute_m_local_entropy(policy, ctx);
+
+        // Update subtree entropy == expected child subtree entropies + local
+        double opp_coeff = is_opponent() ? -1.0 : 1.0;
+        m_subtree_entropy = opp_coeff * m_local_entropy;
+        for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pr : children) {
+            shared_ptr<const Action> action = pr.first;
+            MentsCNode& child = (MentsCNode&) *pr.second;
+            m_subtree_entropy += policy[action] * child.m_subtree_entropy;
         }
     }
     
@@ -166,10 +228,14 @@ namespace thts {
         }
 
         // compute action weights
+        // check for nan underflow, and set to zero in that case
         sum_action_weights = 0.0;
         for (shared_ptr<const Action> action : *actions) {
             double soft_q_value = get_soft_q_value(action,opp_coeff);
             double action_weight = exp((soft_q_value/temp) - normalisation_term);
+            if (isnan(action_weight)) {
+                action_weight = 0.0;
+            }
             action_weights[action] = action_weight;
             sum_action_weights += action_weight;
         }
@@ -215,11 +281,14 @@ namespace thts {
             action_distr[action] *= (1.0 - lambda) / sum_weights;
             if (manager.prior_policy_search_weight > 0.0) {
                 double lambda_tilde = manager.prior_policy_search_weight / log(num_visits+3);
+                if (lambda_tilde > 1.0) {
+                    lambda_tilde = 1.0;
+                }
                 action_distr[action] *= (1.0 - lambda_tilde);
                 action_distr[action] += (1.0 - lambda) * lambda_tilde * policy_prior->at(action);
             }
             action_distr[action] += lambda * uniform_distr_mass;
-            if (action_distr[action] < EPS) {
+            if (isnan(action_distr[action]) || action_distr[action] < EPS) {
                 near_zero_prob_actions.push_back(action);
             }
         }
@@ -240,9 +309,94 @@ namespace thts {
     shared_ptr<const Action> MentsDNode::select_action_ments(ThtsEnvContext& ctx) {
         ActionDistr action_distr;
         compute_action_distribution(action_distr, ctx);
-        shared_ptr<const Action> selected_action = helper::sample_from_distribution(action_distr, *thts_manager);
-        if (!has_child_node(selected_action)) {
-            create_child_node(selected_action);
+        shared_ptr<const Action> selected_action = nullptr;
+        while (is_nullptr_or_should_skip_under_construction_child(selected_action)) {
+            selected_action = helper::sample_from_distribution(action_distr, *thts_manager, false);
+            if (!has_child_node(selected_action)) {
+                create_child_node(selected_action);
+            }
+        }
+        return selected_action;
+    }
+
+    /**
+     * Lazily initialises the alias tables
+    */
+    void MentsDNode::lazy_init_alias_tables(ThtsEnvContext& ctx) {
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        alias_uniform_distr = make_shared<DiscreteUniformDistribution<shared_ptr<const Action>>>(actions);
+        if (manager.prior_fn != nullptr) {
+            alias_prior_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(policy_prior, true);
+        }
+        // shared_ptr<ActionDistr> action_weights = make_shared<ActionDistr>();
+        // compute_action_distribution(*action_weights, spoof_ctx);
+        shared_ptr<ActionDistr> action_distr = make_shared<ActionDistr>();
+        double _sum_weights;
+        double _normalisation_term;
+        lock_all_children();
+        compute_action_weights(*action_distr, _sum_weights, _normalisation_term, ctx);
+        unlock_all_children();
+        alias_action_distr = make_shared<CategoricalDistribution<shared_ptr<const Action>>>(action_distr, true);
+    }
+
+    /**
+     * Gets the mixed distribution using alias tables
+    */
+    shared_ptr<MixedDistribution<shared_ptr<const Action>>> 
+        MentsDNode::select_action_alias_tables_get_mixed_distr(ThtsEnvContext& ctx) 
+    {
+        // Lazily initialise distributions
+        if (alias_action_distr == nullptr) {
+            lazy_init_alias_tables(ctx);
+        }
+        
+        // Compute lambda values (weights the mixed distributions)
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        double epsilon = manager.epsilon;
+        if (is_root_node() && manager.root_node_epsilon > 0.0) epsilon = manager.root_node_epsilon;
+        double lambda = epsilon / log(num_visits+1);
+        if (lambda > manager.max_explore_prob) {
+            lambda = manager.max_explore_prob;
+        }
+        double lambda_tilde = manager.prior_policy_search_weight / log(num_visits+3);
+        if (lambda_tilde > 1.0) {
+            lambda_tilde = 1.0;
+        }
+
+        // Explicit weights for the mixed distribution
+        double uniform_weight = lambda;
+        double bts_weight = (1.0 - lambda) * (1.0 - lambda_tilde);
+        double prior_weight = (1.0 - lambda) * lambda_tilde;
+
+        // Make the mixed distribution
+        shared_ptr<MixedDistributionDistr<shared_ptr<const Action>>> mixed_distr_dict = 
+            make_shared<MixedDistributionDistr<shared_ptr<const Action>>>();
+        mixed_distr_dict->insert_or_assign(alias_uniform_distr, uniform_weight);
+        mixed_distr_dict->insert_or_assign(alias_action_distr, bts_weight);
+        if (manager.prior_fn != nullptr) {
+            mixed_distr_dict->insert_or_assign(alias_prior_distr, prior_weight);
+        }
+
+        return make_shared<MixedDistribution<shared_ptr<const Action>>>(mixed_distr_dict);
+    }
+
+    /**
+     * Select action using alias tables
+    */
+    std::shared_ptr<const Action> MentsDNode::select_action_alias_tables(ThtsEnvContext& ctx) {
+        // Get mixed distribution
+        shared_ptr<MixedDistribution<shared_ptr<const Action>>> mixed_distr = 
+            select_action_alias_tables_get_mixed_distr(ctx);
+
+        // Sample, and handle making child if need be, return
+        // If child already under construction then repeat sample
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        shared_ptr<const Action> selected_action = nullptr;
+        while (is_nullptr_or_should_skip_under_construction_child(selected_action)) {
+            selected_action = mixed_distr->sample(manager);
+            if (!has_child_node(selected_action)) {
+                create_child_node(selected_action);
+            }
         }
         return selected_action;
     }
@@ -251,7 +405,18 @@ namespace thts {
      * Calls the ments implementation of select action
      */
     shared_ptr<const Action> MentsDNode::select_action(ThtsEnvContext& ctx) {
-        return select_action_ments(ctx);
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        shared_ptr<const Action> selected_action = nullptr;
+        if (manager.alias_use_caching) {
+            selected_action = select_action_alias_tables(ctx);
+        } else {
+            selected_action = select_action_ments(ctx);
+        }
+
+        if (manager.use_max_heap) {
+            ctx.put_value_const(_action_selected_key, selected_action);
+        }
+        return selected_action;
     }
 
     /**
@@ -291,6 +456,12 @@ namespace thts {
             visit_counts[action] = get_child_node(action)->num_visits;
         }
 
+        // If no children, best we can do is select a random action to recommend
+        if (visit_counts.size() == 0u) {
+            int index = thts_manager->get_rand_int(0, actions->size());
+            return actions->at(index);
+        }
+
         return helper::get_max_key_break_ties_randomly(visit_counts, *thts_manager);
     }
 
@@ -322,6 +493,11 @@ namespace thts {
      * Also don't forget to increment num_backups
      */
     void MentsDNode::backup_soft(ThtsEnvContext& ctx) {
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        if (manager.use_max_heap) {
+            return backup_soft_with_max_heap(ctx);
+        }
+
         num_backups++;
 
         ActionDistr action_weights;
@@ -337,7 +513,49 @@ namespace thts {
     }
 
     /**
+     * Implement soft backup with auxilary variables to make it quick
+     * 
+     * Child must exist, because action selection would have created it if it didn't
+     * 
+     * Remembver to update num backups
+     * Get child
+     * Get old child term and old max val
+     * Compute new child term + update'max_heap' and 'sum_exp_child_terms'
+     * Remove old exp((old_Q-old_max_val)/temp) (the value of sum_exp_child_terms)
+     * Update sum_exp_child_values for a new normalisation term
+     *      sum(exp((Q - old_max_val)/temp)) -> sum(exp((Q - new_max_val)/temp))
+     * Add new exp((new_Q-new_max_val)/temp)
+     * Set the soft value
+    */
+    void MentsDNode::backup_soft_with_max_heap(ThtsEnvContext& ctx) {
+        num_backups++;
+
+        shared_ptr<const Action> selected_action = ctx.get_value_ptr_const<Action>(_action_selected_key);
+        MentsCNode& child = (MentsCNode&) *get_child_node(selected_action);
+        lock_guard<mutex> lg(child.node_lock);
+        
+        double old_child_term = sum_exp_child_terms[selected_action];
+        double old_max_value = 0.0;
+        if (max_heap->size() > 0) old_max_value = max_heap->peek_top_value();
+
+        double temp = get_temp();
+        double opp_coeff = is_opponent() ? -1.0 : 1.0;
+        double child_value = opp_coeff * child.soft_value;
+        max_heap->insert_or_assign(selected_action, child_value);
+        double max_value = max_heap->peek_top_value();
+        double child_term = exp((child_value - max_value) / temp);
+        sum_exp_child_terms[selected_action] = child_term;
+
+        sum_exp_child_values -= old_child_term;
+        sum_exp_child_values *= exp((-max_value + old_max_value) / temp);
+        sum_exp_child_values += child_term;
+
+        soft_value = opp_coeff * (log(sum_exp_child_values) + max_value / temp);
+    }
+
+    /**
      * Calls the ments implementation of backup, performing soft backup
+     * ++ hacky using avg_returns backup impl
      */
     void MentsDNode::backup(
         const vector<double>& trial_rewards_before_node, 
@@ -346,7 +564,47 @@ namespace thts {
         const double trial_cumulative_return,
         ThtsEnvContext& ctx) 
     {
-        backup_soft(ctx);
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        if (!manager.use_avg_return) {
+            backup_soft(ctx);
+            return;
+        }
+
+        num_backups++;
+        backup_m_avg_return(trial_cumulative_return_after_node);
+        int alias_update_freq = manager.alias_recompute_freq * actions->size();
+        if (!manager.alias_use_caching || (num_backups % alias_update_freq) == 0 || num_backups == 1) {
+            backup_entropy(ctx);
+        }
+        soft_value = m_avg_return + get_temp() * m_subtree_entropy;
+
+        if (manager.alias_use_caching) {
+            backup_update_alias_tables(ctx);
+        }
+    }
+
+    /**
+     * Update alias tables in backup
+    */
+    void MentsDNode::backup_update_alias_tables(ThtsEnvContext& ctx) {
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        int freq = manager.alias_recompute_freq * actions->size();
+        if ((num_backups % freq) == 0) {
+            // Lazily initialise distributions
+            if (alias_action_distr == nullptr) {
+                lazy_init_alias_tables(ctx);
+                return;
+            }
+            
+            shared_ptr<ActionDistr> action_distr = make_shared<ActionDistr>();
+            double _sum_weights;
+            double _normalisation_term;
+            lock_all_children();
+            compute_action_weights(*action_distr, _sum_weights, _normalisation_term, ctx);
+            unlock_all_children();
+            // compute_action_distribution(*action_distr, ctx);
+            alias_action_distr->reconstruct_alias_table(action_distr);
+        }
     }
 
     /**

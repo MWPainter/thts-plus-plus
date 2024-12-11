@@ -57,8 +57,10 @@ namespace thts {
      * chance node initialised to 0. In cuncurrent settings, we may erroneously backup a zero. Alternatively, we may 
      * accidentally erase heuristic values that we wanted to use in concurrent settings (which is why this line was 
      * added originally).
+     * 
      */
-    void DPDNode::backup_dp_impl(DPCNodeChildMap& children, bool is_opponent) {
+    void DPDNode::backup_dp_impl(DPCNodeChildMap& children, bool is_opponent) 
+    {
         double opp_coeff = is_opponent ? -1.0 : 1.0;
         dp_value = opp_coeff * -numeric_limits<double>::infinity();
 
