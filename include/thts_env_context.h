@@ -141,6 +141,20 @@ namespace thts {
                 put_value_raw_const(key, std::static_pointer_cast<const void>(val));
            }
 
+           bool contains_key(const std::string& key) {
+               if (context.find(key) != context.end()) {
+                    return true;
+               }
+               return false;
+           }
+
+           bool contains_key_const(const std::string& key) {
+               if (context_const.find(key) != context_const.end()) {
+                    return true;
+               }
+               return false;
+           }
+
             /**
              * Erase a value from the context
             */

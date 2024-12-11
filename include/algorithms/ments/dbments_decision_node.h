@@ -54,6 +54,9 @@ namespace thts {
              *      ctx: A context provided to all thts functions throughout a trial to pass intermediate/transient info
              */
             virtual void visit(ThtsEnvContext& ctx);
+
+            // Hacking in avg returns recommend for go experiments
+            std::shared_ptr<const Action> recommend_action_best_avg_return() const;
             
             /**
              * Uses the DPDNode to recommend an action according to the DP values.

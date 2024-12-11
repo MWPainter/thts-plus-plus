@@ -4,6 +4,7 @@
 #include "thts_manager.h"
 
 #include <stdexcept>
+#include <thread>
 #include <tuple>
 #include <utility>
 
@@ -30,10 +31,16 @@ namespace thts {
             decision_timestep(decision_timestep),
             parent(parent),
             num_visits(0),
-            heuristic_value(0.0)
+            heuristic_value(0.0),
+            actions(thts_manager->thts_env->get_valid_actions_itfc(state)),
+            child_constructed()
     {
         if (thts_manager->heuristic_fn != nullptr && !thts_manager->thts_env->is_sink_state_itfc(state)) {
             heuristic_value = thts_manager->heuristic_fn(state, thts_manager->thts_env);
+        }
+
+        for (shared_ptr<const Action> action : *actions) {
+            child_constructed.emplace(action,CNODE_STATE_UNCONSTRUCTED);
         }
     }
 
@@ -109,11 +116,24 @@ namespace thts {
      * 
      * As transposition table is implemented for decision nodes, we don't need to use one for chance nodes. If two 
      * chance nodes would be transpositions, then their parent (decision) nodes would be transpositions!
+     * 
+     * Updates for the avoid_selecting_children_under_construction mode, updates the construction state when claiming 
+     * the construction and after putting it in the child map. If we fail to update the construction state, it means 
+     * that another thread either is constructing or has constructed the child. We can safely return a nullptr, and 
+     * the select action methods should loop if the action/next state corresponds to a child that is under construciton.
      */
     shared_ptr<ThtsCNode> ThtsDNode::create_child_node_itfc(shared_ptr<const Action> action) {
         if (has_child_node_itfc(action)) return get_child_node_itfc(action);
+        if (thts_manager->avoid_selecting_children_under_construction) {
+            bool success = set_child_under_construction(action); 
+            if (!success) return nullptr;
+        }
         shared_ptr<ThtsCNode> child_node = create_child_node_helper_itfc(action);
         children[action] = child_node;
+        if (thts_manager->avoid_selecting_children_under_construction) {
+            bool success = set_child_constructed(action);
+            if (!success) throw runtime_error("Failed to finish construction after claiming construction.");
+        }
         return child_node;
     }
 
@@ -236,5 +256,67 @@ namespace thts {
      */
     bool ThtsDNode::save(string& filename) const {
         throw runtime_error("Save function not implemented");
+    }
+    
+    /**
+     * Tries to set that the child is going to be constructed (and is 'under construction'). Returns false if it fails 
+     * to update the state
+    */
+    bool ThtsDNode::set_child_under_construction(shared_ptr<const Action> action) {
+        int unconstructed = CNODE_STATE_UNCONSTRUCTED;
+        int under_construciton = CNODE_STATE_UNDER_CONSTRUCTION;
+        return child_constructed.at(action).compare_exchange_strong(unconstructed, under_construciton);
+    }
+
+    /**
+     * Tries to set that child is constructed. Returns false if it fails to update.
+    */
+    bool ThtsDNode::set_child_constructed(shared_ptr<const Action> action) {
+        int under_construciton = CNODE_STATE_UNDER_CONSTRUCTION;
+        int constructed = CNODE_STATE_CONSTRUCTED;
+        return child_constructed.at(action).compare_exchange_strong(under_construciton, constructed);
+    }
+
+    /**
+     * When running in avoid_selecting_children_under_construction mode, this is just a null ptr check
+     * First checks if the action is a null ptr
+     * Checks if child node is under construction
+     * For deterministic environments, this includes the child decision node
+    */
+    bool ThtsDNode::is_nullptr_or_should_skip_under_construction_child(shared_ptr<const Action> action) {
+        // node_lock.unlock();
+        // std::this_thread::yield();
+        // node_lock.lock();
+
+        if (action == nullptr) return true;
+        if (!thts_manager->avoid_selecting_children_under_construction) return false;
+        int node_state = child_constructed.at(action).load();
+        if (node_state == CNODE_STATE_UNDER_CONSTRUCTION) return true;
+        if (node_state == CNODE_STATE_UNCONSTRUCTED) return false;
+
+        // If deterministic, check that child decision node has been made to avoid getting stuck there
+        if (has_child_node_itfc(action)) {
+            ThtsCNode& child = *get_child_node_itfc(action);
+            if (child.next_state_distr->size() == 1) {
+                for (pair<shared_ptr<const State>,double> pr : *child.next_state_distr) {
+                    node_state = child.child_constructed.at(pr.first).load();
+        // TODO: when integrate in main, use the thread id (put it in context), and use that id for the 
+        // 'under construction' value. This way the thread can take ownership of creating the chance node and decision 
+        // node in the deterministic setting. For now, the race condition is unlikely and worst case is that an 
+        // occasional search thread has to wait
+                    if (node_state == DNODE_STATE_UNCONSTRUCTED) {
+                        // N.B. we need to return false here so we break from the select aciton loop when we make a child
+                        // When integrate into main, we will set the unconstructed value to the thread id, so other threads 
+                        // can instread return true here. I.e. we would replace this if statement with 
+                        // if (node_state == thread_id) 
+                        return false; 
+                    }
+                    if (node_state != DNODE_STATE_CONSTRUCTED) return true;
+                }
+            }
+        }
+
+        // If get here than all the checks for if under construction failed, so should be constructed
+        return false;
     }
 }

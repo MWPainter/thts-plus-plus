@@ -1,23 +1,37 @@
-# Externals from branches
-external/KataGo
-external/eigen
-
 # Folders in other branches
-python
-
-# External files from branches
-external/kata1*
+py
 
 # Outputs
 thts-test
+thts-run-toy-env
+go-test
+goooo
+
+# Kata Neural Net
+external/kata1*
+
+# Katago hidden files
+external/KataGo/.clang-format
+
+# Kata go ignores for compiled code
+external/KataGo/cpp/CMakeCache.txt
+external/KataGo/cpp/CMakeFiles
+external/KataGo/cpp/Makefile
+external/KataGo/cpp/cmake_install.cmake
+external/KataGo/cpp/katago
+external/KataGo/cpp/program/gitinfo.h
+
+# ignore any eigen compiled stuff
+external/eigen/CMakeFiles/
+external/eigen/cmake_install.cmake
+external/eigen/build
+external/eigen-3.4.0
+external/pybind11
+external/qhull
+
 # Results outputs
 plots
 results
-
-# Outputs from branches
-go-test
-goooo
-thts-run-toy-env
 
 # Hidden files
 .vscode

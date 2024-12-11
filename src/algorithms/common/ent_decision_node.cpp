@@ -39,6 +39,7 @@ namespace thts {
         local_entropy = 0.0;
         for (pair<shared_ptr<const Action>,double> pr : policy) {
             double prob = pr.second;
+            if (prob == 0.0) continue;
             local_entropy -= prob * log(prob);
         }
 

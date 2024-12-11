@@ -55,11 +55,15 @@ namespace thts {
         MentsCNode::num_backups++;
 
         // entropy backup
-        backup_ent<DentsDNode>(children);
+        DentsManager& manager = (DentsManager&) *thts_manager;
+        DentsDNode& parent_ref = (DentsDNode&) *parent.lock();
+        int alias_update_freq = manager.alias_recompute_freq * parent_ref.actions->size();
+        if (!manager.alias_use_caching || (MentsCNode::num_backups % alias_update_freq) == 0) {
+            backup_ent<DentsDNode>(children);
+        }
 
         // value backup
         double val_estimate;
-        DentsManager& manager = (DentsManager&) *thts_manager;
         if (manager.use_dp_value) {
             backup_dp<DentsDNode>(children, local_reward, is_opponent());
             val_estimate = dp_value;
@@ -91,8 +95,11 @@ namespace thts {
      * Return string with all of the relevant values in this node
      */
     string DentsCNode::get_pretty_print_val() const {
+        DentsManager& manager = (DentsManager&) *thts_manager;
+        double val_estimate = manager.use_dp_value ? dp_value : avg_return; 
+
         stringstream ss;
-        ss << dp_value << "(entrpy:" << subtree_entropy << ",val_temp:" << get_value_temp() << ",soft_val:" 
+        ss << val_estimate << "(entrpy:" << subtree_entropy << ",val_temp:" << get_value_temp() << ",soft_val:" 
             << soft_value << ")";
         return ss.str();
     }

@@ -43,6 +43,7 @@ namespace thts {
         protected:
             std::string _node_distr_key;
             std::string _parent_distr_key;
+            std::shared_ptr<ActionDistr> cached_action_distr;
 
             /**
              * Gets the action distribution for a parent node 
@@ -119,6 +120,21 @@ namespace thts {
              *      The action selected.
              */
             std::shared_ptr<const Action> select_action_rents(ThtsEnvContext& ctx);
+
+            /**
+             * Select an action using the alias tables
+            */
+            std::shared_ptr<const Action> select_action_alias_tables(ThtsEnvContext& ctx);
+
+            /**
+             * Implement menst soft backup with an auxilary variable for sum(exp(Q(s,a)/temp))
+            */
+            virtual void backup_soft_with_max_heap(ThtsEnvContext& ctx);
+
+            /**
+             * Update the alias tables
+            */
+            virtual void backup_update_alias_tables(ThtsEnvContext& ctx);
 
 
 

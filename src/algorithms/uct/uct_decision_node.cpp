@@ -30,7 +30,7 @@ namespace thts {
                 static_pointer_cast<const ThtsCNode>(parent)),
             num_backups(0),
             avg_return(0.0),
-            actions(thts_manager->thts_env->get_valid_actions_itfc(state)),
+            // actions(thts_manager->thts_env->get_valid_actions_itfc(state)),
             policy_prior() 
     {   
         if (thts_manager->heuristic_fn != nullptr) {
@@ -50,7 +50,7 @@ namespace thts {
      * Code more readable with 'has_prior()' rather than checking against a nullptr.
      */
     bool UctDNode::has_prior() const {
-        UctManager& manager = *static_pointer_cast<UctManager>(thts_manager);
+        UctManager& manager = (UctManager&) *thts_manager;
         return manager.prior_fn != nullptr;
     }
 
@@ -91,12 +91,12 @@ namespace thts {
      * TODO: Consider fine grained locking if want to optimise. Probably don't need bias and values to be held super 
      *      consistent throughout function.
      */
-    void UctDNode::fill_ucb_values(unordered_map<shared_ptr<const Action>,double>& ucb_values, ThtsEnvContext& ctx) const {
+    void UctDNode::fill_ucb_values(unordered_map<shared_ptr<const Action>,double>& ucb_values, ThtsEnvContext& ctx) {
         shared_ptr<UctManager> manager = static_pointer_cast<UctManager>(thts_manager);
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
 
         // Lock all children
-        lock_all_children();
+        // lock_all_children();
 
         // Compute adaptive bias if using
         double bias = manager->bias; 
@@ -104,9 +104,40 @@ namespace thts {
             bias = UctManager::AUTO_BIAS_MIN_BIAS;
             for (shared_ptr<const Action> action : *actions) {
                 if (!has_child_node(action)) continue;
-                double child_abs_val = abs(get_child_node(action)->avg_return);
+                shared_ptr<UctCNode> child = get_child_node(action);
+                lock_guard<mutex> lg(child->node_lock);
+                double child_abs_val = abs(child->avg_return);
                 if (child_abs_val > bias) bias = child_abs_val;
             }
+        }
+
+
+        // Compute ucb values (skipping choosing any nodes that are under construction)
+        while (ucb_values.size() == 0) {
+            for (shared_ptr<const Action> action : *actions) {
+                if (is_nullptr_or_should_skip_under_construction_child(action)) {
+                    continue;
+                }                
+                double action_ucb_value = 0.0;
+                shared_ptr<UctCNode> child;
+                if (has_child_node(action)) {
+                    child = get_child_node(action);
+                    child->lock();
+                }
+                int child_visits = (child != nullptr) ? child->num_visits : 0;
+                action_ucb_value += compute_ucb_term(num_visits, child_visits);
+                action_ucb_value *= bias;
+                if (has_prior()) {
+                    action_ucb_value *= policy_prior->at(action);
+                }
+
+                if (child != nullptr) {
+                    action_ucb_value += opp_coeff * get_child_node(action)->avg_return;
+                    child->unlock();
+                }
+
+                ucb_values[action] = action_ucb_value;
+            }  
         }
 
         // Compute usb values
@@ -128,7 +159,7 @@ namespace thts {
         }  
 
         // unlock all children
-        unlock_all_children();      
+        // unlock_all_children();      
     }
 
     /**
@@ -139,11 +170,11 @@ namespace thts {
      * Otherwise we do standard UCB, by 'pulling each arm' (action) once first.
      */
     shared_ptr<const Action> UctDNode::select_action_ucb(ThtsEnvContext& ctx) {
-        // Pull uninitialised arms if needed
+        // Pull uninitialised arms (that arent being initialised) if needed
         if (!has_prior()) {
             vector<shared_ptr<const Action>> actions_yet_to_try;
             for (shared_ptr<const Action> action : *actions) {
-                if (!has_child_node(action)) {
+                if (!has_child_node(action) && !is_nullptr_or_should_skip_under_construction_child(action)) {
                     actions_yet_to_try.push_back(action);
                 }
             }
@@ -172,10 +203,13 @@ namespace thts {
      * Selects a (uniformly) random action, creating the child if it doesn't yet exist.
      */
     shared_ptr<const Action> UctDNode::select_action_random() {
-        int index = thts_manager->get_rand_int(0, actions->size());
-        shared_ptr<const Action> action = actions->at(index);
-        if (!has_child_node(action)) {
-            create_child_node(action);
+        shared_ptr<const Action> action = nullptr;
+        while (is_nullptr_or_should_skip_under_construction_child(action)) {
+            int index = thts_manager->get_rand_int(0, actions->size());
+            action = actions->at(index);
+            if (!has_child_node(action)) {
+                create_child_node(action);
+            }
         }
         return action;
     }
@@ -228,6 +262,12 @@ namespace thts {
         for (shared_ptr<const Action> action : *actions) {
             if (!has_child_node(action)) continue;
             visit_counts[action] = get_child_node(action)->num_visits;
+        }
+
+        // If no children, best we can do is select a random action to recommend
+        if (visit_counts.size() == 0u) {
+            int index = thts_manager->get_rand_int(0, actions->size());
+            return actions->at(index);
         }
 
         return helper::get_max_key_break_ties_randomly(visit_counts, *thts_manager);

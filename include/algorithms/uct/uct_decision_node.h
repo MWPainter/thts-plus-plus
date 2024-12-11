@@ -43,7 +43,7 @@ namespace thts {
         protected:
             int num_backups;
             double avg_return;
-            std::shared_ptr<ActionVector> actions;
+            // std::shared_ptr<ActionVector> actions;
             std::shared_ptr<ActionPrior> policy_prior;
 
             /**
@@ -84,7 +84,7 @@ namespace thts {
              *      A map from actions to their corresponding ucb values
              */
             virtual void fill_ucb_values(
-                std::unordered_map<std::shared_ptr<const Action>,double>& ucb_values, ThtsEnvContext& ctx) const;
+                std::unordered_map<std::shared_ptr<const Action>,double>& ucb_values, ThtsEnvContext& ctx);
 
             /**
              * Implementation of thts 'select_action' function: that selects actions according to a hybrid 

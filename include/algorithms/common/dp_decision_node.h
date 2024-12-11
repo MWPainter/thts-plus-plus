@@ -2,6 +2,7 @@
 
 #include "algorithms/common/dp_chance_node.h"
 
+#include "algorithms/common/max_heap.h"
 #include "thts_types.h"
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
@@ -22,6 +23,8 @@ namespace thts {
      *          The number of backups this node has performed (== "number of visits" with respect to dp backup)
      *      dp_value: 
      *          The dynamic programming value at this node
+     *      dp_max_heap:
+     *          A max heap for dp values
      */
     class DPDNode {
         // Alloow DPCNode access to private members
@@ -30,16 +33,24 @@ namespace thts {
         protected:
             int num_backups;
             double dp_value;
+            std::shared_ptr<MaxHeap<std::shared_ptr<const Action>>> dp_max_heap;
+
 
             /**
              * Constructor 
              */
-            DPDNode(double dp_value=0.0) : num_backups(1), dp_value(dp_value) {};
+            DPDNode(double dp_value=0.0, bool use_max_heap=false) : 
+                num_backups(1), dp_value(dp_value), dp_max_heap(nullptr) 
+            {
+                if (use_max_heap) {
+                    dp_max_heap = std::make_shared<MaxHeap<std::shared_ptr<const Action>>>();
+                }
+            };
 
             /**
              * Destructor
              */
-           virtual ~DPDNode() = default;
+            virtual ~DPDNode() = default;
 
             /**
              * Visit function. 
@@ -153,12 +164,28 @@ namespace thts {
              * Templated with the top-level class of the ThtsCNode, so that the children can be cast from
              * ThtsCNode -> T -> DPCNode.
              * 
+             * Added a short version if we are using a max heap (selected_action != nullptr), which updates the 
+             * max heap and uses it to get the max value
+             * 
              * Args:
              *      children: The children map for a ThtsDNode (that are ultimately of type T)
              *      is_opponent: True if this node is acting as an opponent in a two player game.
              */
             template <typename T>
-            void backup_dp(const CNodeChildMap& children, bool is_opponent=false) {
+            void backup_dp(
+                const CNodeChildMap& children, 
+                bool is_opponent=false,
+                std::shared_ptr<const Action> selected_action=nullptr,
+                double selected_action_value=0.0) 
+            {
+                if (selected_action != nullptr) {
+                    double opp_coeff = is_opponent ? -1.0 : 1.0;
+                    dp_max_heap->insert_or_assign(selected_action, opp_coeff * selected_action_value);
+                    dp_value = opp_coeff * dp_max_heap->peek_top_value();
+                    num_backups++;
+                    return;
+                }
+
                 std::shared_ptr<DPCNodeChildMap> dp_children = convert_child_map<T>(children);
                 for (auto pr : children) pr.second->lock();
                 backup_dp_impl(*dp_children, is_opponent);

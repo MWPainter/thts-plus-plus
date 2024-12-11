@@ -7,7 +7,7 @@ namespace thts {
      * Args object so that params can be set in a more named args way
      */
     struct DentsManagerArgs : public MentsManagerArgs {
-        static constexpr TempDecayFnPtr value_temp_decay_fn_default=decayed_temp_inv_sqrt;
+        static constexpr TempDecayFnPtr value_temp_decay_fn_default=decayed_temp_inv_log; //decayed_temp_inv_sqrt;
         static constexpr double value_temp_init_default=1.0;
         static constexpr double value_temp_decay_min_temp_default=1.0e-6;
         static constexpr double value_temp_decay_visits_scale_default=1.0;

@@ -4,6 +4,7 @@
 #include "thts_env.h"
 #include "thts_manager.h"
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <sstream>
@@ -12,6 +13,11 @@
 #include <vector>
 
 namespace thts {
+    // constants
+    static const int CNODE_STATE_UNCONSTRUCTED = -1;
+    static const int CNODE_STATE_UNDER_CONSTRUCTION = -2;
+    static const int CNODE_STATE_CONSTRUCTED = -3;
+
     // forward declare
     class ThtsCNode;
     class ThtsLogger;
@@ -69,6 +75,9 @@ namespace thts {
             CNodeChildMap children;
 
             double heuristic_value;
+
+            std::shared_ptr<ActionVector> actions;
+            std::unordered_map<std::shared_ptr<const Action>,std::atomic<int>> child_constructed;
 
         public: 
             /**
@@ -345,5 +354,21 @@ namespace thts {
              * A helper function that actually implements 'get_pretty_pring_string' above.
              */
             void get_pretty_print_string_helper(std::stringstream& ss, int depth, int num_tabs) const;
+
+        protected:
+            /**
+             * Sets child_constructed[action] is set to CNODE_STATE_UNDER_CONSTRUCTION
+             * Returns if the operation was successful
+            */
+            bool set_child_under_construction(std::shared_ptr<const Action> action);
+            /**
+             * Sets child_constructed[action] is set to CNODE_STATE_CONSTRUCTED
+             * Returns if the operation was successful
+            */
+            bool set_child_constructed(std::shared_ptr<const Action> action);
+            /**
+             * Returns true if state == nullptr or child_constructed[action] is set to CNODE_STATE_UNDER_CONSTRUCTION
+            */
+            bool is_nullptr_or_should_skip_under_construction_child(std::shared_ptr<const Action> action);
     };
 }

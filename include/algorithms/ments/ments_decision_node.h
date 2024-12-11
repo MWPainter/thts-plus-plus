@@ -4,11 +4,14 @@
 #include "algorithms/ments/ments_manager.h"
 #include "thts_types.h"
 
+#include "algorithms/common/max_heap.h"
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
 #include "thts_env.h"
 #include "thts_env_context.h"
 #include "thts_manager.h"
+
+#include "distributions.h"
 
 #include <memory>
 #include <sstream>
@@ -57,9 +60,29 @@ namespace thts {
         protected:
             int num_backups;
             double soft_value;
-            std::shared_ptr<ActionVector> actions;
+            // std::shared_ptr<ActionVector> actions;
             std::shared_ptr<ActionPrior> policy_prior;
             double psuedo_q_value_offset;
+
+            double m_avg_return;
+            double m_local_entropy;
+            double m_subtree_entropy;
+
+            std::shared_ptr<DiscreteUniformDistribution<std::shared_ptr<const Action>>> alias_uniform_distr;
+            std::shared_ptr<CategoricalDistribution<std::shared_ptr<const Action>>> alias_prior_distr;
+            std::shared_ptr<CategoricalDistribution<std::shared_ptr<const Action>>> alias_action_distr;
+
+            string _action_selected_key;
+            std::shared_ptr<MaxHeap<std::shared_ptr<const Action>>> max_heap;
+            std::unordered_map<std::shared_ptr<const Action>, double> sum_exp_child_terms;
+            double sum_exp_child_values;
+
+            /**
+             * Entropy backups (used for AR-MENTS)
+            */
+            virtual void backup_m_avg_return(double cumulative_return);
+            virtual double compute_m_local_entropy(ActionDistr& policy, ThtsEnvContext& ctx);
+            virtual void backup_entropy(ThtsEnvContext& ctx);
 
             /**
              * Returns if we have a valid 'policy_prior' to use.
@@ -181,6 +204,32 @@ namespace thts {
              *      ctx: A thts env context
              */
             void backup_soft(ThtsEnvContext& ctx);
+
+            /**
+             * Implement menst soft backup with an auxilary variable for sum(exp(Q(s,a)/temp))
+            */
+            virtual void backup_soft_with_max_heap(ThtsEnvContext& ctx);
+
+            /**
+             * Lazily initialises the alias tables
+            */
+            void lazy_init_alias_tables(ThtsEnvContext& ctx);
+
+            /**
+             * Gets the mixed distribution using alias tables
+            */
+            std::shared_ptr<MixedDistribution<std::shared_ptr<const Action>>> 
+                select_action_alias_tables_get_mixed_distr(ThtsEnvContext& ctx);
+
+            /**
+             * Select an action using the alias tables
+            */
+            std::shared_ptr<const Action> select_action_alias_tables(ThtsEnvContext& ctx);
+
+            /**
+             * Update the alias tables
+            */
+            virtual void backup_update_alias_tables(ThtsEnvContext& ctx);
 
 
 

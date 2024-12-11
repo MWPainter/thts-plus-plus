@@ -26,9 +26,13 @@ namespace thts {
 namespace thts {
 
     ThtsLogger::ThtsLogger() : 
+        entries(),
         prior_runtime(chrono::duration<double>::zero()), 
+        start_time(),
+        trials_completed(0),
         trials_delta(numeric_limits<int>::max()), 
-        runtime_delta(numeric_limits<double>::max()) {}
+        runtime_delta(numeric_limits<double>::max()),
+        next_log_runtime_threshold() {}
 
     void ThtsLogger::set_trials_delta(int delta) {
         trials_delta = delta;

@@ -23,8 +23,8 @@ namespace thts {
                 decision_timestep,
                 static_pointer_cast<const ThtsDNode>(parent)),
             num_backups(0),
-            avg_return(0.0),
-            next_state_distr(thts_manager->thts_env->get_transition_distribution_itfc(state,action))
+            avg_return(0.0)
+            // next_state_distr(thts_manager->thts_env->get_transition_distribution_itfc(state,action))
     {  
     }
 
@@ -39,9 +39,12 @@ namespace thts {
      * Implementation of sample_observation, that uses the sample from distribution helper function.
      */
     shared_ptr<const State> UctCNode::sample_observation_random() {
-        shared_ptr<const State> sampled_state = helper::sample_from_distribution(*next_state_distr, *thts_manager);
-        if (!has_child_node(sampled_state)) {
-            create_child_node(sampled_state);
+        shared_ptr<const State> sampled_state;
+        while (is_nullptr_or_should_skip_under_construction_child(sampled_state)) {
+            sampled_state = helper::sample_from_distribution(*next_state_distr, *thts_manager);
+            if (!has_child_node(sampled_state)) {
+                create_child_node(sampled_state);
+            }
         }
         return sampled_state;
     }

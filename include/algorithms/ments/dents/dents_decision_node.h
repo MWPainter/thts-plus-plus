@@ -52,20 +52,20 @@ namespace thts {
              */
             virtual double get_value_temp() const;            
             
-            /**
-             * Helper to get the soft q-value of an action. Taking into account for if we are acting as an opponent.
-             * 
-             * This computes the value of V + alpha_decayed * H, for each child, where V is the dp value of the child,
-             * H is the subtree entropy of the child and alpha_decayed is the decayed temperature.
-             * 
-             * Args:
-             *      action: 
-             *          The action to get the corresponding q value for
-             *      opponent_coeff: 
-             *          A value of -1.0 or 1.0 for if we are acting as the opponent in a two player game or not 
-             *          respectively
-             */
-            virtual double get_soft_q_value(std::shared_ptr<const Action> action, double opponent_coeff) const;
+            // /**
+            //  * Helper to get the soft q-value of an action. Taking into account for if we are acting as an opponent.
+            //  * 
+            //  * This computes the value of V + alpha_decayed * H, for each child, where V is the dp value of the child,
+            //  * H is the subtree entropy of the child and alpha_decayed is the decayed temperature.
+            //  * 
+            //  * Args:
+            //  *      action: 
+            //  *          The action to get the corresponding q value for
+            //  *      opponent_coeff: 
+            //  *          A value of -1.0 or 1.0 for if we are acting as the opponent in a two player game or not 
+            //  *          respectively
+            //  */
+            // virtual double get_soft_q_value(std::shared_ptr<const Action> action, double opponent_coeff) const;
             
             /**
              * Uses the DPDNode to recommend an action according to the DP values.

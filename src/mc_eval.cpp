@@ -101,6 +101,8 @@ namespace thts {
 
             thread_policy.update_step(action, obsv);
             state = next_state;
+
+            num_actions_taken++;
         }
 
         // store

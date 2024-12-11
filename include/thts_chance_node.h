@@ -3,6 +3,7 @@
 #include "thts_decision_node.h"
 #include "thts_manager.h"
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <sstream>
@@ -10,6 +11,11 @@
 #include <unordered_map>
 
 namespace thts {
+    // constants
+    static const int DNODE_STATE_UNCONSTRUCTED = -1;
+    static const int DNODE_STATE_UNDER_CONSTRUCTION = -2;
+    static const int DNODE_STATE_CONSTRUCTED = -3;
+
     // forward declare
     class ThtsDNode;
 
@@ -62,6 +68,9 @@ namespace thts {
 
             int num_visits;
             DNodeChildMap children;
+
+            std::shared_ptr<StateDistr> next_state_distr;
+            std::unordered_map<std::shared_ptr<const State>,std::atomic<int>> child_constructed;
 
         public: 
             /**
@@ -269,5 +278,21 @@ namespace thts {
              * A helper function that actually implements 'get_pretty_pring_string' above.
              */
             void get_pretty_print_string_helper(std::stringstream& ss, int depth, int num_tabs) const;
+
+        protected:
+            /**
+             * Sets child_constructed[state] is set to CNODE_STATE_UNDER_CONSTRUCTION
+             * Returns if the operation was successful
+            */
+            bool set_child_under_construction(std::shared_ptr<const State> state);
+            /**
+             * Sets child_constructed[state] is set to CNODE_STATE_CONSTRUCTED
+             * Returns if the operation was successful
+            */
+            bool set_child_constructed(std::shared_ptr<const State> state);
+            /**
+             * Returns true if state == nullptr or child_constructed[state] is set to CNODE_STATE_UNDER_CONSTRUCTION
+            */
+            bool is_nullptr_or_should_skip_under_construction_child(std::shared_ptr<const State> state);
     };
 }

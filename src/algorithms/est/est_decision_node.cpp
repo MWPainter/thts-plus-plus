@@ -52,9 +52,20 @@ namespace thts {
         // value backup
         DentsManager& manager = (DentsManager&) *thts_manager;
         if (manager.use_dp_value) {
-            backup_dp<DentsCNode>(children, is_opponent());
+            shared_ptr<const Action> selected_action = nullptr;
+            double child_value = 0.0;
+            if (manager.use_max_heap) {
+                shared_ptr<const Action> selected_action = ctx.get_value_ptr_const<Action>(_action_selected_key);
+                EstCNode& child = (EstCNode&) *get_child_node(selected_action);
+                child_value = child.dp_value;
+            }
+            backup_dp<DentsCNode>(children, is_opponent(), selected_action, child_value);
         } else {
             backup_emp(trial_cumulative_return_after_node);
+        }
+        
+        if (manager.alias_use_caching) {
+            backup_update_alias_tables(ctx);
         }
     }
 
