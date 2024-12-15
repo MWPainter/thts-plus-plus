@@ -1,0 +1,9 @@
+env_id,alg_id,search_runtime,max_trial_length,rollouts_per_mc_eval,num_repeats,num_threads
+four-room-timed-v0,smdents,20,50,1024,5,16
+
+hp_opt_iter,sm_l_inf_thresh,sm_split_visit_thresh,smbts_search_temp,smbts_epsilon,smbts_use_search_temp_decay,smbts_search_temp_decay_visits_scale,smdents_entropy_temp_init,smdents_entropy_temp_visits_scale,eval(mc_estimate_expected_utility),best_eval_so_far
+MIN,0.0001,1,0.01,0.0001,0,0.01,0.001,0.01,MIN
+MAX,0.5,100,100,0.5,1,100,100,100,MAX
+0,0.454875,3,45.3103,0.332659,1,33.2554,5.69539,46.2982,-12.3055,-12.3055
+1,0.196972,81,51.3404,0.116534,0,96.5825,18.4674,30.0856,-12.4496,-12.3055
+2,0.220638,24,34.1806,0.265667,0,13.4611,36.1177,76.333,-12.2195,-12.2195
