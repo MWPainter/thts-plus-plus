@@ -18,6 +18,9 @@ namespace thts {
         context_weight = weight;
     } 
 
+    /**
+     * https://cs.stackexchange.com/questions/3227/uniform-sampling-from-a-simplex
+     */
     void MoThtsContext::sample_uniform_random_simplex_for_weight(MoThtsManager& manager)
     {
         context_weight = Eigen::ArrayXd(manager.reward_dim);
