@@ -250,7 +250,8 @@ static const std::string HP_OPT_MINECART_SMBTS_EXPR_ID = "512_hp_opt_minecart_sm
 static const std::string HP_OPT_MINECART_SMDENTS_EXPR_ID = "513_hp_opt_minecart_smdents";
 
 // expr ids - mo gymnasium + custom envs (6xx + 7xx + 8xx = eval)
-static const std::string EVAL_DST_EXPR_ID = "600_dst";
+static const std::string EVAL_DST_EXPR_ID = "600_deep_sea_treasure";
+static const std::string EVAL_FT_S7_EXPR_ID = "660_fruit_tree_stoch_7";
 
 // expr ids - lists of czt / chmcts / bts / dents expr_ids
 static const std::unordered_map<std::string,std::string> HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID =
@@ -399,6 +400,7 @@ static const std::unordered_set<std::string> ALL_EXPR_IDS =
     HP_OPT_MINECART_SMDENTS_EXPR_ID,
 
     EVAL_DST_EXPR_ID,
+    EVAL_FT_S7_EXPR_ID,
 };
 
 // param ids

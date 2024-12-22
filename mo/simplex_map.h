@@ -6,6 +6,7 @@
 
 #include <Eigen/Dense>
 
+#include <map>
 #include <memory>
 #include <mutex>
 #include <tuple>
@@ -49,6 +50,8 @@ namespace std {
     struct equal_to<shared_ptr<NGV>> {
         size_t operator()(const shared_ptr<NGV>&, const shared_ptr<NGV>&) const;
     };
+    template<>
+    bool operator==(const shared_ptr<NGV>& v0, const shared_ptr<NGV>& v1);
 
     template<> 
     struct hash<shared_ptr<LSE>> {
@@ -140,16 +143,6 @@ namespace thts {
     };
 
     /**
-     * Tree structure for the LSE datatype
-    */
-    struct LSE_BT {
-        double ratio;
-        std::shared_ptr<NGV> vertex;
-        std::shared_ptr<LSE_BT> left;
-        std::shared_ptr<LSE_BT> right;
-    };
-
-    /**
      * (Long) Simplex Edge
      * 
      * Represents an edge of a simplex
@@ -169,7 +162,7 @@ namespace thts {
         std::shared_ptr<NGV> v0;
         std::shared_ptr<NGV> v1;
         std::unordered_map<std::shared_ptr<NGV>,double> ratios;
-        std::shared_ptr<LSE_BT> interpolated_vertex_tree;
+        std::map<double,std::shared_ptr<NGV>> interpolated_vertices;
 
         LSE(std::shared_ptr<NGV> v0, std::shared_ptr<NGV> v1);
 
@@ -177,6 +170,23 @@ namespace thts {
         bool equals(const LSE& other) const;
         bool operator==(const LSE& other) const;
         bool operator!=(const LSE& other) const;
+
+        /**
+         * Returns the ngv with maximum ratio r such that r<'ratio'
+         * I.e. the node left of a "node" at 'ratio' (n.b. the "node" doesnt have to exist) 
+         */
+        std::map<double,std::shared_ptr<NGV>>::iterator left_vertex(double ratio);
+
+        /**
+         * Returns the ngv with minimum ratio r such that r>'ratio'
+         * I.e. the node left of a "node" at 'ratio' (n.b. the "node" doesnt have to exist) 
+         */
+        std::map<double,std::shared_ptr<NGV>>::iterator right_vertex(double ratio);
+
+        /**
+         * Get the closest NGV lying on this edge 
+         */
+        std::shared_ptr<NGV> get_closest_ngv(const Eigen::ArrayXd& w);
 
         /**
          * Inserts an NGV between two NGVs that are on this edge
@@ -273,6 +283,7 @@ namespace thts {
      * 'splitting_edge_new_vertex' is the new NGV created as a result of splitting this simplex
     */
     struct TN {
+        SimplexMap& simplex_map;
         int dim;
         int depth;
         Eigen::ArrayXd centroid;
@@ -289,7 +300,7 @@ namespace thts {
         std::shared_ptr<TN> normal_side_child;
         std::shared_ptr<TN> opposite_side_child;
 
-        TN(int dim, int depth, std::shared_ptr<std::vector<std::shared_ptr<NGV>>> simplex_vertices);
+        TN(SimplexMap& simplex_map, int dim, int depth, std::shared_ptr<std::vector<std::shared_ptr<NGV>>> simplex_vertices);
 
         /**
          * On construction want to ensure that all of the simplex_vertices are (fully) connected 
@@ -320,9 +331,9 @@ namespace thts {
         /**
          * Create child TN's using the triangulation
         */
-        void create_children(SimplexMap& simplex_map, SmtThtsManager& sm_manager);
-        void create_children_binary_tree(SimplexMap& simplex_map, SmtThtsManager& sm_manager);
-        void create_children_triangulation(SimplexMap& simplex_map, SmtThtsManager& sm_manager);
+        void create_children(SmtThtsManager& sm_manager);
+        void create_children_binary_tree();
+        void create_children_triangulation(SmtThtsManager& sm_manager);
 
         /**
          * Get child
@@ -384,7 +395,7 @@ namespace thts {
          *      value_estimate's being different) to allow for a split
          * max_depth is the threshold for the maximum depth of the TN tree
         */
-        void maybe_subdivide(SimplexMap& simplex_map, SmtThtsManager& sm_manager);
+        void maybe_subdivide(SmtThtsManager& sm_manager);
     };
 
     /**
@@ -417,7 +428,9 @@ namespace thts {
         friend LSE;
         friend TN;
 
-        protected:
+        // TODO: change this back to protected after debugging stuff
+        // protected:
+        public:
             int dim;
             std::shared_ptr<TN> root_node;
             std::shared_ptr<std::vector<std::shared_ptr<NGV>>> n_graph_vertices;

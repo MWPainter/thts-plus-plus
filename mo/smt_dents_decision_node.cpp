@@ -87,58 +87,75 @@ namespace thts {
         const Eigen::ArrayXd trial_cumulative_return,
         MoThtsContext& ctx) 
     {
+        SmtDentsManager& manager = (SmtDentsManager&) *thts_manager;
         num_backups++;
 
         // Get closest NGV in simplex map
         shared_ptr<TN> simplex = simplex_map.get_leaf_tn_node(ctx.context_weight);
         shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight);
 
-        // Want to backup according to closest_vertex->weight, so make a context with that weight to use
-        MoThtsContext closest_vertex_ctx(closest_vertex->weight);
-
-        // get q vals
-        shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, closest_vertex_ctx);
-        unordered_map<shared_ptr<const Action>,Eigen::ArrayXd> q_val_map;
-        unordered_map<shared_ptr<const Action>,double> entropy_map;
-        unordered_map<shared_ptr<const Action>,bool> pure_backup_val_map;
-        get_child_q_values(*actions, q_val_map, entropy_map, pure_backup_val_map, closest_vertex_ctx);
-
-        // Compute local policy + entropy
-        ActionDistr policy;
-        compute_action_distribution(*actions, q_val_map, entropy_map, policy, closest_vertex_ctx);
-
-        double local_entropy = 0.0;
-        for (pair<shared_ptr<const Action>,double> pr : policy) {
-            double prob = pr.second;
-            if (prob == 0.0) continue;
-            local_entropy -= prob * log(prob); 
+        // Make list of vertices to backup
+        vector<shared_ptr<NGV>> vertices_to_backup;
+        vertices_to_backup.push_back(closest_vertex);
+        if (manager.backup_all_vertices_of_simplex) {
+            vector<shared_ptr<NGV>>& simplex_vertices = *simplex->simplex_vertices;
+            vertices_to_backup.insert(vertices_to_backup.end(), simplex_vertices.begin(), simplex_vertices.end());
         }
 
-        // dp backups + subtree entropy
-        Eigen::ArrayXd best_q_val;
-        double subtree_entropy = 0.0;
-        bool best_q_val_is_pure_backup = false;
-        double max_ctx_q_val = numeric_limits<double>::lowest();
-        for (shared_ptr<const Action> action : *actions) {
-            double ctx_q_val = thts::helper::dot(closest_vertex->weight, q_val_map[action]);
-            if (ctx_q_val > max_ctx_q_val) {
-                max_ctx_q_val = ctx_q_val;
-                best_q_val = q_val_map[action];
-                best_q_val_is_pure_backup = pure_backup_val_map[action];
+        // Only get actions once - avoid pointless RPC calls
+        shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
+
+        // Backup at all vertices
+        for (shared_ptr<NGV> ngv : vertices_to_backup) {
+
+            // Want to backup according to ngv->weight, so make a context with that weight to use
+            MoThtsContext ngv_ctx(ngv->weight);
+
+            // get q vals
+            unordered_map<shared_ptr<const Action>,Eigen::ArrayXd> q_val_map;
+            unordered_map<shared_ptr<const Action>,double> entropy_map;
+            unordered_map<shared_ptr<const Action>,bool> pure_backup_val_map;
+            get_child_q_values(*actions, q_val_map, entropy_map, pure_backup_val_map, ngv_ctx);
+
+            // Compute local policy + entropy
+            ActionDistr policy;
+            compute_action_distribution(*actions, q_val_map, entropy_map, policy, ngv_ctx);
+
+            double local_entropy = 0.0;
+            for (pair<shared_ptr<const Action>,double> pr : policy) {
+                double prob = pr.second;
+                if (prob == 0.0) continue;
+                local_entropy -= prob * log(prob); 
             }
-            subtree_entropy += policy[action] * entropy_map[action];
+
+            // dp backups + subtree entropy
+            Eigen::ArrayXd best_q_val;
+            double subtree_entropy = 0.0;
+            bool best_q_val_is_pure_backup = false;
+            double max_ctx_q_val = numeric_limits<double>::lowest();
+            for (shared_ptr<const Action> action : *actions) {
+                double ctx_q_val = thts::helper::dot(ngv->weight, q_val_map[action]);
+                if (ctx_q_val > max_ctx_q_val) {
+                    max_ctx_q_val = ctx_q_val;
+                    best_q_val = q_val_map[action];
+                    best_q_val_is_pure_backup = pure_backup_val_map[action];
+                }
+                subtree_entropy += policy[action] * entropy_map[action];
+            }
+
+            // update simplex map
+            double opp_coeff = is_opponent() ? -1.0 : 1.0;
+            ngv->value_estimate = best_q_val * opp_coeff;
+            ngv->entropy = local_entropy + subtree_entropy;
+            ngv->pure_backup_value_estimate = best_q_val_is_pure_backup;
         }
 
-        // update simplex map
-        double opp_coeff = is_opponent() ? -1.0 : 1.0;
-        closest_vertex->value_estimate = best_q_val * opp_coeff;
-        closest_vertex->entropy = local_entropy + subtree_entropy;
-        closest_vertex->pure_backup_value_estimate = best_q_val_is_pure_backup;
-
-        // simplex map - splitting + message passing
-        SmtBtsManager& manager = (SmtBtsManager&) *thts_manager;
-        simplex->maybe_subdivide(simplex_map, manager);
-        closest_vertex->share_values_message_passing();
+        // Message passing / sharing + splitting
+        for (shared_ptr<NGV> ngv : vertices_to_backup) {
+            SmtBtsManager& manager = (SmtBtsManager&) *thts_manager;
+            simplex->maybe_subdivide(manager);
+            closest_vertex->share_values_message_passing();
+        }
     }
 }
 

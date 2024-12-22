@@ -22,7 +22,6 @@ namespace thts {
             MoThtsContext(Eigen::ArrayXd weight);
             virtual ~MoThtsContext() = default;
         
-        private:
-            void sample_uniform_random_simplex_for_weight(MoThtsManager& manager);
+            static Eigen::ArrayXd sample_uniform_random_simplex_for_weight(MoThtsManager& manager);
     };
 }

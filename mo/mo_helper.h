@@ -33,6 +33,9 @@ namespace std {
  * Vector arithmatic helpers
 */
 namespace thts::helper {
+    double norm(const Eigen::ArrayXd& x);
+    Eigen::ArrayXd normalised(const Eigen::ArrayXd& x);
+    Eigen::ArrayXd project(const Eigen::ArrayXd& direction, const Eigen::ArrayXd& x);
     double dist(const Eigen::ArrayXd& p1, const Eigen::ArrayXd& p2);
     double dot(const Eigen::ArrayXd& p1, const Eigen::ArrayXd& p2);
 

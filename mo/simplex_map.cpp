@@ -23,6 +23,13 @@ static double EPS = 1e-12;
 
 
 namespace thts {
+
+    /**
+     * Helper for numerical instability
+    */
+    bool is_approx_zero(double x) {
+        return -EPS < x && x < EPS;
+    }
     
     /**
      * 
@@ -181,10 +188,12 @@ namespace thts {
         v0(v0), 
         v1(v1), 
         ratios(), 
-        interpolated_vertex_tree(make_shared<LSE_BT>())
+        interpolated_vertices()
     {
         ratios[v0] = 0.0;
         ratios[v1] = 1.0;
+        interpolated_vertices[0.0] = v0;
+        interpolated_vertices[1.0] = v1;
     };
     
     size_t LSE::hash() const
@@ -194,7 +203,7 @@ namespace thts {
 
     bool LSE::equals(const LSE& other) const 
     {
-        return ((v0->equals(*other.v0) && v0->equals(*other.v0))
+        return ((v0->equals(*other.v0) && v1->equals(*other.v1))
                 || (v0->equals(*other.v1) && v1->equals(*other.v0)));
     };
 
@@ -207,6 +216,67 @@ namespace thts {
     {
         return !equals(other);
     };
+
+    /**
+     * lower_bound gets the element "not less" than the given key
+     */
+    map<double,shared_ptr<NGV>>::iterator LSE::left_vertex(double ratio) 
+    {
+        map<double,shared_ptr<NGV>>::iterator ngv_it = interpolated_vertices.lower_bound(ratio);
+        if (ngv_it == interpolated_vertices.begin()) {
+            return interpolated_vertices.end();
+        }
+        return --ngv_it;
+    };
+
+    /**
+     * lower_bound gets the element "not less" than the given key
+     * 
+     * if ngv exists, then push the iterator one more right
+     */
+    map<double,shared_ptr<NGV>>::iterator LSE::right_vertex(double ratio) 
+    {
+        map<double,shared_ptr<NGV>>::iterator ngv_it = interpolated_vertices.lower_bound(ratio);
+        if (ngv_it->first == ratio) {
+            ngv_it++;
+        }
+        if (ngv_it == interpolated_vertices.end()) {
+            return interpolated_vertices.end();
+        }
+        return ngv_it;
+    };
+
+    /**
+     * Getting the closest ngv to a point can be done by projecting the point onto the line, and picking the closest 
+     * point on the line
+     */
+    shared_ptr<NGV> LSE::get_closest_ngv(const Eigen::ArrayXd& w) 
+    {
+        Eigen::ArrayXd v0_to_v1 = v1->weight - v0->weight;
+        Eigen::ArrayXd projected_w = thts::helper::project(v0_to_v1, w-v0->weight);
+        double ratio = thts::helper::norm(projected_w) / thts::helper::norm(v0_to_v1);
+
+        std::map<double,std::shared_ptr<NGV>>::iterator left_ngv = left_vertex(ratio);
+        std::map<double,std::shared_ptr<NGV>>::iterator right_ngv = right_vertex(ratio);
+
+        if (left_ngv == interpolated_vertices.end()) {
+            return right_ngv->second;
+        } else if (right_ngv == interpolated_vertices.end()) {
+            return left_ngv->second;
+        }
+
+        // left_ratio <= ratio <= right_ratio
+        // if dist_to_left == ratio - left_ratio < right_ratio - ratio == dist_to_right return left_ngv
+        double left_ratio = left_ngv->first;
+        double right_ratio = right_ngv->first;
+        if (right_ratio - ratio > ratio - left_ratio) {
+            return left_ngv->second;
+        } else {
+            return right_ngv->second;
+        }
+    }
+
+    
 
     /**
      * TODO: be more efficient in not creating nodes before actually using them
@@ -233,32 +303,18 @@ namespace thts {
         // ratio between v0 and v1 (endpoints of the LSE)
         double v_ratio = x0_ratio + (x1_ratio-x0_ratio) * r;
 
-        // Find the LSE_BT node to insert v in
-        // Also find the NGV that will be to the left and right of v
-        shared_ptr<LSE_BT> bt_node = interpolated_vertex_tree;
-        shared_ptr<NGV> left_vertex = v0;
-        shared_ptr<NGV> right_vertex = v1;
-        while (bt_node->vertex != nullptr) {
-            if (v_ratio < bt_node->ratio) {
-                right_vertex = bt_node->vertex;
-                bt_node = bt_node->left;
-            } else { // if (v_ratio > bt_node->ratio)
-                left_vertex = bt_node->vertex;
-                bt_node = bt_node->right;
-            }
-        }
-
-        // Insert v in this LSE
+        // Insert into the maps
         ratios[v] = v_ratio;
-        bt_node->vertex = v;
-        bt_node->ratio = v_ratio;
-        bt_node->left = make_shared<LSE_BT>();
-        bt_node->right = make_shared<LSE_BT>();
+        interpolated_vertices[v_ratio] = v;
+
+        // Get vertices to the left and right of new node
+        shared_ptr<NGV> lvertex = left_vertex(v_ratio)->second;
+        shared_ptr<NGV> rvertex = right_vertex(v_ratio)->second;
 
         // Update the neighbourhood graph
-        left_vertex->erase_connection(right_vertex);
-        left_vertex->add_connection(v);
-        right_vertex->add_connection(v);
+        lvertex->erase_connection(rvertex);
+        lvertex->add_connection(v);
+        rvertex->add_connection(v);
 
         // Register the new pairs of vertices with this LSE
         shared_ptr<LSE> this_lse = shared_from_this();
@@ -355,7 +411,8 @@ namespace thts {
      * 
      * 
     */
-    TN::TN(int dim, int depth, shared_ptr<vector<shared_ptr<NGV>>> simplex_vertices) :
+    TN::TN(SimplexMap& simplex_map, int dim, int depth, shared_ptr<vector<shared_ptr<NGV>>> simplex_vertices) :
+        simplex_map(simplex_map),
         dim(dim),
         depth(depth),
         centroid(Eigen::ArrayXd::Zero(dim)),
@@ -384,8 +441,6 @@ namespace thts {
                 double diff_l_inf_norm = diff.abs().maxCoeff();
                 if (diff_l_inf_norm > l_inf_norm) {
                     l_inf_norm = diff_l_inf_norm;
-                    splitting_edge_normal_side_vertex = simplex_vertices->at(i);
-                    splitting_edge_opposite_side_vertex = simplex_vertices->at(j);
                 }
             }
         }
@@ -407,6 +462,8 @@ namespace thts {
      * TODO: move relevant docstring from 'lazy_compute_hyperplane_noamrls' to here
      * 
      * hyperplane_points contains 'dim-1' many points defining a 'dim-2' hyperplane
+     * 
+     * TODO: #hyperplane points > 1 should be unecessary, as only do this for 3D+. All this code needs a bit of cleaning really
     */
     Eigen::ArrayXd TN::compute_hyperplane_normal(vector<shared_ptr<NGV>>& hyperplane_points) const
     {
@@ -520,23 +577,101 @@ namespace thts {
         return children->size() > 0 || normal_side_child != nullptr;
     }
 
-    void TN::create_children(SimplexMap& simplex_map, SmtThtsManager& sm_manager) 
+    void TN::create_children(SmtThtsManager& sm_manager) 
     {
-        if (sm_manager.use_triangulation) {
-            return create_children_triangulation(simplex_map, sm_manager);
-        } else {
-            return create_children_binary_tree(simplex_map, sm_manager);
+        // triangulation option is only option that doesn't lead to binary tree of TN's
+        if (sm_manager.simplex_map_splitting_option == SPLIT_triangulation) {
+            return create_children_triangulation(sm_manager);
         }
+
+        // Compute 'splitting_Edge_normal_side_vertex' and 'splitting_edge_opposite_side_vertex'
+        // This will be selected differently based 
+        if (sm_manager.simplex_map_splitting_option == SPLIT_ordered) 
+        {
+            for (size_t i=0; i<simplex_vertices->size(); i++) {
+                if (splitting_edge_normal_side_vertex != nullptr) {
+                    break;
+                }
+                for (size_t j=i+1; j<simplex_vertices->size(); j++) {
+                    Eigen::ArrayXd diff = simplex_vertices->at(i)->weight - simplex_vertices->at(j)->weight;
+                    double diff_l_inf_norm = diff.abs().maxCoeff();
+                    if (diff_l_inf_norm == l_inf_norm) {
+                        splitting_edge_normal_side_vertex = simplex_vertices->at(i);
+                        splitting_edge_opposite_side_vertex = simplex_vertices->at(j);
+                        break;
+                    }
+                }
+            }
+        }
+        else if (sm_manager.simplex_map_splitting_option == SPLIT_smallest_edge_randomly) 
+        {
+            vector<UnorderedNGVPair> shortest_edges;
+            for (size_t i=0; i<simplex_vertices->size(); i++) {
+                for (size_t j=i+1; j<simplex_vertices->size(); j++) {
+                    Eigen::ArrayXd diff = simplex_vertices->at(i)->weight - simplex_vertices->at(j)->weight;
+                    double diff_l_inf_norm = diff.abs().maxCoeff();
+                    if (is_approx_zero(l_inf_norm - diff_l_inf_norm)) {
+                        shortest_edges.push_back(UnorderedNGVPair(simplex_vertices->at(i),simplex_vertices->at(j)));
+                    }
+                }
+            }
+            int rand_idx = sm_manager.get_rand_int(0,shortest_edges.size());
+            UnorderedNGVPair selected_edge = shortest_edges[rand_idx];
+            splitting_edge_normal_side_vertex = selected_edge.first;
+            splitting_edge_opposite_side_vertex = selected_edge.second;
+        } 
+        else if (sm_manager.simplex_map_splitting_option == SPLIT_random) 
+        {
+            vector<UnorderedNGVPair> splittable_edges;
+            for (size_t i=0; i<simplex_vertices->size(); i++) {
+                for (size_t j=i+1; j<simplex_vertices->size(); j++) {
+                    Eigen::ArrayXd diff = simplex_vertices->at(i)->weight - simplex_vertices->at(j)->weight;
+                    double diff_l_inf_norm = diff.abs().maxCoeff();
+                    if (diff_l_inf_norm > sm_manager.simplex_node_l_inf_thresh) {
+                        splittable_edges.push_back(UnorderedNGVPair(simplex_vertices->at(i),simplex_vertices->at(j)));
+                    }
+                }
+            }
+            int rand_idx = sm_manager.get_rand_int(0,splittable_edges.size());
+            UnorderedNGVPair selected_edge = splittable_edges[rand_idx];
+            splitting_edge_normal_side_vertex = selected_edge.first;
+            splitting_edge_opposite_side_vertex = selected_edge.second;
+        }
+        else if (sm_manager.simplex_map_splitting_option == SPLIT_value_diff) 
+        {
+            double max_val_diff_norm = -1.0;
+            for (size_t i=0; i<simplex_vertices->size(); i++) {
+                for (size_t j=i+1; j<simplex_vertices->size(); j++) {
+                    Eigen::ArrayXd weight_diff = simplex_vertices->at(i)->weight - simplex_vertices->at(j)->weight;
+                    double weight_inf_norm = weight_diff.abs().maxCoeff();
+
+                    Eigen::ArrayXd val_diff = simplex_vertices->at(i)->value_estimate - simplex_vertices->at(j)->value_estimate;
+                    double val_diff_norm = thts::helper::dot(val_diff,val_diff);
+
+                    if (val_diff_norm > max_val_diff_norm && weight_inf_norm > sm_manager.simplex_node_l_inf_thresh) {
+                        max_val_diff_norm = val_diff_norm;
+                        splitting_edge_normal_side_vertex = simplex_vertices->at(i);
+                        splitting_edge_opposite_side_vertex = simplex_vertices->at(j);
+                    }
+                }
+            }
+        }
+        
+        // Creates binary tree
+        // Assumes 'splitting_edge_xxx_side_vertex' variables are set to elements of 'simplex_vertices'
+        // But once those are set, creating a binary tree will always be the same (so this is the shared logic)
+        return create_children_binary_tree();
     }
     
     /**
      * TODO: document a bit better generally
      * TODO: 
     */
-    void TN::create_children_binary_tree(SimplexMap& simplex_map, SmtThtsManager& sm_manager) 
+    void TN::create_children_binary_tree() 
     {
         // create the new vertex on the splitting edge (halfway between the two)
         // avoid making a duplicate vertex, and add it to simplex map structures if made a novel vertex
+        // And insert it on the LSE if we are making a new vertex
         splitting_edge_new_vertex = make_shared<NGV>(
             *splitting_edge_normal_side_vertex, *splitting_edge_opposite_side_vertex, 0.5);
         if (simplex_map.n_graph_vertex_set->contains(splitting_edge_new_vertex)) {
@@ -544,17 +679,15 @@ namespace thts {
         } else {
             simplex_map.n_graph_vertices->push_back(splitting_edge_new_vertex);
             simplex_map.n_graph_vertex_set->insert(splitting_edge_new_vertex);
+            shared_ptr<LSE> simplex_edge = simplex_map.get_or_create_lse(
+                splitting_edge_normal_side_vertex, splitting_edge_opposite_side_vertex);
+            simplex_edge->insert(
+                splitting_edge_new_vertex, 
+                splitting_edge_normal_side_vertex, 
+                splitting_edge_opposite_side_vertex,
+                0.5,
+                simplex_map);
         }
-
-        // Insert it on the LSE
-        shared_ptr<LSE> simplex_edge = simplex_map.get_or_create_lse(
-            splitting_edge_normal_side_vertex, splitting_edge_opposite_side_vertex);
-        simplex_edge->insert(
-            splitting_edge_new_vertex, 
-            splitting_edge_normal_side_vertex, 
-            splitting_edge_opposite_side_vertex,
-            0.5,
-            simplex_map);
         
         // Create vector of all vertices common to both children
         vector<shared_ptr<NGV>> child_common_simplex_vertices;
@@ -571,13 +704,13 @@ namespace thts {
         shared_ptr<vector<shared_ptr<NGV>>> normal_side_child_vertices = make_shared<vector<shared_ptr<NGV>>>(
             child_common_simplex_vertices);
         normal_side_child_vertices->push_back(splitting_edge_normal_side_vertex);
-        normal_side_child = make_shared<TN>(dim, depth+1, normal_side_child_vertices);
+        normal_side_child = make_shared<TN>(simplex_map, dim, depth+1, normal_side_child_vertices);
 
         // Opposite side child simplex
         shared_ptr<vector<shared_ptr<NGV>>> opposite_side_child_vertices = make_shared<vector<shared_ptr<NGV>>>(
             child_common_simplex_vertices);
         opposite_side_child_vertices->push_back(splitting_edge_opposite_side_vertex);
-        opposite_side_child = make_shared<TN>(dim, depth+1, opposite_side_child_vertices);
+        opposite_side_child = make_shared<TN>(simplex_map, dim, depth+1, opposite_side_child_vertices);
 
         // Compute normal (using the dim-1 many common points of the child simplices)
         splitting_hyperplane_normal = compute_hyperplane_normal(child_common_simplex_vertices);
@@ -604,7 +737,7 @@ namespace thts {
      * 
      * Note that we need to take care to not make any duplicate vertices in the neighbourhood graph
     */
-    void TN::create_children_triangulation(SimplexMap& simplex_map, SmtThtsManager& sm_manager) 
+    void TN::create_children_triangulation(SmtThtsManager& sm_manager) 
     {
         // 0+1: make the list of vertices to triangulate over
         vector<shared_ptr<NGV>> vertices(*simplex_vertices);
@@ -632,7 +765,7 @@ namespace thts {
             for (int& i : simplex_indices) {
                 child_simplex_vertices->push_back(vertices[i]);
             }
-            shared_ptr<TN> child_tn = make_shared<TN>(dim, depth+1, child_simplex_vertices);
+            shared_ptr<TN> child_tn = make_shared<TN>(simplex_map, dim, depth+1, child_simplex_vertices);
             children->insert(child_tn);
         }
     }
@@ -724,13 +857,6 @@ namespace thts {
         }
         return beg->weight[0] <= weight[0] && weight[0] <= end->weight[0];
     }
-
-    /**
-     * Helper for numerical instability
-    */
-    bool is_approx_zero(double x) {
-        return -EPS < x && x < EPS;
-    }
     
     /**
      * return true if point is in plane (i.e. if wegith-halfplane_point dot halfplane_normal == 0)
@@ -746,20 +872,31 @@ namespace thts {
         const Eigen::ArrayXd& weight) const 
     {
         double dot_prod = thts::helper::dot(weight-halfplane_point, halfplane_normal);
-        return dot_prod >= 0 || is_approx_zero(dot_prod);
+        return dot_prod >= 0; // || is_approx_zero(dot_prod);
     }
 
     shared_ptr<NGV> TN::get_closest_ngv_vertex(const Eigen::ArrayXd& ctx) const
     {
+        vector<shared_ptr<NGV>> potential_closest_vertices;
+        potential_closest_vertices.reserve(simplex_vertices->size() * (simplex_vertices->size()-1) / 2);
+        for (size_t i=0; i<simplex_vertices->size(); i++) {
+            for (size_t j=i+1; j<simplex_vertices->size(); j++) {
+                shared_ptr<LSE> long_simplex_edge = simplex_map.get_or_create_lse(
+                    simplex_vertices->at(i), simplex_vertices->at(j));
+                potential_closest_vertices.push_back(long_simplex_edge->get_closest_ngv(ctx));
+            }
+        }
+
         double closest_dist = std::numeric_limits<double>::max();
         shared_ptr<NGV> closest_vertex;
-        for (shared_ptr<NGV> vertex : *simplex_vertices) {
+        for (shared_ptr<NGV> vertex : potential_closest_vertices) {
             double l2_dist = thts::helper::dist(vertex->weight, ctx);
             if (l2_dist < closest_dist) {
                 closest_dist = l2_dist;
                 closest_vertex = vertex;
             }
         }
+        
         if (closest_vertex == nullptr) {
             throw runtime_error("Error in indexing simplex map");
         }
@@ -788,7 +925,7 @@ namespace thts {
         return max_val;
     }
 
-    void TN::maybe_subdivide(SimplexMap& simplex_map, SmtThtsManager& sm_manager)
+    void TN::maybe_subdivide(SmtThtsManager& sm_manager)
     {
         // If already subdivided, no need
         if (has_children()) {
@@ -822,7 +959,7 @@ namespace thts {
         }
 
         if (split_counter >= sm_manager.simplex_node_split_visit_thresh) {
-            create_children(simplex_map, sm_manager);
+            create_children(sm_manager);
         }
     }
 
@@ -856,7 +993,7 @@ namespace thts {
         }    
 
         // Make root TN node with unit simplex
-        root_node = make_shared<TN>(dim, 0, unit_simplex_vertices);
+        root_node = make_shared<TN>(*this, dim, 0, unit_simplex_vertices);
     }
 
     /**
@@ -942,6 +1079,12 @@ namespace std {
     }
 
     size_t equal_to<shared_ptr<NGV>>::operator()(const shared_ptr<NGV>& v0, const shared_ptr<NGV>& v1) const 
+    {
+        return v0->equals(*v1);
+    }
+
+    template<>
+    bool operator==(const shared_ptr<NGV>& v0, const shared_ptr<NGV>& v1) 
     {
         return v0->equals(*v1);
     }

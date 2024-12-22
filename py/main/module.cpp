@@ -39,6 +39,7 @@
 #include <chrono>
 #include <filesystem>
 #include <iostream>
+#include <sstream>
 #include <mutex>
 #include <thread>
 
@@ -847,7 +848,7 @@ void sm_bts_test() {
     args->mcts_mode = false;
     args->num_threads = num_threads;
     args->num_envs = num_threads; 
-    args->use_triangulation = true;
+    args->simplex_map_splitting_option = SPLIT_triangulation;
     shared_ptr<SmtBtsManager> manager = make_shared<SmtBtsManager>(*args);
  
     // // Setup python servers
@@ -941,7 +942,7 @@ void sm_bts_4d_test() {
     args->num_threads = num_threads;
     args->num_envs = num_threads; 
     args->simplex_node_max_depth = 3;
-    args->use_triangulation = true;
+    args->simplex_map_splitting_option = SPLIT_triangulation;
     shared_ptr<SmtBtsManager> manager = make_shared<SmtBtsManager>(*args);
  
     // // Setup python servers
@@ -1218,7 +1219,7 @@ void sm_bts_bin_tree_4d_test() {
     args->mcts_mode = false;
     args->num_threads = num_threads;
     args->num_envs = num_threads; 
-    args->simplex_node_max_depth = 3;
+    args->simplex_node_max_depth = 40;
     shared_ptr<SmtBtsManager> manager = make_shared<SmtBtsManager>(*args);
  
     // // Setup python servers
@@ -1248,9 +1249,9 @@ void sm_bts_bin_tree_4d_test() {
     } 
     cout << endl << endl; 
 
-    // Pretty ball lists
-    cout << "Printing SM-BTS simplex map at root node ball lists for first decision." << endl;
-    cout << root_node->get_simplex_map_pretty_print_string() << endl << endl;
+    // // Pretty ball lists
+    // cout << "Printing SM-BTS simplex map at root node ball lists for first decision." << endl;
+    // cout << root_node->get_simplex_map_pretty_print_string() << endl << endl;
     // ThtsEnvContext ctx;
     // shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
     // for (shared_ptr<const Action> action : *actions) {
@@ -1605,6 +1606,183 @@ void chmcts_4d_test() {
 //     }
 // }
 
+// string eigen_6d_to_string(Eigen::ArrayXd& v) {
+//     stringstream ss;
+//     ss << "[" << v[0] << "," << v[1] << "," << v[2] << "," << v[3] << "," << v[4] << "," << v[5] << "]";
+//     return ss.str();
+// }
+
+// void compare_czt_bts_fruit_tree() {
+//     py::gil_scoped_release release;
+
+//     // params
+//     int search_time = 30;
+//     int num_threads = 8;
+//     string thts_unique_filename = "/bin";
+//     string thts_unique_filename_bts = "/usr";
+
+//     // Setup env 
+//     string mo_gym_env_id = "fruit-tree-v0";
+//     shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+//     shared_ptr<MoGymMultiprocessingThtsEnv> thts_env = make_shared<MoGymMultiprocessingThtsEnv>(
+//         pickle_wrapper, thts_unique_filename, mo_gym_env_id);
+//     shared_ptr<MoGymMultiprocessingThtsEnv> thts_env_bts = make_shared<MoGymMultiprocessingThtsEnv>(
+//         pickle_wrapper, thts_unique_filename_bts, mo_gym_env_id);
+
+//     // Make thts manager 
+//     shared_ptr<CztManagerArgs> args = make_shared<CztManagerArgs>(thts_env);
+//     args->seed = 60415;
+//     args->mcts_mode = false;
+//     args->bias = 30.0;
+//     args->num_backups_before_allowed_to_split = 50;
+//     args->num_threads = num_threads;
+//     args->num_envs = num_threads;
+//     shared_ptr<CztManager> manager = make_shared<CztManager>(*args);
+
+//     Eigen::ArrayXd default_val = Eigen::ArrayXd::Zero(6);
+//     shared_ptr<SmtBtsManagerArgs> sargs = make_shared<SmtBtsManagerArgs>(thts_env_bts, default_val);
+//     sargs->seed = 60415;
+//     sargs->mcts_mode = false;
+//     sargs->simplex_node_l_inf_thresh = 0.05;
+//     sargs->simplex_node_split_visit_thresh = 1;
+//     sargs->temp = 100.0;
+//     sargs->epsilon = 0.5;
+//     sargs->num_threads = num_threads;
+//     sargs->num_envs = num_threads; 
+//     shared_ptr<SmtBtsManager> smanager = make_shared<SmtBtsManager>(*sargs);
+
+//     // Setup python servers
+//     for (int i=0; i<args->num_envs; i++) {
+//         PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(manager->thts_env(i));
+//         py_mp_env.start_python_server(i);
+//     }
+//     for (int i=0; i<args->num_envs; i++) {
+//         PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(smanager->thts_env(i));
+//         py_mp_env.start_python_server(i);
+//     }
+
+//     // Run searches
+//     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
+
+//     cout << "starting czt search" << endl; 
+//     shared_ptr<CztDNode> root_node = make_shared<CztDNode>(manager, init_state, 0, 0);
+//     shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
+//     thts_pool->run_trials(numeric_limits<int>::max(), search_time);
+//     cout << "czt search finished" << endl; 
+
+//     cout << "starting bts search" << endl; 
+//     shared_ptr<SmtBtsDNode> sroot_node = make_shared<SmtBtsDNode>(smanager, init_state, 0, 0);
+//     shared_ptr<ThtsPool> sthts_pool = make_shared<MoThtsPool>(smanager, sroot_node, num_threads);
+//     sthts_pool->run_trials(numeric_limits<int>::max(), search_time);
+//     cout << "bts search finished" << endl; 
+
+//     // Simulate trials until CZT and BTS recommend different actions and then print out some debugging info
+//     int num_sim = 1000;
+//     int max_print_out = 5;
+//     int print_outs = 0;
+
+//     cout << "starting simulations to find discrepancies" << endl; 
+//     for (int i=0; i<num_sim; i++) {
+//         if (print_outs >= max_print_out) {
+//             break;
+//         }
+
+//         shared_ptr<MoThtsContext> mo_context = static_pointer_cast<MoThtsContext>(
+//             thts_env->sample_context_itfc(0, *manager));
+//         manager->register_thts_context(0, mo_context);
+//         smanager->register_thts_context(0, mo_context);
+
+//         thts_env->reset_itfc();
+
+//         shared_ptr<const State> cur_state = init_state;
+//         shared_ptr<CztDNode> cur_czt_node = root_node;
+//         shared_ptr<SmtBtsDNode> cur_bts_node = sroot_node;
+
+//         int depth = 0;
+
+//         // Run trial
+//         while (!thts_env->is_sink_state_itfc(cur_state, *mo_context)) {
+//             shared_ptr<const Action> czt_action = cur_czt_node->recommend_action(*mo_context);
+//             shared_ptr<const Action> bts_action = cur_bts_node->recommend_action(*mo_context);
+
+//             if (czt_action != bts_action) {
+//                 cout << "----------" << endl;
+//                 cout << "found instance of czt_action != bts_action, print debug info out here. (Moving onto next trial for now, this was trial number " << i << ")" << endl;
+//                 print_outs++;
+//                 cout << "Current depth is: " << depth << endl;
+//                 Eigen::ArrayXd& ctx = mo_context->context_weight;
+//                 cout << "Context weight is: " << eigen_6d_to_string(ctx) << endl;
+
+//                 shared_ptr<NGV> ngv = cur_bts_node->simplex_map.get_leaf_tn_node(ctx)->get_closest_ngv_vertex(ctx);
+//                 cout << "Closes NGV weight in BTS dnode is: " << eigen_6d_to_string(ngv->weight) << endl;
+//                 cout << "Closes NGV value_estimate in BTS dnode is: " << eigen_6d_to_string(ngv->value_estimate) << endl;
+//                 cout << "(Contextual value = " << thts::helper::dot(ngv->value_estimate,ctx) << ")" << endl;
+//                 cout << "(Dist from weight to selected ngv = " << thts::helper::dist(ngv->weight,ctx) << ")" << endl;
+
+//                 double min_dist = numeric_limits<double>::max();
+//                 Eigen::ArrayXd min_dist_w = Eigen::ArrayXd::Zero(6);
+//                 for (shared_ptr<NGV> node : *cur_bts_node->simplex_map.n_graph_vertices) {
+//                     double dist = thts::helper::dist(node->weight,ctx);
+//                     if (dist < min_dist) {
+//                         min_dist = dist;
+//                         min_dist_w = node->weight;
+//                     }
+//                 }
+//                 cout << "(Min dist to any ngv is: " << min_dist << " with weight " << eigen_6d_to_string(min_dist_w) << ")" << endl;
+
+//                 int child_num = 0;
+//                 shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(cur_state, *mo_context);
+//                 for (shared_ptr<const Action> action : *actions) {
+//                     if (!cur_bts_node->has_child_node_itfc(action)) {
+//                         continue;
+//                     }
+//                     shared_ptr<SmtBtsCNode> child_node = cur_bts_node->get_child_node(action);
+//                     shared_ptr<NGV> child_ngv = child_node->simplex_map.get_leaf_tn_node(ctx)->get_closest_ngv_vertex(ctx);
+//                     cout << "Closest NGV weight in " << child_num << "th BTS child is: " << eigen_6d_to_string(child_ngv->weight) << endl;
+//                     cout << "Closes NGV value_estimate in " << child_num << "th BTS child is: " << eigen_6d_to_string(child_ngv->value_estimate) << endl;
+//                     cout << "(Contextual value = " << thts::helper::dot(child_ngv->value_estimate,ctx) << ")" << endl;
+//                     cout << "(Dist from weight to selected ngv = " << thts::helper::dist(child_ngv->weight,ctx) << ")" << endl;
+
+//                     double chld_min_dist = numeric_limits<double>::max();
+//                     Eigen::ArrayXd chld_min_dist_w = Eigen::ArrayXd::Zero(6);
+//                     for (shared_ptr<NGV> node : *child_node->simplex_map.n_graph_vertices) {
+//                         double dist = thts::helper::dist(node->weight,ctx);
+//                         if (dist < chld_min_dist) {
+//                             chld_min_dist = dist;
+//                             chld_min_dist_w = node->weight;
+//                         }
+//                     }
+//                     cout << "(Min dist to any ngv is: " << chld_min_dist << " with weight " << eigen_6d_to_string(chld_min_dist_w) << ")" << endl;
+                    
+//                     child_num++;
+//                 }
+
+//                 cout << "Todo print out CZT stuff" << endl;
+//                 cout << "----------" << endl << endl;
+//                 break;
+//             }
+
+//             shared_ptr<CztCNode> c_czt_node = cur_czt_node->get_child_node(czt_action);
+//             shared_ptr<SmtBtsCNode> c_bts_node = cur_bts_node->get_child_node(bts_action);
+
+//             cur_state = thts_env->sample_transition_distribution_itfc(
+//                 cur_state, bts_action, *manager, *mo_context);
+//             shared_ptr<const Observation> cur_obs = static_pointer_cast<const Observation>(cur_state);
+
+//             if (!c_czt_node->has_child_node_itfc(cur_obs) || !c_bts_node->has_child_node_itfc(cur_obs)) {
+//                 // Got outside of the tree
+//                 cout << "Breaking out of trial " << i << "because exited one of the trees" << endl;
+//                 break;
+//             }
+
+//             cur_czt_node = c_czt_node->get_child_node(cur_state);
+//             cur_bts_node = c_bts_node->get_child_node(cur_state);
+
+//             depth++;
+//         }
+//     }
+// }
+
 // C++ entry point for debugging
 int main(int argc, char *argv[]) {
     py::scoped_interpreter py_interpreter;
@@ -1644,7 +1822,7 @@ int main(int argc, char *argv[]) {
     /**
      * Testing python mo gym envs
     */
-    mo_gym_env_test();
+    // mo_gym_env_test();
 
     /**
      * Testing Eigen SVD
@@ -1656,15 +1834,15 @@ int main(int argc, char *argv[]) {
     */
     // sm_bts_test();
     // sm_bts_4d_test();
-    // sm_dents_test();
-    // sm_bts_bin_tree_test();
-    // sm_bts_bin_tree_4d_test();
+    sm_bts_bin_tree_test();
+    sm_bts_bin_tree_4d_test();
+    sm_dents_test();
 
     /**
      * Testing chmcts
     */
-    // chmcts_test();
-    // chmcts_4d_test();
+    chmcts_test();
+    chmcts_4d_test();
 
     /**
      * Debugging Convex hull linear programs
@@ -1679,6 +1857,11 @@ int main(int argc, char *argv[]) {
      * And tested trying to run a second ./pyex /usr gets a runtime error
     */
     // mo_gym_env_test(argv[1]);
+
+    /**
+     * Debugging simplex maps on fruit tree
+     */
+    // compare_czt_bts_fruit_tree();
 
     return 0;
 }

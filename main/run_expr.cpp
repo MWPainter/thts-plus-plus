@@ -56,7 +56,7 @@ namespace thts {
             << "eval"
             // << "_"
             // << get_params_string_helper(run_id)
-            << ".csv";
+            << ".txt";
         return ss.str();
     }
 

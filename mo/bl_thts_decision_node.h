@@ -21,7 +21,9 @@ namespace thts {
     class BL_MoThtsDNode : public MoThtsDNode {
         friend BL_MoThtsCNode;
 
-        protected:
+        // TODO: change this back to protected after debugging stuff
+        // protected:
+        public:
             CZ_BallList ball_list;
 
         public:

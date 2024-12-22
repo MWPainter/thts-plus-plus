@@ -21,7 +21,9 @@ namespace thts {
     class SmtThtsDNode : public MoThtsDNode {
         friend SmtThtsCNode;
 
-        protected:
+        // TODO: change this back to protected after debugging stuff
+        // protected:
+        public:
             SimplexMap simplex_map;
 
         public:

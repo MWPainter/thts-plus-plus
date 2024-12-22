@@ -132,7 +132,7 @@ namespace thts {
         unordered_map<shared_ptr<const Action>,double> scalarised_values;
 
         for (shared_ptr<const Action> action : *actions) {
-            scalarised_values[action] = 0;
+            scalarised_values[action] = numeric_limits<double>::lowest();
             if (has_child_node_itfc(action)) {
                 shared_ptr<vector<shared_ptr<CZ_Ball>>> relevant_balls = 
                     get_child_node(action)->ball_list.get_relevant_balls(ctx.context_weight);

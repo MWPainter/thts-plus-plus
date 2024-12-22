@@ -31,10 +31,23 @@ namespace std {
 }
 
 namespace thts::helper {
-    double dist(const Eigen::ArrayXd& p1, const Eigen::ArrayXd& p2) {
-        Eigen::ArrayXd delta = p1 - p2;
-        return sqrt(delta.pow(2.0).sum());
+    double norm(const Eigen::ArrayXd& x) {
+        return sqrt(x.pow(2.0).sum());
     }
+
+    Eigen::ArrayXd normalised(const Eigen::ArrayXd& x) {
+        return x / norm(x);
+    }
+
+    Eigen::ArrayXd project(const Eigen::ArrayXd& direction, const Eigen::ArrayXd& x) {
+        Eigen::ArrayXd normalised_dir = normalised(direction);
+        return normalised_dir * dot(normalised_dir, x);
+    }
+
+    double dist(const Eigen::ArrayXd& p1, const Eigen::ArrayXd& p2) {
+        return norm(p1-p2);
+    }
+
     double dot(const Eigen::ArrayXd& p1, const Eigen::ArrayXd& p2) {
         return (p1 * p2).sum();
     }
