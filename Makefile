@@ -53,7 +53,7 @@ GTEST = external/googletest/build/lib/libgtest_main.a
 #####
 
 # Variables that need to get updated per machine
-CONDA_ENV_NAME = thts++mo
+CONDA_ENV_NAME = thts++aux
 PYTHON_WITH_VER = python3.12
 ANACONDA_ENVS_HOME = /home/michael/anaconda3/envs
 BOOST_INCLUDE_DIR = /home/michael/cpp_include
@@ -115,8 +115,8 @@ TARGET_THTS_PY_LIB = thtspp
 TARGET_THTS_PY_LIB_DEBUG = thtspp-debug
 TARGET_THTS_PY_EX = pyex
 TARGET_THTS_PY_EX_DEBUG = pyex-debug
-TARGET_MO_EXPR = moexpr
-TARGET_MO_EXPR_DEBUG = moexpr-debug
+TARGET_AUX_EXPR = auxexpr
+TARGET_AUX_EXPR_DEBUG = auxexpr-debug
 TARGET_PY_ENV_SERVER = py_env_server
 TARGET_PY_ENV_SERVER_DEBUG = py_env_server-debug
 
@@ -130,7 +130,7 @@ THTS_PY_LIB_FULL_NAME = thts$$(python3.12-config --extension-suffix)
 #####
 
 # Default, build everything
-all: $(TARGET_THTS_PY_EX) $(TARGET_MO_EXPR) $(TARGET_PY_ENV_SERVER) $(TARGET_THTS_TEST) 
+all: $(TARGET_THTS_PY_EX) $(TARGET_AUX_EXPR) $(TARGET_PY_ENV_SERVER) $(TARGET_THTS_TEST) 
 
 
 
@@ -230,13 +230,13 @@ $(TARGET_PY_ENV_SERVER_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
 $(TARGET_PY_ENV_SERVER_DEBUG): $(TARGET_PY_ENV_SERVER)
 
 # Expr entry point
-$(TARGET_MO_EXPR): LDFLAGS += $(PY_LDFLAGS)
-$(TARGET_MO_EXPR): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(MAIN_OBJECTS)
-	$(CXX) -shared $(PY_EX_CPPFLAGS) $(CPPFLAGS) $^ -o $(TARGET_MO_EXPR) $(LDFLAGS)
+$(TARGET_AUX_EXPR): LDFLAGS += $(PY_LDFLAGS)
+$(TARGET_AUX_EXPR): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(MAIN_OBJECTS)
+	$(CXX) -shared $(PY_EX_CPPFLAGS) $(CPPFLAGS) $^ -o $(TARGET_AUX_EXPR) $(LDFLAGS)
 
 # Debug expr entry
-$(TARGET_MO_EXPR_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
-$(TARGET_MO_EXPR_DEBUG): $(TARGET_MO_EXPR)
+$(TARGET_AUX_EXPR_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
+$(TARGET_AUX_EXPR_DEBUG): $(TARGET_AUX_EXPR)
 
 
 #####
@@ -255,4 +255,4 @@ clean:
 #####
 # Phony targets, so make knows when a target isn't producing a corresponding output file of same name
 #####
-.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST_DEBUG) $(TARGET_THTS_PY_LIB) $(TARGET_THTS_PY_EX_DEBUG) $(TARGET_MO_EXPR_DEBUG)
+.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST_DEBUG) $(TARGET_THTS_PY_LIB) $(TARGET_THTS_PY_EX_DEBUG) $(TARGET_AUX_EXPR_DEBUG)
