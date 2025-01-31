@@ -188,6 +188,12 @@ namespace thts {
             std::unordered_map<std::string, double> alg_params;
 
             double bias;
+
+            double temp;
+
+            int decay_fn;
+            double decay_fn_coeff;
+            double decay_fn_scale;
             // TODO: add params for algorithms
             
             bool eval_wrt_time;
