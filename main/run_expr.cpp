@@ -2,17 +2,11 @@
 
 #include "helper_templates.h"
 
-#include "mo/mo_mc_eval.h"
+#include "mc_eval.h"
+
 #include "mo/mo_thts.h"
 #include "py/mo_py_thts.h"
 #include "py/py_multiprocessing_thts_env.h"
-
-#include "mo/czt_chance_node.h"
-#include "mo/czt_decision_node.h"
-#include "mo/chmcts_chance_node.h"
-#include "mo/chmcts_decision_node.h"
-#include "mo/smt_chance_node.h"
-#include "mo/smt_decision_node.h"
 
 #include "py/py_helper.h"
 #include <Python.h>
@@ -119,12 +113,10 @@ namespace thts {
     */
     void write_eval_header(ofstream& eval_out_file) {
         eval_out_file << "replicate,"
-            << "search_time,"
-            << "num_trials,"
-            << "mc_eval_utility_mean,"
-            << "mc_eval_utility_std,"
-            << "mc_eval_normalised_utility_mean"
-            << "mc_eval_normalised_utility_std" << endl;
+            << "search_time" << ","
+            << "num_trials" << ","
+            << "mc_eval_mean" << ","
+            << "mc_eval_std" << endl;
     }
 
     /**
@@ -135,19 +127,15 @@ namespace thts {
         int replicate, 
         double search_time, 
         int num_trials, 
-        double mc_eval_utility_mean, 
-        double mc_eval_utility_std, 
-        double mc_eval_normalised_utility_mean, 
-        double mc_eval_normalised_utility_std) 
+        double mc_eval_mean, 
+        double mc_eval_std) 
     {
         eval_out_file 
             << replicate << ","
             << search_time << ","
             << num_trials << ","
-            << mc_eval_utility_mean << ","
-            << mc_eval_utility_std << ","
-            << mc_eval_normalised_utility_mean << ","
-            << mc_eval_normalised_utility_std << endl;
+            << mc_eval_mean << ","
+            << mc_eval_std << endl;
     }
 
     /**
@@ -157,21 +145,16 @@ namespace thts {
     void run_mc_eval(
         double& mean, 
         double& std_dev, 
-        double& normalised_mean, 
-        double& normalised_std_dev, 
         shared_ptr<MoThtsEnv> env, 
         shared_ptr<MoThtsDNode> root_node, 
         shared_ptr<MoThtsManager> thts_manager,
         RunID& run_id) 
     {   
         shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(root_node, env, thts_manager);
-        MoMCEvaluator evaluator(
-            eval_policy, run_id.max_trial_length, thts_manager, run_id.get_env_min_value(), run_id.get_env_max_value());
+        MCEvaluator evaluator(eval_policy, run_id.max_trial_length, thts_manager);
         evaluator.run_rollouts(run_id.rollouts_per_mc_eval, run_id.eval_threads);
-        mean = evaluator.get_mean_mo_ctx_return();
-        std_dev = evaluator.get_stddev_mean_mo_ctx_return();
-        normalised_mean = evaluator.get_mean_mo_normalised_ctx_return();
-        normalised_std_dev = evaluator.get_stddev_mean_mo_normalised_ctx_return();
+        mean = evaluator.get_mean_return();
+        std_dev = evaluator.get_stddev_mean_return();
     }
 
     /**
@@ -191,60 +174,11 @@ namespace thts {
      * Writes debug info
     */
     void write_debug_info_to_file(shared_ptr<MoThtsDNode> root_node, ofstream& out_file) {
-        shared_ptr<CztDNode> ball_list_root_node = dynamic_pointer_cast<CztDNode>(root_node);
-        if (ball_list_root_node) {
-            out_file << "ROOT NODE INFO" << endl   
-                << "---------------" << endl;
-            out_file << ball_list_root_node->get_ball_list_pretty_print_string() << endl;
-            out_file << "---------------" << endl;
-
-            for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : root_node->children) {
-                out_file << "ACTION " << child_pair.first << endl 
-                    << "---------------" << endl;
-                CztCNode& child_node = (CztCNode&) *child_pair.second;
-                out_file << child_node.get_ball_list_pretty_print_string() << endl;
-                out_file << "---------------" << endl;
-            }  
-        }
-
-        shared_ptr<ChmctsDNode> convex_hull_root_node = dynamic_pointer_cast<ChmctsDNode>(root_node);
-        if (convex_hull_root_node) {
-            out_file << "ROOT NODE INFO" << endl   
-                << "---------------" << endl;
-            out_file << convex_hull_root_node->get_convex_hull_pretty_print_string() << endl;
-            out_file << "---------------" << endl;
-
-            for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : root_node->children) {
-                out_file << "ACTION " << child_pair.first << endl 
-                    << "---------------" << endl;
-                ChmctsCNode& child_node = (ChmctsCNode&) *child_pair.second;
-                out_file << child_node.get_convex_hull_pretty_print_string() << endl;
-                out_file << "---------------" << endl;
-            }  
-        }
-
-        shared_ptr<SmtThtsDNode> simplex_map_root_node = dynamic_pointer_cast<SmtThtsDNode>(root_node);
-        if (simplex_map_root_node) {
-            out_file << "ROOT NODE INFO" << endl   
-                << "---------------" << endl;
-            out_file << simplex_map_root_node->get_simplex_map_pretty_print_string() << endl;
-            out_file << "---------------" << endl;
-
-            for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : root_node->children) {
-                out_file << "ACTION " << child_pair.first << endl 
-                    << "---------------" << endl;
-                SmtThtsCNode& child_node = (SmtThtsCNode&) *child_pair.second;
-                out_file << child_node.get_simplex_map_pretty_print_string() << endl;
-                out_file << "---------------" << endl;
-            }  
-        }
+        out_file << "Haven't implemented any debug file stuff yet for aux experiments" << endl;
     }
 
     /**
      * Performs all of the (replicated) runs corresponding to 'run_id'
-     * (This is the one exposed function (for now) in run_toy.cpp)
-     * 
-     * We dont try to gracefully exit
     */
     double run_expr(RunID& run_id, bool eval_at_zero_trials) {
         // create results dir + eval file
@@ -264,8 +198,8 @@ namespace thts {
                 << helper::unordered_map_pretty_print_string(run_id.alg_params) << ", replicate " << replicate << endl;
                 
             // setup env
-            shared_ptr<MoThtsEnv> env = run_id.get_env();
-            shared_ptr<MoThtsManager> thts_manager = run_id.get_thts_manager(env);
+            shared_ptr<ThtsEnv> env = run_id.get_env();
+            shared_ptr<ThtsManager> thts_manager = run_id.get_thts_manager(env);
             if (run_id.is_python_env()) {
                 for (int i=0; i<run_id.num_envs; i++) {
                     PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(
@@ -273,34 +207,37 @@ namespace thts {
                     py_mp_env.start_python_server(i);
                 }
             }
-            shared_ptr<MoThtsDNode> root_node = run_id.get_root_search_node(env, thts_manager);
+            shared_ptr<ThtsDNode> root_node = run_id.get_root_search_node(env, thts_manager);
             shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(thts_manager, root_node, run_id.num_threads);
 
             // eval at 0 trials
-            double mean, stddev, normalised_mean, normalised_stddev;
+            double mean, stddev;
             if (eval_at_zero_trials) {
                 run_mc_eval(
                     mean, 
                     stddev, 
-                    normalised_mean, 
-                    normalised_stddev, 
                     env, 
                     root_node, 
                     thts_manager, 
                     run_id);
-                write_eval_line(eval_file, replicate, 0.0, 0, mean, stddev, normalised_mean, normalised_stddev);
+                write_eval_line(eval_file, replicate, 0.0, 0, mean, stddev);
             }
 
             // run trials, evaluating every eval delta
             double search_time_elapsed = 0.0;
             while (search_time_elapsed < run_id.search_runtime) {
-                thts_pool->run_trials(numeric_limits<int>::max(), run_id.eval_delta);
+                int max_trials = numeric_limits<int>::max();
+                double max_runtime = numeric_limits<double>::max();
+                if (run_id.eval_wrt_time) {
+                    max_runtime = run_id.eval_delta;
+                } else {
+                    max_trials = run_id.eval_delta;
+                }
+                thts_pool->run_trials(max_trials, max_runtime);
                 search_time_elapsed += run_id.eval_delta;
                 run_mc_eval(
                     mean, 
                     stddev, 
-                    normalised_mean, 
-                    normalised_stddev, 
                     env, 
                     root_node, 
                     thts_manager, 
@@ -311,9 +248,7 @@ namespace thts {
                     search_time_elapsed, 
                     root_node->get_num_visits(), 
                     mean, 
-                    stddev, 
-                    normalised_mean, 
-                    normalised_stddev);
+                    stddev);
             }
 
             // Write tree to file
@@ -447,75 +382,75 @@ namespace thts {
         hp_opt_file.close();
     }
 
-    /**
-     * Compute noise estimate
-     */
-    void estimate_noise_for_hp_opt(std::string env_id)
-    {
-        // Params that we're hardcoding because this bit is a bit hacky anyway
-        unordered_map<string,int> rollouts_per_mc_eval = 
-        {
-            {DST_ENV_ID, 500},
-        };
-        unordered_map<string,int> max_trial_length = 
-        {
-            {DST_ENV_ID, 50},
-        };
+    // /**
+    //  * Compute noise estimate
+    //  */
+    // void estimate_noise_for_hp_opt(std::string env_id)
+    // {
+    //     // Params that we're hardcoding because this bit is a bit hacky anyway
+    //     unordered_map<string,int> rollouts_per_mc_eval = 
+    //     {
+    //         {DST_ENV_ID, 500},
+    //     };
+    //     unordered_map<string,int> max_trial_length = 
+    //     {
+    //         {DST_ENV_ID, 50},
+    //     };
         
-        unordered_map<string,int> eval_threads = 
-        {
-            {DST_ENV_ID, 10},
-        };
+    //     unordered_map<string,int> eval_threads = 
+    //     {
+    //         {DST_ENV_ID, 10},
+    //     };
         
-        // Error check
-        if (!rollouts_per_mc_eval.contains(env_id)) {
-            throw runtime_error("Invalide env_id, maybe havent added params for this env?");
-        }
+    //     // Error check
+    //     if (!rollouts_per_mc_eval.contains(env_id)) {
+    //         throw runtime_error("Invalide env_id, maybe havent added params for this env?");
+    //     }
 
-        // If running python, make interpreter and release gil
-        shared_ptr<py::scoped_interpreter> py_interpreter;
-        shared_ptr<py::gil_scoped_release> release;
-        if (is_python_env(env_id)) {
-            py_interpreter = make_shared<py::scoped_interpreter>();
-            release = make_shared<py::gil_scoped_release>();
-        }
+    //     // If running python, make interpreter and release gil
+    //     shared_ptr<py::scoped_interpreter> py_interpreter;
+    //     shared_ptr<py::gil_scoped_release> release;
+    //     if (is_python_env(env_id)) {
+    //         py_interpreter = make_shared<py::scoped_interpreter>();
+    //         release = make_shared<py::gil_scoped_release>();
+    //     }
 
-        // Create env
-        unordered_map<string,double> psuedo_alg_params;
-        RunID psuedo_run_id(env_id,"psuedo_expr_id",0,"psuedo_alg_id",psuedo_alg_params,1.0,10,0.1,10,1,1,1);
-        shared_ptr<MoThtsEnv> env = get_env(psuedo_run_id);
-        MoThtsManagerArgs dummy_manager_args(env);
-        dummy_manager_args.num_envs = eval_threads[env_id];
-        dummy_manager_args.seed = 60415;
-        shared_ptr<MoThtsManager> dummy_manager = make_shared<MoThtsManager>(dummy_manager_args);
+    //     // Create env
+    //     unordered_map<string,double> psuedo_alg_params;
+    //     RunID psuedo_run_id(env_id,"psuedo_expr_id",0,"psuedo_alg_id",psuedo_alg_params,1.0,10,0.1,10,1,1,1);
+    //     shared_ptr<MoThtsEnv> env = get_env(psuedo_run_id);
+    //     MoThtsManagerArgs dummy_manager_args(env);
+    //     dummy_manager_args.num_envs = eval_threads[env_id];
+    //     dummy_manager_args.seed = 60415;
+    //     shared_ptr<MoThtsManager> dummy_manager = make_shared<MoThtsManager>(dummy_manager_args);
         
-        // Start python servers
-        if (is_python_env(env_id)) {
-            for (int i=0; i<eval_threads[env_id]; i++) {
-                PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(
-                    dummy_manager->thts_env(i));
-                py_mp_env.start_python_server(i);
-            }
-        }
+    //     // Start python servers
+    //     if (is_python_env(env_id)) {
+    //         for (int i=0; i<eval_threads[env_id]; i++) {
+    //             PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(
+    //                 dummy_manager->thts_env(i));
+    //             py_mp_env.start_python_server(i);
+    //         }
+    //     }
 
-        // Run evaluator
-        shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(nullptr, env, dummy_manager);  
-        MoMCEvaluator evaluator(
-            eval_policy, 
-            max_trial_length[env_id], 
-            dummy_manager, 
-            get_env_min_value(env_id, max_trial_length[env_id]), 
-            get_env_max_value(env_id, max_trial_length[env_id]));
-        evaluator.run_rollouts(rollouts_per_mc_eval[env_id], eval_threads[env_id]);
-        double mean = evaluator.get_mean_mo_ctx_return();
-        double std_dev = evaluator.get_stddev_mean_mo_ctx_return();
-        double normalised_mean = evaluator.get_mean_mo_normalised_ctx_return();
-        double normalised_std_dev = evaluator.get_stddev_mean_mo_normalised_ctx_return();
+    //     // Run evaluator
+    //     shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(nullptr, env, dummy_manager);  
+    //     MoMCEvaluator evaluator(
+    //         eval_policy, 
+    //         max_trial_length[env_id], 
+    //         dummy_manager, 
+    //         get_env_min_value(env_id, max_trial_length[env_id]), 
+    //         get_env_max_value(env_id, max_trial_length[env_id]));
+    //     evaluator.run_rollouts(rollouts_per_mc_eval[env_id], eval_threads[env_id]);
+    //     double mean = evaluator.get_mean_mo_ctx_return();
+    //     double std_dev = evaluator.get_stddev_mean_mo_ctx_return();
+    //     double normalised_mean = evaluator.get_mean_mo_normalised_ctx_return();
+    //     double normalised_std_dev = evaluator.get_stddev_mean_mo_normalised_ctx_return();
 
-        // Print info
-        cout << "Mean: " << mean << endl   
-            << "StdDev: " << std_dev << endl;
-        cout << "Normalised Mean: " << normalised_mean << endl   
-            << "Normalised StdDev: " << normalised_std_dev << endl;
-    }
+    //     // Print info
+    //     cout << "Mean: " << mean << endl   
+    //         << "StdDev: " << std_dev << endl;
+    //     cout << "Normalised Mean: " << normalised_mean << endl   
+    //         << "Normalised StdDev: " << normalised_std_dev << endl;
+    // }
 }

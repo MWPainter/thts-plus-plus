@@ -9,6 +9,7 @@
 namespace thts {
     /**
      * Performs all of the (replicated) runs corresponding to 'run_id', returning avg expected utility over replicates
+     * - returns avg value for use in hyperparam optimisation
     */
     double run_expr(RunID &run_id, bool eval_at_zero_trials=true);
 
@@ -22,8 +23,8 @@ namespace thts {
      */
     void run_hp_opt(std::string expr_id_prefix);
 
-    /**
-     * Computes an estimate for the noise parameter of bayesopt for environment with 'env_id' using a random policy 
-     */
-    void estimate_noise_for_hp_opt(std::string env_id);
+    // /**
+    //  * Computes an estimate for the noise parameter of bayesopt for environment with 'env_id' using a random policy 
+    //  */
+    // void estimate_noise_for_hp_opt(std::string env_id);
 }
