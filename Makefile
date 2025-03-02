@@ -42,6 +42,7 @@ PY_MAIN = py/main/module.cpp
 PY_MAIN_OBJ = bin/py/main/module.o
 
 MAIN_SOURCES = $(wildcard main/*.cpp)
+MAIN_SOURCES += $(wildcard main/envs/*.cpp)
 MAIN_OBJECTS = $(patsubst main/%.cpp, bin/main/%.o, $(MAIN_SOURCES))
 
 GTEST = external/googletest/build/lib/libgtest_main.a

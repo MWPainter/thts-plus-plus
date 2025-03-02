@@ -2,22 +2,23 @@
 
 #include "main/run_expr.h"
 
-#include "mo/chmcts_manager.h"
-#include "mo/czt_manager.h"
-#include "mo/smt_bts_manager.h"
-#include "mo/smt_dents_manager.h"
+#include "algorithms/uct/uct_manager.h"
+#include "algorithms/ments/ments_manager.h"
+#include "algorithms/ments/dents/dents_manager.h"
 
-#include "mo/czt_decision_node.h"
-#include "mo/chmcts_decision_node.h"
-#include "mo/smt_bts_decision_node.h"
-#include "mo/smt_dents_decision_node.h"
+#include "algorithms/uct/uct_decision_node.h"
+#include "algorithms/ments/ments_decision_node.h"
+#include "algorithms/est/est_decision_node.h"
+#include "algorithms/ments/dents/dents_decision_node.h"
+
+#include "algorithms/common/decaying_temp.h"
 
 #include "py/pickle_wrapper.h"
-#include "py/mo_gym_multiprocessing_thts_env.h"
-#include "py/timed_mo_gym_multiprocessing_thts_env.h"
+#include "py/py_multiprocessing_thts_env.h"
+#include "py/gym_multiprocessing_thts_env.h"
 
-#include "test/mo/test_mo_thts_env.h"
-#include "py/mo_py_multiprocessing_thts_env.h"
+#include "main/envs/d_chain.h"
+#include "main/envs/entropy_trap.h"
 
 #include <sstream>
 #include <stdexcept>
@@ -25,8 +26,6 @@
 using namespace std;
 using namespace thts;
 using namespace thts::python;
-using namespace thts::test;
-using namespace pybind11::literals;
 
 namespace py = pybind11;
 
@@ -48,9 +47,9 @@ namespace thts {
         unordered_map<string, double>& alg_params,
         bool eval_wrt_time,
         double search_runtime,
-        int max_trial_length,
         double eval_delta,
         int rollouts_per_mc_eval,
+        int max_trial_length,
         int num_repeats,
         int num_threads,
         int eval_threads) :
@@ -60,15 +59,17 @@ namespace thts {
             alg_id(alg_id),
             alg_params(alg_params),
             bias(UctManagerArgs::bias_default),
-            temp(BtsManagerArgs::temp_default),
+            temp(MentsManagerArgs::temp_default),
             decay_fn(DECAY_FN_CONST),
-            decay_fn_coeff(1.0),
             decay_fn_scale(1.0),
+            entropy_coeff(1.0),
+            entropy_decay_fn(DECAY_FN_CONST),
+            entropy_decay_fn_scale(1.0),
             eval_wrt_time(eval_wrt_time),
             search_runtime(search_runtime),
-            max_trial_length(max_trial_length),
             eval_delta(eval_delta),
             rollouts_per_mc_eval(rollouts_per_mc_eval),
+            max_trial_length(max_trial_length),
             num_repeats(num_repeats),
             num_threads(num_threads),
             eval_threads(eval_threads),
@@ -83,11 +84,17 @@ namespace thts {
         if (alg_params.contains(DECAY_FN_PARAM_ID)) {
             decay_fn = alg_params[DECAY_FN_PARAM_ID];
         }
-        if (alg_params.contains(DECAY_FN_COEFF_PARAM_ID)) {
-            decay_fn_coeff = alg_params[DECAY_FN_COEFF_PARAM_ID];
-        }
         if (alg_params.contains(DECAY_FN_SCALE_PARAM_ID)) {
             decay_fn_scale = alg_params[DECAY_FN_SCALE_PARAM_ID];
+        }
+        if (alg_params.contains(ENTROPY_COEFF_PARAM_ID)) {
+            entropy_coeff = alg_params[ENTROPY_COEFF_PARAM_ID];
+        }
+        if (alg_params.contains(ENTROPY_DECAY_FN_PARAM_ID)) {
+            entropy_decay_fn = alg_params[ENTROPY_DECAY_FN_PARAM_ID];
+        }
+        if (alg_params.contains(ENTROPY_DECAY_FN_SCALE_PARAM_ID)) {
+            entropy_decay_fn_scale = alg_params[ENTROPY_DECAY_FN_SCALE_PARAM_ID];
         }
     }
 
@@ -101,7 +108,7 @@ namespace thts {
         return thts::is_python_env(env_id);
     }
 
-    shared_ptr<MoThtsEnv> RunID::get_env() 
+    shared_ptr<ThtsEnv> RunID::get_env() 
     {
         return thts::get_env(*this);
     }
@@ -109,7 +116,7 @@ namespace thts {
     /**
      * Create thts manager
     */
-    shared_ptr<MoThtsManager> RunID::get_thts_manager(shared_ptr<MoThtsEnv> env) 
+    shared_ptr<ThtsManager> RunID::get_thts_manager(shared_ptr<ThtsEnv> env) 
     {
         if (alg_id == UCT_ALG_ID) {
             UctManagerArgs manager_args(env);
@@ -121,18 +128,65 @@ namespace thts {
             return make_shared<UctManager>(manager_args);
         }
 
-        if (alg_id == BTS_ALG_ID) {
-            BtsManagerArgs manager_args(env);
+        if (alg_id == MENTS_ALG_ID) {
+            MentsManagerArgs manager_args(env);
             manager_args.max_depth = max_trial_length;
             manager_args.mcts_mode = false;
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
             manager_args.temp = temp;
-            // TODO: handle the decay fn stuff (copy from xpr_go?)
-            return make_shared<BtsManager>(manager_args);
+            return make_shared<MentsManager>(manager_args);
         }
-        
-        // TODO: add args for toher algs
+
+        if (alg_id == BTS_ALG_ID) {
+            DentsManagerArgs manager_args(env);
+            manager_args.max_depth = max_trial_length;
+            manager_args.mcts_mode = false;
+            manager_args.num_threads = num_threads;
+            manager_args.num_envs = num_envs;
+
+            // alpha
+            manager_args.temp = temp;
+            manager_args.temp_decay_fn = nullptr; 
+            if (decay_fn == DECAY_FN_INV_SQRT) {
+                manager_args.temp_decay_fn = decayed_temp_inv_sqrt;
+            } else if (decay_fn == DECAY_FN_INV_LOG) {
+                manager_args.temp_decay_fn = decayed_temp_inv_log;
+            }
+            manager_args.temp_decay_visits_scale = decay_fn_scale;
+            
+            return make_shared<DentsManager>(manager_args);
+        }
+
+        if (alg_id == DENTS_ALG_ID) {
+            DentsManagerArgs manager_args(env);
+            manager_args.max_depth = max_trial_length;
+            manager_args.mcts_mode = false;
+            manager_args.num_threads = num_threads;
+            manager_args.num_envs = num_envs;
+
+            // alpha
+            manager_args.temp = temp;
+            manager_args.temp_decay_fn = nullptr; 
+            if (decay_fn == DECAY_FN_INV_SQRT) {
+                manager_args.temp_decay_fn = decayed_temp_inv_sqrt;
+            } else if (decay_fn == DECAY_FN_INV_LOG) {
+                manager_args.temp_decay_fn = decayed_temp_inv_log;
+            }
+            manager_args.temp_decay_visits_scale = decay_fn_scale;
+
+            // beta
+            manager_args.value_temp_init = entropy_coeff;
+            manager_args.value_temp_decay_fn = nullptr;
+            if (entropy_decay_fn == DECAY_FN_INV_SQRT) {
+                manager_args.value_temp_decay_fn = decayed_temp_inv_sqrt;
+            } else if (entropy_decay_fn == DECAY_FN_INV_LOG) {
+                manager_args.value_temp_decay_fn = decayed_temp_inv_log;
+            }
+            manager_args.value_temp_decay_visits_scale = entropy_decay_fn_scale;
+            
+            return make_shared<DentsManager>(manager_args);
+        }
 
         stringstream ss;
         ss << "Error in RunID get_thts_manager for alg_id = " << alg_id;
@@ -142,17 +196,24 @@ namespace thts {
     /**
      * Return a root search node
     */
-    shared_ptr<MoThtsDNode> RunID::get_root_search_node(shared_ptr<MoThtsEnv> env, shared_ptr<MoThtsManager> manager) 
+    shared_ptr<ThtsDNode> RunID::get_root_search_node(shared_ptr<ThtsEnv> env, shared_ptr<ThtsManager> manager) 
     {
         if (alg_id == UCT_ALG_ID) {
-            shared_ptr<UcttManager> uct_manager = static_pointer_cast<UctManager>(manager);
+            shared_ptr<UctManager> uct_manager = static_pointer_cast<UctManager>(manager);
             return make_shared<UctDNode>(uct_manager, env->get_initial_state_itfc(), 0, 0);
         }
-        if (alg_id == BTS_ALG_ID) {
-            shared_ptr<BtsManager> bts_manager = static_pointer_cast<BtsManager>(manager);
-            return make_shared<BtsDNode>(bts_manager, env->get_initial_state_itfc(), 0, 0);
+        if (alg_id == MENTS_ALG_ID) {
+            shared_ptr<MentsManager> ments_manager = static_pointer_cast<DentsManager>(manager);
+            return make_shared<MentsDNode>(ments_manager, env->get_initial_state_itfc(), 0, 0);
         }
-        // TODO: include other algs
+        if (alg_id == BTS_ALG_ID) {
+            shared_ptr<DentsManager> bts_manager = static_pointer_cast<DentsManager>(manager);
+            return make_shared<EstDNode>(bts_manager, env->get_initial_state_itfc(), 0, 0);
+        }
+        if (alg_id == DENTS_ALG_ID) {
+            shared_ptr<DentsManager> dents_manager = static_pointer_cast<DentsManager>(manager);
+            return make_shared<DentsDNode>(dents_manager, env->get_initial_state_itfc(), 0, 0);
+        }
 
         stringstream ss;
         ss << "Error in RunID get_root_search_node for alg_id = " << alg_id;
@@ -169,175 +230,180 @@ namespace thts {
 
         // TODO: define RunId's for experiments
 
-        // // expr_id: 000_debug 
-        // // debug expr id for debugging
-        // if (expr_id == DEBUG_EXPR_ID) {
-        //     string env_id = DST_ENV_ID;
-        //     // string env_id = DEBUG_PY_ENV_1_ID;
-        //     time_t expr_timestamp = std::time(nullptr);
-        //     double search_runtime = 1.0;
-        //     int max_trial_length = 50;
-        //     double eval_delta = 0.5;
-        //     int rollouts_per_mc_eval = 50;
-        //     int num_repeats = 2;
-        //     int num_threads = 1;
-        //     int eval_threads = 1;
+        // expr_id: 000_debug 
+        // debug expr id for debugging
+        if (expr_id == DEBUG_EXPR_ID) {
+            string env_id = D_CHAIN_10_ENV_ID;
+            int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(D_CHAIN_10_ENV_ID);
+            time_t expr_timestamp = std::time(nullptr);
+            bool eval_wrt_time = false;
+            double search_runtime = 100;
+            double eval_delta = 25;
+            int rollouts_per_mc_eval = 5;
+            int num_repeats = 2;
+            int num_threads = 1;
+            int eval_threads = 1;
 
-        //     unordered_map<string,double> alg_params =
-        //     {
-        //         {CZT_BIAS_PARAM_ID, 4.0},
-        //         {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
-        //         {SM_L_INF_THRESH_PARAM_ID, 0.05},
-        //         // {SM_MAX_DEPTH, 10.0},
-        //         // {SM_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
-        //         {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-        //         {SMBTS_SEARCH_TEMP_PARAM_ID, 100.0},
-        //         {SMBTS_EPSILON_PARAM_ID, 0.1},
-        //         // {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-        //         {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 0.0},
-        //         {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
-        //         {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 0.5},
-        //         {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
-        //     };
+            unordered_map<string,double> alg_params =
+            {
+                {BIAS_PARAM_ID, 4.0},
+                {TEMP_PARAM_ID, 1.0},
+                {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                {DECAY_FN_SCALE_PARAM_ID, 1.0},
+                {ENTROPY_COEFF_PARAM_ID, 1.0},
+                {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 1.0},
+                {EPSILON_PARAM_ID, 0.1},
+            };
 
-        //     vector<string> alg_ids = 
-        //     {
-        //         SMBTS_ALG_ID,
-        //         // SMDENTS_ALG_ID,
-        //         // CZT_ALG_ID,
-        //         // CHMCTS_ALG_ID,
-        //     };
+            vector<string> alg_ids = 
+            {
+                UCT_ALG_ID,
+                MENTS_ALG_ID,
+                BTS_ALG_ID,
+                DENTS_ALG_ID,
+            };
 
-        //     for (string alg_id : alg_ids) {
-        //         run_ids->push_back(RunID(
-        //             env_id,
-        //             expr_id,
-        //             expr_timestamp,
-        //             alg_id,
-        //             alg_params,
-        //             search_runtime,
-        //             max_trial_length,
-        //             eval_delta,
-        //             rollouts_per_mc_eval,
-        //             num_repeats,
-        //             num_threads,
-        //             eval_threads
-        //         ));
-        //     }
+            for (string alg_id : alg_ids) {
+                run_ids->push_back(RunID(
+                    env_id,
+                    expr_id,
+                    expr_timestamp,
+                    alg_id,
+                    alg_params,
+                    eval_wrt_time,
+                    search_runtime,
+                    eval_delta,
+                    rollouts_per_mc_eval,
+                    max_trial_length,
+                    num_repeats,
+                    num_threads,
+                    eval_threads
+                ));
+            }
 
-        //     return run_ids;
-        // }
+            return run_ids;
+        }
 
-        // // expr_id: 700_dst
-        // // deep sea treasure eval
-        // if (expr_id == EVAL_DST_EXPR_ID) {
-        //     string env_id = DST_ENV_ID;
-        //     time_t expr_timestamp = std::time(nullptr);
-        //     double search_runtime = 45.0;
-        //     int max_trial_length = 50;
-        //     double eval_delta = 0.5;
-        //     int rollouts_per_mc_eval = 2500;
-        //     int num_repeats = 25;
-        //     int num_threads = 16;
-        //     int eval_threads = 16;
+        // ----
+        // expr_id: 100_supp_dchain_temp_vary 
+        // 10-chain vs temp param
+        // ----
+        // expr_id: 101_supp_mod_dchain_temp_vary 
+        // modified 10-chain vs temp param
+        // ----
+        // expr_id: 102_supp_entropy_temp_vary 
+        // modified 10-chain vs temp param
+        // ----
+        if (expr_id == SUPP_100_DCHAIN_10_TEMP_EXPR_ID
+            || expr_id == SUPP_101_MOD_DCHAIN_10_TEMP_EXPR_ID
+            || expr_id == SUPP_102_ENTROPY_TRAP_10_TEMP_EXPR_ID) 
+        {
+            string env_id = D_CHAIN_10_ENV_ID;
+            if (expr_id == SUPP_101_MOD_DCHAIN_10_TEMP_EXPR_ID) {
+                env_id = MOD_D_CHAIN_10_ENV_ID;
+            } else if (expr_id == SUPP_102_ENTROPY_TRAP_10_TEMP_EXPR_ID) {
+                env_id = ENTROPY_TRAP_10_ENV_ID;
+            }
+            int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
+            time_t expr_timestamp = std::time(nullptr);
+            bool eval_wrt_time = false;
+            double search_runtime = 5000;
+            double eval_delta = 50;
+            int rollouts_per_mc_eval = 1; // det env
+            int num_repeats = 25;
+            int num_threads = 8;
+            int eval_threads = 1; // det env
 
-        //     // CZT
-        //     unordered_map<string,double> czt_alg_params =
-        //     {
-        //         {CZT_BIAS_PARAM_ID, 3.96968},
-        //         {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 5.0},
-        //     };
-        //     run_ids->push_back(RunID(
-        //         env_id,
-        //         expr_id,
-        //         expr_timestamp,
-        //         CZT_ALG_ID,
-        //         czt_alg_params,
-        //         search_runtime,
-        //         max_trial_length,
-        //         eval_delta,
-        //         rollouts_per_mc_eval,
-        //         num_repeats,
-        //         num_threads,
-        //         eval_threads
-        //     ));
+            // UCT run ids 
+            vector<double> biases_to_try = {
+                0.01,
+                0.1,
+                1.0,
+                10.0,
+                100.0,
+                1000.0,
+                10000.0,
+            };
 
-        //     // CHMCTS
-        //     unordered_map<string,double> chmcts_alg_params =
-        //     {
-        //         {CZT_BIAS_PARAM_ID, 33.7555},
-        //         {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 5.0},
-        //     };
-        //     run_ids->push_back(RunID(
-        //         env_id,
-        //         expr_id,
-        //         expr_timestamp,
-        //         CHMCTS_ALG_ID,
-        //         chmcts_alg_params,
-        //         search_runtime,
-        //         max_trial_length,
-        //         eval_delta,
-        //         rollouts_per_mc_eval,
-        //         num_repeats,
-        //         num_threads,
-        //         eval_threads
-        //     ));
+            for (double bias : biases_to_try) {
+                unordered_map<string,double> alg_params =
+                {
+                    {BIAS_PARAM_ID, bias},
+                };
+                run_ids->push_back(RunID(
+                    env_id,
+                    expr_id,
+                    expr_timestamp,
+                    UCT_ALG_ID,
+                    alg_params,
+                    eval_wrt_time,
+                    search_runtime,
+                    eval_delta,
+                    rollouts_per_mc_eval,
+                    max_trial_length,
+                    num_repeats,
+                    num_threads,
+                    eval_threads
+                ));
+            }
+            
+            // MENTS/DENTS/BTS run ids
+            vector<double> temps_to_try = {
+                0.001,
+                0.01,
+                0.05,
+                0.1,
+                0.15,
+                0.2,
+                0.5,
+                1.0,
+                10.0,
+                100.0,
+                1000.0,
+            };
+            vector<string> alg_ids = 
+            {
+                MENTS_ALG_ID,
+                BTS_ALG_ID,
+                DENTS_ALG_ID,
+            };
 
-        //     // SMBTS
-        //     unordered_map<string,double> smbts_alg_params =
-        //     {
-        //         {SM_L_INF_THRESH_PARAM_ID, 0.000144821},
-        //         {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-        //         {SMBTS_SEARCH_TEMP_PARAM_ID, 58.5697},
-        //         {SMBTS_EPSILON_PARAM_ID, 0.414515},
-        //         {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-        //         {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9972},
-        //     };
-        //     run_ids->push_back(RunID(
-        //         env_id,
-        //         expr_id,
-        //         expr_timestamp,
-        //         SMBTS_ALG_ID,
-        //         smbts_alg_params,
-        //         search_runtime,
-        //         max_trial_length,
-        //         eval_delta,
-        //         rollouts_per_mc_eval,
-        //         num_repeats,
-        //         num_threads,
-        //         eval_threads
-        //     ));
+            for (double temp : temps_to_try) {
+                unordered_map<string,double> alg_params =
+                {
+                    {TEMP_PARAM_ID, temp},
+                    {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                    {DECAY_FN_SCALE_PARAM_ID, 1.0},
+                    {ENTROPY_COEFF_PARAM_ID, temp},
+                    {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                    {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 1.0},
+                    {EPSILON_PARAM_ID, 0.01},
+                };
+                for (string alg_id : alg_ids) {
+                    run_ids->push_back(RunID(
+                        env_id,
+                        expr_id,
+                        expr_timestamp,
+                        alg_id,
+                        alg_params,
+                        eval_wrt_time,
+                        search_runtime,
+                        eval_delta,
+                        rollouts_per_mc_eval,
+                        max_trial_length,
+                        num_repeats,
+                        num_threads,
+                        eval_threads
+                    ));
+                }
+            }
+            
+            return run_ids;
+        }
 
-        //     // SMDENTS
-        //     unordered_map<string,double> smdents_alg_params =
-        //     {
-        //         {SM_L_INF_THRESH_PARAM_ID, 0.000145879},
-        //         {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-        //         {SMBTS_SEARCH_TEMP_PARAM_ID, 64.4872},
-        //         {SMBTS_EPSILON_PARAM_ID, 0.409571},
-        //         {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-        //         {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9981},
-        //         {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 99.998},
-        //         {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 0.0196627},
-        //     };
-        //     run_ids->push_back(RunID(
-        //         env_id,
-        //         expr_id,
-        //         expr_timestamp,
-        //         SMDENTS_ALG_ID,
-        //         smdents_alg_params,
-        //         search_runtime,
-        //         max_trial_length,
-        //         eval_delta,
-        //         rollouts_per_mc_eval,
-        //         num_repeats,
-        //         num_threads,
-        //         eval_threads
-        //     ));
 
-        //     // return 
-        //     return run_ids;
-        // }
+
 
         stringstream ss;
         ss << "Error in get_run_ids_from_expr_id for expr_id = " << expr_id;
@@ -353,6 +419,7 @@ namespace thts {
         time_t expr_timestamp,
         string alg_id,
         unordered_map<string, pair<double,double>> alg_params_min_max,
+        bool eval_wrt_time,
         double search_runtime,
         int max_trial_length,
         double eval_delta,
@@ -370,6 +437,7 @@ namespace thts {
             alg_id(alg_id),
             alg_param_ids(RELEVANT_PARAM_IDS.at(alg_id)),
             alg_params_min_max(alg_params_min_max),
+            eval_wrt_time(eval_wrt_time),
             search_runtime(search_runtime),
             max_trial_length(max_trial_length),
             eval_delta(eval_delta),
@@ -457,10 +525,11 @@ namespace thts {
             expr_timestamp,
             alg_id,
             alg_params,
+            eval_wrt_time,
             search_runtime,
-            max_trial_length,
             eval_delta,
             rollouts_per_mc_eval,
+            max_trial_length,
             num_repeats,
             num_threads,
             eval_threads
@@ -654,7 +723,7 @@ namespace thts {
     /**
      * Create and return the env
     */
-    shared_ptr<MoThtsEnv> get_env(RunID& run_id) 
+    shared_ptr<ThtsEnv> get_env(RunID& run_id) 
     {
         string thts_unique_filename = get_results_dir(run_id);
         string& env_id = run_id.env_id;
@@ -664,70 +733,19 @@ namespace thts {
             return make_shared<GymMultiprocessingThtsEnv>(pickle_wrapper, thts_unique_filename, env_id);
         }
 
-        // TODO: make env, frozen lake, delete below, keep the commented out python one though
+        if (env_id == D_CHAIN_10_ENV_ID)
+        {
+            return make_shared<DChainEnv>(10,1.0);
+        }
+        if (env_id == MOD_D_CHAIN_10_ENV_ID)
+        {
+            return make_shared<DChainEnv>(10,0.5); 
+        }
 
-        // if (env_id == FRUIT_TREE_7_ENV_ID || 
-        //     env_id == FRUIT_TREE_STOCH_5_ENV_ID || 
-        //     env_id == FRUIT_TREE_STOCH_7_ENV_ID)
-        // {
-        //     py::gil_scoped_acquire acquire;
-        //     string module_name = "custom_fruit_tree";
-        //     string class_name = "StochFruitTreeThtsEnv";
-        //     py::dict kw_args;
-        //     kw_args["depth"] = to_string((env_id == FRUIT_TREE_STOCH_5_ENV_ID) ? 5 : 7);
-        //     kw_args["action_noise"] = to_string((env_id == FRUIT_TREE_7_ENV_ID) ? 0.0 : 0.2);
-
-        //     shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-        //     return make_shared<MoPyMultiprocessingThtsEnv>(
-        //         pickle_wrapper, thts_unique_filename, module_name, class_name, make_shared<py::dict>(kw_args));
-        // }
-
-        // if (env_id == IMPROVED_DST_ENV_ID ||
-        //     env_id == IMPROVED_STOCH_DST_ENV_ID ||
-        //     env_id == VAMPLEW_DST_ENV_ID ||
-        //     env_id == VAMPLEW_STOCH_DST_ENV_ID)
-        // {
-        //     py::gil_scoped_acquire acquire;
-        //     string module_name = "custom_deep_sea_treasure";
-        //     string class_name = "ImprovedDeepSeaTreasureThtsEnv";
-        //     bool is_stoch = (env_id == IMPROVED_STOCH_DST_ENV_ID || env_id == VAMPLEW_STOCH_DST_ENV_ID);
-        //     bool is_vamplew = (env_id == VAMPLEW_DST_ENV_ID || env_id == VAMPLEW_STOCH_DST_ENV_ID);
-        //     py::dict kw_args;
-        //     kw_args["swept_by_current_prob"] = to_string(is_stoch ? 0.2 : 0.0);
-        //     kw_args["is_vamplew"] = to_string(is_vamplew);
-
-        //     shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-        //     return make_shared<MoPyMultiprocessingThtsEnv>(
-        //         pickle_wrapper, thts_unique_filename, module_name, class_name, make_shared<py::dict>(kw_args));
-            
-        // }
-
-        // if (DEBUG_ENVS.contains(env_id)) {
-        //     int walk_len = 10;
-        //     bool stochastic = (env_id == DEBUG_ENV_2_ID) || (env_id == DEBUG_ENV_4_ID);
-        //     double wrong_dir_prob = stochastic ? 0.25 : 0.0;
-        //     bool add_extra_rewards = (env_id == DEBUG_ENV_3_ID) || (env_id == DEBUG_ENV_4_ID);
-        //     return make_shared<TestMoThtsEnv>(walk_len, wrong_dir_prob, add_extra_rewards);
-        // }
-
-        // if (DEBUG_PY_ENVS.contains(env_id)) {
-        //     int walk_len = 10;
-        //     bool stochastic = (env_id == DEBUG_PY_ENV_2_ID) || (env_id == DEBUG_PY_ENV_4_ID);
-        //     double wrong_dir_prob = stochastic ? 0.25 : 0.0;
-        //     bool add_extra_rewards = (env_id == DEBUG_PY_ENV_3_ID) || (env_id == DEBUG_PY_ENV_4_ID);
-
-        //     py::gil_scoped_acquire acquire;
-        //     string module_name = "mo_test_env";
-        //     string class_name = "MoPyTestThtsEnv";
-        //     py::dict kw_args;
-        //     kw_args["walk_len"] = to_string(walk_len); 
-        //     kw_args["wrong_dir_prob"] = to_string(wrong_dir_prob);
-        //     kw_args["add_extra_rewards"] = to_string(add_extra_rewards);
-
-        //     shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-        //     return make_shared<MoPyMultiprocessingThtsEnv>( 
-        //         pickle_wrapper, thts_unique_filename, module_name, class_name, make_shared<py::dict>(kw_args));
-        // }
+        if (env_id == ENTROPY_TRAP_10_ENV_ID)
+        {
+            return make_shared<EntropyTrapEnv>(10,10,1.0);
+        }
 
         stringstream ss;
         ss << "Error in get_env for env_id = " << env_id;

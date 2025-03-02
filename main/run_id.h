@@ -1,8 +1,8 @@
 #pragma once
 
-#include "mo/mo_thts_env.h"
-#include "mo/mo_thts_manager.h"
-#include "mo/mo_thts_decision_node.h"
+#include "thts_env.h"
+#include "thts_manager.h"
+#include "thts_decision_node.h"
 
 #include <ctime>
 #include <fstream>
@@ -11,8 +11,6 @@
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
-
-#include <Eigen/Dense>
 
 #include "bayesopt/bayesopt.hpp"
 #include "bayesopt/parameters.hpp"
@@ -25,53 +23,78 @@
 
 // alg ids 
 static const std::string UCT_ALG_ID = "uct";
+static const std::string MENTS_ALG_ID = "ments";
 static const std::string BTS_ALG_ID = "bts";
-// TODO
+static const std::string DENTS_ALG_ID = "dents";
+// TODO: RENTS
+// TODO: TENTS
+// TODO: HMCTS (+ import over the envs)
 
 // param ids
 static const std::string BIAS_PARAM_ID = "bias";                        // bias param (uct, etc)
-static const std::string TEMP_PARAM_ID = "temp";                        // temp param (ments, bts, dents, etc)
-static const std::string DECAY_FN_PARAM_ID = "decay_fn";                // temp decay fn
-static const std::string DECAY_FN_COEFF_PARAM_ID = "decay_fn_coeff";    // f(x) -> c*f(x), f = decay fn
+static const std::string TEMP_PARAM_ID = "temp";                        // temp (scale) param (ments, bts, dents, etc) (if using decay fn, then f(x) -> c*f(x))
+static const std::string DECAY_FN_PARAM_ID = "decay_fn";                // temp decay fn (f(x))
 static const std::string DECAY_FN_SCALE_PARAM_ID = "decay_fn_scale";    // f(x) -> f(c*x), f = decay fn
-// TODO
+static const std::string ENTROPY_COEFF_PARAM_ID = "entropy_coeff";               // vertical scale for entropy decay fn (f(x) -> c*f(x))
+static const std::string ENTROPY_DECAY_FN_PARAM_ID = "entropy_decay_fn";
+static const std::string ENTROPY_DECAY_FN_SCALE_PARAM_ID = "decay_fn_scale"; // f(x) -> f(c*x), f = entropy decay fn
+static const std::string EPSILON_PARAM_ID = "epsilon";                  // exploration param for stochastic policies
 
 // param ids - decay fn options
 enum DECAY_FN_VALUES {
     DECAY_FN_CONST = 0,
     DECAY_FN_INV_SQRT = 1,
     DECAY_FN_INV_LOG = 2,
-}
+};
 
 // maps alg ids to the param ids that are relevent for it (there is overlap for example many algs use a temp param)
 static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_PARAM_IDS =
 {
     {UCT_ALG_ID,
         {
-            UCT_BIAS_PARAM_ID,
+            BIAS_PARAM_ID,
+        },
+    },
+    {MENTS_ALG_ID,
+        {
+            TEMP_PARAM_ID,
+            EPSILON_PARAM_ID,
         },
     },
     {BTS_ALG_ID,
         {
             TEMP_PARAM_ID,
             DECAY_FN_PARAM_ID,
-            DECAY_FN_COEFF_PARAM_ID,
             DECAY_FN_SCALE_PARAM_ID,
+            EPSILON_PARAM_ID,
         },
     },
-    // TODO
+    {DENTS_ALG_ID,
+        {
+            TEMP_PARAM_ID,
+            DECAY_FN_PARAM_ID,
+            DECAY_FN_SCALE_PARAM_ID,
+            ENTROPY_COEFF_PARAM_ID,
+            ENTROPY_DECAY_FN_PARAM_ID,
+            ENTROPY_DECAY_FN_SCALE_PARAM_ID,
+            EPSILON_PARAM_ID,
+        },
+    },
+    // TODO: RENTS
+    // TODO: TENTS
+    // TODO: HMCTS (+ import over the envs)
 };
 
 // List of boolean param ids (for hyperparam opt)
 static const std::unordered_set<std::string> BOOLEAN_PARAM_IDS =
 {
-    // TODO
 };
 
 // List of int param ids (for hyperparam opt)
 static const std::unordered_set<std::string> INTEGER_PARAM_IDS =
 {
     DECAY_FN_PARAM_ID,
+    ENTROPY_DECAY_FN_PARAM_ID,
 };
 
 
@@ -81,34 +104,37 @@ static const std::unordered_set<std::string> INTEGER_PARAM_IDS =
 // ---------------------------------------------------------------------------------------------------------------------
 
 // env ids
+static const std::string D_CHAIN_10_ENV_ID = "dchain(D=10,R=1.0)";
+static const std::string MOD_D_CHAIN_10_ENV_ID = "dchain(D=10,R=0.5)";
+static const std::string ENTROPY_TRAP_10_ENV_ID = "dchain(D=10,H=10)";
 static const std::string FROZEN_LAKE_4x4_ENV_ID = "frozen_lake_(map=4x4)";
 static const std::string FROZEN_LAKE_8x8_ENV_ID = "frozen_lake_(map=8x8)";
-// TODO
+static const std::string SAILING_ENV_ID = "sailing";
 
-// env ids - python envs
-// a list of envs that need the python interpreter
-static const std::string XXX_PY_ENV_ID = "xxx";
+// env ids - python envs (non gym envs that need the python )interpreter
+// TODO: any python envs
 
 static const std::unordered_set<std::string> PY_ENVS =
 {
-    // TODO
 };
 
-// env ids - gym envs
-// a list of envs that are python gym envs
+// env ids - gym envs (envs that are python gym envs)
 static const std::string TAXI_GYM_ENV_ID = "Taxi-v3"; // https://gymnasium.farama.org/environments/toy_text/taxi/
 
 static const std::unordered_set<std::string> GYM_ENVS =
 {
-    TAXI_ENV_ID,
+    TAXI_GYM_ENV_ID,
 };
 
 // env ids - max trial length
 static const std::unordered_map<std::string,int> ENV_ID_MAX_TRIAL_LEN = 
 {
+    {D_CHAIN_10_ENV_ID,         100},
+    {MOD_D_CHAIN_10_ENV_ID,     100},
+    {ENTROPY_TRAP_10_ENV_ID,    100},
     {FROZEN_LAKE_4x4_ENV_ID,    25},
     {FROZEN_LAKE_8x8_ENV_ID,    50},
-    // TODO
+    {SAILING_ENV_ID,            50},
 };
 
 
@@ -122,14 +148,17 @@ static const std::string DEBUG_EXPR_ID = "000_debug";
 
 // expr ids - supp experiments (1xx + 2xx + 3xx)
 // supp experiments = showing how performance varies with parameters etc
-static const std::string SUPP_XXX_EXPR_ID = "100_xxx";
+static const std::string SUPP_100_DCHAIN_10_TEMP_EXPR_ID = "100_supp_dchain_temp_vary";
+static const std::string SUPP_101_MOD_DCHAIN_10_TEMP_EXPR_ID = "101_supp_mod_dchain_temp_vary";
+static const std::string SUPP_102_ENTROPY_TRAP_10_TEMP_EXPR_ID = "102_supp_entropy_temp_vary";
+// TODO: what about the exploration param - make an expr or two for this.
 
 // expr ids - toy experiments (4xx + 5xx)
 // toy experiments = running experiments on the toy envs
 static const std::string TOY_XXX_EXPR_ID = "400_xxx";
 
 // expr ids - rerun experiments (6xx + 7xx = hyperparam, 8xx + 9xx = eval)
-// rerunning experiments = repeating the experiments (minus go) plus a couple extra, wiv hyperparam tuning now
+// rerunning experiments = repeating the experiments with hyperparam tuning now
 static const std::string HP_OPT_XXX_UCT_EXPR_ID = "600_hp_opt_xxx_env_xxx_alg";
 static const std::string HP_OPT_XXX_BTS_EXPR_ID = "600_hp_opt_xxx_env_bts";
 static const std::string EVAL_XXX_EXPR_ID = "800_eval_xxx_env_xxx";
@@ -139,14 +168,15 @@ static const std::unordered_map<std::string,std::string> HP_OPT_EXPR_ID_TO_ENV_I
 {
     {HP_OPT_XXX_UCT_EXPR_ID,                FROZEN_LAKE_4x4_ENV_ID},
     {HP_OPT_XXX_BTS_EXPR_ID,                FROZEN_LAKE_4x4_ENV_ID},
-    // TODO
 };
 
 // list of all expr ids (for helper to lookup expr id from a prefix (just the number))
 static const std::unordered_set<std::string> ALL_EXPR_IDS = 
 {
     DEBUG_EXPR_ID,
-    // TODO
+    SUPP_100_DCHAIN_10_TEMP_EXPR_ID,
+    SUPP_101_MOD_DCHAIN_10_TEMP_EXPR_ID,
+    SUPP_102_ENTROPY_TRAP_10_TEMP_EXPR_ID,
 };
 
 
@@ -190,18 +220,18 @@ namespace thts {
             double bias;
 
             double temp;
-
             int decay_fn;
-            double decay_fn_coeff;
             double decay_fn_scale;
-            // TODO: add params for algorithms
+
+            double entropy_coeff;
+            int entropy_decay_fn;
+            double entropy_decay_fn_scale;
             
             bool eval_wrt_time;
             double search_runtime;
-            int max_trial_length;
-            double eval_num_trials_delta;
             double eval_delta;
             int rollouts_per_mc_eval;
+            int max_trial_length;
             int num_repeats;
             int num_threads;
             int eval_threads;
@@ -223,9 +253,9 @@ namespace thts {
                 std::unordered_map<std::string, double>& alg_params,
                 bool eval_wrt_time,
                 double search_runtime,
-                int max_trial_length,
                 double eval_delta,
                 int rollouts_per_mc_eval,
+                int max_trial_length,
                 int num_repeats,
                 int num_threads,
                 int eval_threads);
@@ -248,7 +278,7 @@ namespace thts {
             /**
              * Returns and instance of ThtsManager to use for this run
             */
-            std::shared_ptr<ThtsManager> get_thts_manager(std::shared_ptr<MoThtsEnv> env);
+            std::shared_ptr<ThtsManager> get_thts_manager(std::shared_ptr<ThtsEnv> env);
 
             /**
              * Returns a root node to use for search given these params
@@ -285,6 +315,7 @@ namespace thts {
             std::vector<std::string> alg_param_ids;
             std::unordered_map<std::string, std::pair<double,double>> alg_params_min_max;
 
+            bool eval_wrt_time;
             double search_runtime;
             int max_trial_length;
             double eval_delta;
@@ -306,6 +337,7 @@ namespace thts {
                 std::time_t expr_timestamp,
                 std::string alg_id,
                 std::unordered_map<std::string, std::pair<double,double>> alg_params_min_max,
+                bool eval_wrt_time,
                 double search_runtime,
                 int max_trial_length,
                 double eval_delta,
@@ -359,5 +391,5 @@ namespace thts {
     /**
      * Create the env corresponding to 'env_id' and return is
      */
-    std::shared_ptr<MoThtsEnv> get_env(RunID& run_id);
+    std::shared_ptr<ThtsEnv> get_env(RunID& run_id);
 }

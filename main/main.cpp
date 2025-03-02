@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     } else if (string(argv[1]) == "opt") {  
         thts::run_hp_opt(argv[2]);
     } else if (string(argv[1]) == "noise") {
-        thts::estimate_noise_for_hp_opt(argv[2]);
+        // thts::estimate_noise_for_hp_opt(argv[2]);
     } else if (string(argv[1]) == "val") {
         thts::run_valgrind_debugging(stoi(string(argv[2])));
     }

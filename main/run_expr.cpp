@@ -4,8 +4,8 @@
 
 #include "mc_eval.h"
 
-#include "mo/mo_thts.h"
-#include "py/mo_py_thts.h"
+#include "thts.h"
+#include "py/py_thts.h"
 #include "py/py_multiprocessing_thts_env.h"
 
 #include "py/py_helper.h"
@@ -50,7 +50,7 @@ namespace thts {
             << "eval"
             // << "_"
             // << get_params_string_helper(run_id)
-            << ".csv";
+            << ".txt";
         return ss.str();
     }
 
@@ -145,16 +145,16 @@ namespace thts {
     void run_mc_eval(
         double& mean, 
         double& std_dev, 
-        shared_ptr<MoThtsEnv> env, 
-        shared_ptr<MoThtsDNode> root_node, 
-        shared_ptr<MoThtsManager> thts_manager,
+        shared_ptr<ThtsEnv> env, 
+        shared_ptr<ThtsDNode> root_node, 
+        shared_ptr<ThtsManager> thts_manager,
         RunID& run_id) 
     {   
         shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(root_node, env, thts_manager);
         MCEvaluator evaluator(eval_policy, run_id.max_trial_length, thts_manager);
         evaluator.run_rollouts(run_id.rollouts_per_mc_eval, run_id.eval_threads);
         mean = evaluator.get_mean_return();
-        std_dev = evaluator.get_stddev_mean_return();
+        std_dev = evaluator.get_stddev_return();
     }
 
     /**
@@ -173,7 +173,7 @@ namespace thts {
     /**
      * Writes debug info
     */
-    void write_debug_info_to_file(shared_ptr<MoThtsDNode> root_node, ofstream& out_file) {
+    void write_debug_info_to_file(shared_ptr<ThtsDNode> root_node, ofstream& out_file) {
         out_file << "Haven't implemented any debug file stuff yet for aux experiments" << endl;
     }
 
@@ -208,7 +208,7 @@ namespace thts {
                 }
             }
             shared_ptr<ThtsDNode> root_node = run_id.get_root_search_node(env, thts_manager);
-            shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(thts_manager, root_node, run_id.num_threads);
+            shared_ptr<ThtsPool> thts_pool = make_shared<ThtsPool>(thts_manager, root_node, run_id.num_threads);
 
             // eval at 0 trials
             double mean, stddev;
@@ -418,11 +418,11 @@ namespace thts {
     //     // Create env
     //     unordered_map<string,double> psuedo_alg_params;
     //     RunID psuedo_run_id(env_id,"psuedo_expr_id",0,"psuedo_alg_id",psuedo_alg_params,1.0,10,0.1,10,1,1,1);
-    //     shared_ptr<MoThtsEnv> env = get_env(psuedo_run_id);
-    //     MoThtsManagerArgs dummy_manager_args(env);
+    //     shared_ptr<ThtsEnv> env = get_env(psuedo_run_id);
+    //     ThtsManagerArgs dummy_manager_args(env);
     //     dummy_manager_args.num_envs = eval_threads[env_id];
     //     dummy_manager_args.seed = 60415;
-    //     shared_ptr<MoThtsManager> dummy_manager = make_shared<MoThtsManager>(dummy_manager_args);
+    //     shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_manager_args);
         
     //     // Start python servers
     //     if (is_python_env(env_id)) {
@@ -435,7 +435,7 @@ namespace thts {
 
     //     // Run evaluator
     //     shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(nullptr, env, dummy_manager);  
-    //     MoMCEvaluator evaluator(
+    //     MCEvaluator evaluator(
     //         eval_policy, 
     //         max_trial_length[env_id], 
     //         dummy_manager, 

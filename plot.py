@@ -13,16 +13,18 @@ import sys
 
 import glob
 
-def make_plot_df(
+def make_lineplot_df(
     df, 
-    xaxis_key, 
-    yaxis_key, 
+    x_axis_key, 
+    y_axis_key, 
     hue_key=None, 
     style_key=None, 
     title=None, 
-    xaxis_lab=None, 
-    yaxis_lab=None, 
+    x_axis_lab=None, 
+    y_axis_lab=None, 
     legend_lab=None,
+    x_log_scale=False,
+    y_log_scale=False,
     y_scale_transform_forward=None,
     y_scale_transform_inverse=None,
     filename=None, 
@@ -35,10 +37,12 @@ def make_plot_df(
     alpha=1.0,
     use_legend=True,
     font_scale=1.2):
-    """General helper for plotting in our style."""
+    """
+    General helper for plotting lineplots in our style.
+    """
 
     plt.figure()
-    sns.set(style="darkgrid")
+    sns.set_theme(style="darkgrid",font_scale=font_scale)
 
     # params = {
     #     'axes.labelsize': 48,
@@ -51,7 +55,6 @@ def make_plot_df(
     # mpl.rcParams.update(params)
     # # mpl.rcParams['font.size'] = font_size
     # # mpl.rcParams.update({'font.size': font_size})
-    sns.set(font_scale=font_scale)
 
     if y_scale_transform_forward is not None and y_scale_transform_inverse is not None:
         plt.yscale("function", functions=(y_scale_transform_forward, y_scale_transform_inverse))
@@ -65,8 +68,8 @@ def make_plot_df(
 
     sns.lineplot(
         data=df, 
-        x=xaxis_key, 
-        y=yaxis_key, 
+        x=x_axis_key, 
+        y=y_axis_key, 
         hue=hue_key, 
         style=style_key, 
         palette=palette, 
@@ -79,10 +82,10 @@ def make_plot_df(
 
     if title is not None:
         plt.title(title)
-    if xaxis_lab is not None:
-        plt.xlabel(xaxis_lab)
-    if yaxis_lab is not None:
-        plt.ylabel(yaxis_lab)
+    if x_axis_lab is not None:
+        plt.xlabel(x_axis_lab)
+    if y_axis_lab is not None:
+        plt.ylabel(y_axis_lab)
     if vertical_lines is not None:
         for x in vertical_lines:
             plt.axvline(x=x, color='k', linestyle='--')
@@ -92,178 +95,173 @@ def make_plot_df(
         plt.gca().set_ylim(y_axis_range)
     if not use_legend:
         plt.gca().get_legend().remove()
+    if x_log_scale:
+        plt.xscale('log')
+    if y_log_scale:
+        plt.yscale('log')
 
     if filename is not None:
         plt.savefig(filename)
-        plt.close()
+    else:
+        plt.show()
+    plt.close()
 
+def read_eval_file_to_df(filename,num_trials_scale):
+    """
+    Reads the eval file from 'filename'
+    Appends results in this eval file to the arrays: alg_ids, replicates, search_times, num_trialss, 
 
-def read_mc_eval_into_arrays(filename, alg_ids, search_times, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs, dents_temps, alg_id=None, num_trials_scale=1):
+    Manually reads the first two lines to get params that the algorithm was run with (usually the algorithm name + params)
+    At the moment we just care about the algorithm name
+
+    Then uses pandas to read 2nd half, which is a csv file
+    And adds an additional collumn with the algorithm name
+    """
+
+    alg_id = None
+    temp = None
+    bias = None
     with open(filename) as f:
         param_ids = f.readline().strip().split(",")
         param_vals = f.readline().strip().split(",")
-        _ = f.readline()
 
-        epsilon = 0.0
-        uct_thresh = 0
-        dents_temp = 0.0
+        # Get params for alg
         for param_id, val in zip(param_ids,param_vals):
             if param_id == "alg":
                 alg_id = val
-            # elif param_id in ["bias", "temp"]:
-            #     bias_or_temp = float(val)
-            # elif param_id in ["dents_temp"]:
-            #     dents_temp = float(val)
-            # elif param_id in ["epsilon"]:
-            #     epsilon = float(val)
-            # elif param_id in ["uct_budget_threshold"]:
-            #     uct_thresh = int(val)
-        
-        eval_ids = f.readline().strip().split(",")
-        i = 0
-        for eval_id in eval_ids:
-            if eval_id == "replicate":
-                replicate_idx = i
-            elif eval_id == "search_time":
-                search_time_idx = i
-            elif eval_id == "num_trials":
-                num_trials_idx = i
-            elif eval_id == "mc_eval_utility_mean":
-                value_idx = i
-            i += 1
+            elif param_id == "temp":
+                temp = float(val)
+            elif param_id == "bias":
+                bias = float(val)
+    
+    df = pd.read_csv(filepath_or_buffer=filename, header=3, index_col=False, skip_blank_lines=False)
+    df["alg_id"] = alg_id
+    df["temp"] = temp
+    df["bias"] = bias
+    df["num_trials"] /= num_trials_scale
 
-        for line in f.readlines():
-            csv_vals = line.strip().split(",")
-            alg_ids.append(alg_id)
-            # bias_or_temps.append(float(bias_or_temp))
-            replicates.append(int(csv_vals[replicate_idx]))
-            values.append(float(csv_vals[value_idx]))
-            search_times.append(float(csv_vals[search_time_idx]))
-            num_trialss.append(int(csv_vals[num_trials_idx])/num_trials_scale)
-            # epsilons.append(float(epsilon))
-            # hmcts_uct_threshs.append(uct_thresh)
-            # dents_temps.append(float(dents_temp))
+    df = df.rename(columns={
+        "alg_id": "alg_id",
+        "replicate": "replicate",
+        "search_time": "search_time",
+        "num_trials": "num_trials",
+        "mc_eval_mean": "mc_val",
+        "mc_eval_std": "mc_std",
+    }, errors="raise")
+    
+    return df
 
-def read_eval_files(filenames,num_trials_scale):
-    alg_ids, search_times, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs, dents_temps = [], [], [], [], [], [], [], [], []
+def get_env_id(filename):
+    """
+    Environment name is part of the filename
+    filenames are of the form results/<expr_id>/<env_id>/<alg_id>/<alg_param_1>/.../<alg_param_N>/eval.txt
+    """
+    return filename.split("/")[2]
 
+
+def read_eval_files_to_df(filenames,num_trials_scale):
+    """
+    Reads dataframes for each eval file in 'filenames' and concatinates them all into one big dataframe
+
+    Adds the env_id for each environment to each dataframe, and if the environment was a tree, then add additional 
+    columns for the params of the environment
+    """
+    dfs = []
     for filename in filenames:
-        alg_id = None
-        poss_alg_ids = ["czt","chmcts","smbts","smdents"]
-        for poss_alg_id in poss_alg_ids:
-            if poss_alg_id in filename:
-                alg_id = poss_alg_id
-        
-        read_mc_eval_into_arrays(
-            filename=filename, 
-            alg_ids=alg_ids, 
-            search_times=search_times,
-            bias_or_temps=bias_or_temps, 
-            replicates=replicates,
-            values=values, 
-            num_trialss=num_trialss, 
-            epsilons=epsilons,
-            hmcts_uct_threshs=hmcts_uct_threshs,
-            dents_temps=dents_temps,
-            alg_id=alg_id,
-            num_trials_scale=num_trials_scale)
+        df = read_eval_file_to_df(filename,num_trials_scale)
+        df["env_id"] = get_env_id(filename)
+        dfs.append(df)
+    return pd.concat(dfs, ignore_index=True)
 
-    return alg_ids, search_times, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs, dents_temps
-
-def make_plot(
+def make_eval_plot(
     filenames, 
     plot_filename, 
     hue_key=None, 
     title=None, 
-    xaxis_lab=None, 
-    yaxis_lab=None, 
+    x_axis_key=None,
+    x_axis_lab=None, 
+    y_axis_key=None,
+    y_axis_lab=None, 
     legend_lab=None, 
-    num_trials_truncate=None,
-    alg_ids_to_add_param_to=None,
+    x_axis_truncate=None,
     y_scale_transform_forward=None,
     y_scale_transform_inverse=None,
-    sep_eps_plots=False,
     y_axis_range=None,
-    add_markers=False,
+    # add_markers=False,
     markevery=1,
-    use_legend=True,
-    hue_per_algo=True,
+    use_legend=False,
     alpha=1.0,
-    num_trials_scale=1,
-    plot_num_trials=False):
-    """Read in data, preprocess, and then call make plot"""
+    num_trials_scale=1):
+    """
+    Makes an eval plot using the data in the given filenames
+    Can make a non eum plot by specifying y_axis_key
+    """
 
-
+    # Default params
     if hue_key is None:
-        hue_key = "pretty_alg_id"
+        hue_key = "alg_id"
+    if x_axis_key is None:
+        x_axis_key = "search_time"
+    if x_axis_lab is None:
+        x_axis_lab = "Search Time"
+    if y_axis_key is None:
+        y_axis_key = "mc_val"
+    if y_axis_lab is None:
+        y_axis_lab = "Monte Carlo Value Estimate"
     if title is None:
-        title = "Utility vs Search Time"
-    if xaxis_lab is None:
-        xaxis_lab = "Search Time"
-    if yaxis_lab is None:
-        yaxis_lab = "Utility"
+        title = y_axis_lab + " vs " + x_axis_lab
     if legend_lab is None and use_legend:
         legend_lab = "Algorithm"
-    if alg_ids_to_add_param_to is None:
-        alg_ids_to_add_param_to = []
 
+    # Update x_axis lable if applying scaling
     if num_trials_scale > 1:
-        xaxis_lab += " (x{scale})".format(scale=num_trials_scale)
+        x_axis_lab += " (x{scale})".format(scale=num_trials_scale)
 
-    alg_ids, search_times, bias_or_temps, replicates, values, num_trialss, epsilons, hmcts_uct_threshs, dents_temps = read_eval_files(filenames,num_trials_scale)   
+    # Read in data + make algorithm names more pretty
+    uct_str = "UCT"
+    ments_str = "MENTS"
+    bts_str = "BTS"
+    dents_str = "DENTS"
 
-    pretty_alg_ids = []
-    for i, alg_id in enumerate(alg_ids):
-        pretty_alg_id = alg_id
-        # if pretty_alg_id == "est":
-        #     pretty_alg_id = "bts"
-        # if pretty_alg_id == "db-ments":
-        #     pretty_alg_id = "dents"
-        # if alg_id in alg_ids_to_add_param_to:
-        #     pretty_alg_id = "{alg_id}({param})".format(alg_id=pretty_alg_id,param=bias_or_temps[i])
-        pretty_alg_ids.append(pretty_alg_id.upper())
+    df = read_eval_files_to_df(filenames, num_trials_scale)
+    df["alg_id"] = df["alg_id"].map({
+        "uct": uct_str,
+        "ments": ments_str,
+        "bts": bts_str,
+        "dents": dents_str,
+    })
+
+    # Get the set of alg ids working with
+    alg_id_set = set(df["alg_id"])
     
-    mc_eval_df_dict = {
-        "num_trials": num_trialss,
-        "utility": values,
-        # "log_abs_mc_value_estimate": log_ys,
-        "algorithm_id": alg_ids,
-        # "bias_or_temp": bias_or_temps,
-        "pretty_alg_id": pretty_alg_ids,
-        "replicates": replicates,
-        "search_time": search_times,
-        # "eps": epsilons,
-        # "uct_budget_threshold": hmcts_uct_threshs,
-        # "dents_temp": dents_temps,
-    }
-    
-    palette = None
-    dashes = None
-    if hue_per_algo:
-        palette = {}
-        dashes = {}
-        alg_set = set(pretty_alg_ids)
-        for alg_id in alg_set:
-            dashes[alg_id] = ""
-            # if "1.0" in alg_id:
-            #     dashes[alg_id] = (4,2)
-            if "CZT" in alg_id:
-                palette[alg_id] = "tab:green"
-            # if "PUCT" in alg_id:
-            #     palette[alg_id] = "tab:gray"
-            # if "MENTS" in alg_id:
-            #     palette[alg_id] = "tab:red"
-            if "SMDENTS" in alg_id:
-                palette[alg_id] = "tab:blue"
-            if "SMBTS" in alg_id:
-                palette[alg_id] = "tab:orange"
-            if "CHMCTS" in alg_id:
-                palette[alg_id] = "tab:purple"
-            # if "RENTS" in alg_id:
-            #     palette[alg_id] = "tab:brown"
-            # if "HMCTS" in alg_id:
-            #     palette[alg_id] = "tab:grey"
+    # Define line styles - (colour) palette
+    # N.B. palette can be a colourmap: https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html#matplotlib.colors.Colormap
+    # Currently using dict for mapping using colours from: https://seaborn.pydata.org/generated/seaborn.color_palette.html#seaborn.color_palette
+    palette = {}
+    for alg_id in alg_id_set:
+        if uct_str in alg_id:
+            palette[alg_id] = "tab:green"
+        if dents_str in alg_id:
+            palette[alg_id] = "tab:blue"
+        if bts_str in alg_id:
+            palette[alg_id] = "tab:orange"
+        if ments_str in alg_id:
+            palette[alg_id] = "tab:red"
+        # other colours I used
+        # palette[alg_id] = "tab:gray"
+        # palette[alg_id] = "tab:red"
+        # palette[alg_id] = "tab:brown"
+        # palette[alg_id] = "tab:grey"
 
+    # Define line styles - dashes (currently unused, but dont want del setup)
+    # "Dashes are specified as in matplotlib: a tuple of (segment, gap) lengths, or an empty string to draw a solid line."
+    dashes = {}
+    for alg_id in alg_id_set:
+        dashes[alg_id] = ""
+        # dashes[alg_id] = (4,2)
+
+    # Define line styles - markers (currently unused, but dont want del setup)
+    # N.B. see following for valid values: https://matplotlib.org/stable/api/markers_api.html
     markers = None
     # if add_markers:
     #     markers = {}
@@ -276,50 +274,22 @@ def make_plot(
     #         if "DENTS" in alg_id:
     #             markers[alg_id] = 6
 
+    # Truncate x_axis if want
+    if x_axis_truncate is not None:
+        df = df[df[x_axis_key] <= x_axis_truncate]
 
-    df = pd.DataFrame(mc_eval_df_dict)
-
-    if num_trials_truncate is not None:
-        df = df[df["num_trials"] <= num_trials_truncate]
-
-    if not plot_num_trials:
-        make_plot_df(
-            df=df, 
-            xaxis_key="search_time", 
-            yaxis_key="utility", 
-            title=title,
-            hue_key=hue_key,
-            palette=palette,
-            style_key=hue_key,
-            dashes=dashes,
-            xaxis_lab=xaxis_lab,
-            yaxis_lab=yaxis_lab,
-            y_scale_transform_forward=y_scale_transform_forward,
-            y_scale_transform_inverse=y_scale_transform_inverse,
-            legend_lab=legend_lab,
-            filename=plot_filename,
-            y_axis_range=y_axis_range,
-            markers=markers,
-            markevery=markevery,
-            use_legend=use_legend,
-            alpha=alpha)
-        return
-
-    title = "Num Trials vs Search Time"
-    xaxis_lab = "Search Time"
-    yaxis_lab = "Trials"
-
-    make_plot_df(
+    # Call our actual make plot function
+    make_lineplot_df(
         df=df, 
-        xaxis_key="search_time", 
-        yaxis_key="num_trials", 
+        x_axis_key=x_axis_key, 
+        y_axis_key=y_axis_key, 
         title=title,
         hue_key=hue_key,
         palette=palette,
         style_key=hue_key,
         dashes=dashes,
-        xaxis_lab=xaxis_lab,
-        yaxis_lab=yaxis_lab,
+        x_axis_lab=x_axis_lab,
+        y_axis_lab=y_axis_lab,
         y_scale_transform_forward=y_scale_transform_forward,
         y_scale_transform_inverse=y_scale_transform_inverse,
         legend_lab=legend_lab,
@@ -329,33 +299,152 @@ def make_plot(
         markevery=markevery,
         use_legend=use_legend,
         alpha=alpha)
-    
-    # if not sep_eps_plots:
-    #     return
 
-    # eps_set = set(epsilons)
-    # for eps in eps_set:
-    #     eps_df = df[df['eps'] == eps]
-    #     eps_filename = plot_filename.format(eps=eps)
-    #     make_plot_df(
-    #         df=eps_df, 
-    #         xaxis_key="num_trials", 
-    #         yaxis_key="mc_value_estimate", 
-    #         hue_key=hue_key,
-    #         palette=palette,
-    #         style_key=hue_key,
-    #         dashes=dashes,
-    #         xaxis_lab=xaxis_lab,
-    #         yaxis_lab=yaxis_lab,
-    #         y_scale_transform_forward=y_scale_transform_forward,
-    #         y_scale_transform_inverse=y_scale_transform_inverse,
-    #         legend_lab=legend_lab,
-    #         filename=eps_filename,
-    #         y_axis_range=y_axis_range,
-    #         markers=markers,
-    #         markevery=markevery,
-    #         use_legend=use_legend,
-    #         alpha=alpha)
+def make_param_sens_plot(
+    filenames, 
+    plot_filename_frmt_str, 
+    hue_key=None, 
+    title=None, 
+    # x_axis_key=None,
+    # x_axis_lab=None, 
+    y_axis_key=None,
+    y_axis_lab=None, 
+    legend_lab=None, 
+    x_axis_truncate=None,
+    y_scale_transform_forward=None,
+    y_scale_transform_inverse=None,
+    y_axis_range=None,
+    add_markers=False,
+    markevery=1,
+    use_legend=True,
+    alpha=1.0,
+    num_trials_scale=1):
+    """
+    Makes an plot to compare  
+    """
+
+    # SCALE_DIFF: Default params
+    if hue_key is None:
+        hue_key = "alg_id"
+    # if x_axis_key is None:
+    #     raise Exception("Running make_eum_scalability_plot without providing x_axis_key argument")
+    # if x_axis_lab is None:
+    #     raise Exception("Running make_eum_scalability_plot without providing x_axis_lab argument")
+    if y_axis_key is None:
+        y_axis_key = "mc_val"
+    if y_axis_lab is None:
+        y_axis_lab = "Monte Carlo Value Estimate"
+    if legend_lab is None and use_legend:
+        legend_lab = "Algorithm"
+
+    # Read in data + make algorithm names more pretty
+    uct_str = "UCT"
+    ments_str = "MENTS"
+    bts_str = "BTS"
+    dents_str = "DENTS"
+
+    df = read_eval_files_to_df(filenames, num_trials_scale)
+    df["alg_id"] = df["alg_id"].map({
+        "uct": uct_str,
+        "ments": ments_str,
+        "bts": bts_str,
+        "dents": dents_str,
+    })
+
+    # PARAM_SENS_DIFF: only care about the final results after the search (assumes all experiments run for same search time)
+    experiment_search_time = df["search_time"].max()
+    df = df[df["search_time"] == experiment_search_time]
+
+    # Get the set of alg ids working with
+    alg_id_set = set(df["alg_id"])
+    
+    # Define line styles - (colour) palette
+    # N.B. palette can be a colourmap: https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html#matplotlib.colors.Colormap
+    # Currently using dict for mapping using colours from: https://seaborn.pydata.org/generated/seaborn.color_palette.html#seaborn.color_palette
+    palette = {}
+    for alg_id in alg_id_set:
+        if uct_str in alg_id:
+            palette[alg_id] = "tab:green"
+        if dents_str in alg_id:
+            palette[alg_id] = "tab:blue"
+        if bts_str in alg_id:
+            palette[alg_id] = "tab:orange"
+        if ments_str in alg_id:
+            palette[alg_id] = "tab:red"
+        # other colours I used
+        # palette[alg_id] = "tab:gray"
+        # palette[alg_id] = "tab:red"
+        # palette[alg_id] = "tab:brown"
+        # palette[alg_id] = "tab:grey"
+
+    # Truncate x_axis if want
+    if x_axis_truncate is not None:
+        df = df[df[x_axis_key] <= x_axis_truncate]
+
+    # PARAM_SENS_DIFF: make plot per alg
+    for alg_id in [uct_str]:
+        x_axis_key = "bias"
+        x_axis_lab = "Bias"
+        bias_df = df[df["alg_id"] == alg_id]
+        local_title = title
+        if local_title is None:
+            local_title = y_axis_lab + " vs " + x_axis_lab
+        plot_filename = plot_filename_frmt_str.format(alg_id=alg_id)
+        make_lineplot_df(
+            df=bias_df, 
+            x_axis_key=x_axis_key, 
+            y_axis_key=y_axis_key, 
+            title=local_title,
+            hue_key=hue_key,
+            palette=palette,
+            style_key=hue_key,
+            # dashes=dashes,
+            x_axis_lab=x_axis_lab,
+            y_axis_lab=y_axis_lab,
+            x_log_scale=True,
+            y_scale_transform_forward=y_scale_transform_forward,
+            y_scale_transform_inverse=y_scale_transform_inverse,
+            legend_lab=legend_lab,
+            filename=plot_filename,
+            y_axis_range=y_axis_range,
+            # markers=markers,
+            # markevery=markevery,
+            use_legend=use_legend,
+            alpha=alpha)
+        
+    for alg_id in [ments_str,bts_str,dents_str]:
+        x_axis_key = "temp"
+        x_axis_lab = "Temperature"
+        temp_df = df[df["alg_id"] == alg_id]
+        local_title = title
+        if local_title is None:
+            local_title = y_axis_lab + " vs " + x_axis_lab
+        plot_filename = plot_filename_frmt_str.format(alg_id=alg_id)
+        make_lineplot_df(
+            df=temp_df, 
+            x_axis_key=x_axis_key, 
+            y_axis_key=y_axis_key, 
+            title=local_title,
+            hue_key=hue_key,
+            palette=palette,
+            style_key=hue_key,
+            # dashes=dashes,
+            x_axis_lab=x_axis_lab,
+            y_axis_lab=y_axis_lab,
+            x_log_scale=True,
+            y_scale_transform_forward=y_scale_transform_forward,
+            y_scale_transform_inverse=y_scale_transform_inverse,
+            legend_lab=legend_lab,
+            filename=plot_filename,
+            y_axis_range=y_axis_range,
+            # markers=markers,
+            # markevery=markevery,
+            use_legend=use_legend,
+            alpha=alpha)
+
+
+    # Call our actual make plot function
+
 
     
 def negative_log_transform(x):
@@ -411,253 +500,24 @@ if __name__ == "__main__":
     if not os.path.exists("plots"):
         os.makedirs("plots")
 
-
-
-    ###
-    # Old plots for RG pressie
-    ###    
-    
-    # if "001" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-    #     # filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/*/eval_*.csv")
-    #     # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/hmcts/eval_*.csv")
-    #     filenames = [
-    #         "results/deep-sea-treasure-v0/001_poc_dst_1710339245/smdents/eval.csv",
-    #         "results/deep-sea-treasure-v0/001_poc_dst_1710339245/czt/eval.csv",
-    #         "results/deep-sea-treasure-v0/001_poc_dst_1710339245/chmcts/eval.csv",
-    #     ]
-    #     make_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/001_num_trials.png",
-    #         hue_key="pretty_alg_id",
-    #         alpha=0.8,
-    #         use_legend=True,
-    #         plot_num_trials=True)
-    #     make_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/001_utility.png",
-    #         hue_key="pretty_alg_id",
-    #         alpha=0.8,
-    #         use_legend=True,
-    #         plot_num_trials=False)
-        
-    # if "001_1" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-    #     # filenames = glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/*/eval_*.csv")
-    #     # filenames += glob.glob("results/frozen_lake_env/FL_8x12_test/052_fl12_test/hmcts/eval_*.csv")
-    #     filenames = [
-    #         "results/deep-sea-treasure-v0/001_poc_dst_1710339518/smdents/eval.csv",
-    #         "results/deep-sea-treasure-v0/001_poc_dst_1710339518/czt/eval.csv",
-    #         "results/deep-sea-treasure-v0/001_poc_dst_1710339518/chmcts/eval.csv",
-    #     ]
-    #     make_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/001_1_num_trials.png",
-    #         hue_key="pretty_alg_id",
-    #         alpha=0.8,
-    #         use_legend=True,
-    #         plot_num_trials=True)
-    #     make_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/001_1_utility.png",
-    #         hue_key="pretty_alg_id",
-    #         alpha=0.8,
-    #         use_legend=True,
-    #         plot_num_trials=False)
-
-
-
-
-
     # ------------------------------------------------------------------------------------------------------------------
-    
-
-
-
-
-    ###
-    # Debugging Py vs C++ plots
-    ###    
-    
-    if "001" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = [
-            "results/debug_env_1/001_debug_env_1_1714680035/chmcts/eval.csv",
-            "results/debug_env_1/001_debug_env_1_1714680035/czt/eval.csv",
-            "results/debug_env_1/001_debug_env_1_1714680035/smbts/eval.csv",
-            "results/debug_env_1/001_debug_env_1_1714680035/smdents/eval.csv",
-        ]
-        make_plot(
-            filenames=filenames,
-            plot_filename="plots/001_utility.png",
-            hue_key="pretty_alg_id",
-            alpha=0.8,
-            use_legend=True,
-            plot_num_trials=False)
-    
-    if "002" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = [
-            "results/py_debug_env_1/002_debug_py_env_1_1714683371/chmcts/eval.csv",
-            "results/py_debug_env_1/002_debug_py_env_1_1714683371/czt/eval.csv",
-            "results/py_debug_env_1/002_debug_py_env_1_1714683371/smbts/eval.csv",
-            "results/py_debug_env_1/002_debug_py_env_1_1714683371/smdents/eval.csv",
-        ]
-        make_plot(
-            filenames=filenames,
-            plot_filename="plots/002_utility.png",
-            hue_key="pretty_alg_id",
-            alpha=0.8,
-            use_legend=True,
-            plot_num_trials=False)
-    
-    if "003" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = [
-            "results/debug_env_2/003_debug_env_2_1714690562/chmcts/eval.csv",
-            "results/debug_env_2/003_debug_env_2_1714690562/czt/eval.csv",
-            "results/debug_env_2/003_debug_env_2_1714690562/smbts/eval.csv",
-            "results/debug_env_2/003_debug_env_2_1714690562/smdents/eval.csv",
-        ]
-        make_plot(
-            filenames=filenames,
-            plot_filename="plots/003_utility.png",
-            hue_key="pretty_alg_id",
-            alpha=0.8,
-            use_legend=True,
-            plot_num_trials=False)
-    
-    if "004" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = [
-            "results/py_debug_env_2/004_debug_py_env_2_1714689024/chmcts/eval.csv",
-            "results/py_debug_env_2/004_debug_py_env_2_1714689024/czt/eval.csv",
-            "results/py_debug_env_2/004_debug_py_env_2_1714689024/smbts/eval.csv",
-            "results/py_debug_env_2/004_debug_py_env_2_1714689024/smdents/eval.csv",
-        ]
-        make_plot(
-            filenames=filenames,
-            plot_filename="plots/004_utility.png",
-            hue_key="pretty_alg_id",
-            alpha=0.8,
-            use_legend=True,
-            plot_num_trials=False)
-    
-    if "005" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = [
-            "results/debug_env_3/005_debug_env_3_1714683965/chmcts/eval.csv",
-            "results/debug_env_3/005_debug_env_3_1714683965/czt/eval.csv",
-            "results/debug_env_3/005_debug_env_3_1714683965/smbts/eval.csv",
-            "results/debug_env_3/005_debug_env_3_1714683965/smdents/eval.csv",
-        ]
-        make_plot(
-            filenames=filenames,
-            plot_filename="plots/005_utility.png",
-            hue_key="pretty_alg_id",
-            alpha=0.8,
-            use_legend=True,
-            plot_num_trials=False)
-    
-    if "006" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/py_debug_env_3/006_debug_py_env_3_1714689229/*/eval.csv")
-        make_plot(
-            filenames=filenames,
-            plot_filename="plots/006_utility.png",
-            hue_key="pretty_alg_id",
-            alpha=0.8,
-            use_legend=True,
-            plot_num_trials=False)
-    
-    if "007" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/debug_env_4/007_debug_env_4_1714684155/*/eval.csv")
-        make_plot(
-            filenames=filenames,
-            plot_filename="plots/007_utility.png",
-            hue_key="pretty_alg_id",
-            alpha=0.8,
-            use_legend=True,
-            plot_num_trials=False)
-    
-    if "008" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/py_debug_env_4/008_debug_py_env_4_1714689439/*/eval.csv")
-        make_plot(
-            filenames=filenames,
-            plot_filename="plots/008_utility.png",
-            hue_key="pretty_alg_id",
-            alpha=0.8,
-            use_legend=True,
-            plot_num_trials=False)
-
-
-
-
-
+    # DChain vs temp plots
     # ------------------------------------------------------------------------------------------------------------------
-    
-
-
-
-
-    ###
-    # Proof of concept plots on gym envs
-    ###  
-    
-    if "009" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/deep-sea-treasure-v0/009_poc_dst_1714743803/*/eval.csv")
-        make_plot(
+    if "100" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = glob.glob("results/100_supp_dchain_temp_vary_1740880779/**/eval.txt", recursive=True)
+        make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/009_dst_num_trials.png",
-            hue_key="pretty_alg_id",
-            alpha=0.8,
-            use_legend=True,
-            plot_num_trials=True)
-        make_plot(
+            plot_filename_frmt_str="plots/100_dchain_vs_temp_alg={alg_id}.png",
+        )
+    if "101" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = glob.glob("results/101_supp_mod_dchain_temp_vary_1740880832/**/eval.txt", recursive=True)
+        make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/009_dst_utility.png",
-            hue_key="pretty_alg_id",
-            alpha=0.8,
-            use_legend=True,
-            plot_num_trials=False)
-    
-    if "010" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/fruit-tree-v0/010_poc_ft_1714744312/*/eval.csv")
-        make_plot(
+            plot_filename_frmt_str="plots/101_mod_dchain_vs_temp_alg={alg_id}.png",
+        )
+    if "102" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = glob.glob("results/102_supp_entropy_temp_vary_1740880880/**/eval.txt", recursive=True)
+        make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/010_ft_num_trials.png",
-            hue_key="pretty_alg_id",
-            alpha=0.8,
-            use_legend=True,
-            plot_num_trials=True)
-        make_plot(
-            filenames=filenames,
-            plot_filename="plots/010_ft_utility.png",
-            hue_key="pretty_alg_id",
-            alpha=0.8,
-            use_legend=True,
-            plot_num_trials=False)
-
-
-
-
-
-    # ------------------------------------------------------------------------------------------------------------------
-    
-
-
-
-
-    ###
-    # Gym env evals
-    ###  
-    
-    if "700dr" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/deep-sea-treasure-v0/x700_dst|desktop_run/**/eval.csv", recursive=True)
-        make_plot(
-            filenames=filenames,
-            plot_filename="plots/700dr_dst_num_trials.png",
-            hue_key="pretty_alg_id",
-            alpha=0.8,
-            use_legend=True,
-            plot_num_trials=True)
-        make_plot(
-            filenames=filenames,
-            plot_filename="plots/700dr_dst_utility.png",
-            hue_key="pretty_alg_id",
-            alpha=0.8,
-            use_legend=True,
-            plot_num_trials=False)
-
+            plot_filename_frmt_str="plots/102_entropy_trap_vs_temp_alg={alg_id}.png",
+        )
