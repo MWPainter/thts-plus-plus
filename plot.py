@@ -381,8 +381,15 @@ def make_param_sens_plot(
     if x_axis_truncate is not None:
         df = df[df[x_axis_key] <= x_axis_truncate]
 
+    algs_in_data = set(df["alg_id"])
+
+    df[df["mc_val"] == 0.0] = pow(0.99, 50)
+    df["mc_val"] = -np.log(df["mc_val"]) / np.log(0.99)
+    
     # PARAM_SENS_DIFF: make plot per alg
     for alg_id in [uct_str]:
+        if alg_id not in algs_in_data:
+            continue
         x_axis_key = "bias"
         x_axis_lab = "Bias"
         bias_df = df[df["alg_id"] == alg_id]
@@ -413,6 +420,8 @@ def make_param_sens_plot(
             alpha=alpha)
         
     for alg_id in [ments_str,bts_str,dents_str]:
+        if alg_id not in algs_in_data:
+            continue
         x_axis_key = "temp"
         x_axis_lab = "Temperature"
         temp_df = df[df["alg_id"] == alg_id]
@@ -520,4 +529,25 @@ if __name__ == "__main__":
         make_param_sens_plot(
             filenames=filenames,
             plot_filename_frmt_str="plots/102_entropy_trap_vs_temp_alg={alg_id}.png",
+        )
+
+    if "110" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = glob.glob("results/110_uct_on_fl_dense_1742131738/**/eval.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename_frmt_str="plots/110={alg_id}.png",
+        )
+
+    if "111" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = glob.glob("results/111_uct_on_fl_sparse_len_1742131975/**/eval.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename_frmt_str="plots/111={alg_id}.png",
+        )
+
+    if "112" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = glob.glob("results/112_uct_on_fl_sparse_discounted_1742132205/**/eval.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename_frmt_str="plots/112={alg_id}.png",
         )

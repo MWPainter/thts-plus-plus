@@ -19,6 +19,8 @@
 
 #include "main/envs/d_chain.h"
 #include "main/envs/entropy_trap.h"
+#include "main/envs/frozen_lake.h"
+#include "main/envs/sailing.h"
 
 #include <sstream>
 #include <stdexcept>
@@ -135,6 +137,9 @@ namespace thts {
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
             manager_args.temp = temp;
+            if (alg_params.contains(DEFAULT_Q_VALUE_PARAM_ID)) {
+                manager_args.default_q_value = alg_params.at(DEFAULT_Q_VALUE_PARAM_ID);
+            }
             return make_shared<MentsManager>(manager_args);
         }
 
@@ -144,6 +149,10 @@ namespace thts {
             manager_args.mcts_mode = false;
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
+
+            if (alg_params.contains(DEFAULT_Q_VALUE_PARAM_ID)) {
+                manager_args.default_q_value = alg_params.at(DEFAULT_Q_VALUE_PARAM_ID);
+            }
 
             // alpha
             manager_args.temp = temp;
@@ -164,6 +173,10 @@ namespace thts {
             manager_args.mcts_mode = false;
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
+
+            if (alg_params.contains(DEFAULT_Q_VALUE_PARAM_ID)) {
+                manager_args.default_q_value = alg_params.at(DEFAULT_Q_VALUE_PARAM_ID);
+            }
 
             // alpha
             manager_args.temp = temp;
@@ -379,6 +392,121 @@ namespace thts {
                     {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_CONST},
                     {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 1.0},
                     {EPSILON_PARAM_ID, 0.01},
+                };
+                for (string alg_id : alg_ids) {
+                    run_ids->push_back(RunID(
+                        env_id,
+                        expr_id,
+                        expr_timestamp,
+                        alg_id,
+                        alg_params,
+                        eval_wrt_time,
+                        search_runtime,
+                        eval_delta,
+                        rollouts_per_mc_eval,
+                        max_trial_length,
+                        num_repeats,
+                        num_threads,
+                        eval_threads
+                    ));
+                }
+            }
+            
+            return run_ids;
+        }
+
+        // ----
+        // expr_id: 110_uct_on_fl_dense / 111_uct_on_fl_sparse_len / 112_uct_on_fl_sparse_discounted 
+        // sanity check UCT on frozen lake stuff??
+        // ----
+        if (expr_id == SUPP_110_UCT_ON_FL_DENSE
+            || expr_id == SUPP_111_UCT_ON_FL_SPARSE_LEN
+            || expr_id == SUPP_112_UCT_ON_FL_SPARSE_DISCOUNTED) 
+        {
+            double default_q_value = -50;
+            string env_id = FROZEN_LAKE_NO_HOLE_DENSE_ENV_ID;
+            if (expr_id == SUPP_111_UCT_ON_FL_SPARSE_LEN) {
+                env_id = FROZEN_LAKE_NO_HOLE_SPARSE_LEN_ENV_ID;
+            } else if (expr_id == SUPP_112_UCT_ON_FL_SPARSE_DISCOUNTED) {
+                env_id = FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED_ENV_ID;
+                default_q_value = 0;
+            }
+            int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
+            time_t expr_timestamp = std::time(nullptr);
+            bool eval_wrt_time = false;
+            double search_runtime = 5000;
+            double eval_delta = 50;
+            int rollouts_per_mc_eval = 1; // det env
+            int num_repeats = 25;
+            int num_threads = 8;
+            int eval_threads = 1; // det env
+
+            // UCT run ids 
+            vector<double> biases_to_try = {
+                // UctManagerArgs::bias_default,
+                0.01,
+                0.1,
+                1.0,
+                10.0,
+                100.0,
+                1000.0,
+                10000.0,
+            };
+
+            for (double bias : biases_to_try) {
+                unordered_map<string,double> alg_params =
+                {
+                    {BIAS_PARAM_ID, bias},
+                };
+                run_ids->push_back(RunID(
+                    env_id,
+                    expr_id,
+                    expr_timestamp,
+                    UCT_ALG_ID,
+                    alg_params,
+                    eval_wrt_time,
+                    search_runtime,
+                    eval_delta,
+                    rollouts_per_mc_eval,
+                    max_trial_length,
+                    num_repeats,
+                    num_threads,
+                    eval_threads
+                ));
+            }
+            
+            // MENTS/DENTS/BTS run ids
+            vector<double> temps_to_try = {
+                0.001,
+                0.01,
+                0.05,
+                0.1,
+                0.15,
+                0.2,
+                0.5,
+                1.0,
+                10.0,
+                100.0,
+                1000.0,
+            };
+            vector<string> alg_ids = 
+            {
+                MENTS_ALG_ID,
+                BTS_ALG_ID,
+                DENTS_ALG_ID,
+            };
+
+            for (double temp : temps_to_try) {
+                unordered_map<string,double> alg_params =
+                {
+                    {TEMP_PARAM_ID, temp},
+                    {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                    {DECAY_FN_SCALE_PARAM_ID, 1.0},
+                    {ENTROPY_COEFF_PARAM_ID, temp},
+                    {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                    {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 1.0},
+                    {EPSILON_PARAM_ID, 0.01},
+                    {DEFAULT_Q_VALUE_PARAM_ID, default_q_value}
                 };
                 for (string alg_id : alg_ids) {
                     run_ids->push_back(RunID(
@@ -745,6 +873,32 @@ namespace thts {
         if (env_id == ENTROPY_TRAP_10_ENV_ID)
         {
             return make_shared<EntropyTrapEnv>(10,10,1.0);
+        }
+
+        if (env_id == FROZEN_LAKE_NO_HOLE_DENSE_ENV_ID || env_id == FROZEN_LAKE_NO_HOLE_SPARSE_LEN_ENV_ID || env_id == FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED_ENV_ID)
+        {
+            int reward_type = FL_DENSE_REWARD;
+            if (env_id == FROZEN_LAKE_NO_HOLE_SPARSE_LEN_ENV_ID) {
+                reward_type = FL_SPARSE_LEN_REWARD;
+            } else if (env_id == FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED_ENV_ID) {
+                reward_type = FL_SPARSE_DISCOUNTED_REWARD;
+            }
+            return make_shared<FrozenLakeEnv>(6,6,FL_6x6_NO_HOLE_MAP,reward_type);
+        }
+
+        if (env_id == FROZEN_LAKE_8x8_ENV_ID)
+        {
+            return make_shared<FrozenLakeEnv>(8,8,FL_RAND_8X8_MAP);
+        }
+
+        if (env_id == SAILING_ENV_NORTH_ID)
+        {
+            return make_shared<SailingEnv>(8,8,NN);
+        }
+        
+        if (env_id == SAILING_ENV_SOUTH_EAST_ID)
+        {
+            return make_shared<SailingEnv>(8,8,SE);
         }
 
         stringstream ss;

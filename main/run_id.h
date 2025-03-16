@@ -39,6 +39,7 @@ static const std::string ENTROPY_COEFF_PARAM_ID = "entropy_coeff";              
 static const std::string ENTROPY_DECAY_FN_PARAM_ID = "entropy_decay_fn";
 static const std::string ENTROPY_DECAY_FN_SCALE_PARAM_ID = "decay_fn_scale"; // f(x) -> f(c*x), f = entropy decay fn
 static const std::string EPSILON_PARAM_ID = "epsilon";                  // exploration param for stochastic policies
+static const std::string DEFAULT_Q_VALUE_PARAM_ID = "default_q_value"; // default value of Q(s,a) for unseen state action pairs
 
 // param ids - decay fn options
 enum DECAY_FN_VALUES {
@@ -59,6 +60,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
         {
             TEMP_PARAM_ID,
             EPSILON_PARAM_ID,
+            DEFAULT_Q_VALUE_PARAM_ID,
         },
     },
     {BTS_ALG_ID,
@@ -67,6 +69,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
             DECAY_FN_PARAM_ID,
             DECAY_FN_SCALE_PARAM_ID,
             EPSILON_PARAM_ID,
+            DEFAULT_Q_VALUE_PARAM_ID,
         },
     },
     {DENTS_ALG_ID,
@@ -78,6 +81,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
             ENTROPY_DECAY_FN_PARAM_ID,
             ENTROPY_DECAY_FN_SCALE_PARAM_ID,
             EPSILON_PARAM_ID,
+            DEFAULT_Q_VALUE_PARAM_ID,
         },
     },
     // TODO: RENTS
@@ -107,9 +111,12 @@ static const std::unordered_set<std::string> INTEGER_PARAM_IDS =
 static const std::string D_CHAIN_10_ENV_ID = "dchain(D=10,R=1.0)";
 static const std::string MOD_D_CHAIN_10_ENV_ID = "dchain(D=10,R=0.5)";
 static const std::string ENTROPY_TRAP_10_ENV_ID = "dchain(D=10,H=10)";
-static const std::string FROZEN_LAKE_4x4_ENV_ID = "frozen_lake_(map=4x4)";
+static const std::string FROZEN_LAKE_NO_HOLE_DENSE_ENV_ID = "frozen_lake_no_hole_dense";
+static const std::string FROZEN_LAKE_NO_HOLE_SPARSE_LEN_ENV_ID = "frozen_lake_no_hole_sparse_len";
+static const std::string FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED_ENV_ID = "frozen_lake_no_hole_sparse_discounted";
 static const std::string FROZEN_LAKE_8x8_ENV_ID = "frozen_lake_(map=8x8)";
-static const std::string SAILING_ENV_ID = "sailing";
+static const std::string SAILING_ENV_NORTH_ID = "sailing_north";
+static const std::string SAILING_ENV_SOUTH_EAST_ID = "sailing_south_east";
 
 // env ids - python envs (non gym envs that need the python )interpreter
 // TODO: any python envs
@@ -132,9 +139,12 @@ static const std::unordered_map<std::string,int> ENV_ID_MAX_TRIAL_LEN =
     {D_CHAIN_10_ENV_ID,         100},
     {MOD_D_CHAIN_10_ENV_ID,     100},
     {ENTROPY_TRAP_10_ENV_ID,    100},
-    {FROZEN_LAKE_4x4_ENV_ID,    25},
+    {FROZEN_LAKE_NO_HOLE_DENSE_ENV_ID,50},
+    {FROZEN_LAKE_NO_HOLE_SPARSE_LEN_ENV_ID,50},
+    {FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED_ENV_ID,50},
     {FROZEN_LAKE_8x8_ENV_ID,    50},
-    {SAILING_ENV_ID,            50},
+    {SAILING_ENV_NORTH_ID,      50},
+    {SAILING_ENV_SOUTH_EAST_ID, 50},
 };
 
 
@@ -152,6 +162,9 @@ static const std::string SUPP_100_DCHAIN_10_TEMP_EXPR_ID = "100_supp_dchain_temp
 static const std::string SUPP_101_MOD_DCHAIN_10_TEMP_EXPR_ID = "101_supp_mod_dchain_temp_vary";
 static const std::string SUPP_102_ENTROPY_TRAP_10_TEMP_EXPR_ID = "102_supp_entropy_temp_vary";
 // TODO: what about the exploration param - make an expr or two for this.
+static const std::string SUPP_110_UCT_ON_FL_DENSE = "110_uct_on_fl_dense";
+static const std::string SUPP_111_UCT_ON_FL_SPARSE_LEN = "111_uct_on_fl_sparse_len";
+static const std::string SUPP_112_UCT_ON_FL_SPARSE_DISCOUNTED = "112_uct_on_fl_sparse_discounted";
 
 // expr ids - toy experiments (4xx + 5xx)
 // toy experiments = running experiments on the toy envs
@@ -166,8 +179,8 @@ static const std::string EVAL_XXX_EXPR_ID = "800_eval_xxx_env_xxx";
 // env id lookup - helper dict to lookup env ids from hp opt experiment ids
 static const std::unordered_map<std::string,std::string> HP_OPT_EXPR_ID_TO_ENV_ID =
 {
-    {HP_OPT_XXX_UCT_EXPR_ID,                FROZEN_LAKE_4x4_ENV_ID},
-    {HP_OPT_XXX_BTS_EXPR_ID,                FROZEN_LAKE_4x4_ENV_ID},
+    {HP_OPT_XXX_UCT_EXPR_ID,                FROZEN_LAKE_8x8_ENV_ID},
+    {HP_OPT_XXX_BTS_EXPR_ID,                FROZEN_LAKE_8x8_ENV_ID},
 };
 
 // list of all expr ids (for helper to lookup expr id from a prefix (just the number))
@@ -177,6 +190,9 @@ static const std::unordered_set<std::string> ALL_EXPR_IDS =
     SUPP_100_DCHAIN_10_TEMP_EXPR_ID,
     SUPP_101_MOD_DCHAIN_10_TEMP_EXPR_ID,
     SUPP_102_ENTROPY_TRAP_10_TEMP_EXPR_ID,
+    SUPP_110_UCT_ON_FL_DENSE,
+    SUPP_111_UCT_ON_FL_SPARSE_LEN,
+    SUPP_112_UCT_ON_FL_SPARSE_DISCOUNTED,
 };
 
 
