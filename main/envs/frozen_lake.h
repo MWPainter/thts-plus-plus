@@ -125,6 +125,7 @@ namespace thts{
             int reward_type;
             double reward_discount_factor;
             int max_steps;
+            bool is_slippery;
 
 
         /**
@@ -134,7 +135,14 @@ namespace thts{
             /**
              * Constructor
              */
-            FrozenLakeEnv(int width, int height, const std::string* map, int reward_type=FL_DENSE_REWARD, double reward_discount_factor=0.99);
+            FrozenLakeEnv(
+                int width, 
+                int height, 
+                const std::string* map, 
+                bool is_slippery=false,
+                int reward_type=FL_DENSE_REWARD, 
+                double reward_discount_factor=0.99, 
+                int max_steps=-1);
 
             virtual std::shared_ptr<ThtsEnv> clone() override;
 
@@ -203,13 +211,6 @@ namespace thts{
              * Returns:
              *      Returns an successor state sampled from taking 'action' from 'state'
              */
-            std::shared_ptr<const Int3TupleState> sample_transition_distribution(
-                std::shared_ptr<const Int3TupleState> state, 
-                std::shared_ptr<const IntAction> action) const;
-
-            /**
-             * See above docstring.
-            */
             std::shared_ptr<const Int3TupleState> sample_transition_distribution(
                 std::shared_ptr<const Int3TupleState> state, 
                 std::shared_ptr<const IntAction> action, 

@@ -23,12 +23,13 @@
 
 // alg ids 
 static const std::string UCT_ALG_ID = "uct";
+static const std::string MAX_UCT_ALG_ID = "maxuct";
 static const std::string MENTS_ALG_ID = "ments";
 static const std::string BTS_ALG_ID = "bts";
 static const std::string DENTS_ALG_ID = "dents";
-// TODO: RENTS
-// TODO: TENTS
-// TODO: HMCTS (+ import over the envs)
+static const std::string RENTS_ALG_ID = "rents";
+static const std::string TENTS_ALG_ID = "tents";
+static const std::string HMCTS_ALG_ID = "hmcts";
 
 // param ids
 static const std::string BIAS_PARAM_ID = "bias";                        // bias param (uct, etc)
@@ -40,6 +41,7 @@ static const std::string ENTROPY_DECAY_FN_PARAM_ID = "entropy_decay_fn";
 static const std::string ENTROPY_DECAY_FN_SCALE_PARAM_ID = "decay_fn_scale"; // f(x) -> f(c*x), f = entropy decay fn
 static const std::string EPSILON_PARAM_ID = "epsilon";                  // exploration param for stochastic policies
 static const std::string DEFAULT_Q_VALUE_PARAM_ID = "default_q_value"; // default value of Q(s,a) for unseen state action pairs
+static const std::string UCT_BUDGET_PARAM_ID = "uct_budget"; // hmcts's uct budget param
 
 // param ids - decay fn options
 enum DECAY_FN_VALUES {
@@ -52,6 +54,11 @@ enum DECAY_FN_VALUES {
 static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_PARAM_IDS =
 {
     {UCT_ALG_ID,
+        {
+            BIAS_PARAM_ID,
+        },
+    },
+    {MAX_UCT_ALG_ID,
         {
             BIAS_PARAM_ID,
         },
@@ -84,9 +91,26 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
             DEFAULT_Q_VALUE_PARAM_ID,
         },
     },
-    // TODO: RENTS
-    // TODO: TENTS
-    // TODO: HMCTS (+ import over the envs)
+    {RENTS_ALG_ID,
+        {
+            TEMP_PARAM_ID,
+            EPSILON_PARAM_ID,
+            DEFAULT_Q_VALUE_PARAM_ID,
+        },
+    },
+    {TENTS_ALG_ID,
+        {
+            TEMP_PARAM_ID,
+            EPSILON_PARAM_ID,
+            DEFAULT_Q_VALUE_PARAM_ID,
+        },
+    },
+    {HMCTS_ALG_ID,
+        {
+            BIAS_PARAM_ID,
+            UCT_BUDGET_PARAM_ID,
+        },
+    },
 };
 
 // List of boolean param ids (for hyperparam opt)
@@ -99,6 +123,7 @@ static const std::unordered_set<std::string> INTEGER_PARAM_IDS =
 {
     DECAY_FN_PARAM_ID,
     ENTROPY_DECAY_FN_PARAM_ID,
+    UCT_BUDGET_PARAM_ID,
 };
 
 
@@ -111,10 +136,14 @@ static const std::unordered_set<std::string> INTEGER_PARAM_IDS =
 static const std::string D_CHAIN_10_ENV_ID = "dchain(D=10,R=1.0)";
 static const std::string MOD_D_CHAIN_10_ENV_ID = "dchain(D=10,R=0.5)";
 static const std::string ENTROPY_TRAP_10_ENV_ID = "dchain(D=10,H=10)";
+static const std::string ENTROPY_TRAP_15_ENV_ID = "dchain(D=15,H=15)";
 static const std::string FROZEN_LAKE_NO_HOLE_DENSE_ENV_ID = "frozen_lake_no_hole_dense";
 static const std::string FROZEN_LAKE_NO_HOLE_SPARSE_LEN_ENV_ID = "frozen_lake_no_hole_sparse_len";
 static const std::string FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED_ENV_ID = "frozen_lake_no_hole_sparse_discounted";
-static const std::string FROZEN_LAKE_8x8_ENV_ID = "frozen_lake_(map=8x8)";
+static const std::string FROZEN_LAKE_D_8x8_ENV_ID = "frozen_lake_(map=8x8,dense)";
+static const std::string FROZEN_LAKE_S_8x8_ENV_ID = "frozen_lake_(map=8x8,sparse)";
+static const std::string SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID = "slippy_frozen_lake_(map=8x8,dense)";
+static const std::string SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID = "slippy_frozen_lake_(map=8x8,sparse)";
 static const std::string SAILING_ENV_NORTH_ID = "sailing_north";
 static const std::string SAILING_ENV_SOUTH_EAST_ID = "sailing_south_east";
 
@@ -136,15 +165,31 @@ static const std::unordered_set<std::string> GYM_ENVS =
 // env ids - max trial length
 static const std::unordered_map<std::string,int> ENV_ID_MAX_TRIAL_LEN = 
 {
-    {D_CHAIN_10_ENV_ID,         100},
-    {MOD_D_CHAIN_10_ENV_ID,     100},
-    {ENTROPY_TRAP_10_ENV_ID,    100},
+    {D_CHAIN_10_ENV_ID,         10000},
+    {MOD_D_CHAIN_10_ENV_ID,     10000},
+    {ENTROPY_TRAP_10_ENV_ID,    10000},
+    {ENTROPY_TRAP_15_ENV_ID,    10000},
     {FROZEN_LAKE_NO_HOLE_DENSE_ENV_ID,50},
     {FROZEN_LAKE_NO_HOLE_SPARSE_LEN_ENV_ID,50},
     {FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED_ENV_ID,50},
-    {FROZEN_LAKE_8x8_ENV_ID,    50},
-    {SAILING_ENV_NORTH_ID,      50},
-    {SAILING_ENV_SOUTH_EAST_ID, 50},
+    {FROZEN_LAKE_D_8x8_ENV_ID,    10000},
+    {FROZEN_LAKE_S_8x8_ENV_ID,    10000},
+    {SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID,    10000},
+    {SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID,    10000},
+    {SAILING_ENV_NORTH_ID,      10000},
+    {SAILING_ENV_SOUTH_EAST_ID, 10000},
+};
+
+static const std::unordered_set<std::string> DET_ENVS = 
+{
+    D_CHAIN_10_ENV_ID,
+    MOD_D_CHAIN_10_ENV_ID,
+    ENTROPY_TRAP_10_ENV_ID,
+    FROZEN_LAKE_NO_HOLE_DENSE_ENV_ID,
+    FROZEN_LAKE_NO_HOLE_SPARSE_LEN_ENV_ID,
+    FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED_ENV_ID,
+    FROZEN_LAKE_D_8x8_ENV_ID,
+    FROZEN_LAKE_S_8x8_ENV_ID,
 };
 
 
@@ -160,7 +205,8 @@ static const std::string DEBUG_EXPR_ID = "000_debug";
 // supp experiments = showing how performance varies with parameters etc
 static const std::string SUPP_100_DCHAIN_10_TEMP_EXPR_ID = "100_supp_dchain_temp_vary";
 static const std::string SUPP_101_MOD_DCHAIN_10_TEMP_EXPR_ID = "101_supp_mod_dchain_temp_vary";
-static const std::string SUPP_102_ENTROPY_TRAP_10_TEMP_EXPR_ID = "102_supp_entropy_temp_vary";
+static const std::string SUPP_102_ENTROPY_TRAP_10_TEMP_EXPR_ID = "102_supp_entropy_temp_10_vary";
+static const std::string SUPP_103_ENTROPY_TRAP_15_TEMP_EXPR_ID = "103_supp_entropy_temp_15_vary";
 // TODO: what about the exploration param - make an expr or two for this.
 static const std::string SUPP_110_UCT_ON_FL_DENSE = "110_uct_on_fl_dense";
 static const std::string SUPP_111_UCT_ON_FL_SPARSE_LEN = "111_uct_on_fl_sparse_len";
@@ -172,15 +218,82 @@ static const std::string TOY_XXX_EXPR_ID = "400_xxx";
 
 // expr ids - rerun experiments (6xx + 7xx = hyperparam, 8xx + 9xx = eval)
 // rerunning experiments = repeating the experiments with hyperparam tuning now
-static const std::string HP_OPT_XXX_UCT_EXPR_ID = "600_hp_opt_xxx_env_xxx_alg";
-static const std::string HP_OPT_XXX_BTS_EXPR_ID = "600_hp_opt_xxx_env_bts";
+static const std::string HP_OPT_600_UCT_EXPR_ID =       "600_hp_opt_uct";
+static const std::string HP_OPT_610_MAX_UCT_EXPR_ID =   "610_hp_opt_max_uct";
+static const std::string HP_OPT_620_MENTS_EXPR_ID =     "620_hp_opt_ments";
+static const std::string HP_OPT_630_BTS_EXPR_ID =       "630_hp_opt_bts";
+static const std::string HP_OPT_640_DENTS_EXPR_ID =     "640_hp_opt_dents";
+static const std::string HP_OPT_650_RENTS_EXPR_ID =     "650_hp_opt_rents";
+static const std::string HP_OPT_660_TENTS_EXPR_ID =     "660_hp_opt_tents";
+static const std::string HP_OPT_670_HMCTS_EXPR_ID =     "670_hp_opt_hmcts";
+
+static const std::string HP_OPT_601_UCT_EXPR_ID =       "601_hp_opt_uct";
+static const std::string HP_OPT_611_MAX_UCT_EXPR_ID =   "611_hp_opt_max_uct";
+static const std::string HP_OPT_621_MENTS_EXPR_ID =     "621_hp_opt_ments";
+static const std::string HP_OPT_631_BTS_EXPR_ID =       "631_hp_opt_bts";
+static const std::string HP_OPT_641_DENTS_EXPR_ID =     "641_hp_opt_dents";
+static const std::string HP_OPT_651_RENTS_EXPR_ID =     "651_hp_opt_rents";
+static const std::string HP_OPT_661_TENTS_EXPR_ID =     "661_hp_opt_tents";
+static const std::string HP_OPT_671_HMCTS_EXPR_ID =     "671_hp_opt_hmcts";
+
+static const std::string HP_OPT_602_UCT_EXPR_ID =       "602_hp_opt_uct";
+static const std::string HP_OPT_612_MAX_UCT_EXPR_ID =   "612_hp_opt_max_uct";
+static const std::string HP_OPT_622_MENTS_EXPR_ID =     "622_hp_opt_ments";
+static const std::string HP_OPT_632_BTS_EXPR_ID =       "632_hp_opt_bts";
+static const std::string HP_OPT_642_DENTS_EXPR_ID =     "642_hp_opt_dents";
+static const std::string HP_OPT_652_RENTS_EXPR_ID =     "652_hp_opt_rents";
+static const std::string HP_OPT_662_TENTS_EXPR_ID =     "662_hp_opt_tents";
+static const std::string HP_OPT_672_HMCTS_EXPR_ID =     "672_hp_opt_hmcts";
+
+static const std::string HP_OPT_603_UCT_EXPR_ID =       "603_hp_opt_uct";
+static const std::string HP_OPT_613_MAX_UCT_EXPR_ID =   "613_hp_opt_max_uct";
+static const std::string HP_OPT_623_MENTS_EXPR_ID =     "623_hp_opt_ments";
+static const std::string HP_OPT_633_BTS_EXPR_ID =       "633_hp_opt_bts";
+static const std::string HP_OPT_643_DENTS_EXPR_ID =     "643_hp_opt_dents";
+static const std::string HP_OPT_653_RENTS_EXPR_ID =     "653_hp_opt_rents";
+static const std::string HP_OPT_663_TENTS_EXPR_ID =     "663_hp_opt_tents";
+static const std::string HP_OPT_673_HMCTS_EXPR_ID =     "673_hp_opt_hmcts";
+
 static const std::string EVAL_XXX_EXPR_ID = "800_eval_xxx_env_xxx";
 
 // env id lookup - helper dict to lookup env ids from hp opt experiment ids
 static const std::unordered_map<std::string,std::string> HP_OPT_EXPR_ID_TO_ENV_ID =
 {
-    {HP_OPT_XXX_UCT_EXPR_ID,                FROZEN_LAKE_8x8_ENV_ID},
-    {HP_OPT_XXX_BTS_EXPR_ID,                FROZEN_LAKE_8x8_ENV_ID},
+    {HP_OPT_600_UCT_EXPR_ID,                    FROZEN_LAKE_D_8x8_ENV_ID},
+    {HP_OPT_610_MAX_UCT_EXPR_ID,                FROZEN_LAKE_D_8x8_ENV_ID},
+    {HP_OPT_620_MENTS_EXPR_ID,                  FROZEN_LAKE_D_8x8_ENV_ID},
+    {HP_OPT_630_BTS_EXPR_ID,                    FROZEN_LAKE_D_8x8_ENV_ID},
+    {HP_OPT_640_DENTS_EXPR_ID,                  FROZEN_LAKE_D_8x8_ENV_ID},
+    {HP_OPT_650_RENTS_EXPR_ID,                  FROZEN_LAKE_D_8x8_ENV_ID},
+    {HP_OPT_660_TENTS_EXPR_ID,                  FROZEN_LAKE_D_8x8_ENV_ID},
+    {HP_OPT_670_HMCTS_EXPR_ID,                  FROZEN_LAKE_D_8x8_ENV_ID},
+
+    {HP_OPT_601_UCT_EXPR_ID,                    FROZEN_LAKE_S_8x8_ENV_ID},
+    {HP_OPT_611_MAX_UCT_EXPR_ID,                FROZEN_LAKE_S_8x8_ENV_ID},
+    {HP_OPT_621_MENTS_EXPR_ID,                  FROZEN_LAKE_S_8x8_ENV_ID},
+    {HP_OPT_631_BTS_EXPR_ID,                    FROZEN_LAKE_S_8x8_ENV_ID},
+    {HP_OPT_641_DENTS_EXPR_ID,                  FROZEN_LAKE_S_8x8_ENV_ID},
+    {HP_OPT_651_RENTS_EXPR_ID,                  FROZEN_LAKE_S_8x8_ENV_ID},
+    {HP_OPT_661_TENTS_EXPR_ID,                  FROZEN_LAKE_S_8x8_ENV_ID},
+    {HP_OPT_671_HMCTS_EXPR_ID,                  FROZEN_LAKE_S_8x8_ENV_ID},
+
+    {HP_OPT_602_UCT_EXPR_ID,                    SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
+    {HP_OPT_612_MAX_UCT_EXPR_ID,                SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
+    {HP_OPT_622_MENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
+    {HP_OPT_632_BTS_EXPR_ID,                    SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
+    {HP_OPT_642_DENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
+    {HP_OPT_652_RENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
+    {HP_OPT_662_TENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
+    {HP_OPT_672_HMCTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
+
+    {HP_OPT_603_UCT_EXPR_ID,                    SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
+    {HP_OPT_613_MAX_UCT_EXPR_ID,                SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
+    {HP_OPT_623_MENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
+    {HP_OPT_633_BTS_EXPR_ID,                    SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
+    {HP_OPT_643_DENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
+    {HP_OPT_653_RENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
+    {HP_OPT_663_TENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
+    {HP_OPT_673_HMCTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
 };
 
 // list of all expr ids (for helper to lookup expr id from a prefix (just the number))
@@ -190,9 +303,46 @@ static const std::unordered_set<std::string> ALL_EXPR_IDS =
     SUPP_100_DCHAIN_10_TEMP_EXPR_ID,
     SUPP_101_MOD_DCHAIN_10_TEMP_EXPR_ID,
     SUPP_102_ENTROPY_TRAP_10_TEMP_EXPR_ID,
+    SUPP_103_ENTROPY_TRAP_15_TEMP_EXPR_ID,
     SUPP_110_UCT_ON_FL_DENSE,
     SUPP_111_UCT_ON_FL_SPARSE_LEN,
     SUPP_112_UCT_ON_FL_SPARSE_DISCOUNTED,
+
+    HP_OPT_600_UCT_EXPR_ID,      
+    HP_OPT_610_MAX_UCT_EXPR_ID,    
+    HP_OPT_620_MENTS_EXPR_ID,      
+    HP_OPT_630_BTS_EXPR_ID,                    
+    HP_OPT_640_DENTS_EXPR_ID,                  
+    HP_OPT_650_RENTS_EXPR_ID,                  
+    HP_OPT_660_TENTS_EXPR_ID,                  
+    HP_OPT_670_HMCTS_EXPR_ID,
+
+    HP_OPT_601_UCT_EXPR_ID,      
+    HP_OPT_611_MAX_UCT_EXPR_ID,    
+    HP_OPT_621_MENTS_EXPR_ID,      
+    HP_OPT_631_BTS_EXPR_ID,                    
+    HP_OPT_641_DENTS_EXPR_ID,                  
+    HP_OPT_651_RENTS_EXPR_ID,                  
+    HP_OPT_661_TENTS_EXPR_ID,                  
+    HP_OPT_671_HMCTS_EXPR_ID,
+
+    HP_OPT_602_UCT_EXPR_ID,      
+    HP_OPT_612_MAX_UCT_EXPR_ID,    
+    HP_OPT_622_MENTS_EXPR_ID,      
+    HP_OPT_632_BTS_EXPR_ID,                    
+    HP_OPT_642_DENTS_EXPR_ID,                  
+    HP_OPT_652_RENTS_EXPR_ID,                  
+    HP_OPT_662_TENTS_EXPR_ID,                  
+    HP_OPT_672_HMCTS_EXPR_ID,
+
+    HP_OPT_603_UCT_EXPR_ID,      
+    HP_OPT_613_MAX_UCT_EXPR_ID,    
+    HP_OPT_623_MENTS_EXPR_ID,      
+    HP_OPT_633_BTS_EXPR_ID,                    
+    HP_OPT_643_DENTS_EXPR_ID,                  
+    HP_OPT_653_RENTS_EXPR_ID,                  
+    HP_OPT_663_TENTS_EXPR_ID,                  
+    HP_OPT_673_HMCTS_EXPR_ID,                  
 };
 
 

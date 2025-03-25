@@ -36,7 +36,8 @@ def make_lineplot_df(
     y_axis_range=None,
     alpha=1.0,
     use_legend=True,
-    font_scale=1.2):
+    font_scale=1.2,
+    legend_loc=None):
     """
     General helper for plotting lineplots in our style.
     """
@@ -65,6 +66,8 @@ def make_lineplot_df(
         dashes = False
     if markers is None:
         markers = False
+    if legend_loc is None:
+        legend_loc = "lower right"
 
     sns.lineplot(
         data=df, 
@@ -90,7 +93,7 @@ def make_lineplot_df(
         for x in vertical_lines:
             plt.axvline(x=x, color='k', linestyle='--')
     if legend_lab is not None:
-        plt.legend(loc="lower right", title=legend_lab)
+        plt.legend(loc=legend_loc, title=legend_lab)
     if y_axis_range is not None:
         plt.gca().set_ylim(y_axis_range)
     if not use_legend:
@@ -100,6 +103,7 @@ def make_lineplot_df(
     if y_log_scale:
         plt.yscale('log')
 
+    plt.tight_layout()
     if filename is not None:
         plt.savefig(filename)
     else:
@@ -318,7 +322,10 @@ def make_param_sens_plot(
     markevery=1,
     use_legend=True,
     alpha=1.0,
-    num_trials_scale=1):
+    num_trials_scale=1,
+    legend_loc=None,
+    seperate_plots=True,
+    fl_sparse_reward_transform=False):
     """
     Makes an plot to compare  
     """
@@ -383,10 +390,42 @@ def make_param_sens_plot(
 
     algs_in_data = set(df["alg_id"])
 
-    df[df["mc_val"] == 0.0] = pow(0.99, 50)
-    df["mc_val"] = -np.log(df["mc_val"]) / np.log(0.99)
+    if fl_sparse_reward_transform:
+        df.loc[df["mc_val"] == 0.0, "mc_val"] = pow(0.99, 36)
+        df["mc_val"] = -np.log(df["mc_val"]) / np.log(0.99)
     
-    # PARAM_SENS_DIFF: make plot per alg
+    if not seperate_plots:
+        x_axis_key = "temp_or_bias"
+        x_axis_lab = "Temperature/Bias"
+        df["temp_or_bias"] = df["temp"].fillna(df["bias"])
+        local_title = title
+        if local_title is None:
+            local_title = y_axis_lab + " vs " + x_axis_lab
+        plot_filename = plot_filename_frmt_str
+        make_lineplot_df(
+            df=df, 
+            x_axis_key=x_axis_key, 
+            y_axis_key=y_axis_key, 
+            title=local_title,
+            hue_key=hue_key,
+            palette=palette,
+            style_key=hue_key,
+            # dashes=dashes,
+            x_axis_lab=x_axis_lab,
+            y_axis_lab=y_axis_lab,
+            x_log_scale=True,
+            y_scale_transform_forward=y_scale_transform_forward,
+            y_scale_transform_inverse=y_scale_transform_inverse,
+            legend_lab=legend_lab,
+            filename=plot_filename,
+            y_axis_range=y_axis_range,
+            # markers=markers,
+            # markevery=markevery,
+            use_legend=use_legend,
+            legend_loc=legend_loc,
+            alpha=alpha)
+        return
+
     for alg_id in [uct_str]:
         if alg_id not in algs_in_data:
             continue
@@ -417,6 +456,7 @@ def make_param_sens_plot(
             # markers=markers,
             # markevery=markevery,
             use_legend=use_legend,
+            legend_loc=legend_loc,
             alpha=alpha)
         
     for alg_id in [ments_str,bts_str,dents_str]:
@@ -449,6 +489,7 @@ def make_param_sens_plot(
             # markers=markers,
             # markevery=markevery,
             use_legend=use_legend,
+            legend_loc=legend_loc,
             alpha=alpha)
 
 
@@ -513,41 +554,59 @@ if __name__ == "__main__":
     # DChain vs temp plots
     # ------------------------------------------------------------------------------------------------------------------
     if "100" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/100_supp_dchain_temp_vary_1740880779/**/eval.txt", recursive=True)
+        # filenames = glob.glob("results/100_supp_dchain_temp_vary_1740880779/**/eval.txt", recursive=True)
+        filenames = glob.glob("results/100_supp_dchain_temp_vary_1742842978/**/eval.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename_frmt_str="plots/100_dchain_vs_temp_alg={alg_id}.png",
+            plot_filename_frmt_str="plots/100_dchain_vs_tempbias.png",
+            seperate_plots=False,
         )
     if "101" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/101_supp_mod_dchain_temp_vary_1740880832/**/eval.txt", recursive=True)
+        # filenames = glob.glob("results/101_supp_mod_dchain_temp_vary_1740880832/**/eval.txt", recursive=True)
+        filenames = glob.glob("results/101_supp_mod_dchain_temp_vary_1742843062/**/eval.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename_frmt_str="plots/101_mod_dchain_vs_temp_alg={alg_id}.png",
+            plot_filename_frmt_str="plots/101_mod_dchain_vs_tempbias.png",
+            seperate_plots=False,
         )
     if "102" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/102_supp_entropy_temp_vary_1740880880/**/eval.txt", recursive=True)
+        # filenames = glob.glob("results/102_supp_entropy_temp_vary_1740880880/**/eval.txt", recursive=True)
+        filenames = glob.glob("results/102_supp_entropy_temp_10_vary_1742843147/**/eval.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename_frmt_str="plots/102_entropy_trap_vs_temp_alg={alg_id}.png",
+            plot_filename_frmt_str="plots/102_entropy_trap_vs_tempbias.png",
+            seperate_plots=False,
+        )
+    if "103" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+        filenames = glob.glob("results/103_supp_entropy_temp_15_vary_1742843279/**/eval.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename_frmt_str="plots/103_entropy_trap_vs_tempbias.png",
+            seperate_plots=False,
         )
 
     if "110" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/110_uct_on_fl_dense_1742131738/**/eval.txt", recursive=True)
+        filenames = glob.glob("results/110_uct_on_fl_dense_1742283963/**/eval.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename_frmt_str="plots/110={alg_id}.png",
+            plot_filename_frmt_str="plots/110.png",
+            seperate_plots=False,
+            legend_loc="lower left",
         )
 
-    if "111" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/111_uct_on_fl_sparse_len_1742131975/**/eval.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename_frmt_str="plots/111={alg_id}.png",
-        )
+    # if "111" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
+    #     filenames = glob.glob("results/111_uct_on_fl_sparse_len_1742131975/**/eval.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename_frmt_str="plots/111={alg_id}.png",
+    #     )
 
     if "112" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/112_uct_on_fl_sparse_discounted_1742132205/**/eval.txt", recursive=True)
+        filenames = glob.glob("results/112_uct_on_fl_sparse_discounted_1742284349/**/eval.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename_frmt_str="plots/112={alg_id}.png",
+            plot_filename_frmt_str="plots/112.png",
+            fl_sparse_reward_transform=True,
+            seperate_plots=False,
+            legend_loc="lower left",
         )

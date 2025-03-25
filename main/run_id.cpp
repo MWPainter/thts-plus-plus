@@ -306,22 +306,28 @@ namespace thts {
         // modified 10-chain vs temp param
         // ----
         // expr_id: 102_supp_entropy_temp_vary 
-        // modified 10-chain vs temp param
+        // entropy trap 10 vs temp param
+        // ----
+        // expr_id: 103_supp_entropy_temp_15_vary 
+        // entropy trap 15 vs temp param
         // ----
         if (expr_id == SUPP_100_DCHAIN_10_TEMP_EXPR_ID
             || expr_id == SUPP_101_MOD_DCHAIN_10_TEMP_EXPR_ID
-            || expr_id == SUPP_102_ENTROPY_TRAP_10_TEMP_EXPR_ID) 
+            || expr_id == SUPP_102_ENTROPY_TRAP_10_TEMP_EXPR_ID
+            || expr_id == SUPP_103_ENTROPY_TRAP_15_TEMP_EXPR_ID) 
         {
             string env_id = D_CHAIN_10_ENV_ID;
             if (expr_id == SUPP_101_MOD_DCHAIN_10_TEMP_EXPR_ID) {
                 env_id = MOD_D_CHAIN_10_ENV_ID;
             } else if (expr_id == SUPP_102_ENTROPY_TRAP_10_TEMP_EXPR_ID) {
                 env_id = ENTROPY_TRAP_10_ENV_ID;
+            } else if (expr_id == SUPP_103_ENTROPY_TRAP_15_TEMP_EXPR_ID) {
+                env_id = ENTROPY_TRAP_15_ENV_ID;
             }
             int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
             time_t expr_timestamp = std::time(nullptr);
             bool eval_wrt_time = false;
-            double search_runtime = 5000;
+            double search_runtime = (expr_id == SUPP_103_ENTROPY_TRAP_15_TEMP_EXPR_ID) ? 100000 : 5000;
             double eval_delta = 50;
             int rollouts_per_mc_eval = 1; // det env
             int num_repeats = 25;
@@ -330,13 +336,12 @@ namespace thts {
 
             // UCT run ids 
             vector<double> biases_to_try = {
+                0.001,
                 0.01,
                 0.1,
                 1.0,
                 10.0,
                 100.0,
-                1000.0,
-                10000.0,
             };
 
             for (double bias : biases_to_try) {
@@ -364,16 +369,26 @@ namespace thts {
             // MENTS/DENTS/BTS run ids
             vector<double> temps_to_try = {
                 0.001,
+                0.0018,
+                0.0032,
+                0.0058,
                 0.01,
-                0.05,
+                0.018,
+                0.032,
+                0.058,
                 0.1,
-                0.15,
-                0.2,
-                0.5,
+                0.18,
+                0.32,
+                0.58,
                 1.0,
+                1.8,
+                3.2,
+                5.8,
                 10.0,
+                18.0,
+                32.0,
+                58.0,
                 100.0,
-                1000.0,
             };
             vector<string> alg_ids = 
             {
@@ -440,14 +455,24 @@ namespace thts {
             int num_repeats = 25;
             int num_threads = 8;
             int eval_threads = 1; // det env
-
+            
             // UCT run ids 
             vector<double> biases_to_try = {
                 // UctManagerArgs::bias_default,
+                0.001,
                 0.01,
                 0.1,
+                0.18,
+                0.32,
+                0.58,
                 1.0,
+                1.8,
+                3.2,
+                5.8,
                 10.0,
+                18.0,
+                32.0,
+                58.0,
                 100.0,
                 1000.0,
                 10000.0,
@@ -475,19 +500,28 @@ namespace thts {
                 ));
             }
             
-            // MENTS/DENTS/BTS run ids
+            // MENTS/DENTS/BTS run ids 
             vector<double> temps_to_try = {
                 0.001,
                 0.01,
-                0.05,
+                0.018,
+                0.032,
+                0.058,
                 0.1,
-                0.15,
-                0.2,
-                0.5,
+                0.18,
+                0.32,
+                0.58,
                 1.0,
+                1.8,
+                3.2,
+                5.8,
                 10.0,
+                18.0,
+                32.0,
+                58.0,
                 100.0,
                 1000.0,
+                10000.0,
             };
             vector<string> alg_ids = 
             {
@@ -743,49 +777,53 @@ namespace thts {
     {
         // TODO: add hp opt configs, example commented out below
 
-        // // expr_id: 3x0 + 4x0 + 5x0
-        // // initial mo gym hyperparam opt for czt
-        // if (HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID.contains(expr_id)) {
-        //     string alg_id = CZT_ALG_ID;
-        //     unordered_map<string, pair<double,double>> alg_params_min_max = {
-        //         {CZT_BIAS_PARAM_ID, make_pair(0.01, 100.0)},
-        //         {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
-        //     };
+        // UCT
+        if (expr_id == HP_OPT_600_UCT_EXPR_ID 
+            || expr_id == HP_OPT_601_UCT_EXPR_ID
+            || expr_id == HP_OPT_602_UCT_EXPR_ID
+            || expr_id == HP_OPT_603_UCT_EXPR_ID) 
+        {
+            string alg_id = UCT_ALG_ID;
+            unordered_map<string, pair<double,double>> alg_params_min_max = {
+                {BIAS_PARAM_ID, make_pair(0.01, 10000.0)},
+            };
 
-        //     string env_id = HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID.at(expr_id);
-        //     double search_runtime = 20.0;
-        //     int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
-        //     double eval_delta = 5.0;
-        //     int rollouts_per_mc_eval = 1024;
-        //     int num_repeats = 5;
-        //     int num_threads = 16;
-        //     int eval_threads = 16;
+            string env_id = HP_OPT_EXPR_ID_TO_ENV_ID.at(expr_id);
+            bool eval_wrt_time = false;
+            double search_runtime = 50000.0;
+            int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
+            double eval_delta = 25000.0;
+            int rollouts_per_mc_eval = (DET_ENVS.contains(env_id)) ? 1 : 1024;
+            int num_repeats = 5;
+            int num_threads = 16;
+            int eval_threads = 16;
 
-        //     bayesopt::Parameters bo_params;
-        //     bo_params.surr_name = "sGaussianProcessML";
-        //     bo_params.noise = 1.0; 
-        //     bo_params.n_iterations = 190;
-        //     bo_params.n_init_samples = 10;
-        //     bo_params.n_iter_relearn = 10;
-        //     bo_params.verbose_level = 0;
+            bayesopt::Parameters bo_params;
+            bo_params.surr_name = "sGaussianProcessML";
+            bo_params.noise = 1.0; 
+            bo_params.n_iterations = 190;
+            bo_params.n_init_samples = 10;
+            bo_params.n_iter_relearn = 10;
+            bo_params.verbose_level = 0;
 
-        //     return make_shared<HyperparamOptimiser>(
-        //         env_id,
-        //         expr_id,
-        //         expr_timestamp,
-        //         alg_id,
-        //         alg_params_min_max,
-        //         search_runtime,
-        //         max_trial_length,
-        //         eval_delta,
-        //         rollouts_per_mc_eval,
-        //         num_repeats,
-        //         num_threads,
-        //         eval_threads,
-        //         bo_params,
-        //         hp_opt_fs
-        //     );
-        // }
+            return make_shared<HyperparamOptimiser>(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params_min_max,
+                eval_wrt_time,
+                search_runtime,
+                max_trial_length,
+                eval_delta,
+                rollouts_per_mc_eval,
+                num_repeats,
+                num_threads,
+                eval_threads,
+                bo_params,
+                hp_opt_fs
+            );
+        }
 
         stringstream ss;
         ss << "Error in get_hyperparam_optimiser_from_expr_id for expr_id = " << expr_id;
@@ -875,6 +913,11 @@ namespace thts {
             return make_shared<EntropyTrapEnv>(10,10,1.0);
         }
 
+        if (env_id == ENTROPY_TRAP_15_ENV_ID)
+        {
+            return make_shared<EntropyTrapEnv>(15,15,1.0);
+        }
+
         if (env_id == FROZEN_LAKE_NO_HOLE_DENSE_ENV_ID || env_id == FROZEN_LAKE_NO_HOLE_SPARSE_LEN_ENV_ID || env_id == FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED_ENV_ID)
         {
             int reward_type = FL_DENSE_REWARD;
@@ -883,12 +926,24 @@ namespace thts {
             } else if (env_id == FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED_ENV_ID) {
                 reward_type = FL_SPARSE_DISCOUNTED_REWARD;
             }
-            return make_shared<FrozenLakeEnv>(6,6,FL_6x6_NO_HOLE_MAP,reward_type);
+            return make_shared<FrozenLakeEnv>(6,6,FL_6x6_NO_HOLE_MAP,false,reward_type);
         }
 
-        if (env_id == FROZEN_LAKE_8x8_ENV_ID)
+        if (env_id == FROZEN_LAKE_D_8x8_ENV_ID)
         {
-            return make_shared<FrozenLakeEnv>(8,8,FL_RAND_8X8_MAP);
+            return make_shared<FrozenLakeEnv>(8,8,FL_RAND_8X8_MAP,false,FL_DENSE_REWARD);
+        }
+        if (env_id == FROZEN_LAKE_S_8x8_ENV_ID)
+        {
+            return make_shared<FrozenLakeEnv>(8,8,FL_RAND_8X8_MAP,false,FL_SPARSE_DISCOUNTED_REWARD);
+        }
+        if (env_id == SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID)
+        {
+            return make_shared<FrozenLakeEnv>(8,8,FL_RAND_8X8_MAP,true,FL_DENSE_REWARD);
+        }
+        if (env_id == SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID)
+        {
+            return make_shared<FrozenLakeEnv>(8,8,FL_RAND_8X8_MAP,true,FL_SPARSE_DISCOUNTED_REWARD,1.0);
         }
 
         if (env_id == SAILING_ENV_NORTH_ID)

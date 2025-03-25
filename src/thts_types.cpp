@@ -307,6 +307,11 @@ namespace std {
     size_t hash<shared_ptr<const State>>::operator()(const shared_ptr<const State>& state) const {
         return state->hash();
     }
+    
+    size_t hash<shared_ptr<const Int3TupleState>>::operator()(const shared_ptr<const Int3TupleState>& state) const {
+        return state->hash();
+    }
+
     /**
      * Implementation of std::equal_to<State>, calling the equals function.
      */
@@ -318,12 +323,22 @@ namespace std {
         return lhs->equals_itfc(*rhs);
     }
 
+    bool operator==(const shared_ptr<const Int3TupleState>& lhs, const shared_ptr<const Int3TupleState>& rhs) {
+        return lhs->equals_itfc(*rhs);
+    }
+
     bool equal_to<State>::operator()(const State& lhs, const State& rhs) const {
         return lhs.equals_itfc(rhs);
     }
 
     bool equal_to<shared_ptr<const State>>::operator()(
         const shared_ptr<const State>& lhs, const shared_ptr<const State>& rhs) const 
+    {
+        return lhs->equals_itfc(*rhs);
+    }
+
+    bool equal_to<shared_ptr<const Int3TupleState>>::operator()(
+        const shared_ptr<const Int3TupleState>& lhs, const shared_ptr<const Int3TupleState>& rhs) const 
     {
         return lhs->equals_itfc(*rhs);
     }

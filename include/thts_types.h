@@ -269,9 +269,15 @@ namespace std {
     struct hash<std::shared_ptr<const State>> {
         size_t operator()(const shared_ptr<const State>&) const;
     };
+
+    template <> 
+    struct hash<std::shared_ptr<const Int3TupleState>> {
+        size_t operator()(const shared_ptr<const Int3TupleState>&) const;
+    };
     
     bool operator==(const State& lhs, const State& rhs);
     bool operator==(const shared_ptr<const State>& lhs, const shared_ptr<const State>& rhs);
+    bool operator==(const shared_ptr<const Int3TupleState>& lhs, const shared_ptr<const Int3TupleState>& rhs);
 
     template <> 
     struct equal_to<State> {
@@ -281,6 +287,11 @@ namespace std {
     template <> 
     struct equal_to<shared_ptr<const State>> {
         bool operator()(const shared_ptr<const State>&, const shared_ptr<const State>&) const;
+    };
+
+    template <> 
+    struct equal_to<shared_ptr<const Int3TupleState>> {
+        bool operator()(const shared_ptr<const Int3TupleState>&, const shared_ptr<const Int3TupleState>&) const;
     };
 
     ostream& operator<<(ostream& os, const State& state);
