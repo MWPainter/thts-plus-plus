@@ -8,6 +8,7 @@
 #include "algorithms/ments/dents/dents_manager.h"
 
 #include "algorithms/uct/uct_decision_node.h"
+#include "algorithms/uct/max_uct_decision_node.h"
 #include "algorithms/ments/ments_decision_node.h"
 #include "algorithms/est/est_decision_node.h"
 #include "algorithms/ments/dents/dents_decision_node.h"
@@ -252,6 +253,10 @@ namespace thts {
         if (alg_id == UCT_ALG_ID) {
             shared_ptr<UctManager> uct_manager = static_pointer_cast<UctManager>(manager);
             return make_shared<UctDNode>(uct_manager, env->get_initial_state_itfc(), 0, 0);
+        }
+        if (alg_id == MAX_UCT_ALG_ID) {
+            shared_ptr<UctManager> uct_manager = static_pointer_cast<UctManager>(manager);
+            return make_shared<MaxUctDNode>(uct_manager, env->get_initial_state_itfc(), 0, 0);
         }
         if (alg_id == MENTS_ALG_ID) {
             shared_ptr<MentsManager> ments_manager = static_pointer_cast<DentsManager>(manager);
