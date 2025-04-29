@@ -87,21 +87,33 @@ namespace thts {
 
         // compute normalisation term
         normalisation_term = numeric_limits<double>::lowest();
+        double min_q_value = numeric_limits<double>::max();
+        double max_q_value = numeric_limits<double>::lowest();
         for (shared_ptr<const Action> action : *actions) {
-            double q_value_over_temp = get_soft_q_value(action,opp_coeff) / temp;
+            double q_value = get_soft_q_value(action,opp_coeff);
+            double q_value_over_temp =  q_value / temp;
             if (normalisation_term < q_value_over_temp) {
                 normalisation_term = q_value_over_temp;
             }
+
+            if (q_value < min_q_value) min_q_value = q_value;
+            if (q_value > max_q_value) max_q_value = q_value;
         }
 
         // Get parent distribution
         shared_ptr<ActionDistr> parent_distr = get_parent_distr_from_context(context);
 
         // compute action weights
+        MentsManager& manager = (MentsManager&) *thts_manager;
         sum_action_weights = 0.0;
         for (shared_ptr<const Action> action : *actions) {
             double soft_q_value = get_soft_q_value(action,opp_coeff);
-            double action_weight = exp((soft_q_value/temp) - normalisation_term);
+            double action_weight;
+            if (manager.normalise_q_values) {
+                action_weight = exp((soft_q_value - min_q_value) / (max_q_value - min_q_value));
+            } else {
+                action_weight = exp((soft_q_value/temp) - normalisation_term);
+            }
             action_weight *= get_parent_action_prob(parent_distr, action);
             action_weights[action] = action_weight;
             sum_action_weights += action_weight;

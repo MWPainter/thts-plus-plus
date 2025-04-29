@@ -32,7 +32,9 @@ static const std::string TENTS_ALG_ID = "tents";
 static const std::string HMCTS_ALG_ID = "hmcts";
 
 // param ids
+static const std::string ADAPTIVE_BIAS_PARAM_ID = "adaptive_bias";      // adaptive bias (uct, etc)
 static const std::string BIAS_PARAM_ID = "bias";                        // bias param (uct, etc)
+static const std::string NORMALISE_Q_VALUES_PARAM_ID = "normalise_q_values"; // normalise q values (boltzmann search algorithms)
 static const std::string TEMP_PARAM_ID = "temp";                        // temp (scale) param (ments, bts, dents, etc) (if using decay fn, then f(x) -> c*f(x))
 static const std::string DECAY_FN_PARAM_ID = "decay_fn";                // temp decay fn (f(x))
 static const std::string DECAY_FN_SCALE_PARAM_ID = "decay_fn_scale";    // f(x) -> f(c*x), f = decay fn
@@ -55,16 +57,19 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
 {
     {UCT_ALG_ID,
         {
+            ADAPTIVE_BIAS_PARAM_ID,
             BIAS_PARAM_ID,
         },
     },
     {MAX_UCT_ALG_ID,
         {
+            ADAPTIVE_BIAS_PARAM_ID,
             BIAS_PARAM_ID,
         },
     },
     {MENTS_ALG_ID,
         {
+            NORMALISE_Q_VALUES_PARAM_ID,
             TEMP_PARAM_ID,
             EPSILON_PARAM_ID,
             DEFAULT_Q_VALUE_PARAM_ID,
@@ -72,6 +77,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
     },
     {BTS_ALG_ID,
         {
+            NORMALISE_Q_VALUES_PARAM_ID,
             TEMP_PARAM_ID,
             DECAY_FN_PARAM_ID,
             DECAY_FN_SCALE_PARAM_ID,
@@ -81,6 +87,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
     },
     {DENTS_ALG_ID,
         {
+            NORMALISE_Q_VALUES_PARAM_ID,
             TEMP_PARAM_ID,
             DECAY_FN_PARAM_ID,
             DECAY_FN_SCALE_PARAM_ID,
@@ -93,6 +100,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
     },
     {RENTS_ALG_ID,
         {
+            NORMALISE_Q_VALUES_PARAM_ID,
             TEMP_PARAM_ID,
             EPSILON_PARAM_ID,
             DEFAULT_Q_VALUE_PARAM_ID,
@@ -100,6 +108,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
     },
     {TENTS_ALG_ID,
         {
+            NORMALISE_Q_VALUES_PARAM_ID,
             TEMP_PARAM_ID,
             EPSILON_PARAM_ID,
             DEFAULT_Q_VALUE_PARAM_ID,
@@ -107,6 +116,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
     },
     {HMCTS_ALG_ID,
         {
+            ADAPTIVE_BIAS_PARAM_ID,
             BIAS_PARAM_ID,
             UCT_BUDGET_PARAM_ID,
         },
@@ -116,6 +126,8 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
 // List of boolean param ids (for hyperparam opt)
 static const std::unordered_set<std::string> BOOLEAN_PARAM_IDS =
 {
+    ADAPTIVE_BIAS_PARAM_ID,
+    NORMALISE_Q_VALUES_PARAM_ID,
 };
 
 // List of int param ids (for hyperparam opt)
@@ -126,6 +138,15 @@ static const std::unordered_set<std::string> INTEGER_PARAM_IDS =
     UCT_BUDGET_PARAM_ID,
 };
 
+// List of params to use a log scale in BayesOpt
+static const std::unordered_set<std::string> LOG_SCALE_PARAM_IDS =
+{
+    BIAS_PARAM_ID,
+    TEMP_PARAM_ID,
+    DECAY_FN_SCALE_PARAM_ID,
+    ENTROPY_COEFF_PARAM_ID,
+    ENTROPY_DECAY_FN_SCALE_PARAM_ID,
+};
 
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -142,8 +163,16 @@ static const std::string FROZEN_LAKE_NO_HOLE_SPARSE_LEN_ENV_ID = "frozen_lake_no
 static const std::string FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED_ENV_ID = "frozen_lake_no_hole_sparse_discounted";
 static const std::string FROZEN_LAKE_D_8x8_ENV_ID = "frozen_lake_(map=8x8,dense)";
 static const std::string FROZEN_LAKE_S_8x8_ENV_ID = "frozen_lake_(map=8x8,sparse)";
-static const std::string SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID = "slippy_frozen_lake_(map=8x8,dense)";
-static const std::string SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID = "slippy_frozen_lake_(map=8x8,sparse)";
+static const std::string FROZEN_LAKE_D_8x16_ENV_ID = "frozen_lake_(map=8x16,dense)";
+static const std::string FROZEN_LAKE_S_8x16_ENV_ID = "frozen_lake_(map=8x16,sparse)";
+static const std::string FROZEN_LAKE_D_16x16_ENV_ID = "frozen_lake_(map=16x16,dense)";
+static const std::string FROZEN_LAKE_S_16x16_ENV_ID = "frozen_lake_(map=16x16,sparse)";
+static const std::string SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID = "slippy_frozen_lake_(map=4x4,dense)";
+static const std::string SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID = "slippy_frozen_lake_(map=4x4,sparse)";
+static const std::string SLIPPY_FROZEN_LAKE_D_5x5_ENV_ID = "slippy_frozen_lake_(map=5x5,dense)";
+static const std::string SLIPPY_FROZEN_LAKE_S_5x5_ENV_ID = "slippy_frozen_lake_(map=5x5,sparse)";
+static const std::string SLIPPY_FROZEN_LAKE_D_6x6_ENV_ID = "slippy_frozen_lake_(map=6x6,dense)";
+static const std::string SLIPPY_FROZEN_LAKE_S_6x6_ENV_ID = "slippy_frozen_lake_(map=6x6,sparse)";
 static const std::string SAILING_ENV_NORTH_ID = "sailing_north";
 static const std::string SAILING_ENV_SOUTH_EAST_ID = "sailing_south_east";
 
@@ -174,8 +203,16 @@ static const std::unordered_map<std::string,int> ENV_ID_MAX_TRIAL_LEN =
     {FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED_ENV_ID,50},
     {FROZEN_LAKE_D_8x8_ENV_ID,    10000},
     {FROZEN_LAKE_S_8x8_ENV_ID,    10000},
-    {SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID,    10000},
-    {SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID,    10000},
+    {FROZEN_LAKE_D_8x16_ENV_ID,    10000},
+    {FROZEN_LAKE_S_8x16_ENV_ID,    10000},
+    {FROZEN_LAKE_D_16x16_ENV_ID,    10000},
+    {FROZEN_LAKE_S_16x16_ENV_ID,    10000},
+    {SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID,    10000},
+    {SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID,    10000},
+    {SLIPPY_FROZEN_LAKE_D_5x5_ENV_ID,    10000},
+    {SLIPPY_FROZEN_LAKE_S_5x5_ENV_ID,    10000},
+    {SLIPPY_FROZEN_LAKE_D_6x6_ENV_ID,    10000},
+    {SLIPPY_FROZEN_LAKE_S_6x6_ENV_ID,    10000},
     {SAILING_ENV_NORTH_ID,      10000},
     {SAILING_ENV_SOUTH_EAST_ID, 10000},
 };
@@ -190,6 +227,10 @@ static const std::unordered_set<std::string> DET_ENVS =
     FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED_ENV_ID,
     FROZEN_LAKE_D_8x8_ENV_ID,
     FROZEN_LAKE_S_8x8_ENV_ID,
+    FROZEN_LAKE_D_8x16_ENV_ID,
+    FROZEN_LAKE_S_8x16_ENV_ID,
+    FROZEN_LAKE_D_16x16_ENV_ID,
+    FROZEN_LAKE_S_16x16_ENV_ID,
 };
 
 
@@ -277,23 +318,23 @@ static const std::unordered_map<std::string,std::string> HP_OPT_EXPR_ID_TO_ENV_I
     {HP_OPT_661_TENTS_EXPR_ID,                  FROZEN_LAKE_S_8x8_ENV_ID},
     {HP_OPT_671_HMCTS_EXPR_ID,                  FROZEN_LAKE_S_8x8_ENV_ID},
 
-    {HP_OPT_602_UCT_EXPR_ID,                    SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
-    {HP_OPT_612_MAX_UCT_EXPR_ID,                SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
-    {HP_OPT_622_MENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
-    {HP_OPT_632_BTS_EXPR_ID,                    SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
-    {HP_OPT_642_DENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
-    {HP_OPT_652_RENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
-    {HP_OPT_662_TENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
-    {HP_OPT_672_HMCTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID},
+    {HP_OPT_602_UCT_EXPR_ID,                    SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID},
+    {HP_OPT_612_MAX_UCT_EXPR_ID,                SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID},
+    {HP_OPT_622_MENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID},
+    {HP_OPT_632_BTS_EXPR_ID,                    SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID},
+    {HP_OPT_642_DENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID},
+    {HP_OPT_652_RENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID},
+    {HP_OPT_662_TENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID},
+    {HP_OPT_672_HMCTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID},
 
-    {HP_OPT_603_UCT_EXPR_ID,                    SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
-    {HP_OPT_613_MAX_UCT_EXPR_ID,                SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
-    {HP_OPT_623_MENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
-    {HP_OPT_633_BTS_EXPR_ID,                    SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
-    {HP_OPT_643_DENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
-    {HP_OPT_653_RENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
-    {HP_OPT_663_TENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
-    {HP_OPT_673_HMCTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID},
+    {HP_OPT_603_UCT_EXPR_ID,                    SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID},
+    {HP_OPT_613_MAX_UCT_EXPR_ID,                SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID},
+    {HP_OPT_623_MENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID},
+    {HP_OPT_633_BTS_EXPR_ID,                    SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID},
+    {HP_OPT_643_DENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID},
+    {HP_OPT_653_RENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID},
+    {HP_OPT_663_TENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID},
+    {HP_OPT_673_HMCTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID},
 };
 
 // list of all expr ids (for helper to lookup expr id from a prefix (just the number))
@@ -383,8 +424,11 @@ namespace thts {
 
             std::unordered_map<std::string, double> alg_params;
 
+            bool adaptive_bias;
             double bias;
+            int hmcts_uct_budget;
 
+            bool normalise_q_values;
             double temp;
             int decay_fn;
             double decay_fn_scale;

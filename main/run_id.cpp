@@ -3,6 +3,7 @@
 #include "main/run_expr.h"
 
 #include "algorithms/uct/uct_manager.h"
+#include "algorithms/uct/hmcts_manager.h"
 #include "algorithms/ments/ments_manager.h"
 #include "algorithms/ments/dents/dents_manager.h"
 
@@ -10,6 +11,10 @@
 #include "algorithms/ments/ments_decision_node.h"
 #include "algorithms/est/est_decision_node.h"
 #include "algorithms/ments/dents/dents_decision_node.h"
+#include "algorithms/uct/hmcts_decision_node.h"
+#include "algorithms/uct/max_uct_decision_node.h"
+#include "algorithms/ments/rents/rents_decision_node.h"
+#include "algorithms/ments/tents/tents_decision_node.h"
 
 #include "algorithms/common/decaying_temp.h"
 
@@ -21,6 +26,8 @@
 #include "main/envs/entropy_trap.h"
 #include "main/envs/frozen_lake.h"
 #include "main/envs/sailing.h"
+
+#include <cmath>
 
 #include <sstream>
 #include <stdexcept>
@@ -60,7 +67,10 @@ namespace thts {
             expr_timestamp(expr_timestamp),
             alg_id(alg_id),
             alg_params(alg_params),
+            adaptive_bias(UctManagerArgs::adaptive_bias_default),
             bias(UctManagerArgs::bias_default),
+            hmcts_uct_budget(HmctsManagerArgs::uct_budget_threshold_default),
+            normalise_q_values(MentsManagerArgs::normalise_q_values_default),
             temp(MentsManagerArgs::temp_default),
             decay_fn(DECAY_FN_CONST),
             decay_fn_scale(1.0),
@@ -77,8 +87,17 @@ namespace thts {
             eval_threads(eval_threads),
             num_envs((eval_threads > num_threads) ? eval_threads : num_threads)
     {
+        if (alg_params.contains(ADAPTIVE_BIAS_PARAM_ID)) {
+            adaptive_bias = alg_params[ADAPTIVE_BIAS_PARAM_ID];
+        }
         if (alg_params.contains(BIAS_PARAM_ID)) {
             bias = alg_params[BIAS_PARAM_ID];
+        }
+        if (alg_params.contains(UCT_BUDGET_PARAM_ID)) {
+            hmcts_uct_budget = alg_params[UCT_BUDGET_PARAM_ID];
+        }
+        if (alg_params.contains(NORMALISE_Q_VALUES_PARAM_ID)) {
+            normalise_q_values = alg_params[NORMALISE_Q_VALUES_PARAM_ID];
         }
         if (alg_params.contains(TEMP_PARAM_ID)) {
             temp = alg_params[TEMP_PARAM_ID];
@@ -120,22 +139,24 @@ namespace thts {
     */
     shared_ptr<ThtsManager> RunID::get_thts_manager(shared_ptr<ThtsEnv> env) 
     {
-        if (alg_id == UCT_ALG_ID) {
+        if (alg_id == UCT_ALG_ID || alg_id == MAX_UCT_ALG_ID) {
             UctManagerArgs manager_args(env);
             manager_args.max_depth = max_trial_length;
             manager_args.mcts_mode = false;
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
+            manager_args.adaptive_bias = adaptive_bias;
             manager_args.bias = bias;
             return make_shared<UctManager>(manager_args);
         }
 
-        if (alg_id == MENTS_ALG_ID) {
+        if (alg_id == MENTS_ALG_ID || alg_id == RENTS_ALG_ID || alg_id == TENTS_ALG_ID) {
             MentsManagerArgs manager_args(env);
             manager_args.max_depth = max_trial_length;
             manager_args.mcts_mode = false;
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
+            manager_args.normalise_q_values = normalise_q_values;
             manager_args.temp = temp;
             if (alg_params.contains(DEFAULT_Q_VALUE_PARAM_ID)) {
                 manager_args.default_q_value = alg_params.at(DEFAULT_Q_VALUE_PARAM_ID);
@@ -149,6 +170,7 @@ namespace thts {
             manager_args.mcts_mode = false;
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
+            manager_args.normalise_q_values = normalise_q_values;
 
             if (alg_params.contains(DEFAULT_Q_VALUE_PARAM_ID)) {
                 manager_args.default_q_value = alg_params.at(DEFAULT_Q_VALUE_PARAM_ID);
@@ -173,6 +195,7 @@ namespace thts {
             manager_args.mcts_mode = false;
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
+            manager_args.normalise_q_values = normalise_q_values;
 
             if (alg_params.contains(DEFAULT_Q_VALUE_PARAM_ID)) {
                 manager_args.default_q_value = alg_params.at(DEFAULT_Q_VALUE_PARAM_ID);
@@ -201,6 +224,21 @@ namespace thts {
             return make_shared<DentsManager>(manager_args);
         }
 
+        if (alg_id == HMCTS_ALG_ID) {
+            HmctsManagerArgs manager_args(env);
+            manager_args.max_depth = max_trial_length;
+            manager_args.mcts_mode = false;
+            manager_args.num_threads = num_threads;
+            manager_args.num_envs = num_envs;
+            manager_args.adaptive_bias = adaptive_bias;
+            manager_args.bias = bias;
+
+            manager_args.total_budget = search_runtime; // search_runtime in units of #trials
+            manager_args.uct_budget_threshold = hmcts_uct_budget;
+
+            return make_shared<HmctsManager>(manager_args);
+        }
+
         stringstream ss;
         ss << "Error in RunID get_thts_manager for alg_id = " << alg_id;
         throw runtime_error(ss.str());
@@ -226,6 +264,18 @@ namespace thts {
         if (alg_id == DENTS_ALG_ID) {
             shared_ptr<DentsManager> dents_manager = static_pointer_cast<DentsManager>(manager);
             return make_shared<DentsDNode>(dents_manager, env->get_initial_state_itfc(), 0, 0);
+        }
+        if (alg_id == RENTS_ALG_ID) {
+            shared_ptr<MentsManager> ments_manager = static_pointer_cast<MentsManager>(manager);
+            return make_shared<RentsDNode>(ments_manager, env->get_initial_state_itfc(), 0, 0);
+        }
+        if (alg_id == TENTS_ALG_ID) {
+            shared_ptr<MentsManager> ments_manager = static_pointer_cast<MentsManager>(manager);
+            return make_shared<TentsDNode>(ments_manager, env->get_initial_state_itfc(), 0, 0);
+        }
+        if (alg_id == HMCTS_ALG_ID) {
+            shared_ptr<HmctsManager> uct_manager = static_pointer_cast<HmctsManager>(manager);
+            return make_shared<UctDNode>(uct_manager, env->get_initial_state_itfc(), 0, 0);
         }
 
         stringstream ss;
@@ -632,8 +682,9 @@ namespace thts {
         bayesopt::vectord max_vec(num_hyperparams);
         for (size_t i=0; i<alg_param_ids.size(); i++) {
             pair<double,double> min_max = alg_params_min_max[alg_param_ids[i]];
-            min_vec[i] = min_max.first;
-            max_vec[i] = min_max.second;
+            bool use_log_scale = (LOG_SCALE_PARAM_IDS.contains(alg_param_ids[i]));
+            min_vec[i] = use_log_scale ? log(min_max.first) : min_max.first;
+            max_vec[i] = use_log_scale ? log(min_max.second) : min_max.second;
         }
         bayesopt::ContinuousModel::setBoundingBox(min_vec,max_vec);
     };
@@ -655,7 +706,8 @@ namespace thts {
                 pair<double,double> min_max = alg_params_min_max[param_id]; 
                 alg_params[param_id] = get_int_val_from_cts_sample(vec[i], min_max.first, min_max.second);
             } else {
-                alg_params[param_id] = vec[i];
+                bool log_scaled = (LOG_SCALE_PARAM_IDS.contains(param_id));
+                alg_params[param_id] = log_scaled ? exp(vec[i]) : vec[i];
             }
         }
         return alg_params;
@@ -775,7 +827,20 @@ namespace thts {
     shared_ptr<HyperparamOptimiser> get_hyperparam_optimiser_from_expr_id(
         string expr_id, time_t expr_timestamp, ofstream &hp_opt_fs)
     {
-        // TODO: add hp opt configs, example commented out below
+        // Params shared across optimisations (related to envs)
+        string env_id = HP_OPT_EXPR_ID_TO_ENV_ID.at(expr_id);
+        bool eval_wrt_time = false;
+        double search_runtime = 50000.0;
+        int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
+        double eval_delta = 25000.0;
+        int rollouts_per_mc_eval = (DET_ENVS.contains(env_id)) ? 1 : 1024;
+        int num_repeats = 5;
+        int num_threads = 16;
+        int eval_threads = 16;
+
+        // Params being tuned
+        string alg_id;
+        unordered_map<string, pair<double,double>> alg_params_min_max;
 
         // UCT
         if (expr_id == HP_OPT_600_UCT_EXPR_ID 
@@ -783,51 +848,152 @@ namespace thts {
             || expr_id == HP_OPT_602_UCT_EXPR_ID
             || expr_id == HP_OPT_603_UCT_EXPR_ID) 
         {
-            string alg_id = UCT_ALG_ID;
-            unordered_map<string, pair<double,double>> alg_params_min_max = {
-                {BIAS_PARAM_ID, make_pair(0.01, 10000.0)},
+            alg_id = UCT_ALG_ID;
+            alg_params_min_max = {
+                {ADAPTIVE_BIAS_PARAM_ID, make_pair(0.0, 1.0)},
+                {BIAS_PARAM_ID, make_pair(0.001, 1000.0)},
             };
-
-            string env_id = HP_OPT_EXPR_ID_TO_ENV_ID.at(expr_id);
-            bool eval_wrt_time = false;
-            double search_runtime = 50000.0;
-            int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
-            double eval_delta = 25000.0;
-            int rollouts_per_mc_eval = (DET_ENVS.contains(env_id)) ? 1 : 1024;
-            int num_repeats = 5;
-            int num_threads = 16;
-            int eval_threads = 16;
-
-            bayesopt::Parameters bo_params;
-            bo_params.surr_name = "sGaussianProcessML";
-            bo_params.noise = 1.0; 
-            bo_params.n_iterations = 190;
-            bo_params.n_init_samples = 10;
-            bo_params.n_iter_relearn = 10;
-            bo_params.verbose_level = 0;
-
-            return make_shared<HyperparamOptimiser>(
-                env_id,
-                expr_id,
-                expr_timestamp,
-                alg_id,
-                alg_params_min_max,
-                eval_wrt_time,
-                search_runtime,
-                max_trial_length,
-                eval_delta,
-                rollouts_per_mc_eval,
-                num_repeats,
-                num_threads,
-                eval_threads,
-                bo_params,
-                hp_opt_fs
-            );
+        }
+        // MaxUCT
+        else if (expr_id == HP_OPT_610_MAX_UCT_EXPR_ID
+            || expr_id == HP_OPT_611_MAX_UCT_EXPR_ID
+            || expr_id == HP_OPT_612_MAX_UCT_EXPR_ID
+            || expr_id == HP_OPT_613_MAX_UCT_EXPR_ID)
+        {
+            alg_id = MAX_UCT_ALG_ID;
+            alg_params_min_max = {
+                {ADAPTIVE_BIAS_PARAM_ID, make_pair(0.0, 1.0)},
+                {BIAS_PARAM_ID, make_pair(0.001, 1000.0)},
+            };
+        }
+        // MENTS
+        else if (expr_id == HP_OPT_620_MENTS_EXPR_ID
+            || expr_id == HP_OPT_621_MENTS_EXPR_ID
+            || expr_id == HP_OPT_622_MENTS_EXPR_ID
+            || expr_id == HP_OPT_623_MENTS_EXPR_ID)
+        {   
+            double default_q_value = -double(max_trial_length);
+            alg_id = MENTS_ALG_ID;
+            alg_params_min_max = {
+                {NORMALISE_Q_VALUES_PARAM_ID, make_pair(0.0, 1.0)},
+                {TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
+                {EPSILON_PARAM_ID, make_pair(0.0, 10.0)},
+                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(default_q_value,default_q_value)}
+            };
+        }
+        // BTS
+        else if (expr_id == HP_OPT_630_BTS_EXPR_ID
+            || expr_id == HP_OPT_631_BTS_EXPR_ID
+            || expr_id == HP_OPT_632_BTS_EXPR_ID
+            || expr_id == HP_OPT_633_BTS_EXPR_ID)
+        {
+            double default_q_value = -double(max_trial_length);
+            alg_id = BTS_ALG_ID;
+            alg_params_min_max = {
+                {NORMALISE_Q_VALUES_PARAM_ID, make_pair(0.0, 1.0)},
+                {TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
+                {DECAY_FN_PARAM_ID, make_pair(0.0, 3.0)},
+                {DECAY_FN_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
+                {EPSILON_PARAM_ID, make_pair(0.0, 10.0)},
+                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(default_q_value,default_q_value)}
+            };
+        }
+        // DENTS
+        else if (expr_id == HP_OPT_640_DENTS_EXPR_ID
+            || expr_id == HP_OPT_641_DENTS_EXPR_ID
+            || expr_id == HP_OPT_642_DENTS_EXPR_ID
+            || expr_id == HP_OPT_643_DENTS_EXPR_ID)
+        {
+            double default_q_value = -double(max_trial_length);
+            alg_id = DENTS_ALG_ID;
+            alg_params_min_max = {
+                {NORMALISE_Q_VALUES_PARAM_ID, make_pair(0.0, 1.0)},
+                {TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
+                {DECAY_FN_PARAM_ID, make_pair(0.0, 3.0)},
+                {DECAY_FN_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
+                {ENTROPY_COEFF_PARAM_ID, make_pair(0.001, 1000.0)},
+                {ENTROPY_DECAY_FN_PARAM_ID, make_pair(0.0, 3.0)},
+                {ENTROPY_DECAY_FN_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
+                {EPSILON_PARAM_ID, make_pair(0.0, 10.0)},
+                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(default_q_value,default_q_value)}
+            };
+        }
+        // RENTS
+        else if (expr_id == HP_OPT_650_RENTS_EXPR_ID
+            || expr_id == HP_OPT_651_RENTS_EXPR_ID
+            || expr_id == HP_OPT_652_RENTS_EXPR_ID
+            || expr_id == HP_OPT_653_RENTS_EXPR_ID)
+        {
+            double default_q_value = -double(max_trial_length);
+            alg_id = RENTS_ALG_ID;
+            alg_params_min_max = {
+                {NORMALISE_Q_VALUES_PARAM_ID, make_pair(0.0, 1.0)},
+                {TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
+                {EPSILON_PARAM_ID, make_pair(0.0, 10.0)},
+                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(default_q_value,default_q_value)}
+            };
+        }
+        // TENTS
+        else if (expr_id == HP_OPT_660_TENTS_EXPR_ID
+            || expr_id == HP_OPT_661_TENTS_EXPR_ID
+            || expr_id == HP_OPT_662_TENTS_EXPR_ID
+            || expr_id == HP_OPT_663_TENTS_EXPR_ID)
+        {
+            double default_q_value = -double(max_trial_length);
+            alg_id = TENTS_ALG_ID;
+            alg_params_min_max = {
+                {NORMALISE_Q_VALUES_PARAM_ID, make_pair(0.0, 1.0)},
+                {TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
+                {EPSILON_PARAM_ID, make_pair(0.0, 10.0)},
+                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(default_q_value,default_q_value)}
+            };
+        }
+        // HMCTS
+        else if (expr_id == HP_OPT_670_HMCTS_EXPR_ID
+            || expr_id == HP_OPT_671_HMCTS_EXPR_ID
+            || expr_id == HP_OPT_672_HMCTS_EXPR_ID
+            || expr_id == HP_OPT_673_HMCTS_EXPR_ID)
+        {
+            alg_id = HMCTS_ALG_ID;
+            alg_params_min_max = {
+                {ADAPTIVE_BIAS_PARAM_ID, make_pair(0.0, 1.0)},
+                {UCT_BUDGET_PARAM_ID, make_pair(1.0, 5000.0)},
+            };
+        }
+        // Default, haven't set up hp opt experiments for this env
+        else 
+        {
+            stringstream ss;
+            ss << "Error in get_hyperparam_optimiser_from_expr_id for expr_id = " << expr_id;
+            throw runtime_error(ss.str());
         }
 
-        stringstream ss;
-        ss << "Error in get_hyperparam_optimiser_from_expr_id for expr_id = " << expr_id;
-        throw runtime_error(ss.str());
+        // Bayesopt params
+        bayesopt::Parameters bo_params;
+        bo_params.surr_name = "sGaussianProcessML";
+        bo_params.noise = 1.0; 
+        bo_params.n_iterations = 190;
+        bo_params.n_init_samples = 10;
+        bo_params.n_iter_relearn = 10;
+        bo_params.verbose_level = 0;
+
+        return make_shared<HyperparamOptimiser>(
+            env_id,
+            expr_id,
+            expr_timestamp,
+            alg_id,
+            alg_params_min_max,
+            eval_wrt_time,
+            search_runtime,
+            max_trial_length,
+            eval_delta,
+            rollouts_per_mc_eval,
+            num_repeats,
+            num_threads,
+            eval_threads,
+            bo_params,
+            hp_opt_fs
+        );
     };
 
     /**
@@ -931,19 +1097,56 @@ namespace thts {
 
         if (env_id == FROZEN_LAKE_D_8x8_ENV_ID)
         {
-            return make_shared<FrozenLakeEnv>(8,8,FL_RAND_8X8_MAP,false,FL_DENSE_REWARD);
+            return make_shared<FrozenLakeEnv>(8,8,FL_8x8_MAP,false,FL_DENSE_REWARD);
         }
         if (env_id == FROZEN_LAKE_S_8x8_ENV_ID)
         {
-            return make_shared<FrozenLakeEnv>(8,8,FL_RAND_8X8_MAP,false,FL_SPARSE_DISCOUNTED_REWARD);
+            return make_shared<FrozenLakeEnv>(8,8,FL_8x8_MAP,false,FL_SPARSE_DISCOUNTED_REWARD);
         }
-        if (env_id == SLIPPY_FROZEN_LAKE_D_8x8_ENV_ID)
+
+        if (env_id == FROZEN_LAKE_D_8x16_ENV_ID)
         {
-            return make_shared<FrozenLakeEnv>(8,8,FL_RAND_8X8_MAP,true,FL_DENSE_REWARD);
+            return make_shared<FrozenLakeEnv>(8,16,FL_GEN_8x16_MAP,false,FL_DENSE_REWARD);
         }
-        if (env_id == SLIPPY_FROZEN_LAKE_S_8x8_ENV_ID)
+        if (env_id == FROZEN_LAKE_S_8x16_ENV_ID)
         {
-            return make_shared<FrozenLakeEnv>(8,8,FL_RAND_8X8_MAP,true,FL_SPARSE_DISCOUNTED_REWARD,1.0);
+            return make_shared<FrozenLakeEnv>(8,16,FL_GEN_8x16_MAP,false,FL_SPARSE_DISCOUNTED_REWARD);
+        }
+
+        if (env_id == FROZEN_LAKE_D_16x16_ENV_ID)
+        {
+            return make_shared<FrozenLakeEnv>(8,16,FL_GEN_16x16_MAP,false,FL_DENSE_REWARD);
+        }
+        if (env_id == FROZEN_LAKE_S_16x16_ENV_ID)
+        {
+            return make_shared<FrozenLakeEnv>(8,16,FL_GEN_16x16_MAP,false,FL_SPARSE_DISCOUNTED_REWARD);
+        }
+
+        if (env_id == SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID)
+        {
+            return make_shared<FrozenLakeEnv>(4,4,FL_4x4_MAP,true,FL_DENSE_REWARD);
+        }
+        if (env_id == SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID)
+        {
+            return make_shared<FrozenLakeEnv>(4,4,FL_4x4_MAP,true,FL_SPARSE_DISCOUNTED_REWARD,1.0);
+        }
+
+        if (env_id == SLIPPY_FROZEN_LAKE_D_5x5_ENV_ID)
+        {
+            return make_shared<FrozenLakeEnv>(5,5,FL_GEN_5x5_MAP,true,FL_DENSE_REWARD);
+        }
+        if (env_id == SLIPPY_FROZEN_LAKE_S_5x5_ENV_ID)
+        {
+            return make_shared<FrozenLakeEnv>(5,5,FL_GEN_5x5_MAP,true,FL_SPARSE_DISCOUNTED_REWARD,1.0);
+        }
+
+        if (env_id == SLIPPY_FROZEN_LAKE_D_6x6_ENV_ID)
+        {
+            return make_shared<FrozenLakeEnv>(5,5,FL_GEN_6x6_MAP,true,FL_DENSE_REWARD);
+        }
+        if (env_id == SLIPPY_FROZEN_LAKE_S_6x6_ENV_ID)
+        {
+            return make_shared<FrozenLakeEnv>(5,5,FL_GEN_6x6_MAP,true,FL_SPARSE_DISCOUNTED_REWARD,1.0);
         }
 
         if (env_id == SAILING_ENV_NORTH_ID)

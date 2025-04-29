@@ -7,14 +7,15 @@ namespace thts {
      * Args object so that params can be set in a more named args way
      */
     struct UctManagerArgs : public ThtsManagerArgs {
-        static constexpr double USE_AUTO_BIAS = -1.0;
-        static constexpr double AUTO_BIAS_MIN_BIAS = 0.001;
+        static constexpr double ADAPTIVE_BIAS_MIN_BIAS = 0.001;
 
-        static constexpr double bias_default=USE_AUTO_BIAS;
+        static const bool adaptive_bias_default=true;
+        static constexpr double bias_default=1.0;
         static const int heuristic_psuedo_trials_default=0;
         static const bool recommend_most_visited_default=true;
         static constexpr double epsilon_exploration_default=0.0;
 
+        bool adaptive_bias;
         double bias;
         int heuristic_psuedo_trials;
         bool recommend_most_visited;
@@ -51,9 +52,9 @@ namespace thts {
      */
     class UctManager : public ThtsManager {
         public:
-            static constexpr double USE_AUTO_BIAS = UctManagerArgs::USE_AUTO_BIAS;
-            static constexpr double AUTO_BIAS_MIN_BIAS = UctManagerArgs::AUTO_BIAS_MIN_BIAS;
+            static constexpr double ADAPTIVE_BIAS_MIN_BIAS = UctManagerArgs::ADAPTIVE_BIAS_MIN_BIAS;
 
+            bool adaptive_bias;
             double bias;
             int heuristic_psuedo_trials;
             bool recommend_most_visited;
@@ -61,6 +62,7 @@ namespace thts {
 
             UctManager(const UctManagerArgs& args) :
                 ThtsManager(args),
+                adaptive_bias(args.adaptive_bias),
                 bias(args.bias),
                 heuristic_psuedo_trials(args.heuristic_psuedo_trials),
                 recommend_most_visited(args.recommend_most_visited),

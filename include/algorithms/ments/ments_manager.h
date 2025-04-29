@@ -8,6 +8,7 @@ namespace thts {
      * Args object so that params can be set in a more named args way
      */
     struct MentsManagerArgs : public ThtsManagerArgs {
+        static const bool normalise_q_values_default=true;
         static constexpr double temp_default=1.0;
         static constexpr double prior_policy_search_weight_default=0.0;
         static constexpr double epsilon_default=0.5;
@@ -26,6 +27,7 @@ namespace thts {
         static const int recommend_visit_threshold_default=0;
         static const bool recommend_most_visited_default=false;
 
+        bool normalise_q_values;
         double temp;
         double prior_policy_search_weight;
         double epsilon;
@@ -46,6 +48,7 @@ namespace thts {
 
         MentsManagerArgs(std::shared_ptr<ThtsEnv> thts_env) :
             ThtsManagerArgs(thts_env),
+            normalise_q_values(normalise_q_values_default),
             temp(temp_default),
             prior_policy_search_weight(prior_policy_search_weight_default),
             epsilon(epsilon_default),
@@ -74,6 +77,8 @@ namespace thts {
      *      
      * 
      * Member variables (search):
+     *      normalise_q_values:
+     *          <TODO>
      *      temp:
      *          The temperature to use in energy based policy (and soft (max entropy) backups) 
      *      prior_policy_search_weight:
@@ -127,6 +132,7 @@ namespace thts {
      */
     class MentsManager : public ThtsManager {
         public:
+            bool normalise_q_values;
             double temp;
             double prior_policy_search_weight;
             double epsilon;
@@ -147,6 +153,7 @@ namespace thts {
 
             MentsManager(const MentsManagerArgs& args) :
                 ThtsManager(args),
+                normalise_q_values(args.normalise_q_values),
                 temp(args.temp),
                 prior_policy_search_weight(args.prior_policy_search_weight),
                 epsilon(args.epsilon),

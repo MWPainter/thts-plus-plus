@@ -15,7 +15,7 @@ enum FLDirection { FL_RIGHT, FL_DOWN, FL_LEFT, FL_UP };
 enum FLRewardType { FL_SPARSE_DISCOUNTED_REWARD, FL_SPARSE_LEN_REWARD, FL_DENSE_REWARD };
 
 
-
+// no holes
 static const std::string FL_6x6_NO_HOLE_MAP[] = 
 {
     "SFFFFF",
@@ -26,7 +26,107 @@ static const std::string FL_6x6_NO_HOLE_MAP[] =
     "FFFFFG",
 };
 
+// copied from gymnasium
+static const std::string FL_4x4_MAP[] =
+{
+    "SFFF", 
+    "FHFH", 
+    "FFFH", 
+    "HFFG"
+};
 
+// copied from gymnasium
+static const std::string FL_8x8_MAP[] =
+{
+    "SFFFFFFF",
+    "FFFFFFFF",
+    "FFFHFFFF",
+    "FFFFFHFF",
+    "FFFHFFFF",
+    "FHHFFFHF",
+    "FHFFHFHF",
+    "FFFHFFFG",
+};
+
+// python generate_random_frozen_lake_env.py 5 5 0.8
+static const std::string FL_GEN_5x5_MAP[] =
+{
+    "SFFFF",
+    "HFFFH",
+    "HHFFF",
+    "FFFFF",
+    "FFFHG",
+};
+
+// python generate_random_frozen_lake_env.py 6 6 0.8
+static const std::string FL_GEN_6x6_MAP[] =
+{
+    "SFFFFF",
+    "FHFHFF",
+    "FFFFFF",
+    "FFHFFF",
+    "FFFFHH",
+    "FFFFFG",
+};
+
+// python generate_random_frozen_lake_env.py 4 8 0.8
+static const std::string FL_GEN_4x8_MAP[] =
+{
+    "SFFFHFFF",
+    "FHFFFFFF",
+    "FHFFHFFF",
+    "FFFFFFHG",
+};
+
+// python generate_random_frozen_lake_env.py 4 12 0.8
+static const std::string FL_GEN_4x12_MAP[] =
+{
+    "SFFHFFFFFFFH",
+    "FFFFFHFFFFFF",
+    "FFFFHFFFFFFF",
+    "FFFFFFFFFFHG",
+};
+
+// python generate_random_frozen_lake_env.py 8 16 0.8
+static const std::string FL_GEN_8x16_MAP[] =
+{
+    "SFFFFFFFFFFFFFHF",
+    "FHHFFFHFHHFFFHFF",
+    "FHFFHFFFHFFFFFFF",
+    "FFFHFFFHFFFFFHHF",
+    "HFFHFHFFFFFFHHFF",
+    "FFFHFHFFHHFFFFFF",
+    "FFFFFFFFFFFFFFHF",
+    "FFFFFHFFHHFFHHFG",
+};
+
+// python generate_random_frozen_lake_env.py 16 16 0.8
+static const std::string FL_GEN_16x16_MAP[] =
+{
+    "SFFHFHFFHFFFFFFF",
+    "FFHHFHFFFHFFFHFF",
+    "FFFFHFHFHFHHFFFF",
+    "FFFHFFFFFHFFFFFF",
+    "FFFFHFFFFFFHFHFF",
+    "FFFFHFFFHFFFFFFF",
+    "FFHHHFHHFHFFHFHH",
+    "FFFFFFFFFFFFFFFF",
+    "FFFFFFFFFFFFFFHF",
+    "HFFFFHHFHFFFHFHF",
+    "FFFHFFFFFFFFHFFF",
+    "FFFFFFFHFHFFFFFF",
+    "FFHHFFHHHHFFFFFF",
+    "FFHFFFFHFFFFFFFH",
+    "FFFFFFFFFFHFHFFF",
+    "FFHFHFHHFFHFFFFG",
+};
+
+
+
+
+
+
+// old
 // python generate_random_frozen_lake_env.py 8 8 0.8
 static const std::string FL_RAND_8X8_MAP[] = 
 {
@@ -41,6 +141,7 @@ static const std::string FL_RAND_8X8_MAP[] =
 
 };
 
+// old
 // python generate_random_frozen_lake_env.py 8 8 0.8
 static const std::string FL_RAND_8X8_TEST_MAP[] = 
 {
@@ -54,6 +155,7 @@ static const std::string FL_RAND_8X8_TEST_MAP[] =
     "FHFHFFFG",
 };
 
+// old
 // python generate_random_frozen_lake_env.py 8 12 0.8
 static const std::string FL_RAND_8X12_MAP[] = 
 {
@@ -67,6 +169,7 @@ static const std::string FL_RAND_8X12_MAP[] =
     "FFFFFFFFFHHG",
 };
 
+// old
 // python generate_random_frozen_lake_env.py 8 12 0.8
 static const std::string FL_RAND_8X12_TEST_MAP[] = 
 {
@@ -80,7 +183,7 @@ static const std::string FL_RAND_8X12_TEST_MAP[] =
     "FFFFFFFFFFFG",
 };
 
-
+// old
 // python generate_random_frozen_lake_env.py 8 16 0.8
 static const std::string FL_RAND_8X16_TEST_MAP[] = 
 {

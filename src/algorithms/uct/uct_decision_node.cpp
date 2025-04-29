@@ -100,12 +100,14 @@ namespace thts {
 
         // Compute adaptive bias if using
         double bias = manager->bias; 
-        if (bias == UctManager::USE_AUTO_BIAS) {
-            bias = UctManager::AUTO_BIAS_MIN_BIAS;
+        if (manager->adaptive_bias) {
+            double adaptive_bias_coef = bias;
+            bias = UctManager::ADAPTIVE_BIAS_MIN_BIAS;
             for (shared_ptr<const Action> action : *actions) {
                 if (!has_child_node(action)) continue;
                 double child_abs_val = abs(get_child_node(action)->avg_return);
-                if (child_abs_val > bias) bias = child_abs_val;
+                double candidate_bias = child_abs_val * adaptive_bias_coef;
+                if (candidate_bias > bias) bias = candidate_bias;
             }
         }
 
