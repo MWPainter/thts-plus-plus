@@ -2337,7 +2337,7 @@ namespace thts {
         // Params shared across optimisations (related to envs)
         string env_id = HP_OPT_EXPR_ID_TO_ENV_ID.at(expr_id);
         bool eval_wrt_time = false;
-        double search_runtime = 64.0; //50000.0;
+        double search_runtime = 50000.0;
         int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
         double eval_delta = 25000.0;
         int rollouts_per_mc_eval = (DET_ENVS.contains(env_id)) ? 1 : 1024;
