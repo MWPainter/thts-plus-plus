@@ -110,7 +110,7 @@ namespace thts {
             double soft_q_value = get_soft_q_value(action,opp_coeff);
             double action_weight;
             if (manager.normalise_q_values) {
-                action_weight = exp((soft_q_value - min_q_value) / (max_q_value - min_q_value));
+                action_weight = exp((soft_q_value - min_q_value) / (max_q_value - min_q_value + EPS));
             } else {
                 action_weight = exp((soft_q_value/temp) - normalisation_term);
             }

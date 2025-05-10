@@ -180,7 +180,7 @@ namespace thts {
     /**
      * Performs all of the (replicated) runs corresponding to 'run_id'
     */
-    double run_expr(RunID& run_id, bool eval_at_zero_trials) {
+    vector<double> run_expr(RunID& run_id, bool eval_at_zero_trials) {
         // create results dir + eval file
         create_results_dir(run_id);
         string eval_filename = get_mc_eval_results_filename(run_id);
@@ -190,7 +190,7 @@ namespace thts {
         write_eval_header(eval_file);
 
         // Run experiment 'replicate' many times
-        double avg_mean_over_replicates = 0.0;
+        vector<double> value_estimates = vector<double>(run_id.num_repeats);
         for (int replicate=0; replicate<run_id.num_repeats; replicate++) {
 
             // print
@@ -251,31 +251,29 @@ namespace thts {
                     stddev);
             }
 
-            // Write tree to file
-            if (replicate == 0) {
-                string tree_filename = get_tree_filename(run_id, replicate);
-                ofstream tree_file;
-                tree_file.open(tree_filename, ios::out);
-                tree_file << root_node->get_pretty_print_string(1) << endl;
-                tree_file.close();
-            }
+            // // Write tree to file
+            // if (replicate == 0) {
+            //     string tree_filename = get_tree_filename(run_id, replicate);
+            //     ofstream tree_file;
+            //     tree_file.open(tree_filename, ios::out);
+            //     tree_file << root_node->get_pretty_print_string(1) << endl;
+            //     tree_file.close();
+            // }
 
-            // Write debug info
-            if (replicate == 0) {
-                string debug_filename = get_debug_filename(run_id, replicate);
-                ofstream debug_file;
-                debug_file.open(debug_filename, ios::out);
-                write_debug_info_to_file(root_node, debug_file);
-                debug_file.close();
-            }
+            // // Write debug info
+            // if (replicate == 0) {
+            //     string debug_filename = get_debug_filename(run_id, replicate);
+            //     ofstream debug_file;
+            //     debug_file.open(debug_filename, ios::out);
+            //     write_debug_info_to_file(root_node, debug_file);
+            //     debug_file.close();
+            // }
 
             // Flush
             eval_file.flush();
 
-            // Update avg mean
-            double num_replicates_run = replicate;
-            avg_mean_over_replicates *= (num_replicates_run) / (num_replicates_run+1.0);
-            avg_mean_over_replicates += mean / (num_replicates_run+1.0);
+            // Update results
+            value_estimates[replicate] = mean;
             
             env.reset();
             thts_manager.reset();
@@ -287,7 +285,7 @@ namespace thts {
         eval_file.close();
 
         // Return avg mean utility over replicates
-        return avg_mean_over_replicates;
+        return value_estimates;
     }
 
     /**
@@ -331,11 +329,20 @@ namespace thts {
     }
 
     /**
-     * Returns the filename for the mc eval results file
+     * Returns the filename for the mc eval results file (summary of hp opt)
     */ 
-    string get_hp_opt_results_filename(string expr_id, time_t timestamp) {
+    string get_hp_opt_summary_filename(string expr_id, time_t timestamp) {
         stringstream ss;
-        ss << HP_OPT_RESULTS_DIR << expr_id << "_" << timestamp << ".txt";
+        ss << HP_OPT_RESULTS_DIR << expr_id << "_summary_" << timestamp << ".txt";
+        return ss.str();
+    }
+
+    /**
+     * Returns the filename for the mc eval results file (all evaluations of each params)
+    */ 
+    string get_hp_opt_evals_filename(string expr_id, time_t timestamp) {
+        stringstream ss;
+        ss << HP_OPT_RESULTS_DIR << expr_id << "_evals_" << timestamp << ".txt";
         return ss.str();
     }
 
@@ -350,15 +357,20 @@ namespace thts {
         // timestamp, so can rerun with same params and keep both results
         time_t expr_timestamp = std::time(nullptr);
         
-        // Create output filestream
+        // Create output filestreams
         create_hp_opt_results_dir();
-        string hp_opt_filename = get_hp_opt_results_filename(expr_id, expr_timestamp);
-        ofstream hp_opt_file;
-        hp_opt_file.open(hp_opt_filename, ios::out);// | ios::app);
+
+        string hp_opt_summary_filename = get_hp_opt_summary_filename(expr_id, expr_timestamp);
+        ofstream hp_opt_summary_file;
+        hp_opt_summary_file.open(hp_opt_summary_filename, ios::out);// | ios::app);
+
+        string hp_opt_evals_filename = get_hp_opt_evals_filename(expr_id, expr_timestamp);
+        ofstream hp_opt_evals_file;
+        hp_opt_evals_file.open(hp_opt_evals_filename, ios::out);// | ios::app);
 
         // Get the hp_opt
         shared_ptr<HyperparamOptimiser> hp_opt = get_hyperparam_optimiser_from_expr_id(
-            expr_id, expr_timestamp, hp_opt_file);
+            expr_id, expr_timestamp, hp_opt_summary_file, hp_opt_evals_file);
 
         // If running python, make interpreter and release gil
         shared_ptr<py::scoped_interpreter> py_interpreter;
@@ -378,8 +390,9 @@ namespace thts {
         // Write best eval to file at end
         hp_opt->write_best_eval();
 
-        // Close file
-        hp_opt_file.close();
+        // Close files
+        hp_opt_summary_file.close();
+        hp_opt_evals_file.close();
     }
 
     // /**

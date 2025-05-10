@@ -622,6 +622,1472 @@ namespace thts {
 
 
 
+        // ----
+        // expr_id: 80x - frozen lake, deterministic, dense reward
+        // ----
+        if (expr_id == EVAL_FL_D_8x8_EXPR_ID || expr_id == EVAL_FL_D_8x16_EXPR_ID || expr_id == EVAL_FL_D_16x16_EXPR_ID)
+        {
+            // Env params
+            string env_id = FROZEN_LAKE_D_8x8_ENV_ID;
+            if (expr_id == EVAL_FL_D_8x16_EXPR_ID) {
+                env_id = FROZEN_LAKE_D_8x16_ENV_ID;
+            } else if (expr_id == EVAL_FL_D_16x16_EXPR_ID) {
+                env_id = FROZEN_LAKE_D_16x16_ENV_ID;
+            }
+            double default_q_value = - (double) ENV_ID_MAX_TRIAL_LEN.at(env_id);
+            int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
+            time_t expr_timestamp = std::time(nullptr);
+            bool eval_wrt_time = false;
+            double search_runtime = 250000;
+            double eval_delta = 500;
+            int rollouts_per_mc_eval = 1024;
+            int num_repeats = 25;
+            int num_threads = 16;
+            int eval_threads = 16;
+
+            string alg_id;
+            unordered_map<string,double> alg_params;
+
+            // UCT 
+            // -16.8
+            alg_id = UCT_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 0},
+                {BIAS_PARAM_ID, 0.773029},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // MaxUCT 
+            // -16
+            // TODO
+            alg_id = MAX_UCT_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 1},
+                {BIAS_PARAM_ID, 3.11406},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // HMCTS
+            // -17.6
+            alg_id = HMCTS_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 1},
+                {BIAS_PARAM_ID, 0.0255415},
+                {UCT_BUDGET_PARAM_ID, 1},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // MENTS
+            // -16
+            alg_id = MENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 1},
+                {TEMP_PARAM_ID, 0.001},
+                {EPSILON_PARAM_ID, 0.0},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // BTS
+            // -15.8
+            alg_id = BTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 96.6912},
+                {DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
+                {DECAY_FN_SCALE_PARAM_ID, 30.4339},
+                {EPSILON_PARAM_ID, 0.0001},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // DENTS
+            // -17.2
+            // TODO
+            alg_id = DENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 1},
+                {TEMP_PARAM_ID, 0.001},
+                {DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
+                {DECAY_FN_SCALE_PARAM_ID, 100},
+                {ENTROPY_COEFF_PARAM_ID, 0.001},
+                {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 100.0},
+                {EPSILON_PARAM_ID, 0.0},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // RENTS
+            // -15.8
+            alg_id = RENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 1},
+                {TEMP_PARAM_ID, 0.00939754},
+                {EPSILON_PARAM_ID, 0.398645},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // TENTS
+            // -16.8
+            alg_id = TENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 1},
+                {TEMP_PARAM_ID, 0.018575},
+                {EPSILON_PARAM_ID, 0.0001},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            return run_ids;
+        }
+
+
+
+
+        // ----
+        // expr_id: 81x - frozen lake, deterministic, sparse reward
+        // ----
+        if (expr_id == EVAL_FL_S_8x8_EXPR_ID || expr_id == EVAL_FL_S_8x16_EXPR_ID || expr_id == EVAL_FL_S_16x16_EXPR_ID)
+        {
+            // Env params
+            string env_id = FROZEN_LAKE_S_8x8_ENV_ID;
+            if (expr_id == EVAL_FL_S_8x16_EXPR_ID) {
+                env_id = FROZEN_LAKE_S_8x16_ENV_ID;
+            } else if (expr_id == EVAL_FL_S_16x16_EXPR_ID) {
+                env_id = FROZEN_LAKE_S_16x16_ENV_ID;
+            }
+            double default_q_value = 0.0;
+            int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
+            time_t expr_timestamp = std::time(nullptr);
+            bool eval_wrt_time = false;
+            double search_runtime = 250000;
+            double eval_delta = 500;
+            int rollouts_per_mc_eval = 1024;
+            int num_repeats = 25;
+            int num_threads = 16;
+            int eval_threads = 16;
+
+            string alg_id;
+            unordered_map<string,double> alg_params;
+
+            // UCT 
+            // 0.861813
+            alg_id = UCT_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 1},
+                {BIAS_PARAM_ID, 7.38704},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // MaxUCT 
+            // 0.826829
+            // TODO
+            alg_id = MAX_UCT_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 1},
+                {BIAS_PARAM_ID, 1.18597},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // HMCTS
+            // 0.841411
+            alg_id = HMCTS_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 0},
+                {BIAS_PARAM_ID, 0.0506811},
+                {UCT_BUDGET_PARAM_ID, 2426},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // MENTS
+            // 0.849875
+            alg_id = MENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 1},
+                {TEMP_PARAM_ID, 0.00159796},
+                {EPSILON_PARAM_ID, 0.132675},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // BTS
+            // 0.854984
+            alg_id = BTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 1},
+                {TEMP_PARAM_ID, 0.827971},
+                {DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
+                {DECAY_FN_SCALE_PARAM_ID, 1.09636},
+                {EPSILON_PARAM_ID, 0.39285},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // DENTS
+            // 0.85839
+            // TODO
+            alg_id = DENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 0.528818},
+                {DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
+                {DECAY_FN_SCALE_PARAM_ID, 0.0100092},
+                {ENTROPY_COEFF_PARAM_ID, 0.0010013},
+                {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 0.0100082},
+                {EPSILON_PARAM_ID, 0.0001},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // RENTS
+            // 0.860058
+            alg_id = RENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 1},
+                {TEMP_PARAM_ID, 0.00100434},
+                {EPSILON_PARAM_ID, 0.838382},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // TENTS
+            // 0.853383
+            alg_id = TENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 1},
+                {TEMP_PARAM_ID, 0.00181297},
+                {EPSILON_PARAM_ID, 0.218298},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            return run_ids;
+        }
+
+
+
+
+        // ----
+        // expr_id: 82x - slippy frozen lake, stochastic, dense reward
+        // ----
+        if (expr_id == EVAL_SFL_D_4x4_EXPR_ID || expr_id == EVAL_SFL_D_5x5_EXPR_ID || expr_id == EVAL_SFL_D_6x6_EXPR_ID)
+        {
+            // Env params
+            string env_id = SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID;
+            if (expr_id == EVAL_SFL_D_5x5_EXPR_ID) {
+                env_id = SLIPPY_FROZEN_LAKE_D_5x5_ENV_ID;
+            } else if (expr_id == EVAL_SFL_D_6x6_EXPR_ID) {
+                env_id = SLIPPY_FROZEN_LAKE_D_6x6_ENV_ID;
+            }
+            double default_q_value = - (double) ENV_ID_MAX_TRIAL_LEN.at(env_id);
+            int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
+            time_t expr_timestamp = std::time(nullptr);
+            bool eval_wrt_time = false;
+            double search_runtime = 250000;
+            double eval_delta = 500;
+            int rollouts_per_mc_eval = 1024;
+            int num_repeats = 25;
+            int num_threads = 16;
+            int eval_threads = 16;
+
+            string alg_id;
+            unordered_map<string,double> alg_params;
+
+            // UCT 
+            // -23.5199
+            alg_id = UCT_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 1},
+                {BIAS_PARAM_ID, 0.0545607},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // MaxUCT 
+            // -23.5268
+            alg_id = MAX_UCT_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 0},
+                {BIAS_PARAM_ID, 2.74005},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // HMCTS
+            // -23.4768
+            alg_id = HMCTS_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 0},
+                {BIAS_PARAM_ID, 0.859055},
+                {UCT_BUDGET_PARAM_ID, 3},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // MENTS
+            // -23.5393
+            alg_id = MENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 1},
+                {TEMP_PARAM_ID, 0.001},
+                {EPSILON_PARAM_ID, 0.0},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // BTS
+            // -23.5238
+            // TODO
+            alg_id = BTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 0.036216},
+                {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                {DECAY_FN_SCALE_PARAM_ID, 99.4302},
+                {EPSILON_PARAM_ID, 0.996121},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // DENTS
+            // -23.4732
+            // TODO
+            alg_id = DENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 0.001},
+                {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                {DECAY_FN_SCALE_PARAM_ID, 100},
+                {ENTROPY_COEFF_PARAM_ID, 0.00547603},
+                {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
+                {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 0.01},
+                {EPSILON_PARAM_ID, 0.0},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // RENTS
+            // -23.559
+            alg_id = RENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 0.001},
+                {EPSILON_PARAM_ID, 1.0},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // TENTS
+            // -23.5146
+            alg_id = TENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 1},
+                {TEMP_PARAM_ID, 0.00829662},
+                {EPSILON_PARAM_ID, 0.00019767},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            return run_ids;
+        }
+
+
+
+
+        // ----
+        // expr_id: 83x - slippy frozen lake, stochastic, sparse reward
+        // ----
+        if (expr_id == EVAL_SFL_S_4x4_EXPR_ID || expr_id == EVAL_SFL_S_5x5_EXPR_ID || expr_id == EVAL_SFL_S_6x6_EXPR_ID)
+        {
+            // Env params
+            string env_id = SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID;
+            if (expr_id == EVAL_SFL_S_5x5_EXPR_ID) {
+                env_id = SLIPPY_FROZEN_LAKE_S_5x5_ENV_ID;
+            } else if (expr_id == EVAL_SFL_S_6x6_EXPR_ID) {
+                env_id = SLIPPY_FROZEN_LAKE_S_6x6_ENV_ID;
+            }
+            double default_q_value = 0.0;
+            int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
+            time_t expr_timestamp = std::time(nullptr);
+            bool eval_wrt_time = false;
+            double search_runtime = 250000;
+            double eval_delta = 500;
+            int rollouts_per_mc_eval = 1024;
+            int num_repeats = 25;
+            int num_threads = 16;
+            int eval_threads = 16;
+
+            string alg_id;
+            unordered_map<string,double> alg_params;
+
+            // UCT 
+            // 0.0382813
+            alg_id = UCT_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 0},
+                {BIAS_PARAM_ID, 0.104752},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // MaxUCT 
+            // 0.0392578
+            alg_id = MAX_UCT_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 0},
+                {BIAS_PARAM_ID, 0.247274},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // HMCTS
+            // 0.0386719
+            alg_id = HMCTS_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 0},
+                {BIAS_PARAM_ID, 0.0988045},
+                {UCT_BUDGET_PARAM_ID, 517},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // MENTS
+            // 0.0410156
+            alg_id = MENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 0.001},
+                {EPSILON_PARAM_ID, 0.0},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // BTS
+            // 0.0404297
+            // TODO
+            alg_id = BTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 0.00414547},
+                {DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
+                {DECAY_FN_SCALE_PARAM_ID, 0.0101548},
+                {EPSILON_PARAM_ID, 0.227683},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // DENTS
+            // 0.0396484
+            // TODO
+            alg_id = DENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 0.0738441},
+                {DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
+                {DECAY_FN_SCALE_PARAM_ID, 42.4924},
+                {ENTROPY_COEFF_PARAM_ID, 0.0826038},
+                {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
+                {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 28.191},
+                {EPSILON_PARAM_ID, 0.710385},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // RENTS
+            // 0.0380859
+            alg_id = RENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 0.001},
+                {EPSILON_PARAM_ID, 0.0},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // TENTS
+            // 0.040625
+            alg_id = TENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 1},
+                {TEMP_PARAM_ID, 0.001},
+                {EPSILON_PARAM_ID, 0.0},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            return run_ids;
+        }
+
+
+
+
+        // ----
+        // expr_id: 84x - sailing, north
+        // ----
+        if (expr_id == EVAL_SAIL_N_8x8_EXPR_ID || expr_id == EVAL_SAIL_N_8x16_EXPR_ID || expr_id == EVAL_SAIL_N_16x16_EXPR_ID)
+        {
+            // Env params
+            string env_id = SAILING_ENV_NORTH_ID;
+            if (expr_id == EVAL_SAIL_N_8x16_EXPR_ID) {
+                env_id = SAILING_8x16_ENV_NORTH_ID;
+            } else if (expr_id == EVAL_SAIL_N_16x16_EXPR_ID) {
+                env_id = SAILING_16x16_ENV_NORTH_ID;
+            }
+            double default_q_value = -5.0 * (double) ENV_ID_MAX_TRIAL_LEN.at(env_id);
+            int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
+            time_t expr_timestamp = std::time(nullptr);
+            bool eval_wrt_time = false;
+            double search_runtime = 250000;
+            double eval_delta = 500;
+            int rollouts_per_mc_eval = 1024;
+            int num_repeats = 25;
+            int num_threads = 16;
+            int eval_threads = 16;
+
+            string alg_id;
+            unordered_map<string,double> alg_params;
+
+            // UCT 
+            // -78.484
+            alg_id = UCT_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 0},
+                {BIAS_PARAM_ID, 20.0638},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // MaxUCT 
+            // -80.0736
+            alg_id = MAX_UCT_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 1},
+                {BIAS_PARAM_ID, 0.599484},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // HMCTS
+            // -154 (but failed)
+            // TODO
+            alg_id = HMCTS_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 1},
+                {BIAS_PARAM_ID, 0.599484},
+                {UCT_BUDGET_PARAM_ID, 1},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // MENTS
+            // -187.941
+            alg_id = MENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 7.0341},
+                {EPSILON_PARAM_ID, 0.000876699},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // BTS
+            // -181.67
+            // TODO
+            alg_id = BTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 21.6892},
+                {DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
+                {DECAY_FN_SCALE_PARAM_ID, 0.0181898},
+                {EPSILON_PARAM_ID, 0.956878},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // DENTS
+            // -184.881
+            // TODO
+            alg_id = DENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 4.40294},
+                {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                {DECAY_FN_SCALE_PARAM_ID, 0.0100076},
+                {ENTROPY_COEFF_PARAM_ID, 0.0142321},
+                {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 99.9819},
+                {EPSILON_PARAM_ID, 0.999999},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // RENTS
+            // -36.1584
+            alg_id = RENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 20.0744},
+                {EPSILON_PARAM_ID, 0.998703},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // TENTS
+            // -186.15
+            alg_id = TENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 1},
+                {TEMP_PARAM_ID, 25.4172},
+                {EPSILON_PARAM_ID, 0.0590783},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            return run_ids;
+        }
+
+
+
+
+        // ----
+        // expr_id: 84x - sailing, south east
+        // ----
+        if (expr_id == EVAL_SAIL_SE_8x8_EXPR_ID || expr_id == EVAL_SAIL_SE_8x16_EXPR_ID || expr_id == EVAL_SAIL_SE_16x16_EXPR_ID)
+        {
+            // Env params
+            string env_id = SAILING_ENV_SOUTH_EAST_ID;
+            if (expr_id == EVAL_SAIL_SE_8x16_EXPR_ID) {
+                env_id = SAILING_8x16_ENV_SOUTH_EAST_ID;
+            } else if (expr_id == EVAL_SAIL_SE_16x16_EXPR_ID) {
+                env_id = SAILING_16x16_ENV_SOUTH_EAST_ID;
+            }
+            double default_q_value = -5.0 * (double) ENV_ID_MAX_TRIAL_LEN.at(env_id);
+            int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
+            time_t expr_timestamp = std::time(nullptr);
+            bool eval_wrt_time = false;
+            double search_runtime = 250000;
+            double eval_delta = 500;
+            int rollouts_per_mc_eval = 1024;
+            int num_repeats = 25;
+            int num_threads = 16;
+            int eval_threads = 16;
+
+            string alg_id;
+            unordered_map<string,double> alg_params;
+
+            // UCT 
+            // -98.3836
+            alg_id = UCT_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 0},
+                {BIAS_PARAM_ID, 20.9906},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // MaxUCT 
+            // -90.8139
+            alg_id = MAX_UCT_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 1},
+                {BIAS_PARAM_ID, 1.0},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // HMCTS
+            // -162.195
+            // TODO
+            alg_id = HMCTS_ALG_ID;
+            alg_params = 
+            {
+                {ADAPTIVE_BIAS_PARAM_ID, 0},
+                {BIAS_PARAM_ID, 52.5813},
+                {UCT_BUDGET_PARAM_ID, 4990},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // MENTS
+            // -192.017
+            alg_id = MENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 5.25483},
+                {EPSILON_PARAM_ID, 0.16076},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // BTS
+            // -194.082
+            // TODO
+            alg_id = BTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 30.0578},
+                {DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
+                {DECAY_FN_SCALE_PARAM_ID, 0.01},
+                {EPSILON_PARAM_ID, 1.0},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // DENTS
+            // -193.007
+            // TODO
+            alg_id = DENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 6.04038},
+                {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                {DECAY_FN_SCALE_PARAM_ID, 99.9746},
+                {ENTROPY_COEFF_PARAM_ID, 0.0960247},
+                {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
+                {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 99.9716},
+                {EPSILON_PARAM_ID, 0.000167246},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // RENTS
+            // -73.9193
+            alg_id = RENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 26.8291},
+                {EPSILON_PARAM_ID, 0.0},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length,
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            // TENTS
+            // -196.061
+            alg_id = TENTS_ALG_ID;
+            alg_params = 
+            {
+                {NORMALISE_Q_VALUES_PARAM_ID, 1},
+                {TEMP_PARAM_ID, 26.721},
+                {EPSILON_PARAM_ID, 0.0001},
+                {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
+            };
+            run_ids->push_back(RunID(
+                env_id,
+                expr_id,
+                expr_timestamp,
+                alg_id,
+                alg_params,
+                eval_wrt_time,
+                search_runtime,
+                eval_delta,
+                rollouts_per_mc_eval,
+                max_trial_length, 
+                num_repeats,
+                num_threads,
+                eval_threads
+            ));
+
+            return run_ids;
+        }
+
+
+
+
         stringstream ss;
         ss << "Error in get_run_ids_from_expr_id for expr_id = " << expr_id;
         throw runtime_error(ss.str());
@@ -645,7 +2111,8 @@ namespace thts {
         int num_threads,
         int eval_threads,
         bayesopt::Parameters params,
-        ofstream &results_fs) :
+        ofstream &results_summary_fs,
+        ofstream &results_evals_fs) :
             bayesopt::ContinuousModel(RELEVANT_PARAM_IDS.at(alg_id).size(), params),
             num_hyperparams(RELEVANT_PARAM_IDS.at(alg_id).size()),
             env_id(env_id),
@@ -665,7 +2132,8 @@ namespace thts {
             num_envs((eval_threads > num_threads) ? eval_threads : num_threads),
             best_eval(numeric_limits<double>::lowest()),
             best_alg_params(),
-            results_fs(results_fs),
+            results_summary_fs(results_summary_fs),
+            results_evals_fs(results_evals_fs),
             hp_opt_iter(0)
     {
         // error checking
@@ -737,6 +2205,7 @@ namespace thts {
      */
     double HyperparamOptimiser::evaluateSample(const bayesopt::vectord &query) 
     {
+        // Run eval on hyperparams
         unordered_map<string,double> alg_params = get_alg_params_from_bayesopt_vec(query);
         RunID run_id(
             env_id,
@@ -753,14 +2222,26 @@ namespace thts {
             num_threads,
             eval_threads
         );
-        double eval = thts::run_expr(run_id, false);
-        if (eval > best_eval) {
-            best_eval = eval;
+        vector<double> evals = thts::run_expr(run_id, false);
+
+        // Compute mean eval + log stuff
+        double evals_sum = 0.0;
+        for (double eval : evals) {
+            evals_sum += eval;
+        }
+        double mean_eval = evals_sum / evals.size();
+        if (mean_eval > best_eval) {
+            best_eval = mean_eval;
             best_alg_params = alg_params;
         }
-        write_eval_line(alg_params, eval);
+        write_eval_lines(alg_params, evals);
+        write_summary_line(alg_params, mean_eval);
+
+        // Remember to increment hp_opt_iter
+        hp_opt_iter++;
+
         // bayes opt tried to minimise, so return *-1.0 because want to maximise
-        return -1.0 * eval;
+        return -1.0 * mean_eval;
     };
 
     /**
@@ -769,10 +2250,10 @@ namespace thts {
     void HyperparamOptimiser::write_header()
     {
         // expr params
-        results_fs 
+        results_summary_fs 
             << "env_id,alg_id,search_runtime,max_trial_length,rollouts_per_mc_eval,num_repeats,num_threads" << endl;
         
-        results_fs 
+        results_summary_fs 
             << env_id << ","
             << alg_id << ","
             << search_runtime << ","
@@ -783,46 +2264,67 @@ namespace thts {
             << endl << endl;
         
         // hyperparams (with sample number (hp_opt_iter) and eval at start/end)
-        results_fs << "hp_opt_iter,";
+        results_summary_fs << "hp_opt_iter,";
         for (string& param_id : alg_param_ids) {
-            results_fs << param_id << ",";
+            results_summary_fs << param_id << ",";
         } 
-        results_fs << "eval(mc_estimate_expected_utility),best_eval_so_far" << endl;
+        results_summary_fs << "eval(mc_estimate_expected_utility),best_eval_so_far" << endl;
 
         // Print out the min an max params trying
-        results_fs << "MIN,";
+        results_summary_fs << "MIN,";
         for (string param_id : alg_param_ids) {
-            results_fs << alg_params_min_max[param_id].first << ",";
+            results_summary_fs << alg_params_min_max[param_id].first << ",";
         } 
-        results_fs << "MIN" << endl;
-        results_fs << "MAX,";
+        results_summary_fs << "MIN" << endl;
+        results_summary_fs << "MAX,";
         for (string param_id : alg_param_ids) {
-            results_fs << alg_params_min_max[param_id].second << ",";
+            results_summary_fs << alg_params_min_max[param_id].second << ",";
         } 
-        results_fs << "MAX" << endl;
-
+        results_summary_fs << "MAX" << endl;
+        
+        // for evals fs, just want the list of hyperparms, and the eval
+        results_evals_fs << "hp_opt_iter,replicate,";
+        for (string& param_id : alg_param_ids) {
+            results_evals_fs << param_id << ",";
+        } 
+        results_evals_fs << "eval(mc_estimate_expected_utility)" << endl;
     };
 
     /**
      * Write eval/hyperparam sample line to file
+     * - note that hp_opt_iter only used but updated
+     */
+    void HyperparamOptimiser::write_eval_lines(unordered_map<string,double> alg_params, vector<double>& evals)
+    {   
+        for (size_t i=0; i<evals.size(); i++) {
+            results_evals_fs << hp_opt_iter << "," << i << ",";
+            for (string param_id : alg_param_ids) {
+                results_evals_fs << alg_params[param_id] << ",";
+            }
+            results_evals_fs << evals[i] << endl;
+        }
+    };
+
+    /**
+     * Write hyperparam sample line to file
      * - note that hp_opt_iter only used here, and also updated here
      */
-    void HyperparamOptimiser::write_eval_line(unordered_map<string,double> alg_params, double eval)
+    void HyperparamOptimiser::write_summary_line(unordered_map<string,double> alg_params, double mean_eval)
     {   
-        results_fs << hp_opt_iter++ << ",";
+        results_summary_fs << hp_opt_iter << ",";
         for (string param_id : alg_param_ids) {
-            results_fs << alg_params[param_id] << ",";
+            results_summary_fs << alg_params[param_id] << ",";
         }
-        results_fs << eval << "," << best_eval << endl;
+        results_summary_fs << mean_eval << "," << best_eval << endl;
     };
 
     void HyperparamOptimiser::write_best_eval()
     {
-        results_fs << endl;
-        results_fs << "Best eval with params:" << endl;
-        results_fs << "eval (mc_estimate_expected_utility) = " << best_eval << endl;
+        results_summary_fs << endl;
+        results_summary_fs << "Best eval with params:" << endl;
+        results_summary_fs << "eval (mc_estimate_expected_utility) = " << best_eval << endl;
         for (pair<string,double> pr : best_alg_params) {
-            results_fs << pr.first << " = " << pr.second << endl;
+            results_summary_fs << pr.first << " = " << pr.second << endl;
         }
     };
 
@@ -830,28 +2332,38 @@ namespace thts {
      * Gets hyperparam optimiser from expr_id
      */
     shared_ptr<HyperparamOptimiser> get_hyperparam_optimiser_from_expr_id(
-        string expr_id, time_t expr_timestamp, ofstream &hp_opt_fs)
+        string expr_id, time_t expr_timestamp, ofstream &hp_opt_summary_fs, ofstream &hp_opt_evals_fs)
     {
         // Params shared across optimisations (related to envs)
         string env_id = HP_OPT_EXPR_ID_TO_ENV_ID.at(expr_id);
         bool eval_wrt_time = false;
-        double search_runtime = 50000.0;
+        double search_runtime = 64.0; //50000.0;
         int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
         double eval_delta = 25000.0;
         int rollouts_per_mc_eval = (DET_ENVS.contains(env_id)) ? 1 : 1024;
         int num_repeats = 5;
         int num_threads = 16;
-        int eval_threads = 16;
+        int eval_threads = (DET_ENVS.contains(env_id)) ? 1 : 16;
 
         // Params being tuned
         string alg_id;
         unordered_map<string, pair<double,double>> alg_params_min_max;
 
+        // Defualt Q values
+        double min_default_q_value = 0.0;
+        if (env_id == FROZEN_LAKE_D_8x8_ENV_ID || env_id == SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID) {
+            min_default_q_value = -((double) max_trial_length);
+        } else if (env_id == SAILING_ENV_NORTH_ID || env_id == SAILING_ENV_SOUTH_EAST_ID) {
+            min_default_q_value = -5.0 * ((double) max_trial_length);
+        }
+
         // UCT
         if (expr_id == HP_OPT_600_UCT_EXPR_ID 
             || expr_id == HP_OPT_601_UCT_EXPR_ID
             || expr_id == HP_OPT_602_UCT_EXPR_ID
-            || expr_id == HP_OPT_603_UCT_EXPR_ID) 
+            || expr_id == HP_OPT_603_UCT_EXPR_ID
+            || expr_id == HP_OPT_604_UCT_EXPR_ID
+            || expr_id == HP_OPT_605_UCT_EXPR_ID) 
         {
             alg_id = UCT_ALG_ID;
             alg_params_min_max = {
@@ -863,7 +2375,9 @@ namespace thts {
         else if (expr_id == HP_OPT_610_MAX_UCT_EXPR_ID
             || expr_id == HP_OPT_611_MAX_UCT_EXPR_ID
             || expr_id == HP_OPT_612_MAX_UCT_EXPR_ID
-            || expr_id == HP_OPT_613_MAX_UCT_EXPR_ID)
+            || expr_id == HP_OPT_613_MAX_UCT_EXPR_ID
+            || expr_id == HP_OPT_614_MAX_UCT_EXPR_ID
+            || expr_id == HP_OPT_615_MAX_UCT_EXPR_ID)
         {
             alg_id = MAX_UCT_ALG_ID;
             alg_params_min_max = {
@@ -875,41 +2389,44 @@ namespace thts {
         else if (expr_id == HP_OPT_620_MENTS_EXPR_ID
             || expr_id == HP_OPT_621_MENTS_EXPR_ID
             || expr_id == HP_OPT_622_MENTS_EXPR_ID
-            || expr_id == HP_OPT_623_MENTS_EXPR_ID)
+            || expr_id == HP_OPT_623_MENTS_EXPR_ID
+            || expr_id == HP_OPT_624_MENTS_EXPR_ID
+            || expr_id == HP_OPT_625_MENTS_EXPR_ID)
         {   
-            double default_q_value = -double(max_trial_length);
             alg_id = MENTS_ALG_ID;
             alg_params_min_max = {
                 {NORMALISE_Q_VALUES_PARAM_ID, make_pair(0.0, 1.0)},
                 {TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
-                {EPSILON_PARAM_ID, make_pair(0.0, 10.0)},
-                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(default_q_value,default_q_value)}
+                {EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
+                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,0.0)}
             };
         }
         // BTS
         else if (expr_id == HP_OPT_630_BTS_EXPR_ID
             || expr_id == HP_OPT_631_BTS_EXPR_ID
             || expr_id == HP_OPT_632_BTS_EXPR_ID
-            || expr_id == HP_OPT_633_BTS_EXPR_ID)
+            || expr_id == HP_OPT_633_BTS_EXPR_ID
+            || expr_id == HP_OPT_634_BTS_EXPR_ID
+            || expr_id == HP_OPT_635_BTS_EXPR_ID)
         {
-            double default_q_value = -double(max_trial_length);
             alg_id = BTS_ALG_ID;
             alg_params_min_max = {
                 {NORMALISE_Q_VALUES_PARAM_ID, make_pair(0.0, 1.0)},
                 {TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
                 {DECAY_FN_PARAM_ID, make_pair(0.0, 3.0)},
                 {DECAY_FN_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
-                {EPSILON_PARAM_ID, make_pair(0.0, 10.0)},
-                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(default_q_value,default_q_value)}
+                {EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
+                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,0.0)}
             };
         }
         // DENTS
         else if (expr_id == HP_OPT_640_DENTS_EXPR_ID
             || expr_id == HP_OPT_641_DENTS_EXPR_ID
             || expr_id == HP_OPT_642_DENTS_EXPR_ID
-            || expr_id == HP_OPT_643_DENTS_EXPR_ID)
+            || expr_id == HP_OPT_643_DENTS_EXPR_ID
+            || expr_id == HP_OPT_644_DENTS_EXPR_ID
+            || expr_id == HP_OPT_645_DENTS_EXPR_ID)
         {
-            double default_q_value = -double(max_trial_length);
             alg_id = DENTS_ALG_ID;
             alg_params_min_max = {
                 {NORMALISE_Q_VALUES_PARAM_ID, make_pair(0.0, 1.0)},
@@ -919,49 +2436,54 @@ namespace thts {
                 {ENTROPY_COEFF_PARAM_ID, make_pair(0.001, 1000.0)},
                 {ENTROPY_DECAY_FN_PARAM_ID, make_pair(0.0, 3.0)},
                 {ENTROPY_DECAY_FN_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
-                {EPSILON_PARAM_ID, make_pair(0.0, 10.0)},
-                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(default_q_value,default_q_value)}
+                {EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
+                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,0.0)}
             };
         }
         // RENTS
         else if (expr_id == HP_OPT_650_RENTS_EXPR_ID
             || expr_id == HP_OPT_651_RENTS_EXPR_ID
             || expr_id == HP_OPT_652_RENTS_EXPR_ID
-            || expr_id == HP_OPT_653_RENTS_EXPR_ID)
+            || expr_id == HP_OPT_653_RENTS_EXPR_ID
+            || expr_id == HP_OPT_654_RENTS_EXPR_ID
+            || expr_id == HP_OPT_655_RENTS_EXPR_ID)
         {
-            double default_q_value = -double(max_trial_length);
             alg_id = RENTS_ALG_ID;
             alg_params_min_max = {
                 {NORMALISE_Q_VALUES_PARAM_ID, make_pair(0.0, 1.0)},
                 {TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
-                {EPSILON_PARAM_ID, make_pair(0.0, 10.0)},
-                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(default_q_value,default_q_value)}
+                {EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
+                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,0.0)}
             };
         }
         // TENTS
         else if (expr_id == HP_OPT_660_TENTS_EXPR_ID
             || expr_id == HP_OPT_661_TENTS_EXPR_ID
             || expr_id == HP_OPT_662_TENTS_EXPR_ID
-            || expr_id == HP_OPT_663_TENTS_EXPR_ID)
+            || expr_id == HP_OPT_663_TENTS_EXPR_ID
+            || expr_id == HP_OPT_664_TENTS_EXPR_ID
+            || expr_id == HP_OPT_665_TENTS_EXPR_ID)
         {
-            double default_q_value = -double(max_trial_length);
             alg_id = TENTS_ALG_ID;
             alg_params_min_max = {
                 {NORMALISE_Q_VALUES_PARAM_ID, make_pair(0.0, 1.0)},
                 {TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
-                {EPSILON_PARAM_ID, make_pair(0.0, 10.0)},
-                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(default_q_value,default_q_value)}
+                {EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
+                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,0.0)}
             };
         }
         // HMCTS
         else if (expr_id == HP_OPT_670_HMCTS_EXPR_ID
             || expr_id == HP_OPT_671_HMCTS_EXPR_ID
             || expr_id == HP_OPT_672_HMCTS_EXPR_ID
-            || expr_id == HP_OPT_673_HMCTS_EXPR_ID)
+            || expr_id == HP_OPT_673_HMCTS_EXPR_ID
+            || expr_id == HP_OPT_674_HMCTS_EXPR_ID
+            || expr_id == HP_OPT_675_HMCTS_EXPR_ID)
         {
             alg_id = HMCTS_ALG_ID;
             alg_params_min_max = {
                 {ADAPTIVE_BIAS_PARAM_ID, make_pair(0.0, 1.0)},
+                {BIAS_PARAM_ID, make_pair(0.001, 1000.0)},
                 {UCT_BUDGET_PARAM_ID, make_pair(1.0, 5000.0)},
             };
         }
@@ -997,7 +2519,8 @@ namespace thts {
             num_threads,
             eval_threads,
             bo_params,
-            hp_opt_fs
+            hp_opt_summary_fs,
+            hp_opt_evals_fs
         );
     };
 
@@ -1162,6 +2685,26 @@ namespace thts {
         if (env_id == SAILING_ENV_SOUTH_EAST_ID)
         {
             return make_shared<SailingEnv>(8,8,SE);
+        }
+
+        if (env_id == SAILING_8x16_ENV_NORTH_ID)
+        {
+            return make_shared<SailingEnv>(8,16,NN);
+        }
+        
+        if (env_id == SAILING_8x16_ENV_SOUTH_EAST_ID)
+        {
+            return make_shared<SailingEnv>(8,16,SE);
+        }
+
+        if (env_id == SAILING_16x16_ENV_NORTH_ID)
+        {
+            return make_shared<SailingEnv>(16,16,NN);
+        }
+        
+        if (env_id == SAILING_16x16_ENV_SOUTH_EAST_ID)
+        {
+            return make_shared<SailingEnv>(16,16,SE);
         }
 
         stringstream ss;

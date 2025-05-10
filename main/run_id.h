@@ -40,7 +40,7 @@ static const std::string DECAY_FN_PARAM_ID = "decay_fn";                // temp 
 static const std::string DECAY_FN_SCALE_PARAM_ID = "decay_fn_scale";    // f(x) -> f(c*x), f = decay fn
 static const std::string ENTROPY_COEFF_PARAM_ID = "entropy_coeff";               // vertical scale for entropy decay fn (f(x) -> c*f(x))
 static const std::string ENTROPY_DECAY_FN_PARAM_ID = "entropy_decay_fn";
-static const std::string ENTROPY_DECAY_FN_SCALE_PARAM_ID = "decay_fn_scale"; // f(x) -> f(c*x), f = entropy decay fn
+static const std::string ENTROPY_DECAY_FN_SCALE_PARAM_ID = "entropy_decay_fn_scale"; // f(x) -> f(c*x), f = entropy decay fn
 static const std::string EPSILON_PARAM_ID = "epsilon";                  // exploration param for stochastic policies
 static const std::string DEFAULT_Q_VALUE_PARAM_ID = "default_q_value"; // default value of Q(s,a) for unseen state action pairs
 static const std::string UCT_BUDGET_PARAM_ID = "uct_budget"; // hmcts's uct budget param
@@ -143,6 +143,7 @@ static const std::unordered_set<std::string> LOG_SCALE_PARAM_IDS =
 {
     BIAS_PARAM_ID,
     TEMP_PARAM_ID,
+    EPSILON_PARAM_ID,
     DECAY_FN_SCALE_PARAM_ID,
     ENTROPY_COEFF_PARAM_ID,
     ENTROPY_DECAY_FN_SCALE_PARAM_ID,
@@ -173,8 +174,12 @@ static const std::string SLIPPY_FROZEN_LAKE_D_5x5_ENV_ID = "slippy_frozen_lake_(
 static const std::string SLIPPY_FROZEN_LAKE_S_5x5_ENV_ID = "slippy_frozen_lake_(map=5x5,sparse)";
 static const std::string SLIPPY_FROZEN_LAKE_D_6x6_ENV_ID = "slippy_frozen_lake_(map=6x6,dense)";
 static const std::string SLIPPY_FROZEN_LAKE_S_6x6_ENV_ID = "slippy_frozen_lake_(map=6x6,sparse)";
-static const std::string SAILING_ENV_NORTH_ID = "sailing_north";
-static const std::string SAILING_ENV_SOUTH_EAST_ID = "sailing_south_east";
+static const std::string SAILING_ENV_NORTH_ID = "sailing_(8x8,N)";
+static const std::string SAILING_ENV_SOUTH_EAST_ID = "sailing_(8x8,SE)";
+static const std::string SAILING_8x16_ENV_NORTH_ID = "sailing_(8x8,N)";
+static const std::string SAILING_8x16_ENV_SOUTH_EAST_ID = "sailing_(8x8,SE)";
+static const std::string SAILING_16x16_ENV_NORTH_ID = "sailing_(8x8,N)";
+static const std::string SAILING_16x16_ENV_SOUTH_EAST_ID = "sailing_(8x8,SE)";
 
 // env ids - python envs (non gym envs that need the python )interpreter
 // TODO: any python envs
@@ -201,20 +206,24 @@ static const std::unordered_map<std::string,int> ENV_ID_MAX_TRIAL_LEN =
     {FROZEN_LAKE_NO_HOLE_DENSE_ENV_ID,50},
     {FROZEN_LAKE_NO_HOLE_SPARSE_LEN_ENV_ID,50},
     {FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED_ENV_ID,50},
-    {FROZEN_LAKE_D_8x8_ENV_ID,    10000},
-    {FROZEN_LAKE_S_8x8_ENV_ID,    10000},
-    {FROZEN_LAKE_D_8x16_ENV_ID,    10000},
-    {FROZEN_LAKE_S_8x16_ENV_ID,    10000},
-    {FROZEN_LAKE_D_16x16_ENV_ID,    10000},
-    {FROZEN_LAKE_S_16x16_ENV_ID,    10000},
-    {SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID,    10000},
-    {SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID,    10000},
-    {SLIPPY_FROZEN_LAKE_D_5x5_ENV_ID,    10000},
-    {SLIPPY_FROZEN_LAKE_S_5x5_ENV_ID,    10000},
-    {SLIPPY_FROZEN_LAKE_D_6x6_ENV_ID,    10000},
-    {SLIPPY_FROZEN_LAKE_S_6x6_ENV_ID,    10000},
-    {SAILING_ENV_NORTH_ID,      10000},
-    {SAILING_ENV_SOUTH_EAST_ID, 10000},
+    {FROZEN_LAKE_D_8x8_ENV_ID,    100},
+    {FROZEN_LAKE_S_8x8_ENV_ID,    100},
+    {FROZEN_LAKE_D_8x16_ENV_ID,    100},
+    {FROZEN_LAKE_S_8x16_ENV_ID,    100},
+    {FROZEN_LAKE_D_16x16_ENV_ID,    100},
+    {FROZEN_LAKE_S_16x16_ENV_ID,    100},
+    {SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID,    50},
+    {SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID,    50},
+    {SLIPPY_FROZEN_LAKE_D_5x5_ENV_ID,    50},
+    {SLIPPY_FROZEN_LAKE_S_5x5_ENV_ID,    50},
+    {SLIPPY_FROZEN_LAKE_D_6x6_ENV_ID,    50},
+    {SLIPPY_FROZEN_LAKE_S_6x6_ENV_ID,    50},
+    {SAILING_ENV_NORTH_ID,      100},
+    {SAILING_ENV_SOUTH_EAST_ID, 100},
+    {SAILING_8x16_ENV_NORTH_ID,      100},
+    {SAILING_8x16_ENV_SOUTH_EAST_ID, 100},
+    {SAILING_16x16_ENV_NORTH_ID,      100},
+    {SAILING_16x16_ENV_SOUTH_EAST_ID, 100},
 };
 
 static const std::unordered_set<std::string> DET_ENVS = 
@@ -295,7 +304,48 @@ static const std::string HP_OPT_653_RENTS_EXPR_ID =     "653_hp_opt_rents";
 static const std::string HP_OPT_663_TENTS_EXPR_ID =     "663_hp_opt_tents";
 static const std::string HP_OPT_673_HMCTS_EXPR_ID =     "673_hp_opt_hmcts";
 
-static const std::string EVAL_XXX_EXPR_ID = "800_eval_xxx_env_xxx";
+static const std::string HP_OPT_604_UCT_EXPR_ID =       "604_hp_opt_uct";
+static const std::string HP_OPT_614_MAX_UCT_EXPR_ID =   "614_hp_opt_max_uct";
+static const std::string HP_OPT_624_MENTS_EXPR_ID =     "624_hp_opt_ments";
+static const std::string HP_OPT_634_BTS_EXPR_ID =       "634_hp_opt_bts";
+static const std::string HP_OPT_644_DENTS_EXPR_ID =     "644_hp_opt_dents";
+static const std::string HP_OPT_654_RENTS_EXPR_ID =     "654_hp_opt_rents";
+static const std::string HP_OPT_664_TENTS_EXPR_ID =     "664_hp_opt_tents";
+static const std::string HP_OPT_674_HMCTS_EXPR_ID =     "674_hp_opt_hmcts";
+
+static const std::string HP_OPT_605_UCT_EXPR_ID =       "605_hp_opt_uct";
+static const std::string HP_OPT_615_MAX_UCT_EXPR_ID =   "615_hp_opt_max_uct";
+static const std::string HP_OPT_625_MENTS_EXPR_ID =     "625_hp_opt_ments";
+static const std::string HP_OPT_635_BTS_EXPR_ID =       "635_hp_opt_bts";
+static const std::string HP_OPT_645_DENTS_EXPR_ID =     "645_hp_opt_dents";
+static const std::string HP_OPT_655_RENTS_EXPR_ID =     "655_hp_opt_rents";
+static const std::string HP_OPT_665_TENTS_EXPR_ID =     "665_hp_opt_tents";
+static const std::string HP_OPT_675_HMCTS_EXPR_ID =     "675_hp_opt_hmcts";
+
+static const std::string EVAL_FL_D_8x8_EXPR_ID = "800_eval_fl_d_8x8";
+static const std::string EVAL_FL_D_8x16_EXPR_ID = "801_eval_fl_d_8x16";
+static const std::string EVAL_FL_D_16x16_EXPR_ID = "802_eval_fl_d_16x16";
+
+static const std::string EVAL_FL_S_8x8_EXPR_ID = "810_eval_fl_s_8x8";
+static const std::string EVAL_FL_S_8x16_EXPR_ID = "811_eval_fl_s_8x16";
+static const std::string EVAL_FL_S_16x16_EXPR_ID = "812_eval_fl_s_16x16";
+
+static const std::string EVAL_SFL_D_4x4_EXPR_ID = "820_eval_sfl_d_4x4";
+static const std::string EVAL_SFL_D_5x5_EXPR_ID = "821_eval_sfl_d_5x5";
+static const std::string EVAL_SFL_D_6x6_EXPR_ID = "822_eval_sfl_d_6x6";
+
+static const std::string EVAL_SFL_S_4x4_EXPR_ID = "830_eval_sfl_s_4x4";
+static const std::string EVAL_SFL_S_5x5_EXPR_ID = "831_eval_sfl_s_5x5";
+static const std::string EVAL_SFL_S_6x6_EXPR_ID = "832_eval_sfl_s_6x6";
+
+static const std::string EVAL_SAIL_N_8x8_EXPR_ID = "840_eval_sailing_n_8x8";
+static const std::string EVAL_SAIL_N_8x16_EXPR_ID = "841_eval_sailing_n_8x16";
+static const std::string EVAL_SAIL_N_16x16_EXPR_ID = "842_eval_sailing_n_16x16";
+
+static const std::string EVAL_SAIL_SE_8x8_EXPR_ID = "850_eval_sailing_se_8x8";
+static const std::string EVAL_SAIL_SE_8x16_EXPR_ID = "851_eval_sailing_se_8x16";
+static const std::string EVAL_SAIL_SE_16x16_EXPR_ID = "852_eval_sailing_se_16x16";
+
 
 // env id lookup - helper dict to lookup env ids from hp opt experiment ids
 static const std::unordered_map<std::string,std::string> HP_OPT_EXPR_ID_TO_ENV_ID =
@@ -335,6 +385,24 @@ static const std::unordered_map<std::string,std::string> HP_OPT_EXPR_ID_TO_ENV_I
     {HP_OPT_653_RENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID},
     {HP_OPT_663_TENTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID},
     {HP_OPT_673_HMCTS_EXPR_ID,                  SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID},
+
+    {HP_OPT_604_UCT_EXPR_ID,                    SAILING_ENV_NORTH_ID},
+    {HP_OPT_614_MAX_UCT_EXPR_ID,                SAILING_ENV_NORTH_ID},
+    {HP_OPT_624_MENTS_EXPR_ID,                  SAILING_ENV_NORTH_ID},
+    {HP_OPT_634_BTS_EXPR_ID,                    SAILING_ENV_NORTH_ID},
+    {HP_OPT_644_DENTS_EXPR_ID,                  SAILING_ENV_NORTH_ID},
+    {HP_OPT_654_RENTS_EXPR_ID,                  SAILING_ENV_NORTH_ID},
+    {HP_OPT_664_TENTS_EXPR_ID,                  SAILING_ENV_NORTH_ID},
+    {HP_OPT_674_HMCTS_EXPR_ID,                  SAILING_ENV_NORTH_ID},
+
+    {HP_OPT_605_UCT_EXPR_ID,                    SAILING_ENV_SOUTH_EAST_ID},
+    {HP_OPT_615_MAX_UCT_EXPR_ID,                SAILING_ENV_SOUTH_EAST_ID},
+    {HP_OPT_625_MENTS_EXPR_ID,                  SAILING_ENV_SOUTH_EAST_ID},
+    {HP_OPT_635_BTS_EXPR_ID,                    SAILING_ENV_SOUTH_EAST_ID},
+    {HP_OPT_645_DENTS_EXPR_ID,                  SAILING_ENV_SOUTH_EAST_ID},
+    {HP_OPT_655_RENTS_EXPR_ID,                  SAILING_ENV_SOUTH_EAST_ID},
+    {HP_OPT_665_TENTS_EXPR_ID,                  SAILING_ENV_SOUTH_EAST_ID},
+    {HP_OPT_675_HMCTS_EXPR_ID,                  SAILING_ENV_SOUTH_EAST_ID},
 };
 
 // list of all expr ids (for helper to lookup expr id from a prefix (just the number))
@@ -383,7 +451,49 @@ static const std::unordered_set<std::string> ALL_EXPR_IDS =
     HP_OPT_643_DENTS_EXPR_ID,                  
     HP_OPT_653_RENTS_EXPR_ID,                  
     HP_OPT_663_TENTS_EXPR_ID,                  
-    HP_OPT_673_HMCTS_EXPR_ID,                  
+    HP_OPT_673_HMCTS_EXPR_ID,  
+
+    HP_OPT_604_UCT_EXPR_ID,      
+    HP_OPT_614_MAX_UCT_EXPR_ID,    
+    HP_OPT_624_MENTS_EXPR_ID,      
+    HP_OPT_634_BTS_EXPR_ID,                    
+    HP_OPT_644_DENTS_EXPR_ID,                  
+    HP_OPT_654_RENTS_EXPR_ID,                  
+    HP_OPT_664_TENTS_EXPR_ID,                  
+    HP_OPT_674_HMCTS_EXPR_ID,  
+
+    HP_OPT_605_UCT_EXPR_ID,      
+    HP_OPT_615_MAX_UCT_EXPR_ID,    
+    HP_OPT_625_MENTS_EXPR_ID,      
+    HP_OPT_635_BTS_EXPR_ID,                    
+    HP_OPT_645_DENTS_EXPR_ID,                  
+    HP_OPT_655_RENTS_EXPR_ID,                  
+    HP_OPT_665_TENTS_EXPR_ID,                  
+    HP_OPT_675_HMCTS_EXPR_ID,  
+    
+    EVAL_FL_D_8x8_EXPR_ID,
+    EVAL_FL_D_8x16_EXPR_ID,
+    EVAL_FL_D_16x16_EXPR_ID,
+
+    EVAL_FL_S_8x8_EXPR_ID,
+    EVAL_FL_S_8x16_EXPR_ID,
+    EVAL_FL_S_16x16_EXPR_ID,
+
+    EVAL_SFL_D_4x4_EXPR_ID,
+    EVAL_SFL_D_5x5_EXPR_ID,
+    EVAL_SFL_D_6x6_EXPR_ID,
+
+    EVAL_SFL_S_4x4_EXPR_ID,
+    EVAL_SFL_S_5x5_EXPR_ID,
+    EVAL_SFL_S_6x6_EXPR_ID,
+
+    EVAL_SAIL_N_8x8_EXPR_ID,
+    EVAL_SAIL_N_8x16_EXPR_ID,
+    EVAL_SAIL_N_16x16_EXPR_ID,
+
+    EVAL_SAIL_SE_8x8_EXPR_ID,
+    EVAL_SAIL_SE_8x16_EXPR_ID,
+    EVAL_SAIL_SE_16x16_EXPR_ID,
 };
 
 
@@ -538,7 +648,8 @@ namespace thts {
             double best_eval;
             std::unordered_map<std::string, double> best_alg_params;
 
-            std::ofstream &results_fs;
+            std::ofstream &results_summary_fs;
+            std::ofstream &results_evals_fs;
             int hp_opt_iter;
             
             HyperparamOptimiser(
@@ -556,7 +667,8 @@ namespace thts {
                 int num_threads,
                 int eval_threads,
                 bayesopt::Parameters params,
-                std::ofstream &results_fs);
+                std::ofstream &results_summary_fs,
+                std::ofstream &results_evals_fs);
 
             bool is_python_env();
 
@@ -571,7 +683,8 @@ namespace thts {
             void write_header();
 
         private:
-            void write_eval_line(std::unordered_map<std::string,double> alg_params, double eval);
+            void write_eval_lines(std::unordered_map<std::string,double> alg_params, std::vector<double>& evals);
+            void write_summary_line(std::unordered_map<std::string,double> alg_params, double mean_eval);
 
         public:
             void write_best_eval();
@@ -581,7 +694,7 @@ namespace thts {
      * Creates and returns a hyperparamters optimiser from experiment id
     */
     std::shared_ptr<HyperparamOptimiser> get_hyperparam_optimiser_from_expr_id(
-        std::string expr_id, std::time_t expr_timestamp, std::ofstream &hp_opt_fs);
+        std::string expr_id, std::time_t expr_timestamp, std::ofstream &hp_opt_summary_fs, std::ofstream &hp_opt_evals_fs);
 
     /**
      * Lookup expr_id from prefix
