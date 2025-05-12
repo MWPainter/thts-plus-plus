@@ -1,0 +1,280 @@
+
+#pragma once
+
+#include "mo/data_structures/pareto_front.h"
+
+#include <unordered_set>
+#include <utility>
+
+#include <Eigen/Dense>
+
+namespace thts {
+    /**
+     * A Point in a Pareto Front / Convex Hull
+     * 
+     * In practise, we want points to be 'tagged'. For example, it will be useful to tag points with the actions that were 
+     * used to obtain that value.
+     * 
+     * Note that we only really want to use this in ParetoFront's and ConvexHull's. 
+     * TODO: consider moving the struct definition into the ParetoFront declaration
+     * 
+     * N.B. mark tag as mutable, as equality/hash will only depend on 'point'. So it's valid to edit the tag when in an 
+     * unordered_set/unordered_map
+     * 
+     * Member variables:
+     *      point: A vector value (i.e. the point)
+     *      tag: A tag associated with this point
+    */
+    template <typename T>
+    struct TaggedPoint {
+        Eigen::ArrayXd point;
+        mutable T tag;
+        
+        /**
+         * Constructor
+        */
+        TaggedPoint(const Eigen::ArrayXd& point, const T& tag);
+
+        /**
+         * Copy constructor
+        */
+        TaggedPoint(const TaggedPoint<T>& other);
+
+        /**
+         * Move constructor
+        */
+        TaggedPoint(const TaggedPoint<T>&& other);
+
+        /**
+         * Copy asignment operator
+        */
+        TaggedPoint<T>& operator=(const TaggedPoint<T>& other);
+
+        /**
+         * Move asignment operator
+        */
+        TaggedPoint<T>& operator=(const TaggedPoint<T>&& other);
+
+        /**
+         * Returns if this TaggedPoint weakly Pareto dominates another TaggedPoint 'other'
+         * Technically vector u (strongly) pareto dominates vector v 
+         *      iff for all i. u[i]>=v[i] and there exists j. u[j]>v[j]
+         * Say u weakly Pareto dominates v 
+         *      iff for all i. u[i] >= v[i]
+         * As we won't really care much for keeping two vectors with the same values in our algorithms, we'll work with 
+         *      weak pareto domination
+        */
+        bool weakly_pareto_dominates(const TaggedPoint<T>& other) const;
+
+        /**
+         * Returns if this TaggedPoint is equal to another TaggedPoint 'other'
+         * N.B. this ignores the values of the 'tag' members, it only compares equality for the vecxtors
+        */
+        bool equals(const TaggedPoint<T>& other) const;
+
+        /**
+         * Equality operator
+        */
+        bool operator==(const TaggedPoint<T>& other) const;
+
+        /**
+         * Returns a hash for this tagged point
+         * N.B. ignores the value of 'tag' members, as if a == b, then need hash(a) == hash(b)
+        */
+        std::size_t hash() const;
+    };
+}
+
+/**
+ * Forward declare hash, equality and output stream function sepcialisations for TaggedPoints
+ * Hash and equals_to needed so that tagged points can be used in unordered_set
+ * Output stream for debugging
+*/
+namespace std {
+    using namespace thts;
+
+    /**
+     * Hash
+    */
+    template <typename T>
+    struct hash<TaggedPoint<T>> {
+        size_t operator()(const TaggedPoint<T>&) const;
+    };
+
+    /**
+     * Equals
+    */
+    template <typename T>
+    struct equal_to<TaggedPoint<T>> {
+        bool operator()(const TaggedPoint<T>&, const TaggedPoint<T>&) const;
+    };
+
+    /**
+     * Output stream
+    */
+    template <typename T>
+    ostream& operator<<(ostream& os, const TaggedPoint<T>& point);
+}
+
+
+
+
+
+
+
+
+
+
+
+namespace thts {
+    /**     
+     * Convex Hull implementation
+     * 
+     * As a convex hull can be considered a Pareto front when using mixed policies and linear scalarisations, we make 
+     * it a subclass of Pareto Front (i.e. a CH is a PF, but a PF isn't necessarily a CH)
+     * 
+     * TODO: 
+     *  - Would like to make this a subclass of Pareto Front (because a Convex Hull is a Pareto front when using mixed
+     *      policies and linear scalarisations).
+     *  - Also ParetoFront calls 'prune' and need to make that virtual between the CH and PF, but cant call virt funcitons 
+     *      from constructor and dont want to sort that out now
+     *  - So for now, we're just going to accept code duplication :(
+     * 
+     * TODO: use description have in local branch, copy implementations from here
+     * TODO: add comments for functions that have different imlpementations to pareto fronts
+     * TODO: also add comments saying extra things that we could implement
+     *      - use qhul convex hull (adding a reference point)
+     *      - computing the hypervolume using convex hull (will actually need to do this for hypervolume indicator act selection)
+     * 
+     * Member variables:
+     *      ch_points: 
+     *          The set of TaggedPoints in the Convex Hull          
+    */
+    template <typename T>
+    class ConvexHull {
+        protected:
+            std::unordered_set<TaggedPoint<T>> ch_points;
+
+        public:
+            ConvexHull();
+            ConvexHull(const std::vector<std::pair<Eigen::ArrayXd,T>>& init_points);
+            ConvexHull(const std::vector<Eigen::ArrayXd>& init_points, const T& tag);
+            ConvexHull(const std::unordered_set<TaggedPoint<T>>& init_points, bool already_pareto_front=false);
+            ConvexHull(const Eigen::ArrayXd& heuristic_val, const T& tag);
+            ConvexHull(const ConvexHull<T>& ch);
+            ConvexHull(const ConvexHull<T>&& ch);
+
+            /**
+             * Assignment operators
+            */
+            ConvexHull<T>& operator=(const ConvexHull<T>& ch);
+            ConvexHull<T>& operator=(ConvexHull<T>&& ch);
+            inline ConvexHull<T>& operator*=(double rhs);
+            inline ConvexHull<T>& operator|=(ConvexHull<T>& rhs);
+            inline ConvexHull<T>& operator|=(ConvexHull<T>&& rhs);
+            inline ConvexHull<T>& operator+=(ConvexHull<T>& rhs);
+            inline ConvexHull<T>& operator+=(ConvexHull<T>&& rhs);
+            inline ConvexHull<T>& operator+=(Eigen::ArrayXd& rhs);
+
+        protected:
+            /**
+             * Returns if 'point' is dominated by any ppints in 'ref_points', which is checked using a linear program
+             * This is a strong domination compared to the weak notion we used in ParetoFront
+             * 
+             * If ignore_if_point_in_ref_points then we use ref_points-{point} in place of ref_points
+            */
+            bool strongly_convex_dominated(
+                const std::unordered_set<TaggedPoint<T>>& ref_points, 
+                const TaggedPoint<T>& point) const;
+            /**
+             * Main functions that are overriden from Pareto Front
+            */
+            // std::unordered_set<TaggedPoint<T>> prune(
+            //     const std::unordered_set<TaggedPoint<T>>& ref_points, 
+            //     const std::unordered_set<TaggedPoint<T>>& points) const;
+            std::unordered_set<TaggedPoint<T>> prune(const std::unordered_set<TaggedPoint<T>>& points) const;
+
+        public:
+            std::size_t size() const;
+            void set_tags(const T& new_tag);
+            ConvexHull<T> scale(double scale) const;
+            ConvexHull<T> combine(const ConvexHull<T>& other) const;
+            ConvexHull<T> add(const ConvexHull<T>& other) const;
+            ConvexHull<T> add(const Eigen::ArrayXd& v) const;
+
+            /**
+             * If this convex hull is equal to another convex hull (ignoring any tags)
+             */
+            bool equals(const ConvexHull<T> &other) const;
+
+            /**
+             * Get the best tag for a context weight
+            */
+            TaggedPoint<T> get_best_point(Eigen::ArrayXd& context_weight, RandManager& rand_manager) const;
+            T get_best_point_tag(Eigen::ArrayXd& context_weight, RandManager& rand_manager) const;
+
+            /**
+             * Get max (linear) utility from this convex hull
+             */
+            double get_max_linear_utility(Eigen::ArrayXd& context_weight) const;
+
+            /**
+             * TODO: want this directly implemented in operator<<
+             * But declaring operator<< as friend wasnt working because I couldnt work out how to declare a templated 
+             * function as a friend hmph
+            */
+            void write_to_ostream(std::ostream& os) const;
+    };
+}
+
+/**
+ * Forward declare operator overloads and output stream function sepcialisations for ConvexHull
+ * Output stream for debugging
+*/
+namespace std {
+    using namespace thts;
+
+    /**
+     * Scale by vector
+    */
+    template <typename T>
+    ConvexHull<T> operator*(const ConvexHull<T>& ch, double s);
+    
+    template <typename T>
+    ConvexHull<T> operator*(double s, const ConvexHull<T>& ch);
+
+    /**
+     * Union of two convex hulls
+    */
+    template <typename T>
+    ConvexHull<T> operator|(const ConvexHull<T>& ch1, const ConvexHull<T>& ch2);
+
+    /**
+     * Sum of convex hulls
+    */
+    template <typename T>
+    ConvexHull<T> operator+(const ConvexHull<T>& ch1, const ConvexHull<T>& ch2);
+
+    /**
+     * Add vector to convex hull
+    */
+    template <typename T>
+    ConvexHull<T> operator+(const ConvexHull<T>& ch, const Eigen::ArrayXd& v);
+
+    template <typename T>
+    ConvexHull<T> operator+(const Eigen::ArrayXd& v, const ConvexHull<T>& ch);
+
+    /**
+     * Equality of convex hulls
+     */
+    template <typename T>
+    bool operator==(const ConvexHull<T>& lhs, const ConvexHull<T>& rhs);
+
+    /**
+     * Output stream
+    */
+    template <typename T>
+    ostream& operator<<(ostream& os, const ConvexHull<T>& ch);
+}
+
+#include "mo/data_structures/convex_hull.cc"

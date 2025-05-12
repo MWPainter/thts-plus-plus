@@ -2,9 +2,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-#include "test/mo/test_pareto_front.h"
-
-#include "mo/convex_hull.h"
+#include "mo/data_structures/convex_hull.h"
 
 #include <algorithm>
 #include <set>
@@ -16,11 +14,38 @@ namespace thts::test {
     using namespace thts;
 
     /**
-     * Helpers defined in test_pareto_front.h
+     * Helpers 
      * 
      * set_subset
      * set_equals
     */
+
+    /**
+     * Helper to check that s1 is a subset of s2
+    */
+    template <typename T>
+    bool set_subset(unordered_set<TaggedPoint<T>> s1, unordered_set<TaggedPoint<T>> s2) {
+        for (TaggedPoint<T> p1 : s1) {
+            auto it = find(s2.begin(), s2.end(), p1);
+            if (it != s2.end()) {
+                if (!it->equals(p1)) {
+                    return false;
+                }
+                if (it->tag != p1.tag) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+
+    /**
+     * Helper to compare sets of unordered sets
+    */
+    template <typename T>
+    bool set_equals(unordered_set<TaggedPoint<T>> s1, unordered_set<TaggedPoint<T>> s2) {
+        return set_subset(s1,s2) && set_subset(s2,s1);
+    };
 
     /**
      * ConvexHull subclass to add testing checks

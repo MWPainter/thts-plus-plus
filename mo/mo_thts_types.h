@@ -14,6 +14,28 @@
  */
 
 namespace thts {
+
+
+    /**
+     * An implementation of state containing a vector of integers as the state.
+     */
+    class IntVectorState : public State {
+        public:
+            std::vector<int> state;
+
+            IntVectorState(std::vector<int>& v) : state(v) {}
+            virtual ~IntVectorState() = default;
+            virtual std::size_t hash() const override;
+            bool equals(const IntVectorState& other) const;
+            virtual bool equals_itfc(const Observation& other) const override;
+            virtual std::string get_pretty_print_string() const override;
+    };
+
+
+    typedef std::unordered_map<std::shared_ptr<const IntVectorState>,double> IntVectorStateDistr;
+
+
+
     /**
      * Typedef for heuristic function pointers
      * First used in thts_decision_node.h and thts_chance_node.h
@@ -21,4 +43,14 @@ namespace thts {
      */  
     Eigen::ArrayXd _DummyMoHeuristicFn(std::shared_ptr<const State> s, std::shared_ptr<ThtsEnv> env);
     typedef decltype(&_DummyMoHeuristicFn) MoHeuristicFnPtr;
+}
+
+
+namespace std {
+    using namespace thts;
+
+
+    ostream& operator<<(ostream& os, const IntVectorState& state);
+    ostream& operator<<(ostream& os, const shared_ptr<const IntVectorState>& state);
+
 }

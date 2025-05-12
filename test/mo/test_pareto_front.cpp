@@ -3,7 +3,7 @@
 #include "gmock/gmock.h"
 
 // testing
-#include "mo/pareto_front.h"
+#include "mo/data_structures/pareto_front.h"
 
 // includes
 #include <string>
@@ -45,104 +45,6 @@ static Eigen::ArrayXd make_vec(double a, double b, double c, double d) {
 }
 
 
-/**
- * Tests that equality works for Tagged points
-*/
-TEST(Pf_TaggedPoint, equality_one_dim) {
-    TaggedPoint<int> p1(make_vec(1.0,2.0,3.0), 1);
-    TaggedPoint<int> p2(make_vec(1.0,2.0,3.0), 1);
-    TaggedPoint<int> p3(make_vec(1.0,2.0,3.0), 2);
-    TaggedPoint<int> p4(make_vec(1.0,2.0,0.0), 1);
-    TaggedPoint<int> p5(make_vec(0.0,0.0,0.0), 1);
-
-    EXPECT_TRUE(p1.equals(p2));
-    EXPECT_TRUE(p1.equals(p3)); // different tag, but equality should ignore this
-    EXPECT_FALSE(p1.equals(p4));
-    EXPECT_FALSE(p1.equals(p5));
-
-    // check operator== too
-    EXPECT_TRUE(p1 == p2);
-    EXPECT_TRUE(p1 == p3);
-    EXPECT_FALSE(p1 == p4);
-    EXPECT_FALSE(p1 == p5);
-
-    // also check hashes
-    EXPECT_EQ(p1.hash(), p2.hash());
-    EXPECT_EQ(p1.hash(), p3.hash());
-    EXPECT_NE(p1.hash(), p4.hash());
-    EXPECT_NE(p1.hash(), p5.hash());
-} 
-
-/**
- * Tests that equality throws errors for Tagged points with different dims
-*/
-TEST(Pf_TaggedPoint, equality_diff_dims) {
-    TaggedPoint<int> p1(make_vec(1.0,2.0,3.0), 1);
-    TaggedPoint<int> p2(make_vec(1.0,2.0), 1);
-    TaggedPoint<int> p3(make_vec(1.0,2.0,3.0,4.0), 1);
-
-    EXPECT_ANY_THROW(p1.equals(p2));
-    EXPECT_ANY_THROW(p1.equals(p3));
-    EXPECT_NE(p1.hash(), p2.hash());
-    EXPECT_NE(p1.hash(), p3.hash());
-}
-
-/**
- * Test copy constructor makes a copy
-*/
-TEST(Pf_TaggedPoint, copy_constructor) {
-    TaggedPoint<int> p1(make_vec(1.0,2.0,3.0), 1);
-    TaggedPoint<int> p2(p1);
-
-    EXPECT_TRUE(p1.equals(p2));
-    EXPECT_TRUE(p1 == p2);
-    EXPECT_EQ(p1.hash(), p2.hash());
-
-    p2.point = make_vec(0.0,0.0,0.0);
-
-    EXPECT_FALSE(p1.equals(p2));
-    EXPECT_FALSE(p1 == p2);
-    EXPECT_NE(p1.hash(), p2.hash());
-}
-
-/**
- * Test weakly pareto domination
-*/
-TEST(Pf_TaggedPoint, weak_pareto_domination) {
-    TaggedPoint<int> p1(make_vec(1.0,2.0,3.0), 1);
-    TaggedPoint<int> p2(make_vec(1.0,2.0,3.0), 2);
-    TaggedPoint<int> p3(make_vec(1.1,2.0,3.0), 3);
-    TaggedPoint<int> p4(make_vec(1.0,2.1,3.0), 4);
-    TaggedPoint<int> p5(make_vec(1.0,2.0,3.1), 5);
-    TaggedPoint<int> p6(make_vec(4.0,4.0,4.0), 6);
-
-    EXPECT_TRUE(p1.weakly_pareto_dominates(p1));
-    EXPECT_TRUE(p1.weakly_pareto_dominates(p2));
-    EXPECT_TRUE(p2.weakly_pareto_dominates(p1));
-    EXPECT_FALSE(p1.weakly_pareto_dominates(p3));
-    EXPECT_TRUE(p3.weakly_pareto_dominates(p1));
-    EXPECT_FALSE(p1.weakly_pareto_dominates(p4));
-    EXPECT_TRUE(p4.weakly_pareto_dominates(p1));
-    EXPECT_FALSE(p1.weakly_pareto_dominates(p5));
-    EXPECT_TRUE(p5.weakly_pareto_dominates(p1));
-    EXPECT_FALSE(p1.weakly_pareto_dominates(p6));
-    EXPECT_TRUE(p6.weakly_pareto_dominates(p1));
-}
-
-/**
- * Test weakly pareto domination throws error if comparing different dim points
-*/
-TEST(Pf_TaggedPoint, weak_pareto_domination_errors) {
-    TaggedPoint<int> p1(make_vec(1.0,2.0,3.0), 1);
-    TaggedPoint<int> p2(make_vec(1.0,2.0), 1);
-    TaggedPoint<int> p3(make_vec(1.0,2.0,3.0,4.0), 1);
-
-    EXPECT_ANY_THROW(p1.weakly_pareto_dominates(p2));
-    EXPECT_ANY_THROW(p1.weakly_pareto_dominates(p3));
-    EXPECT_ANY_THROW(p2.weakly_pareto_dominates(p1));
-    EXPECT_ANY_THROW(p3.weakly_pareto_dominates(p1));
-}
-
 
 
 
@@ -153,107 +55,42 @@ TEST(Pf_TaggedPoint, weak_pareto_domination_errors) {
  * Empty constructor
 */
 TEST(Pf_Constructors, empty_constructor) {
-    TestableParetoFront<int> pf;
+    TestableParetoFront pf;
     EXPECT_EQ(pf.size(), 0u);
-}
-
-/**
- * Test constructing from set constructions, and prune fn
-*/
-TEST(Pf_Constructors, vector_constructors) {
-    vector<pair<Eigen::ArrayXd,string>> points1 = {
-        make_pair(make_vec(1.0,2.0), "1"),
-        make_pair(make_vec(2.0,1.0), "2"),
-        make_pair(make_vec(1.0,1.9), "1"),
-        make_pair(make_vec(1.0,1.0), "1"),
-        make_pair(make_vec(0.0,0.0), "1"), 
-    };
-    TestableParetoFront<string> pf1(points1);
-    unordered_set<TaggedPoint<string>> expected_pf1 = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "2"),
-    };
-    EXPECT_TRUE(pf1.check_fits_expected(expected_pf1));
-    EXPECT_EQ(pf1.size(), 2u);
-    
-    vector<pair<Eigen::ArrayXd,string>> points2 = {
-        make_pair(make_vec(1.0,3.0), "1"),
-        make_pair(make_vec(1.0,3.0), "1"),
-        make_pair(make_vec(3.0,1.0), "3"),
-        make_pair(make_vec(3.0,1.0), "1"),
-        make_pair(make_vec(3.0,1.0), "1"),
-    };
-    TestableParetoFront<string> pf2(points2);
-    unordered_set<TaggedPoint<unordered_set<string>>> expected_pf2 = {
-        TaggedPoint<unordered_set<string>>(make_vec(1.0,3.0), {"1"}),
-        TaggedPoint<unordered_set<string>>(make_vec(3.0,1.0), {"1", "3"}),
-    };
-    EXPECT_TRUE(pf2.check_fits_expected_multitag(expected_pf2));
-    EXPECT_EQ(pf2.size(), 2u);
-
-    // vector<Eigen::ArrayXd> points3 = {
-    //     make_vec(1.0,2.0),
-    //     make_vec(2.0,1.0),
-    //     make_vec(1.0,1.9),
-    //     make_vec(1.0,1.0),
-    //     make_vec(0.0,0.0),
-    // };
-    // TestableParetoFront<string> pf3(points3, "1");
-    // unordered_set<TaggedPoint<string>> expected_pf3 = {
-    //     TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-    //     TaggedPoint<string>(make_vec(2.0,1.0), "1"),
-    // };
-    // EXPECT_TRUE(pf3.check_fits_expected(expected_pf3));
-    // EXPECT_EQ(pf3.size(), 2u);
-    
-    // vector<Eigen::ArrayXd> points4 = {
-    //     make_vec(1.0,3.0),
-    //     make_vec(1.0,3.0),
-    //     make_vec(3.0,1.0),
-    //     make_vec(3.0,1.0),
-    //     make_vec(3.0,1.0),
-    // };
-    // TestableParetoFront<string> pf4(points4, "1");
-    // unordered_set<TaggedPoint<string>> expected_pf4 = {
-    //     TaggedPoint<string>(make_vec(1.0,3.0), "1"),
-    //     TaggedPoint<string>(make_vec(3.0,1.0), "1"),
-    // };
-    // EXPECT_TRUE(pf4.check_fits_expected(expected_pf4));
-    // EXPECT_EQ(pf4.size(), 2u);
 }
 
 /**
  * Test constructing from set of tagged points, and prune fn
 */
 TEST(Pf_Constructors, set_constructors) {
-    unordered_set<TaggedPoint<string>> points1 = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "1"),
-        TaggedPoint<string>(make_vec(1.0,1.9), "1"),
-        TaggedPoint<string>(make_vec(1.0,1.0), "1"),
-        TaggedPoint<string>(make_vec(0.0,0.0), "1"),
+    unordered_set<Eigen::ArrayXd> points1 = {
+        make_vec(1.0,2.0),
+        make_vec(2.0,1.0),
+        make_vec(1.0,1.9),
+        make_vec(1.0,1.0),
+        make_vec(0.0,0.0),
     };
-    TestableParetoFront<string> pf1(points1);
-    unordered_set<TaggedPoint<string>> expected_pf1 = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "1"),
+    TestableParetoFront pf1(points1);
+    unordered_set<Eigen::ArrayXd> expected_pf1 = {
+        make_vec(1.0,2.0),
+        make_vec(2.0,1.0),
     };
     EXPECT_TRUE(pf1.check_fits_expected(expected_pf1));
     EXPECT_EQ(pf1.size(), 2u);
     
-    unordered_set<TaggedPoint<string>> points2 = {
-        TaggedPoint<string>(make_vec(1.0,3.0), "1"),
-        TaggedPoint<string>(make_vec(1.0,3.0), "1"),
-        TaggedPoint<string>(make_vec(3.0,1.0), "3"),
-        TaggedPoint<string>(make_vec(3.0,1.0), "1"),
-        TaggedPoint<string>(make_vec(3.0,1.0), "1"),
+    unordered_set<Eigen::ArrayXd> points2 = {
+        make_vec(1.0,3.0),
+        make_vec(1.0,3.0),
+        make_vec(3.0,1.0),
+        make_vec(3.0,1.0),
+        make_vec(3.0,1.0),
     };
-    TestableParetoFront<string> pf2(points2);
-    unordered_set<TaggedPoint<unordered_set<string>>> expected_pf2 = {
-        TaggedPoint<unordered_set<string>>(make_vec(1.0,3.0), {"1"}),
-        TaggedPoint<unordered_set<string>>(make_vec(3.0,1.0), {"1","3"}),
+    TestableParetoFront pf2(points2);
+    unordered_set<Eigen::ArrayXd> expected_pf2 = {
+        make_vec(1.0,3.0),
+        make_vec(3.0,1.0),
     };
-    EXPECT_TRUE(pf2.check_fits_expected_multitag(expected_pf2));
+    EXPECT_TRUE(pf2.check_fits_expected(expected_pf2));
     EXPECT_EQ(pf2.size(), 2u);
 }
 
@@ -261,47 +98,21 @@ TEST(Pf_Constructors, set_constructors) {
  * Test copy constructor
 */
 TEST(Pf_Constructors, copy_constructor) {
-    unordered_set<TaggedPoint<string>> points = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "1"),
-        TaggedPoint<string>(make_vec(1.0,1.9), "1"),
-        TaggedPoint<string>(make_vec(1.0,1.0), "1"),
-        TaggedPoint<string>(make_vec(0.0,0.0), "1"),
+    unordered_set<Eigen::ArrayXd> points = {
+        make_vec(2.0,1.0),
+        make_vec(1.0,2.0),
+        make_vec(1.0,1.9),
+        make_vec(1.0,1.0),
+        make_vec(0.0,0.0),
     };
-    TestableParetoFront<string> pf1(points);
-    TestableParetoFront<string> pf2(pf1);
-    unordered_set<TaggedPoint<string>> expected_pf = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "1"),
+    TestableParetoFront pf1(points);
+    TestableParetoFront pf2(pf1);
+    unordered_set<Eigen::ArrayXd> expected_pf = {
+        make_vec(1.0,2.0),
+        make_vec(2.0,1.0),
     };
     EXPECT_TRUE(pf2.check_fits_expected(expected_pf));
     EXPECT_EQ(pf2.size(), 2u);
-}
-
-/**
- * Tests 'set_tags'
-*/
-TEST(Pf_Constructors, setting_tags) {
-    vector<pair<Eigen::ArrayXd,string>> points = {
-        make_pair(make_vec(1.0,2.0), "1"),
-        make_pair(make_vec(2.0,1.0), "2"),
-    };
-    TestableParetoFront<string> pf(points);
-    unordered_set<TaggedPoint<string>> expected_pf1 = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "2"),
-    };
-    EXPECT_TRUE(pf.check_fits_expected(expected_pf1));
-    EXPECT_EQ(pf.size(), 2u);
-
-    pf.set_tags("3");
-    unordered_set<TaggedPoint<string>> expected_pf2 = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "3"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "3"),
-    };
-    EXPECT_TRUE(pf.check_fits_expected(expected_pf2));
-    EXPECT_EQ(pf.size(), 2u);
-
 }
 
 /**
@@ -309,25 +120,25 @@ TEST(Pf_Constructors, setting_tags) {
  * Testing the two argument prune funciton
 */
 TEST(Pf_Arithmetic, prune) {
-    TestableParetoFront<int> pf;
-    unordered_set<TaggedPoint<int>> ref_points = {
-        TaggedPoint<int>(make_vec(1.0,3.0), 1),
-        TaggedPoint<int>(make_vec(3.0,1.0), 1),
+    TestableParetoFront pf;
+    unordered_set<Eigen::ArrayXd> ref_points = {
+        make_vec(1.0,3.0),
+        make_vec(3.0,1.0),
     };
-    unordered_set<TaggedPoint<int>> points = {
-        TaggedPoint<int>(make_vec(2.0,3.0), 1),
-        TaggedPoint<int>(make_vec(1.0,1.0), 1),
-        TaggedPoint<int>(make_vec(4.0,0.5), 1),
-        TaggedPoint<int>(make_vec(5.0,0.0), 1),
-        TaggedPoint<int>(make_vec(-1.0,0.0), 1),
+    unordered_set<Eigen::ArrayXd> points = {
+        make_vec(2.0,3.0),
+        make_vec(1.0,1.0),
+        make_vec(4.0,0.5),
+        make_vec(5.0,0.0),
+        make_vec(-1.0,0.0),
     };
-    unordered_set<TaggedPoint<int>> expected_pruned_points = {
-        TaggedPoint<int>(make_vec(2.0,3.0), 1),
-        TaggedPoint<int>(make_vec(4.0,0.5), 1),
-        TaggedPoint<int>(make_vec(5.0,0.0), 1),
+    unordered_set<Eigen::ArrayXd> expected_pruned_points = {
+        make_vec(2.0,3.0),
+        make_vec(4.0,0.5),
+        make_vec(5.0,0.0),
     };
 
-    unordered_set<TaggedPoint<int>> pruned_points = pf.public_prune(ref_points, points);
+    unordered_set<Eigen::ArrayXd> pruned_points = pf.public_prune(ref_points, points);
     EXPECT_TRUE(set_equals(pruned_points, expected_pruned_points));
 } 
 
@@ -336,44 +147,44 @@ TEST(Pf_Arithmetic, prune) {
  * Testing the two argument prune funciton
 */
 TEST(Pf_Arithmetic, prune_corner_cases) {
-    TestableParetoFront<int> pf;
+    TestableParetoFront pf;
 
     // a point in 'points' is also in 'ref_points' and should be removed
-    unordered_set<TaggedPoint<int>> ref_points = {
-        TaggedPoint<int>(make_vec(1.0,3.0), 1),
-        TaggedPoint<int>(make_vec(3.0,1.0), 1),
+    unordered_set<Eigen::ArrayXd> ref_points = {
+        make_vec(1.0,3.0),
+        make_vec(3.0,1.0),
     };
-    unordered_set<TaggedPoint<int>> points = {
-        TaggedPoint<int>(make_vec(2.0,3.0), 1),
-        TaggedPoint<int>(make_vec(1.0,1.0), 1),
-        TaggedPoint<int>(make_vec(1.0,3.0), 1),
-        TaggedPoint<int>(make_vec(4.0,0.5), 1),
+    unordered_set<Eigen::ArrayXd> points = {
+        make_vec(2.0,3.0),
+        make_vec(1.0,1.0),
+        make_vec(1.0,3.0),
+        make_vec(4.0,0.5),
     };
-    unordered_set<TaggedPoint<int>> expected_pruned_points = {
-        TaggedPoint<int>(make_vec(2.0,3.0), 1),
-        TaggedPoint<int>(make_vec(4.0,0.5), 1),
+    unordered_set<Eigen::ArrayXd> expected_pruned_points = {
+        make_vec(2.0,3.0),
+        make_vec(4.0,0.5),
     };
 
-    unordered_set<TaggedPoint<int>> pruned_points = pf.public_prune(ref_points, points);
+    unordered_set<Eigen::ArrayXd> pruned_points = pf.public_prune(ref_points, points);
     EXPECT_TRUE(set_equals(pruned_points, expected_pruned_points));
     // 'points' contain points that dominate each other, but shouldn't be removed, because not dominated by any 
     // points in 'ref_points'
-    unordered_set<TaggedPoint<int>> ref_points2 = {
-        TaggedPoint<int>(make_vec(1.0,3.0), 1),
-        TaggedPoint<int>(make_vec(3.0,1.0), 1),
+    unordered_set<Eigen::ArrayXd> ref_points2 = {
+        make_vec(1.0,3.0),
+        make_vec(3.0,1.0),
     };
-    unordered_set<TaggedPoint<int>> points2 = {
-        TaggedPoint<int>(make_vec(0.0,0.0), 1),
-        TaggedPoint<int>(make_vec(1.0,1.0), 1),
-        TaggedPoint<int>(make_vec(2.0,2.0), 1),
-        TaggedPoint<int>(make_vec(3.0,3.0), 1),
+    unordered_set<Eigen::ArrayXd> points2 = {
+        make_vec(0.0,0.0),
+        make_vec(1.0,1.0),
+        make_vec(2.0,2.0),
+        make_vec(3.0,3.0),
     };
-    unordered_set<TaggedPoint<int>> expected_pruned_points2 = {
-        TaggedPoint<int>(make_vec(2.0,2.0), 1),
-        TaggedPoint<int>(make_vec(3.0,3.0), 1),
+    unordered_set<Eigen::ArrayXd> expected_pruned_points2 = {
+        make_vec(2.0,2.0),
+        make_vec(3.0,3.0),
     };
 
-    unordered_set<TaggedPoint<int>> pruned_points2 = pf.public_prune(ref_points2, points2);
+    unordered_set<Eigen::ArrayXd> pruned_points2 = pf.public_prune(ref_points2, points2);
     EXPECT_TRUE(set_equals(pruned_points2, expected_pruned_points2));
 }
 
@@ -381,26 +192,26 @@ TEST(Pf_Arithmetic, prune_corner_cases) {
  * 
 */
 TEST(Pf_Arithmetic, scale) {
-    unordered_set<TaggedPoint<string>> points = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "1"),
+    unordered_set<Eigen::ArrayXd> points = {
+        make_vec(1.0,2.0),
+        make_vec(2.0,1.0),
     };
-    TestableParetoFront<string> pf(points);
+    TestableParetoFront pf(points);
 
     // test scale
-    TestableParetoFront<string> pf1 = (TestableParetoFront<string>) pf.scale(0.5);
-    unordered_set<TaggedPoint<string>> expected_pf1 = {
-        TaggedPoint<string>(make_vec(0.5,1.0), "1"),
-        TaggedPoint<string>(make_vec(1.0,0.5), "1"),
+    TestableParetoFront pf1 = (TestableParetoFront) pf.scale(0.5);
+    unordered_set<Eigen::ArrayXd> expected_pf1 = {
+        make_vec(0.5,1.0),
+        make_vec(1.0,0.5),
     };
     EXPECT_TRUE(pf1.check_fits_expected(expected_pf1));
     EXPECT_EQ(pf1.size(), 2u);
 
     // test operator *
-    TestableParetoFront<string> pf2 = (TestableParetoFront<string>) (pf * 2.0);
-    unordered_set<TaggedPoint<string>> expected_pf2 = {
-        TaggedPoint<string>(make_vec(2.0,4.0), "1"),
-        TaggedPoint<string>(make_vec(4.0,2.0), "1"),
+    TestableParetoFront pf2 = (TestableParetoFront) (2.0 * pf);
+    unordered_set<Eigen::ArrayXd> expected_pf2 = {
+        make_vec(2.0,4.0),
+        make_vec(4.0,2.0),
     };
     EXPECT_TRUE(pf2.check_fits_expected(expected_pf2));
     EXPECT_EQ(pf2.size(), 2u);
@@ -410,32 +221,32 @@ TEST(Pf_Arithmetic, scale) {
  * 
 */
 TEST(Pf_Arithmetic, union) {
-    unordered_set<TaggedPoint<string>> points1 = {
-        TaggedPoint<string>(make_vec(2.0,0.0), "1a"),
-        TaggedPoint<string>(make_vec(1.0,1.0), "1b"),
-        TaggedPoint<string>(make_vec(0.0,1.1), "1c"),
+    unordered_set<Eigen::ArrayXd> points1 = {
+        make_vec(2.0,0.0),
+        make_vec(1.0,1.0),
+        make_vec(0.0,1.1),
     };
-    TestableParetoFront<string> pf1(points1);
+    TestableParetoFront pf1(points1);
 
-    unordered_set<TaggedPoint<string>> points2 = {
-        TaggedPoint<string>(make_vec(1.0,1.0), "2a"),
-        TaggedPoint<string>(make_vec(0.0,2.0), "2b"),
+    unordered_set<Eigen::ArrayXd> points2 = {
+        make_vec(1.0,1.0),
+        make_vec(0.0,2.0),
     };
-    TestableParetoFront<string> pf2(points2);
+    TestableParetoFront pf2(points2);
 
-    unordered_set<TaggedPoint<unordered_set<string>>> expected_union_pf = {
-        TaggedPoint<unordered_set<string>>(make_vec(2.0,0.0), {"1a"}),
-        TaggedPoint<unordered_set<string>>(make_vec(1.0,1.0), {"1b","2a"}),
-        TaggedPoint<unordered_set<string>>(make_vec(0.0,2.0), {"2b"}),
+    unordered_set<Eigen::ArrayXd>  expected_union_pf = {
+        make_vec(2.0,0.0),
+        make_vec(1.0,1.0),
+        make_vec(0.0,2.0),
     };
 
-    TestableParetoFront<string> pf3 = (TestableParetoFront<string>) pf1.combine(pf2);
-    TestableParetoFront<string> pf4 = (TestableParetoFront<string>) (pf1 | pf2);
+    TestableParetoFront pf3 = (TestableParetoFront) pf1.combine(pf2);
+    TestableParetoFront pf4 = (TestableParetoFront) (pf1 | pf2);
 
-    EXPECT_TRUE(pf3.check_fits_expected_multitag(expected_union_pf));
+    EXPECT_TRUE(pf3.check_fits_expected(expected_union_pf));
     EXPECT_EQ(pf3.size(), 3u);
 
-    EXPECT_TRUE(pf4.check_fits_expected_multitag(expected_union_pf));
+    EXPECT_TRUE(pf4.check_fits_expected(expected_union_pf));
     EXPECT_EQ(pf4.size(), 3u);
 }
 
@@ -445,33 +256,33 @@ TEST(Pf_Arithmetic, union) {
  * There are two ways of making vector (2.0,2.0) from adding 1b and 2a or adding 1a and 2b
 */
 TEST(Pf_Arithmetic, add_pfs) {
-    unordered_set<TaggedPoint<string>> points1 = {
-        TaggedPoint<string>(make_vec(2.0,0.0), "1a"),
-        TaggedPoint<string>(make_vec(1.0,1.0), "1b"),
-        TaggedPoint<string>(make_vec(0.0,1.1), "1c"),
+    unordered_set<Eigen::ArrayXd> points1 = {
+        make_vec(2.0,0.0),
+        make_vec(1.0,1.0),
+        make_vec(0.0,1.1),
     };
-    TestableParetoFront<string> pf1(points1);
+    TestableParetoFront pf1(points1);
 
-    unordered_set<TaggedPoint<string>> points2 = {
-        TaggedPoint<string>(make_vec(1.0,1.0), "2a"),
-        TaggedPoint<string>(make_vec(0.0,2.0), "2b"),
+    unordered_set<Eigen::ArrayXd> points2 = {
+        make_vec(1.0,1.0),
+        make_vec(0.0,2.0),
     };
-    TestableParetoFront<string> pf2(points2);
+    TestableParetoFront pf2(points2);
 
-    unordered_set<TaggedPoint<unordered_set<string>>> expected_add_pf = {
-        TaggedPoint<unordered_set<string>>(make_vec(3.0,1.0), {"1a","2a"}),
-        TaggedPoint<unordered_set<string>>(make_vec(2.0,2.0), {"1a","1b","2a","2b"}),
-        TaggedPoint<unordered_set<string>>(make_vec(1.0,3.0), {"1b","2b"}),
-        TaggedPoint<unordered_set<string>>(make_vec(0.0,3.1), {"1c","2b"}),
+    unordered_set<Eigen::ArrayXd> expected_add_pf = {
+        make_vec(3.0,1.0),
+        make_vec(2.0,2.0),
+        make_vec(1.0,3.0),
+        make_vec(0.0,3.1),
     };
 
-    TestableParetoFront<string> pf3 = (TestableParetoFront<string>) pf1.add(pf2);
-    TestableParetoFront<string> pf4 = (TestableParetoFront<string>) (pf2 + pf1);
+    TestableParetoFront pf3 = (TestableParetoFront) pf1.add(pf2);
+    TestableParetoFront pf4 = (TestableParetoFront) (pf2 + pf1);
 
-    EXPECT_TRUE(pf3.check_fits_expected_multitag(expected_add_pf));
+    EXPECT_TRUE(pf3.check_fits_expected(expected_add_pf));
     EXPECT_EQ(pf3.size(), 4u);
 
-    EXPECT_TRUE(pf4.check_fits_expected_multitag(expected_add_pf));
+    EXPECT_TRUE(pf4.check_fits_expected(expected_add_pf));
     EXPECT_EQ(pf4.size(), 4u);
 }
 
@@ -479,30 +290,30 @@ TEST(Pf_Arithmetic, add_pfs) {
  * 
 */
 TEST(Pf_Arithmetic, add_vector) {
-    unordered_set<TaggedPoint<string>> points = {
-        TaggedPoint<string>(make_vec(2.0,0.0), "1a"),
-        TaggedPoint<string>(make_vec(1.0,1.0), "1b"),
-        TaggedPoint<string>(make_vec(0.0,1.1), "1c"),
+    unordered_set<Eigen::ArrayXd> points = {
+        make_vec(2.0,0.0),
+        make_vec(1.0,1.0),
+        make_vec(0.0,1.1),
     };
-    TestableParetoFront<string> pf(points);
+    TestableParetoFront pf(points);
 
     Eigen::ArrayXd v1 = make_vec(1.0,3.0);
     Eigen::ArrayXd v2 = make_vec(-1.0,0.0);
 
-    unordered_set<TaggedPoint<string>> expected_pf1 = {
-        TaggedPoint<string>(make_vec(3.0,3.0), "1a"),
-        TaggedPoint<string>(make_vec(2.0,4.0), "1b"),
-        TaggedPoint<string>(make_vec(1.0,4.1), "1c"),
+    unordered_set<Eigen::ArrayXd> expected_pf1 = {
+        make_vec(3.0,3.0),
+        make_vec(2.0,4.0),
+        make_vec(1.0,4.1),
     };
 
-    unordered_set<TaggedPoint<string>> expected_pf2 = {
-        TaggedPoint<string>(make_vec(1.0,0.0), "1a"),
-        TaggedPoint<string>(make_vec(0.0,1.0), "1b"),
-        TaggedPoint<string>(make_vec(-1.0,1.1), "1c"),
+    unordered_set<Eigen::ArrayXd> expected_pf2 = {
+        make_vec(1.0,0.0),
+        make_vec(0.0,1.0),
+        make_vec(-1.0,1.1),
     };
 
-    TestableParetoFront<string> pf1 = (TestableParetoFront<string>) pf.add(v1);
-    TestableParetoFront<string> pf2 = (TestableParetoFront<string>) (pf + v2);
+    TestableParetoFront pf1 = (TestableParetoFront) pf.add(v1);
+    TestableParetoFront pf2 = (TestableParetoFront) (pf + v2);
 
     EXPECT_TRUE(pf1.check_fits_expected(expected_pf1));
     EXPECT_EQ(pf1.size(), 3u);

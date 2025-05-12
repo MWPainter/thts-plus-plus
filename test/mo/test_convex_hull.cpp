@@ -3,7 +3,7 @@
 #include "gmock/gmock.h"
 
 // testing
-#include "mo/convex_hull.h"
+#include "mo/data_structures/convex_hull.h"
 
 // includes
 #include <string>

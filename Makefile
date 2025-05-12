@@ -30,6 +30,11 @@ TEST_SOURCES += $(wildcard test/mo/*.cpp)
 TEST_OBJECTS = $(patsubst test/%.cpp, bin/test/%.o, $(TEST_SOURCES))
 
 MO_SOURCES = $(wildcard mo/*.cpp)
+MO_SOURCES += $(wildcard mo/algorithms/*.cpp)
+MO_SOURCES += $(wildcard mo/algorithms/chmcts/*.cpp)
+MO_SOURCES += $(wildcard mo/algorithms/contextual_zooming/*.cpp)
+MO_SOURCES += $(wildcard mo/algorithms/simplex_maps/*.cpp)
+MO_SOURCES += $(wildcard mo/data_structures/*.cpp)
 MO_OBJECTS = $(patsubst mo/%.cpp, bin/mo/%.o, $(MO_SOURCES))
 
 PY_SOURCES = $(wildcard py/*.cpp)
@@ -41,9 +46,13 @@ PY_ENV_SERVER_MAIN_OBJ = bin/py/env_server/main.o
 PY_MAIN = py/main/module.cpp
 PY_MAIN_OBJ = bin/py/main/module.o
 
-MAIN_SOURCES = $(wildcard main/*.cpp)
-MAIN_SOURCES += $(wildcard main/envs/*.cpp)
-MAIN_OBJECTS = $(patsubst main/%.cpp, bin/main/%.o, $(MAIN_SOURCES))
+MAIN_MO_SOURCES = $(wildcard main_mo/*.cpp)
+MAIN_MO_SOURCES += $(wildcard main_mo/envs/*.cpp)
+MAIN_MO_OBJECTS = $(patsubst main_mo/%.cpp, bin/main_mo/%.o, $(MAIN_MO_SOURCES))
+
+MAIN_AUX_SOURCES = $(wildcard main_aux/*.cpp)
+MAIN_AUX_SOURCES += $(wildcard main_aux/envs/*.cpp)
+MAIN_AUX_OBJECTS = $(patsubst main_aux/%.cpp, bin/main_aux/%.o, $(MAIN_AUX_SOURCES))
 
 GTEST = external/googletest/build/lib/libgtest_main.a
 
@@ -54,10 +63,14 @@ GTEST = external/googletest/build/lib/libgtest_main.a
 #####
 
 # Variables that need to get updated per machine
-CONDA_ENV_NAME = thts++aux
+CONDA_ENV_NAME = thts++mo
 PYTHON_WITH_VER = python3.12
+# Desktop directories
 ANACONDA_ENVS_HOME = /home/michael/anaconda3/envs
 BOOST_INCLUDE_DIR = /home/michael/cpp_include
+# ARC directories
+# ANACONDA_ENVS_HOME = /data/engs-goals/pemb5587/anaconda3/envs
+# BOOST_INCLUDE_DIR = /home/pemb5587/cpp_include/
 
 # Includes
 INCLUDES = -I. -Iinclude -Isrc -Iexternal 
@@ -116,6 +129,8 @@ TARGET_THTS_PY_LIB = thtspp
 TARGET_THTS_PY_LIB_DEBUG = thtspp-debug
 TARGET_THTS_PY_EX = pyex
 TARGET_THTS_PY_EX_DEBUG = pyex-debug
+TARGET_MO_EXPR = moexpr
+TARGET_MO_EXPR_DEBUG = moexpr-debug
 TARGET_AUX_EXPR = auxexpr
 TARGET_AUX_EXPR_DEBUG = auxexpr-debug
 TARGET_PY_ENV_SERVER = py_env_server
@@ -131,7 +146,7 @@ THTS_PY_LIB_FULL_NAME = thts$$(python3.12-config --extension-suffix)
 #####
 
 # Default, build everything
-all: $(TARGET_THTS_PY_EX) $(TARGET_AUX_EXPR) $(TARGET_PY_ENV_SERVER) $(TARGET_THTS_TEST) 
+all: $(TARGET_THTS_PY_EX) $(TARGET_MO_EXPR) $(TARGET_AUX_EXPR) $(TARGET_PY_ENV_SERVER) $(TARGET_THTS_TEST) 
 
 
 
@@ -179,7 +194,12 @@ $(PY_ENV_SERVER_MAIN_OBJ) : $(PY_ENV_SERVER_MAIN)
 	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
 # Build main object files rule
-$(MAIN_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
+$(MAIN_MO_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
+	@mkdir -p $(@D)
+	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
+
+# Build main object files rule
+$(MAIN_AUX_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
 	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
@@ -230,12 +250,21 @@ $(TARGET_PY_ENV_SERVER): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(PY_ENV_SERVER_
 $(TARGET_PY_ENV_SERVER_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
 $(TARGET_PY_ENV_SERVER_DEBUG): $(TARGET_PY_ENV_SERVER)
 
-# Expr entry point
+# Mo Expr entry point
+$(TARGET_MO_EXPR): LDFLAGS += $(PY_LDFLAGS)
+$(TARGET_MO_EXPR): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(MAIN_MO_OBJECTS)
+	$(CXX) -shared $(PY_EX_CPPFLAGS) $(CPPFLAGS) $^ -o $(TARGET_MO_EXPR) $(LDFLAGS)
+
+# Mo Debug expr entry
+$(TARGET_MO_EXPR_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
+$(TARGET_MO_EXPR_DEBUG): $(TARGET_MO_EXPR)
+
+# Aux Expr entry point
 $(TARGET_AUX_EXPR): LDFLAGS += $(PY_LDFLAGS)
-$(TARGET_AUX_EXPR): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(MAIN_OBJECTS)
+$(TARGET_AUX_EXPR): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(MAIN_AUX_OBJECTS)
 	$(CXX) -shared $(PY_EX_CPPFLAGS) $(CPPFLAGS) $^ -o $(TARGET_AUX_EXPR) $(LDFLAGS)
 
-# Debug expr entry
+# Aux Debug expr entry
 $(TARGET_AUX_EXPR_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
 $(TARGET_AUX_EXPR_DEBUG): $(TARGET_AUX_EXPR)
 
@@ -256,4 +285,4 @@ clean:
 #####
 # Phony targets, so make knows when a target isn't producing a corresponding output file of same name
 #####
-.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST_DEBUG) $(TARGET_THTS_PY_LIB) $(TARGET_THTS_PY_EX_DEBUG) $(TARGET_AUX_EXPR_DEBUG)
+.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST_DEBUG) $(TARGET_THTS_PY_LIB) $(TARGET_THTS_PY_EX_DEBUG) $(TARGET_MO_EXPR_DEBUG) $(TARGET_AUX_EXPR_DEBUG)

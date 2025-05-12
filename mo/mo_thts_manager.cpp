@@ -45,6 +45,22 @@ namespace thts {
                 return helper::mo_zero_heuristic_fn<8>;
             case 9: 
                 return helper::mo_zero_heuristic_fn<9>;
+            case 10: 
+                return helper::mo_zero_heuristic_fn<10>;
+            case 16: 
+                return helper::mo_zero_heuristic_fn<16>;
+            case 32: 
+                return helper::mo_zero_heuristic_fn<32>;
+            case 64: 
+                return helper::mo_zero_heuristic_fn<64>;
+            case 128: 
+                return helper::mo_zero_heuristic_fn<128>;
+            case 256: 
+                return helper::mo_zero_heuristic_fn<256>;
+            case 512: 
+                return helper::mo_zero_heuristic_fn<512>;
+            case 1024: 
+                return helper::mo_zero_heuristic_fn<1024>;
             default: 
                 stringstream ss;
                 ss << "get_default_mo_zero_heuristic_fn doesnt contain the reward dimension (" << reward_dim << ") "

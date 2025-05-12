@@ -83,7 +83,7 @@ namespace thts::test {
      */
     class MockUctManager : public UctManager {
         public:
-            MockUctManager(shared_ptr<ThtsEnv> thts_env=nullptr, double bias=UctManager::USE_AUTO_BIAS) : 
+            MockUctManager(shared_ptr<ThtsEnv> thts_env=nullptr, double bias=UctManagerArgs::bias_default) : 
                 UctManager(thts_env) 
             {
                 this->bias = bias;

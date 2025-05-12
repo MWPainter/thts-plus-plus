@@ -1,12 +1,18 @@
-# Thesis Auxilary Experiments (`xpr_aux` branch of THTS++)
+# Simplex Maps For Multi-Objective Monte Carlo Tree Search (`xpr_mo` branch of THTS++)
 
-Realised that now we have code to do hyperparam opt and embed python can use these to get better results on Boltzmann exploration for my thesis.
+Branch implements multi-objective algorithms and experiments.
 
-So this is `xpr_mo` rebased onto `main` (to get any updates made in main to single objective stuff) 
+Purpose of this branch is:
+- implementation of multi-objective MCTS algorithms
+- replicating [Convex Hull Monte Carlo Tree Search](https://arxiv.org/abs/2003.04445) results in C++ for my thesis plots
+- experiments for new Simplex Maps work
+- auxilary experiments for my thesis
 
-Probably not going to try keep this readme updated or accurate (`xpr_mo`'s readme is very messy)
+Long term plan is to keep this branch for multi-objective MCTS algorithm implementations, and won't pull them into main library to avoid too much bloat.
+This branch will be used as a basis for new main branch when find time to clean it up and merge.
+If there's some interest in multi-objective algorithms at some point in the future, may create a new `mo` branch. 
 
-Below is readme at time of branching `xpr_mo`, with the top section replaced for these brief notes
+Main readme is below
 
 
 # thts-plus-plus
