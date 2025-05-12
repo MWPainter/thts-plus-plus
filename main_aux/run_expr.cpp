@@ -26,7 +26,7 @@ namespace py = pybind11;
 using namespace thts;
 using namespace thts::python;
 
-static const string HP_OPT_RESULTS_DIR = "hp_opt/";
+static const string HP_OPT_RESULTS_DIR = "hp_opt_aux/";
 
 namespace thts {
 

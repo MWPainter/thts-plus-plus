@@ -2563,7 +2563,7 @@ namespace thts {
     */
     string get_results_dir(RunID& run_id) {
         stringstream ss;
-        ss << "results/" 
+        ss << "results_aux/" 
             << run_id.expr_id << "_" << run_id.expr_timestamp << "/" 
             << run_id.env_id << "/" 
             << run_id.alg_id << "/"
