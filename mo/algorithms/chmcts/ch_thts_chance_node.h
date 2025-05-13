@@ -24,7 +24,7 @@ namespace thts {
 
         protected:
             int num_backups;
-            ConvexHull<std::shared_ptr<const Action>> convex_hull;
+            ConvexHull convex_hull;
             Eigen::ArrayXd local_reward;
 
         public:

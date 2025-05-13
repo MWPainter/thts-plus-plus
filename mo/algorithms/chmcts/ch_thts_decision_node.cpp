@@ -1,5 +1,7 @@
 #include "mo/algorithms/chmcts/ch_thts_decision_node.h"
 
+#include "helper_templates.h"
+
 using namespace std; 
 
 namespace thts {
@@ -16,7 +18,7 @@ namespace thts {
                 decision_timestep,
                 static_pointer_cast<const MoThtsCNode>(parent)),
             num_backups(0),
-            convex_hull(mo_heuristic_value, nullptr)
+            convex_hull(mo_heuristic_value)
     {
     }
     
@@ -49,23 +51,6 @@ namespace thts {
         // Return best utility
         return thts::helper::get_max_key_break_ties_randomly(utilities, *thts_manager);
     }
-
-    /**
-     * N.B. This is how we used to do it, but was the wrong idea
-     * 
-     * Convex hull is initialised with a single point tagged with nullptr
-     * Return a random action if the best point tag is nullptr
-    */
-    shared_ptr<const Action> ChThtsDNode::recommend_action_from_tags(MoThtsContext& ctx) const 
-    {  
-        shared_ptr<const Action> act = convex_hull.get_best_point_tag(ctx.context_weight, *thts_manager);
-        if (act == nullptr) {
-            shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
-            int index = thts_manager->get_rand_int(0, actions->size());
-            act = actions->at(index);
-        }
-        return act;
-    }
  
     void ChThtsDNode::backup(
         const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 
@@ -74,7 +59,7 @@ namespace thts {
         const Eigen::ArrayXd trial_cumulative_return,
         MoThtsContext& ctx)
     {
-        convex_hull = ConvexHull<shared_ptr<const Action>>();
+        convex_hull = ConvexHull();
         for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : children) {
             ChThtsCNode& ch_child = (ChThtsCNode&) *child_pair.second;
             lock_guard<mutex> lg(ch_child.get_lock()); 

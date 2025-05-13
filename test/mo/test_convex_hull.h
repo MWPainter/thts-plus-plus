@@ -3,6 +3,7 @@
 #include "gmock/gmock.h"
 
 #include "mo/data_structures/convex_hull.h"
+#include "test/mo/test_pareto_front.h"
 
 #include <algorithm>
 #include <set>
@@ -14,38 +15,11 @@ namespace thts::test {
     using namespace thts;
 
     /**
-     * Helpers 
+     * Helpers (imported from pareto front tests)
      * 
      * set_subset
      * set_equals
     */
-
-    /**
-     * Helper to check that s1 is a subset of s2
-    */
-    template <typename T>
-    bool set_subset(unordered_set<TaggedPoint<T>> s1, unordered_set<TaggedPoint<T>> s2) {
-        for (TaggedPoint<T> p1 : s1) {
-            auto it = find(s2.begin(), s2.end(), p1);
-            if (it != s2.end()) {
-                if (!it->equals(p1)) {
-                    return false;
-                }
-                if (it->tag != p1.tag) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    };
-
-    /**
-     * Helper to compare sets of unordered sets
-    */
-    template <typename T>
-    bool set_equals(unordered_set<TaggedPoint<T>> s1, unordered_set<TaggedPoint<T>> s2) {
-        return set_subset(s1,s2) && set_subset(s2,s1);
-    };
 
     /**
      * ConvexHull subclass to add testing checks
@@ -54,49 +28,36 @@ namespace thts::test {
      * To use ch_points either need to have the "using ConvexHull<T>::ch_points" line, or use this->ch_points:
      * https://stackoverflow.com/questions/62127901/simple-way-to-reference-member-variables-of-base-class-templates
     */
-    template <typename T>
-    struct TestableConvexHull : public ConvexHull<T> {
-        using ConvexHull<T>::ch_points;
+    struct TestableConvexHull : public ConvexHull {
+        using ConvexHull::ch_points;
 
         /**
          * Constructor, empty
         */
-        TestableConvexHull() : ConvexHull<T>() {}; 
-
-        /**
-         * Constructor, adding points immediately
-        */
-        TestableConvexHull(const std::vector<std::pair<Eigen::ArrayXd,T>>& init_points) :
-            ConvexHull<T>(init_points) {};
-
-        /**
-         * Constructor, adding points immediately, with one tag
-        */
-        TestableConvexHull(const std::vector<Eigen::ArrayXd>& init_points, const T& tag) :
-            ConvexHull<T>(init_points, tag) {};
+        TestableConvexHull() : ConvexHull() {}; 
 
         /**
          * Constructor, set of Tagged points
          * With an option to say if we know that the set of points is already a pareto front
         */
-        TestableConvexHull(const std::unordered_set<TaggedPoint<T>>& init_points, bool already_pareto_front=false) :
-            ConvexHull<T>(init_points, already_pareto_front) {};
+        TestableConvexHull(const std::unordered_set<Vec>& init_points, bool already_pareto_front=false) :
+            ConvexHull(init_points, already_pareto_front) {};
 
         /**
          * Copy constructor
         */
-        TestableConvexHull(const ConvexHull<T>& pf) : 
-            ConvexHull<T>(pf) {};
-        TestableConvexHull(const TestableConvexHull<T>& pf) : 
-            ConvexHull<T>(pf) {};
+        TestableConvexHull(const ConvexHull& pf) : 
+            ConvexHull(pf) {};
+        TestableConvexHull(const TestableConvexHull& pf) : 
+            ConvexHull(pf) {};
 
         /**
          * Move constructor
         */
-        TestableConvexHull(const ConvexHull<T>&& pf) :
-            ConvexHull<T>(pf) {};
-        TestableConvexHull(const TestableConvexHull<T>&& pf) :
-            ConvexHull<T>(pf) {};
+        TestableConvexHull(const ConvexHull&& pf) :
+            ConvexHull(pf) {};
+        TestableConvexHull(const TestableConvexHull&& pf) :
+            ConvexHull(pf) {};
 
         /**
          * Checks pareto front doesn't contain any duplicate points
@@ -109,11 +70,11 @@ namespace thts::test {
          * So keep just in case we ever change backend to a vector instead of a set
         */
         bool contains_duplicate_points() {
-            vector<TaggedPoint<T>> ch_points_vec;
+            vector<Vec> ch_points_vec;
             ch_points_vec.insert(ch_points_vec.begin(), ch_points.begin(), ch_points.end());
             for (unsigned int i=0; i<ch_points_vec.size(); i++) {
                 for (unsigned int j=i+1; j<ch_points_vec.size(); j++) {
-                    if (ch_points_vec[i].equals(ch_points_vec[j])) {
+                    if (ch_points_vec[i] == ch_points_vec[j]) {
                         return true;
                     }
                 }
@@ -125,42 +86,26 @@ namespace thts::test {
         /**
          * Checks for Pareto Fronts
         */
-        bool check_fits_expected_multitag(unordered_set<TaggedPoint<unordered_set<T>>>& points) {
+        bool check_fits_expected(unordered_set<Vec>& points) {
             if (this->size() != points.size()) {
                 return false; // not correct number of points in pf
             }
             if (contains_duplicate_points()) {
                 return false; // pf shouldn't contain duplicate points
             }
-            for (const TaggedPoint<T>& point : ch_points) {
+            for (const Vec& point : ch_points) {
                 // find 'point' in 'points'
                 auto it = points.begin();
                 for ( ; it != points.end(); it++) {
-                    if ((point.point == it->point).all()) {
+                    if (point == *it) {
                         break;
                     }
                 }
                 if (it == points.end()) {
                     return false; // pf contains a point not in the expected pf
                 }
-                if (!it->tag.contains(point.tag)) {
-                    return false; // point in pf doesn't contain any of the possible correct tags
-                }
             }
             return true; // passed all the checks
-        };
-
-        /**
-         * Checks for Pareto Fronts, where only have one tag (override function)
-        */
-        bool check_fits_expected(unordered_set<TaggedPoint<T>>& points) {
-            unordered_set<TaggedPoint<unordered_set<T>>> expanded_points;
-            for (const TaggedPoint<T>& point : points) {
-                unordered_set<T> extended_tags = {point.tag};
-                TaggedPoint<unordered_set<T>> extended_point(point.point,extended_tags);
-                expanded_points.insert(extended_point);
-            }
-            return check_fits_expected_multitag(expanded_points);
         };
 
         // /**
@@ -183,8 +128,8 @@ namespace thts::test {
         /**
          * Public version of 'prune' for testing
         */
-        std::unordered_set<TaggedPoint<T>> public_prune(const std::unordered_set<TaggedPoint<T>>& points) const {
-            return ConvexHull<T>::prune(points);
+        std::unordered_set<Vec> public_prune(const std::unordered_set<Vec>& points) const {
+            return ConvexHull::prune(points);
         }
     };
 }

@@ -6,7 +6,6 @@
 #include "mo/data_structures/convex_hull.h"
 
 // includes
-#include <string>
 #include <utility>
 
 #include <Eigen/Dense>
@@ -159,107 +158,107 @@ TEST(ch_qhull, test3) {
  * Empty constructor
 */
 TEST(Ch_Constructors, empty_constructor) {
-    TestableConvexHull<int> ch;
+    TestableConvexHull ch;
     EXPECT_EQ(ch.size(), 0u);
 }
 
 /**
  * Test constructing from set constructions, and prune fn
 */
-TEST(Ch_Constructors, vector_constructors) {
-    vector<pair<Eigen::ArrayXd,string>> points1 = {
-        make_pair(make_vec(1.0,2.0), "1"),
-        make_pair(make_vec(2.0,1.0), "2"),
-        make_pair(make_vec(1.0,1.9), "1"),
-        make_pair(make_vec(1.0,1.0), "1"),
-        make_pair(make_vec(0.0,0.0), "1"), 
-    };
-    TestableConvexHull<string> ch1(points1);
-    unordered_set<TaggedPoint<string>> expected_ch1 = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "2"),
-    };
-    EXPECT_TRUE(ch1.check_fits_expected(expected_ch1));
-    EXPECT_EQ(ch1.size(), 2u);
+// TEST(Ch_Constructors, vector_constructors) {
+//     vector<pair<Eigen::ArrayXd,string>> points1 = {
+//         make_pair(make_vec(1.0,2.0), "1"),
+//         make_pair(make_vec(2.0,1.0), "2"),
+//         make_pair(make_vec(1.0,1.9), "1"),
+//         make_pair(make_vec(1.0,1.0), "1"),
+//         make_pair(make_vec(0.0,0.0), "1"), 
+//     };
+//     TestableConvexHull ch1(points1);
+//     unordered_set<TaggedPoint> expected_ch1 = {
+//         TaggedPoint(make_vec(1.0,2.0), "1"),
+//         TaggedPoint(make_vec(2.0,1.0), "2"),
+//     };
+//     EXPECT_TRUE(ch1.check_fits_expected(expected_ch1));
+//     EXPECT_EQ(ch1.size(), 2u);
     
-    vector<pair<Eigen::ArrayXd,string>> points2 = {
-        make_pair(make_vec(1.0,3.0), "1"),
-        make_pair(make_vec(1.0,3.0), "1"),
-        make_pair(make_vec(3.0,1.0), "3"),
-        make_pair(make_vec(3.0,1.0), "1"),
-        make_pair(make_vec(3.0,1.0), "1"),
-    };
-    TestableConvexHull<string> ch2(points2);
-    unordered_set<TaggedPoint<unordered_set<string>>> expected_ch2 = {
-        TaggedPoint<unordered_set<string>>(make_vec(1.0,3.0), {"1"}),
-        TaggedPoint<unordered_set<string>>(make_vec(3.0,1.0), {"1", "3"}),
-    };
-    EXPECT_TRUE(ch2.check_fits_expected_multitag(expected_ch2));
-    EXPECT_EQ(ch2.size(), 2u);
+//     vector<pair<Eigen::ArrayXd,string>> points2 = {
+//         make_pair(make_vec(1.0,3.0), "1"),
+//         make_pair(make_vec(1.0,3.0), "1"),
+//         make_pair(make_vec(3.0,1.0), "3"),
+//         make_pair(make_vec(3.0,1.0), "1"),
+//         make_pair(make_vec(3.0,1.0), "1"),
+//     };
+//     TestableConvexHull ch2(points2);
+//     unordered_set<TaggedPoint<unordered_set>> expected_ch2 = {
+//         TaggedPoint<unordered_set>(make_vec(1.0,3.0), {"1"}),
+//         TaggedPoint<unordered_set>(make_vec(3.0,1.0), {"1", "3"}),
+//     };
+//     EXPECT_TRUE(ch2.check_fits_expected(expected_ch2));
+//     EXPECT_EQ(ch2.size(), 2u);
 
-    // vector<Eigen::ArrayXd> points3 = {
-    //     make_vec(1.0,2.0),
-    //     make_vec(2.0,1.0),
-    //     make_vec(1.0,1.9),
-    //     make_vec(1.0,1.0),
-    //     make_vec(0.0,0.0),
-    // };
-    // TestableConvexHull<string> ch3(points3, "1");
-    // unordered_set<TaggedPoint<string>> expected_ch3 = {
-    //     TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-    //     TaggedPoint<string>(make_vec(2.0,1.0), "1"),
-    // };
-    // EXPECT_TRUE(ch3.check_fits_expected(expected_ch3));
-    // EXPECT_EQ(ch3.size(), 2u);
+//     // vector<Eigen::ArrayXd> points3 = {
+//     //     make_vec(1.0,2.0),
+//     //     make_vec(2.0,1.0),
+//     //     make_vec(1.0,1.9),
+//     //     make_vec(1.0,1.0),
+//     //     make_vec(0.0,0.0),
+//     // };
+//     // TestableConvexHull ch3(points3, "1");
+//     // unordered_set<TaggedPoint> expected_ch3 = {
+//     //     TaggedPoint(make_vec(1.0,2.0), "1"),
+//     //     TaggedPoint(make_vec(2.0,1.0), "1"),
+//     // };
+//     // EXPECT_TRUE(ch3.check_fits_expected(expected_ch3));
+//     // EXPECT_EQ(ch3.size(), 2u);
     
-    // vector<Eigen::ArrayXd> points4 = {
-    //     make_vec(1.0,3.0),
-    //     make_vec(1.0,3.0),
-    //     make_vec(3.0,1.0),
-    //     make_vec(3.0,1.0),
-    //     make_vec(3.0,1.0),
-    // };
-    // TestableConvexHull<string> ch4(points4, "1");
-    // unordered_set<TaggedPoint<string>> expected_ch4 = {
-    //     TaggedPoint<string>(make_vec(1.0,3.0), "1"),
-    //     TaggedPoint<string>(make_vec(3.0,1.0), "1"),
-    // };
-    // EXPECT_TRUE(ch4.check_fits_expected(expected_ch4));
-    // EXPECT_EQ(ch4.size(), 2u);
-}
+//     // vector<Eigen::ArrayXd> points4 = {
+//     //     make_vec(1.0,3.0),
+//     //     make_vec(1.0,3.0),
+//     //     make_vec(3.0,1.0),
+//     //     make_vec(3.0,1.0),
+//     //     make_vec(3.0,1.0),
+//     // };
+//     // TestableConvexHull ch4(points4, "1");
+//     // unordered_set<TaggedPoint> expected_ch4 = {
+//     //     TaggedPoint(make_vec(1.0,3.0), "1"),
+//     //     TaggedPoint(make_vec(3.0,1.0), "1"),
+//     // };
+//     // EXPECT_TRUE(ch4.check_fits_expected(expected_ch4));
+//     // EXPECT_EQ(ch4.size(), 2u);
+// }
 
 /**
  * Test constructing from set of tagged points, and prune fn
 */
 TEST(Ch_Constructors, set_constructors) {
-    unordered_set<TaggedPoint<string>> points1 = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "1"),
-        TaggedPoint<string>(make_vec(1.0,1.9), "1"),
-        TaggedPoint<string>(make_vec(1.0,1.0), "1"),
-        TaggedPoint<string>(make_vec(0.0,0.0), "1"),
+    unordered_set<Vec> points1 = {
+        make_vec(1.0,2.0),
+        make_vec(2.0,1.0),
+        make_vec(1.0,1.9),
+        make_vec(1.0,1.0),
+        make_vec(0.0,0.0),
     };
-    TestableConvexHull<string> ch1(points1);
-    unordered_set<TaggedPoint<string>> expected_ch1 = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "1"),
+    TestableConvexHull ch1(points1);
+    unordered_set<Vec> expected_ch1 = {
+        make_vec(1.0,2.0),
+        make_vec(2.0,1.0),
     };
     EXPECT_TRUE(ch1.check_fits_expected(expected_ch1));
     EXPECT_EQ(ch1.size(), 2u);
-    
-    unordered_set<TaggedPoint<string>> points2 = {
-        TaggedPoint<string>(make_vec(1.0,3.0), "1"),
-        TaggedPoint<string>(make_vec(1.0,3.0), "1"),
-        TaggedPoint<string>(make_vec(3.0,1.0), "3"),
-        TaggedPoint<string>(make_vec(3.0,1.0), "1"),
-        TaggedPoint<string>(make_vec(3.0,1.0), "1"),
+
+    unordered_set<Vec> points2 = {
+        make_vec(1.0,3.0),
+        make_vec(1.0,3.0),
+        make_vec(3.0,1.0),
+        make_vec(3.0,1.0),
+        make_vec(3.0,1.0),
     };
-    TestableConvexHull<string> ch2(points2);
-    unordered_set<TaggedPoint<unordered_set<string>>> expected_ch2 = {
-        TaggedPoint<unordered_set<string>>(make_vec(1.0,3.0), {"1"}),
-        TaggedPoint<unordered_set<string>>(make_vec(3.0,1.0), {"1","3"}),
+    TestableConvexHull ch2(points2);
+    unordered_set<Vec> expected_ch2 = {
+        make_vec(1.0,3.0),
+        make_vec(3.0,1.0),
     };
-    EXPECT_TRUE(ch2.check_fits_expected_multitag(expected_ch2));
+    EXPECT_TRUE(ch2.check_fits_expected(expected_ch2));
     EXPECT_EQ(ch2.size(), 2u);
 }
 
@@ -267,18 +266,18 @@ TEST(Ch_Constructors, set_constructors) {
  * Test copy constructor
 */
 TEST(Ch_Constructors, copy_constructor) {
-    unordered_set<TaggedPoint<string>> points = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "1"),
-        TaggedPoint<string>(make_vec(1.0,1.9), "1"),
-        TaggedPoint<string>(make_vec(1.0,1.0), "1"),
-        TaggedPoint<string>(make_vec(0.0,0.0), "1"),
+    unordered_set<Vec> points = {
+        make_vec(1.0,2.0),
+        make_vec(2.0,1.0),
+        make_vec(1.0,1.9),
+        make_vec(1.0,1.0),
+        make_vec(0.0,0.0),
     };
-    TestableConvexHull<string> ch1(points);
-    TestableConvexHull<string> ch2(ch1);
-    unordered_set<TaggedPoint<string>> expected_ch = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "1"),
+    TestableConvexHull ch1(points);
+    TestableConvexHull ch2(ch1);
+    unordered_set<Vec> expected_ch = {
+        make_vec(1.0,2.0),
+        make_vec(2.0,1.0),
     };
     EXPECT_TRUE(ch2.check_fits_expected(expected_ch));
     EXPECT_EQ(ch2.size(), 2u);
@@ -287,57 +286,57 @@ TEST(Ch_Constructors, copy_constructor) {
 /**
  * Tests 'set_tags'
 */
-TEST(Ch_Constructors, setting_tags) {
-    vector<pair<Eigen::ArrayXd,string>> points = {
-        make_pair(make_vec(1.0,2.0), "1"),
-        make_pair(make_vec(2.0,1.0), "2"),
-    };
-    TestableConvexHull<string> ch(points);
-    unordered_set<TaggedPoint<string>> expected_ch1 = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "2"),
-    };
-    EXPECT_TRUE(ch.check_fits_expected(expected_ch1));
-    EXPECT_EQ(ch.size(), 2u);
+// TEST(Ch_Constructors, setting_tags) {
+//     vector<pair<Eigen::ArrayXd,string>> points = {
+//         make_pair(make_vec(1.0,2.0), "1"),
+//         make_pair(make_vec(2.0,1.0), "2"),
+//     };
+//     TestableConvexHull ch(points);
+//     unordered_set<TaggedPoint> expected_ch1 = {
+//         TaggedPoint(make_vec(1.0,2.0), "1"),
+//         TaggedPoint(make_vec(2.0,1.0), "2"),
+//     };
+//     EXPECT_TRUE(ch.check_fits_expected(expected_ch1));
+//     EXPECT_EQ(ch.size(), 2u);
 
-    ch.set_tags("3");
-    unordered_set<TaggedPoint<string>> expected_ch2 = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "3"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "3"),
-    };
-    EXPECT_TRUE(ch.check_fits_expected(expected_ch2));
-    EXPECT_EQ(ch.size(), 2u);
+//     ch.set_tags("3");
+//     unordered_set<TaggedPoint> expected_ch2 = {
+//         TaggedPoint(make_vec(1.0,2.0), "3"),
+//         TaggedPoint(make_vec(2.0,1.0), "3"),
+//     };
+//     EXPECT_TRUE(ch.check_fits_expected(expected_ch2));
+//     EXPECT_EQ(ch.size(), 2u);
 
-}
+// }
 
 /**
  * Tests 'equals' relationship
  */
 TEST(Ch_Arithmetic, equality) {
-    vector<ConvexHull<string>> chs;
+    vector<ConvexHull> chs;
 
-    unordered_set<TaggedPoint<string>> points1 = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "1"),
+    unordered_set<Vec> points1 = {
+        make_vec(1.0,2.0),
+        make_vec(2.0,1.0),
     };
-    chs.push_back(ConvexHull<string>(points1));
+    chs.push_back(ConvexHull(points1));
 
-    unordered_set<TaggedPoint<string>> points2 = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "2"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "3"),
+    unordered_set<Vec> points2 = {
+        make_vec(1.0,2.0),
+        make_vec(2.0,1.0),
     };
-    chs.push_back(ConvexHull<string>(points2));
-    
-    unordered_set<TaggedPoint<string>> points3 = {
-        TaggedPoint<string>(make_vec(2.0,3.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "1"),
-    };
-    chs.push_back(ConvexHull<string>(points3));
+    chs.push_back(ConvexHull(points2));
 
-    unordered_set<TaggedPoint<string>> points4 = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "2"),
+    unordered_set<Vec> points3 = {
+        make_vec(2.0,3.0),
+        make_vec(2.0,1.0),
     };
-    chs.push_back(ConvexHull<string>(points4));
+    chs.push_back(ConvexHull(points3));
+
+    unordered_set<Vec> points4 = {
+        make_vec(1.0,2.0),
+    };
+    chs.push_back(ConvexHull(points4));
 
     for (size_t i=0; i<chs.size(); i++) {
         for (size_t j=i+1; j<chs.size(); j++) {
@@ -361,25 +360,25 @@ TEST(Ch_Arithmetic, equality) {
 //  * Testing the two argument prune funciton
 // */
 // TEST(Ch_Arithmetic, prune) {
-//     TestableConvexHull<int> ch;
-//     unordered_set<TaggedPoint<int>> ref_points = {
-//         TaggedPoint<int>(make_vec(1.0,3.0), 1),
-//         TaggedPoint<int>(make_vec(3.0,1.0), 1),
+//     TestableConvexHull ch;
+//     unordered_set<TaggedPoint> ref_points = {
+//         TaggedPoint(make_vec(1.0,3.0), 1),
+//         TaggedPoint(make_vec(3.0,1.0), 1),
 //     };
-//     unordered_set<TaggedPoint<int>> points = {
-//         TaggedPoint<int>(make_vec(2.0,3.0), 1),
-//         TaggedPoint<int>(make_vec(1.0,1.0), 1),
-//         TaggedPoint<int>(make_vec(4.0,0.5), 1),
-//         TaggedPoint<int>(make_vec(5.0,0.0), 1),
-//         TaggedPoint<int>(make_vec(-1.0,0.0), 1),
+//     unordered_set<TaggedPoint> points = {
+//         TaggedPoint(make_vec(2.0,3.0), 1),
+//         TaggedPoint(make_vec(1.0,1.0), 1),
+//         TaggedPoint(make_vec(4.0,0.5), 1),
+//         TaggedPoint(make_vec(5.0,0.0), 1),
+//         TaggedPoint(make_vec(-1.0,0.0), 1),
 //     };
-//     unordered_set<TaggedPoint<int>> expected_pruned_points = {
-//         TaggedPoint<int>(make_vec(2.0,3.0), 1),
-//         TaggedPoint<int>(make_vec(4.0,0.5), 1),
-//         TaggedPoint<int>(make_vec(5.0,0.0), 1),
+//     unordered_set<TaggedPoint> expected_pruned_points = {
+//         TaggedPoint(make_vec(2.0,3.0), 1),
+//         TaggedPoint(make_vec(4.0,0.5), 1),
+//         TaggedPoint(make_vec(5.0,0.0), 1),
 //     };
 
-//     unordered_set<TaggedPoint<int>> pruned_points = ch.public_prune(ref_points, points);
+//     unordered_set<TaggedPoint> pruned_points = ch.public_prune(ref_points, points);
 //     EXPECT_TRUE(set_equals(pruned_points, expected_pruned_points));
 // } 
 
@@ -388,44 +387,44 @@ TEST(Ch_Arithmetic, equality) {
 //  * Testing the two argument prune funciton
 // */
 // TEST(Ch_Arithmetic, prune_corner_cases) {
-//     TestableConvexHull<int> ch;
+//     TestableConvexHull ch;
 
 //     // a point in 'points' is also in 'ref_points' and should be removed
-//     unordered_set<TaggedPoint<int>> ref_points = {
-//         TaggedPoint<int>(make_vec(1.0,3.0), 1),
-//         TaggedPoint<int>(make_vec(3.0,1.0), 1),
+//     unordered_set<TaggedPoint> ref_points = {
+//         TaggedPoint(make_vec(1.0,3.0), 1),
+//         TaggedPoint(make_vec(3.0,1.0), 1),
 //     };
-//     unordered_set<TaggedPoint<int>> points = {
-//         TaggedPoint<int>(make_vec(2.0,3.0), 1),
-//         TaggedPoint<int>(make_vec(1.0,1.0), 1),
-//         TaggedPoint<int>(make_vec(1.0,3.0), 1),
-//         TaggedPoint<int>(make_vec(4.0,0.5), 1),
+//     unordered_set<TaggedPoint> points = {
+//         TaggedPoint(make_vec(2.0,3.0), 1),
+//         TaggedPoint(make_vec(1.0,1.0), 1),
+//         TaggedPoint(make_vec(1.0,3.0), 1),
+//         TaggedPoint(make_vec(4.0,0.5), 1),
 //     };
-//     unordered_set<TaggedPoint<int>> expected_pruned_points = {
-//         TaggedPoint<int>(make_vec(2.0,3.0), 1),
-//         TaggedPoint<int>(make_vec(4.0,0.5), 1),
+//     unordered_set<TaggedPoint> expected_pruned_points = {
+//         TaggedPoint(make_vec(2.0,3.0), 1),
+//         TaggedPoint(make_vec(4.0,0.5), 1),
 //     };
 
-//     unordered_set<TaggedPoint<int>> pruned_points = ch.public_prune(ref_points, points);
+//     unordered_set<TaggedPoint> pruned_points = ch.public_prune(ref_points, points);
 //     EXPECT_TRUE(set_equals(pruned_points, expected_pruned_points));
 //     // 'points' contain points that dominate each other, but shouldn't be removed, because not dominated by any 
 //     // points in 'ref_points'
-//     unordered_set<TaggedPoint<int>> ref_points2 = {
-//         TaggedPoint<int>(make_vec(1.0,3.0), 1),
-//         TaggedPoint<int>(make_vec(3.0,1.0), 1),
+//     unordered_set<TaggedPoint> ref_points2 = {
+//         TaggedPoint(make_vec(1.0,3.0), 1),
+//         TaggedPoint(make_vec(3.0,1.0), 1),
 //     };
-//     unordered_set<TaggedPoint<int>> points2 = {
-//         TaggedPoint<int>(make_vec(0.0,0.0), 1),
-//         TaggedPoint<int>(make_vec(1.0,1.0), 1),
-//         TaggedPoint<int>(make_vec(2.0,2.0), 1),
-//         TaggedPoint<int>(make_vec(3.0,3.0), 1),
+//     unordered_set<TaggedPoint> points2 = {
+//         TaggedPoint(make_vec(0.0,0.0), 1),
+//         TaggedPoint(make_vec(1.0,1.0), 1),
+//         TaggedPoint(make_vec(2.0,2.0), 1),
+//         TaggedPoint(make_vec(3.0,3.0), 1),
 //     };
-//     unordered_set<TaggedPoint<int>> expected_pruned_points2 = {
-//         TaggedPoint<int>(make_vec(2.0,2.0), 1),
-//         TaggedPoint<int>(make_vec(3.0,3.0), 1),
+//     unordered_set<TaggedPoint> expected_pruned_points2 = {
+//         TaggedPoint(make_vec(2.0,2.0), 1),
+//         TaggedPoint(make_vec(3.0,3.0), 1),
 //     };
 
-//     unordered_set<TaggedPoint<int>> pruned_points2 = ch.public_prune(ref_points2, points2);
+//     unordered_set<TaggedPoint> pruned_points2 = ch.public_prune(ref_points2, points2);
 //     EXPECT_TRUE(set_equals(pruned_points2, expected_pruned_points2));
 // }
 
@@ -433,26 +432,26 @@ TEST(Ch_Arithmetic, equality) {
  * 
 */
 TEST(Ch_Arithmetic, scale) {
-    unordered_set<TaggedPoint<string>> points = {
-        TaggedPoint<string>(make_vec(1.0,2.0), "1"),
-        TaggedPoint<string>(make_vec(2.0,1.0), "1"),
+    unordered_set<Vec> points = {
+        make_vec(1.0,2.0),
+        make_vec(2.0,1.0),
     };
-    TestableConvexHull<string> ch(points);
+    TestableConvexHull ch(points);
 
     // test scale
-    TestableConvexHull<string> ch1 = (TestableConvexHull<string>) ch.scale(0.5);
-    unordered_set<TaggedPoint<string>> expected_ch1 = {
-        TaggedPoint<string>(make_vec(0.5,1.0), "1"),
-        TaggedPoint<string>(make_vec(1.0,0.5), "1"),
+    TestableConvexHull ch1 = ch.scale(0.5);
+    unordered_set<Vec> expected_ch1 = {
+        make_vec(0.5,1.0),
+        make_vec(1.0,0.5),
     };
     EXPECT_TRUE(ch1.check_fits_expected(expected_ch1));
     EXPECT_EQ(ch1.size(), 2u);
 
     // test operator *
-    TestableConvexHull<string> ch2 = (TestableConvexHull<string>) (ch * 2.0);
-    unordered_set<TaggedPoint<string>> expected_ch2 = {
-        TaggedPoint<string>(make_vec(2.0,4.0), "1"),
-        TaggedPoint<string>(make_vec(4.0,2.0), "1"),
+    TestableConvexHull ch2 = (TestableConvexHull) (ch * 2.0);
+    unordered_set<Vec> expected_ch2 = {
+        make_vec(2.0,4.0),
+        make_vec(4.0,2.0),
     };
     EXPECT_TRUE(ch2.check_fits_expected(expected_ch2));
     EXPECT_EQ(ch2.size(), 2u);
@@ -462,32 +461,32 @@ TEST(Ch_Arithmetic, scale) {
  * Test one = pf test adapted to have similar result
 */
 TEST(Ch_Arithmetic, union_one) {
-    unordered_set<TaggedPoint<string>> points1 = {
-        TaggedPoint<string>(make_vec(2.0,0.0), "1a"),
-        TaggedPoint<string>(make_vec(1.1,1.1), "1b"),
-        TaggedPoint<string>(make_vec(0.0,1.1), "1c"),
+    unordered_set<Vec> points1 = {
+        make_vec(2.0,0.0),
+        make_vec(1.1,1.1),
+        make_vec(0.0,1.1),
     };
-    TestableConvexHull<string> ch1(points1);
+    TestableConvexHull ch1(points1);
 
-    unordered_set<TaggedPoint<string>> points2 = {
-        TaggedPoint<string>(make_vec(1.1,1.1), "2a"),
-        TaggedPoint<string>(make_vec(0.0,2.0), "2b"),
+    unordered_set<Vec> points2 = {
+        make_vec(1.1,1.1),
+        make_vec(0.0,2.0),
     };
-    TestableConvexHull<string> ch2(points2);
+    TestableConvexHull ch2(points2);
 
-    unordered_set<TaggedPoint<unordered_set<string>>> expected_union_ch = {
-        TaggedPoint<unordered_set<string>>(make_vec(2.0,0.0), {"1a"}),
-        TaggedPoint<unordered_set<string>>(make_vec(1.1,1.1), {"1b","2a"}),
-        TaggedPoint<unordered_set<string>>(make_vec(0.0,2.0), {"2b"}),
+    unordered_set<Vec> expected_union_ch = {
+        make_vec(2.0,0.0),
+        make_vec(1.1,1.1),
+        make_vec(0.0,2.0),
     };
 
-    TestableConvexHull<string> ch3 = (TestableConvexHull<string>) ch1.combine(ch2);
-    TestableConvexHull<string> ch4 = (TestableConvexHull<string>) (ch1 | ch2);
+    TestableConvexHull ch3 = (TestableConvexHull) ch1.combine(ch2);
+    TestableConvexHull ch4 = (TestableConvexHull) (ch1 | ch2);
 
-    EXPECT_TRUE(ch3.check_fits_expected_multitag(expected_union_ch));
+    EXPECT_TRUE(ch3.check_fits_expected(expected_union_ch));
     EXPECT_EQ(ch3.size(), 3u);
 
-    EXPECT_TRUE(ch4.check_fits_expected_multitag(expected_union_ch));
+    EXPECT_TRUE(ch4.check_fits_expected(expected_union_ch));
     EXPECT_EQ(ch4.size(), 3u);
 }
 
@@ -495,32 +494,32 @@ TEST(Ch_Arithmetic, union_one) {
  * Test two = pf test, but adapted result
 */
 TEST(Ch_Arithmetic, union_two) {
-    unordered_set<TaggedPoint<string>> points1 = {
-        TaggedPoint<string>(make_vec(2.0,0.0), "1a"),
-        TaggedPoint<string>(make_vec(1.0,1.0), "1b"),
-        TaggedPoint<string>(make_vec(0.0,1.1), "1c"),
+    unordered_set<Vec> points1 = {
+        make_vec(2.0,0.0),
+        make_vec(1.0,1.0),
+        make_vec(0.0,1.1),
     };
-    TestableConvexHull<string> ch1(points1);
+    TestableConvexHull ch1(points1);
 
-    unordered_set<TaggedPoint<string>> points2 = {
-        TaggedPoint<string>(make_vec(1.0,1.0), "2a"),
-        TaggedPoint<string>(make_vec(0.0,2.0), "2b"),
+    unordered_set<Vec> points2 = {
+        make_vec(1.0,1.0),
+        make_vec(0.0,2.0),
     };
-    TestableConvexHull<string> ch2(points2);
+    TestableConvexHull ch2(points2);
 
-    unordered_set<TaggedPoint<unordered_set<string>>> expected_union_ch = {
-        TaggedPoint<unordered_set<string>>(make_vec(2.0,0.0), {"1a"}),
-        // TaggedPoint<unordered_set<string>>(make_vec(1.0,1.0), {"1b","2a"}),
-        TaggedPoint<unordered_set<string>>(make_vec(0.0,2.0), {"2b"}),
-    }; 
+    unordered_set<Vec> expected_union_ch = {
+        make_vec(2.0,0.0),
+        // make_vec(1.0,1.0),
+        make_vec(0.0,2.0),
+    };
 
-    TestableConvexHull<string> ch3 = (TestableConvexHull<string>) ch1.combine(ch2);
-    TestableConvexHull<string> ch4 = (TestableConvexHull<string>) (ch1 | ch2);
+    TestableConvexHull ch3 = (TestableConvexHull) ch1.combine(ch2);
+    TestableConvexHull ch4 = (TestableConvexHull) (ch1 | ch2);
 
-    EXPECT_TRUE(ch3.check_fits_expected_multitag(expected_union_ch));
+    EXPECT_TRUE(ch3.check_fits_expected(expected_union_ch));
     EXPECT_EQ(ch3.size(), 2u);
 
-    EXPECT_TRUE(ch4.check_fits_expected_multitag(expected_union_ch));
+    EXPECT_TRUE(ch4.check_fits_expected(expected_union_ch));
     EXPECT_EQ(ch4.size(), 2u);
 }
 
@@ -532,35 +531,35 @@ TEST(Ch_Arithmetic, union_two) {
  * Test one = pf test adapted to have similar result
 */
 TEST(Ch_Arithmetic, add_chs_one) {
-    unordered_set<TaggedPoint<string>> points1 = {
-        TaggedPoint<string>(make_vec(2.1,0.0), "1a"),
-        TaggedPoint<string>(make_vec(1.0,1.0), "1b"),
-        TaggedPoint<string>(make_vec(0.0,1.1), "1c"),
+    unordered_set<Vec> points1 = {
+        make_vec(2.1,0.0),
+        make_vec(1.0,1.0),
+        make_vec(0.0,1.1),
     };
-    TestableConvexHull<string> ch1(points1);
+    TestableConvexHull ch1(points1);
 
-    unordered_set<TaggedPoint<string>> points2 = {
-        TaggedPoint<string>(make_vec(1.0,1.0), "2a"),
-        TaggedPoint<string>(make_vec(0.0,2.1), "2b"),
+    unordered_set<Vec> points2 = {
+        make_vec(1.0,1.0),
+        make_vec(0.0,2.1),
     };
-    TestableConvexHull<string> ch2(points2);
+    TestableConvexHull ch2(points2);
 
-    unordered_set<TaggedPoint<unordered_set<string>>> expected_add_ch = {
-        TaggedPoint<unordered_set<string>>(make_vec(3.1,1.0), {"1a","2a"}),
-        TaggedPoint<unordered_set<string>>(make_vec(2.1,2.1), {"1a","1b","2a","2b"}),
-        TaggedPoint<unordered_set<string>>(make_vec(1.0,3.1), {"1b","2b"}),
-        TaggedPoint<unordered_set<string>>(make_vec(0.0,3.2), {"1c","2b"}),
+    unordered_set<Vec> expected_add_ch = {
+        make_vec(3.1,1.0),
+        make_vec(2.1,2.1),
+        make_vec(1.0,3.1),
+        make_vec(0.0,3.2),
     };
 
-    TestableConvexHull<string> ch3 = (TestableConvexHull<string>) ch1.add(ch2);
-    TestableConvexHull<string> ch4 = (TestableConvexHull<string>) (ch2 + ch1);
+    TestableConvexHull ch3 = (TestableConvexHull) ch1.add(ch2);
+    TestableConvexHull ch4 = (TestableConvexHull) (ch2 + ch1);
 
-    EXPECT_TRUE(ch3.check_fits_expected_multitag(expected_add_ch));
+    EXPECT_TRUE(ch3.check_fits_expected(expected_add_ch));
     EXPECT_EQ(ch3.size(), 4u);
 
-    EXPECT_TRUE(ch4.check_fits_expected_multitag(expected_add_ch));
+    EXPECT_TRUE(ch4.check_fits_expected(expected_add_ch));
     EXPECT_EQ(ch4.size(), 4u);
-}
+} 
 
 /**
  * This test is used in pareto fronts, but no longer will have the point (2,2) in the final convex hull
@@ -568,33 +567,33 @@ TEST(Ch_Arithmetic, add_chs_one) {
  * Test two = pf test, but adapted result
 */
 TEST(Ch_Arithmetic, add_chs_two) {
-    unordered_set<TaggedPoint<string>> points1 = {
-        TaggedPoint<string>(make_vec(2.0,0.0), "1a"),
-        TaggedPoint<string>(make_vec(1.0,1.0), "1b"),
-        TaggedPoint<string>(make_vec(0.0,1.1), "1c"),
+    unordered_set<Vec> points1 = {
+        make_vec(2.0,0.0),
+        make_vec(1.0,1.0),
+        make_vec(0.0,1.1),
     };
-    TestableConvexHull<string> ch1(points1);
+    TestableConvexHull ch1(points1);
 
-    unordered_set<TaggedPoint<string>> points2 = {
-        TaggedPoint<string>(make_vec(1.0,1.0), "2a"),
-        TaggedPoint<string>(make_vec(0.0,2.0), "2b"),
+    unordered_set<Vec> points2 = { 
+        make_vec(1.0,1.0),
+        make_vec(0.0,2.0),
     };
-    TestableConvexHull<string> ch2(points2);
+    TestableConvexHull ch2(points2);
 
-    unordered_set<TaggedPoint<unordered_set<string>>> expected_add_ch = {
-        TaggedPoint<unordered_set<string>>(make_vec(3.0,1.0), {"1a","2a"}),
-        // TaggedPoint<unordered_set<string>>(make_vec(2.0,2.0), {"1a","1b","2a","2b"}),
-        TaggedPoint<unordered_set<string>>(make_vec(1.0,3.0), {"1b","2b"}),
-        TaggedPoint<unordered_set<string>>(make_vec(0.0,3.1), {"1c","2b"}),
+    unordered_set<Vec> expected_add_ch = {
+        make_vec(3.0,1.0),
+        // make_vec(2.0,2.0),
+        make_vec(1.0,3.0),
+        make_vec(0.0,3.1),
     };
 
-    TestableConvexHull<string> ch3 = (TestableConvexHull<string>) ch1.add(ch2);
-    TestableConvexHull<string> ch4 = (TestableConvexHull<string>) (ch2 + ch1);
+    TestableConvexHull ch3 = (TestableConvexHull) ch1.add(ch2);
+    TestableConvexHull ch4 = (TestableConvexHull) (ch2 + ch1);
 
-    EXPECT_TRUE(ch3.check_fits_expected_multitag(expected_add_ch));
+    EXPECT_TRUE(ch3.check_fits_expected(expected_add_ch));
     EXPECT_EQ(ch3.size(), 3u);
 
-    EXPECT_TRUE(ch4.check_fits_expected_multitag(expected_add_ch));
+    EXPECT_TRUE(ch4.check_fits_expected(expected_add_ch));
     EXPECT_EQ(ch4.size(), 3u);
 }
 
@@ -602,30 +601,30 @@ TEST(Ch_Arithmetic, add_chs_two) {
  * 
 */
 TEST(Ch_Arithmetic, add_vector) {
-    unordered_set<TaggedPoint<string>> points = {
-        TaggedPoint<string>(make_vec(2.0,0.0), "1a"),
-        TaggedPoint<string>(make_vec(1.0,1.0), "1b"),
-        TaggedPoint<string>(make_vec(0.0,1.1), "1c"),
+    unordered_set<Vec> points = {
+        make_vec(2.0,0.0),
+        make_vec(1.0,1.0),
+        make_vec(0.0,1.1),
     };
-    TestableConvexHull<string> ch(points);
+    TestableConvexHull ch(points);
 
     Eigen::ArrayXd v1 = make_vec(1.0,3.0);
     Eigen::ArrayXd v2 = make_vec(-1.0,0.0);
 
-    unordered_set<TaggedPoint<string>> expected_ch1 = {
-        TaggedPoint<string>(make_vec(3.0,3.0), "1a"),
-        TaggedPoint<string>(make_vec(2.0,4.0), "1b"),
-        TaggedPoint<string>(make_vec(1.0,4.1), "1c"),
+    unordered_set<Vec> expected_ch1 = {
+        make_vec(3.0,3.0),
+        make_vec(2.0,4.0),
+        make_vec(1.0,4.1),
     };
 
-    unordered_set<TaggedPoint<string>> expected_ch2 = {
-        TaggedPoint<string>(make_vec(1.0,0.0), "1a"),
-        TaggedPoint<string>(make_vec(0.0,1.0), "1b"),
-        TaggedPoint<string>(make_vec(-1.0,1.1), "1c"),
+    unordered_set<Vec> expected_ch2 = {
+        make_vec(1.0,0.0),
+        make_vec(0.0,1.0),
+        make_vec(-1.0,1.1),
     };
 
-    TestableConvexHull<string> ch1 = (TestableConvexHull<string>) ch.add(v1);
-    TestableConvexHull<string> ch2 = (TestableConvexHull<string>) (ch + v2);
+    TestableConvexHull ch1 = (TestableConvexHull) ch.add(v1);
+    TestableConvexHull ch2 = (TestableConvexHull) (ch + v2);
 
     EXPECT_TRUE(ch1.check_fits_expected(expected_ch1));
     EXPECT_EQ(ch1.size(), 3u);

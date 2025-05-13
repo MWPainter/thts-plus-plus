@@ -49,7 +49,7 @@ namespace thts {
         
         // use empirical distribution to take an average of child ch values
         // If havent visited any children yet then convex hull of child values is just the zero vector
-        convex_hull = ConvexHull<shared_ptr<const Action>>();  
+        convex_hull = ConvexHull();  
         if (total_child_backups > 0) {
             for (pair<const shared_ptr<const Observation>,shared_ptr<ThtsDNode>>& child_pair : children) {
                 ChThtsDNode& ch_child = (ChThtsDNode&) *child_pair.second;
@@ -58,15 +58,12 @@ namespace thts {
             }
         } else {
             MoThtsManager& manager = (MoThtsManager&) *thts_manager;
-            vector<Eigen::ArrayXd> zero_vector_vector = {Eigen::ArrayXd::Zero(manager.reward_dim)};
-            convex_hull = ConvexHull<shared_ptr<const Action>>(zero_vector_vector, action);
+            Vec zero_vec = (Vec) Eigen::ArrayXd::Zero(manager.reward_dim);
+            convex_hull = ConvexHull(zero_vec);
         }
 
         // add reward to convex hull too
-        convex_hull += local_reward;
-
-        // dont forget to set tags for decision node to use
-        convex_hull.set_tags(action);
+        convex_hull += (Vec) local_reward;
 
         // remember to incr num_backups
         num_backups++;

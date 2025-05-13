@@ -51,6 +51,38 @@ static Eigen::ArrayXd make_vec(double a, double b, double c, double d) {
 
 
 
+
+/**
+ * Helper to check that s1 is a subset of s2
+*/
+bool thts::test::set_subset(unordered_set<Vec> s1, unordered_set<Vec> s2) {
+    for (const Vec& p1 : s1) {
+        auto it = s2.find(p1);
+        if (it == s2.end()) {
+            return false;
+        }
+        // check that the point is the same
+        if (*it != p1) {
+            return false;
+        }
+    }
+    return true;
+};
+
+/**
+ * Helper to compare sets of unordered sets
+*/
+bool thts::test::set_equals(unordered_set<Vec> s1, unordered_set<Vec> s2) {
+    return set_subset(s1,s2) && set_subset(s2,s1);
+}; 
+
+
+
+
+
+
+
+
 /**
  * Empty constructor
 */
@@ -63,7 +95,7 @@ TEST(Pf_Constructors, empty_constructor) {
  * Test constructing from set of tagged points, and prune fn
 */
 TEST(Pf_Constructors, set_constructors) {
-    unordered_set<Eigen::ArrayXd> points1 = {
+    unordered_set<Vec> points1 = {
         make_vec(1.0,2.0),
         make_vec(2.0,1.0),
         make_vec(1.0,1.9),
@@ -71,14 +103,14 @@ TEST(Pf_Constructors, set_constructors) {
         make_vec(0.0,0.0),
     };
     TestableParetoFront pf1(points1);
-    unordered_set<Eigen::ArrayXd> expected_pf1 = {
+    unordered_set<Vec> expected_pf1 = {
         make_vec(1.0,2.0),
         make_vec(2.0,1.0),
     };
     EXPECT_TRUE(pf1.check_fits_expected(expected_pf1));
     EXPECT_EQ(pf1.size(), 2u);
-    
-    unordered_set<Eigen::ArrayXd> points2 = {
+
+    unordered_set<Vec> points2 = {
         make_vec(1.0,3.0),
         make_vec(1.0,3.0),
         make_vec(3.0,1.0),
@@ -86,7 +118,7 @@ TEST(Pf_Constructors, set_constructors) {
         make_vec(3.0,1.0),
     };
     TestableParetoFront pf2(points2);
-    unordered_set<Eigen::ArrayXd> expected_pf2 = {
+    unordered_set<Vec> expected_pf2 = {
         make_vec(1.0,3.0),
         make_vec(3.0,1.0),
     };
@@ -98,7 +130,7 @@ TEST(Pf_Constructors, set_constructors) {
  * Test copy constructor
 */
 TEST(Pf_Constructors, copy_constructor) {
-    unordered_set<Eigen::ArrayXd> points = {
+    unordered_set<Vec> points = {
         make_vec(2.0,1.0),
         make_vec(1.0,2.0),
         make_vec(1.0,1.9),
@@ -107,7 +139,7 @@ TEST(Pf_Constructors, copy_constructor) {
     };
     TestableParetoFront pf1(points);
     TestableParetoFront pf2(pf1);
-    unordered_set<Eigen::ArrayXd> expected_pf = {
+    unordered_set<Vec> expected_pf = {
         make_vec(1.0,2.0),
         make_vec(2.0,1.0),
     };
@@ -121,24 +153,24 @@ TEST(Pf_Constructors, copy_constructor) {
 */
 TEST(Pf_Arithmetic, prune) {
     TestableParetoFront pf;
-    unordered_set<Eigen::ArrayXd> ref_points = {
+    unordered_set<Vec> ref_points = {
         make_vec(1.0,3.0),
         make_vec(3.0,1.0),
     };
-    unordered_set<Eigen::ArrayXd> points = {
+    unordered_set<Vec> points = {
         make_vec(2.0,3.0),
         make_vec(1.0,1.0),
         make_vec(4.0,0.5),
         make_vec(5.0,0.0),
         make_vec(-1.0,0.0),
     };
-    unordered_set<Eigen::ArrayXd> expected_pruned_points = {
+    unordered_set<Vec> expected_pruned_points = {
         make_vec(2.0,3.0),
         make_vec(4.0,0.5),
         make_vec(5.0,0.0),
     };
 
-    unordered_set<Eigen::ArrayXd> pruned_points = pf.public_prune(ref_points, points);
+    unordered_set<Vec> pruned_points = pf.public_prune(ref_points, points);
     EXPECT_TRUE(set_equals(pruned_points, expected_pruned_points));
 } 
 
@@ -150,41 +182,41 @@ TEST(Pf_Arithmetic, prune_corner_cases) {
     TestableParetoFront pf;
 
     // a point in 'points' is also in 'ref_points' and should be removed
-    unordered_set<Eigen::ArrayXd> ref_points = {
+    unordered_set<Vec> ref_points = {
         make_vec(1.0,3.0),
         make_vec(3.0,1.0),
     };
-    unordered_set<Eigen::ArrayXd> points = {
+    unordered_set<Vec> points = {
         make_vec(2.0,3.0),
         make_vec(1.0,1.0),
         make_vec(1.0,3.0),
         make_vec(4.0,0.5),
     };
-    unordered_set<Eigen::ArrayXd> expected_pruned_points = {
+    unordered_set<Vec> expected_pruned_points = {
         make_vec(2.0,3.0),
         make_vec(4.0,0.5),
     };
 
-    unordered_set<Eigen::ArrayXd> pruned_points = pf.public_prune(ref_points, points);
+    unordered_set<Vec> pruned_points = pf.public_prune(ref_points, points);
     EXPECT_TRUE(set_equals(pruned_points, expected_pruned_points));
     // 'points' contain points that dominate each other, but shouldn't be removed, because not dominated by any 
     // points in 'ref_points'
-    unordered_set<Eigen::ArrayXd> ref_points2 = {
+    unordered_set<Vec> ref_points2 = {
         make_vec(1.0,3.0),
         make_vec(3.0,1.0),
     };
-    unordered_set<Eigen::ArrayXd> points2 = {
+    unordered_set<Vec> points2 = {
         make_vec(0.0,0.0),
         make_vec(1.0,1.0),
         make_vec(2.0,2.0),
         make_vec(3.0,3.0),
     };
-    unordered_set<Eigen::ArrayXd> expected_pruned_points2 = {
+    unordered_set<Vec> expected_pruned_points2 = {
         make_vec(2.0,2.0),
         make_vec(3.0,3.0),
     };
 
-    unordered_set<Eigen::ArrayXd> pruned_points2 = pf.public_prune(ref_points2, points2);
+    unordered_set<Vec> pruned_points2 = pf.public_prune(ref_points2, points2);
     EXPECT_TRUE(set_equals(pruned_points2, expected_pruned_points2));
 }
 
@@ -192,7 +224,7 @@ TEST(Pf_Arithmetic, prune_corner_cases) {
  * 
 */
 TEST(Pf_Arithmetic, scale) {
-    unordered_set<Eigen::ArrayXd> points = {
+    unordered_set<Vec> points = {
         make_vec(1.0,2.0),
         make_vec(2.0,1.0),
     };
@@ -200,7 +232,7 @@ TEST(Pf_Arithmetic, scale) {
 
     // test scale
     TestableParetoFront pf1 = (TestableParetoFront) pf.scale(0.5);
-    unordered_set<Eigen::ArrayXd> expected_pf1 = {
+    unordered_set<Vec> expected_pf1 = {
         make_vec(0.5,1.0),
         make_vec(1.0,0.5),
     };
@@ -209,7 +241,7 @@ TEST(Pf_Arithmetic, scale) {
 
     // test operator *
     TestableParetoFront pf2 = (TestableParetoFront) (2.0 * pf);
-    unordered_set<Eigen::ArrayXd> expected_pf2 = {
+    unordered_set<Vec> expected_pf2 = {
         make_vec(2.0,4.0),
         make_vec(4.0,2.0),
     };
@@ -221,20 +253,20 @@ TEST(Pf_Arithmetic, scale) {
  * 
 */
 TEST(Pf_Arithmetic, union) {
-    unordered_set<Eigen::ArrayXd> points1 = {
+    unordered_set<Vec> points1 = {
         make_vec(2.0,0.0),
         make_vec(1.0,1.0),
         make_vec(0.0,1.1),
     };
     TestableParetoFront pf1(points1);
 
-    unordered_set<Eigen::ArrayXd> points2 = {
+    unordered_set<Vec> points2 = {
         make_vec(1.0,1.0),
         make_vec(0.0,2.0),
     };
     TestableParetoFront pf2(points2);
 
-    unordered_set<Eigen::ArrayXd>  expected_union_pf = {
+    unordered_set<Vec>  expected_union_pf = {
         make_vec(2.0,0.0),
         make_vec(1.0,1.0),
         make_vec(0.0,2.0),
@@ -256,20 +288,20 @@ TEST(Pf_Arithmetic, union) {
  * There are two ways of making vector (2.0,2.0) from adding 1b and 2a or adding 1a and 2b
 */
 TEST(Pf_Arithmetic, add_pfs) {
-    unordered_set<Eigen::ArrayXd> points1 = {
+    unordered_set<Vec> points1 = {
         make_vec(2.0,0.0),
         make_vec(1.0,1.0),
         make_vec(0.0,1.1),
     };
     TestableParetoFront pf1(points1);
 
-    unordered_set<Eigen::ArrayXd> points2 = {
+    unordered_set<Vec> points2 = {
         make_vec(1.0,1.0),
         make_vec(0.0,2.0),
     };
     TestableParetoFront pf2(points2);
 
-    unordered_set<Eigen::ArrayXd> expected_add_pf = {
+    unordered_set<Vec> expected_add_pf = {
         make_vec(3.0,1.0),
         make_vec(2.0,2.0),
         make_vec(1.0,3.0),
@@ -290,23 +322,23 @@ TEST(Pf_Arithmetic, add_pfs) {
  * 
 */
 TEST(Pf_Arithmetic, add_vector) {
-    unordered_set<Eigen::ArrayXd> points = {
+    unordered_set<Vec> points = {
         make_vec(2.0,0.0),
         make_vec(1.0,1.0),
         make_vec(0.0,1.1),
     };
     TestableParetoFront pf(points);
 
-    Eigen::ArrayXd v1 = make_vec(1.0,3.0);
-    Eigen::ArrayXd v2 = make_vec(-1.0,0.0);
+    Vec v1 = make_vec(1.0,3.0);
+    Vec v2 = make_vec(-1.0,0.0);
 
-    unordered_set<Eigen::ArrayXd> expected_pf1 = {
+    unordered_set<Vec> expected_pf1 = {
         make_vec(3.0,3.0),
         make_vec(2.0,4.0),
         make_vec(1.0,4.1),
     };
 
-    unordered_set<Eigen::ArrayXd> expected_pf2 = {
+    unordered_set<Vec> expected_pf2 = {
         make_vec(1.0,0.0),
         make_vec(0.0,1.0),
         make_vec(-1.0,1.1),

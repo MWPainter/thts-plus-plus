@@ -23,15 +23,19 @@ namespace thts {
     /**
      * Constructor, add points immediately, optionally specify that already pareto front
     */
-    ParetoFront::ParetoFront(const unordered_set<Eigen::ArrayXd>& init_points, bool already_pareto_front) :
+    ParetoFront::ParetoFront(const unordered_set<Vec>& init_points, bool already_pareto_front) :
         pf_points(already_pareto_front ? init_points : prune(init_points))
+    {
+    };
+    ParetoFront::ParetoFront(const unordered_set<Eigen::ArrayXd>& init_points, bool already_pareto_front) :
+        pf_points(already_pareto_front ? unordered_set<Vec>(init_points.begin(), init_points.end()) : prune(unordered_set<Vec>(init_points.begin(), init_points.end())))
     {
     };
 
     /**
      * Constructor that initialises it with a single tagged point
     */
-    ParetoFront::ParetoFront(const Eigen::ArrayXd& heuristic_val) :
+    ParetoFront::ParetoFront(const Vec& heuristic_val) :
         pf_points()
     {
         pf_points.insert(heuristic_val);
@@ -91,29 +95,29 @@ namespace thts {
      * If any index has in u lower value than v, then u doesnt dominate it
      * If all indices are greater than or equal, we dominate the other point if we are not equal
     */
-    bool ParetoFront::weakly_pareto_dominates(const Eigen::ArrayXd& u, const Eigen::ArrayXd& v) {
-        if (u.size() != v.size()) {
+    bool ParetoFront::weakly_pareto_dominates(const Vec& u, const Vec& v) {
+        if (u.vec.size() != v.vec.size()) {
             throw runtime_error("Trying to use 'weakly_pareto_dominates' with vectors with different dims.");
         }
-        return (u >= v).all();
+        return (u.vec >= v.vec).all();
     }
 
     /**
      * Returns the set of points from 'points' that are not weakly dominated by any points in 'ref_points'
     */
-    unordered_set<Eigen::ArrayXd> ParetoFront::prune(
-        const unordered_set<Eigen::ArrayXd>& ref_points, const unordered_set<Eigen::ArrayXd>& points)
+    unordered_set<Vec> ParetoFront::prune(
+        const unordered_set<Vec>& ref_points, const unordered_set<Vec>& points)
     {
         if (ref_points.size() == 0 || points.size() == 0) {
-            return unordered_set<Eigen::ArrayXd>(points);
+            return unordered_set<Vec>(points);
         }
 
-        unordered_set<Eigen::ArrayXd> new_set;
+        unordered_set<Vec> new_set;
         new_set.reserve(points.size());
 
-        for (const Eigen::ArrayXd& p_point : points) {
+        for (const Vec& p_point : points) {
             bool is_dominated = false;
-            for (const Eigen::ArrayXd& r_point : ref_points) {
+            for (const Vec& r_point : ref_points) {
                 if (weakly_pareto_dominates(r_point, p_point)) {
                     is_dominated = true;
                     break;
@@ -142,9 +146,9 @@ namespace thts {
      * For each point in the set, we search for if there is another unique point in the set that weakly dominates it, 
      * and if so remove it. Note that a point weakly dominates itself, so take care to avoid that case.
     */
-    unordered_set<Eigen::ArrayXd> ParetoFront::prune(const unordered_set<Eigen::ArrayXd>& points) {
-        unordered_set<Eigen::ArrayXd> pruned_points(points);
-        
+    unordered_set<Vec> ParetoFront::prune(const unordered_set<Vec>& points) {
+        unordered_set<Vec> pruned_points(points);
+
         for (auto it = pruned_points.begin(); it != pruned_points.end(); ) {
             bool is_dominated = false; 
             for (auto jt = pruned_points.begin(); jt != pruned_points.end(); jt++) {
@@ -178,10 +182,10 @@ namespace thts {
     */
     ParetoFront ParetoFront::scale(double scale) const
     {
-        unordered_set<Eigen::ArrayXd> scaled_pf_points;
+        unordered_set<Vec> scaled_pf_points;
         scaled_pf_points.reserve(size());
-        for (const Eigen::ArrayXd& point : pf_points) {
-            scaled_pf_points.insert(point*scale);
+        for (const Vec& point : pf_points) {
+            scaled_pf_points.insert(point * scale);
         }
         return ParetoFront(scaled_pf_points, true);
     };
@@ -203,11 +207,11 @@ namespace thts {
         
         // as already pareto fronts, only need to check if points dominated by the other pareto front
         // care here if this and other contain the same vector, as using weak Pareto domination
-        unordered_set<Eigen::ArrayXd> pruned_points_one = prune(other.pf_points, pf_points);
-        unordered_set<Eigen::ArrayXd> pruned_points_two = prune(pruned_points_one, other.pf_points);
+        unordered_set<Vec> pruned_points_one = prune(other.pf_points, pf_points);
+        unordered_set<Vec> pruned_points_two = prune(pruned_points_one, other.pf_points);
         
         pruned_points_one.reserve(pruned_points_one.size() + pruned_points_two.size());
-        for (const Eigen::ArrayXd& point : pruned_points_two) {
+        for (const Vec& point : pruned_points_two) {
             pruned_points_one.insert(point);
         }
 
@@ -226,9 +230,9 @@ namespace thts {
             return ParetoFront(*this);
         }
 
-        unordered_set<Eigen::ArrayXd> summed_points;
-        for (const Eigen::ArrayXd& point : pf_points) {
-            for (const Eigen::ArrayXd& other_point : other.pf_points) {
+        unordered_set<Vec> summed_points;
+        for (const Vec& point : pf_points) {
+            for (const Vec& other_point : other.pf_points) {
                 summed_points.insert(point + other_point);
             }
         }
@@ -240,10 +244,10 @@ namespace thts {
     /**
      * Add vector to pareto front
     */
-    ParetoFront ParetoFront::add(const Eigen::ArrayXd& v) const 
+    ParetoFront ParetoFront::add(const Vec& v) const
     {
-        unordered_set<Eigen::ArrayXd> summed_points;
-        for (const Eigen::ArrayXd& point : pf_points) {
+        unordered_set<Vec> summed_points;
+        for (const Vec& point : pf_points) {
             summed_points.insert(point + v);
         }
         return ParetoFront(summed_points, true);
@@ -252,14 +256,14 @@ namespace thts {
     /**
      * Return points to iterate over externally
      */
-    const unordered_set<Eigen::ArrayXd>& ParetoFront::get_points() const
+    const unordered_set<Vec>& ParetoFront::get_points() const
     {
         return pf_points;
     }
 }
 
 /**
- * Forward declare operator overloads and output stream function sepcialisations for ParetoFront
+ * Forward declare operator overloads and output stream function specialisations for ParetoFront
  * Output stream for debugging
 */
 namespace std {
@@ -296,12 +300,12 @@ namespace std {
      * Add vector to pareto front
     */
     
-    ParetoFront operator+(const ParetoFront& pf, const Eigen::ArrayXd& v) {
+    ParetoFront operator+(const ParetoFront& pf, const Vec& v) {
         return pf.add(v);
     }
 
     
-    ParetoFront operator+(const Eigen::ArrayXd& v, const ParetoFront& pf) {
+    ParetoFront operator+(const Vec& v, const ParetoFront& pf) {
         return pf.add(v);
     }
 
@@ -311,7 +315,7 @@ namespace std {
     
     ostream& operator<<(ostream& os, const ParetoFront& pf) {
         os << "ParetoFront = {" << endl;
-        for (const Eigen::ArrayXd& point : pf.get_points()) {
+        for (const Vec& point : pf.get_points()) {
             os << point << endl;
         }
         os << "}";

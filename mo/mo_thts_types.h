@@ -43,14 +43,88 @@ namespace thts {
      */  
     Eigen::ArrayXd _DummyMoHeuristicFn(std::shared_ptr<const State> s, std::shared_ptr<ThtsEnv> env);
     typedef decltype(&_DummyMoHeuristicFn) MoHeuristicFnPtr;
+
+
+
+
+
+    /**
+     * Wrapper around Eigen::ArrayXd to make it hashable and comparable
+     * Also makes most operations operate at a vector level
+     * For example, if u,v, are Eigen::ArrayXd, then u==v will give a vector of bools, whereas if Vec, then gives a bool
+     * Also provides open access to the underlying Eigen::ArrayXd to use Eigen functions where needed
+     */
+    struct Vec {
+        public:
+            Eigen::ArrayXd vec;
+
+            Vec(const Eigen::ArrayXd& v);
+            Vec(const std::vector<double>& v);
+            Vec(const Vec& other);
+
+            double norm() const;
+            Vec normalised() const;
+            double dot(const Vec& other) const;
+            Vec project_onto_origin_line(const Vec& direction) const;
+            Vec project_onto_line(const Vec& direction, const Vec& point) const;
+            double dist(const Vec& other) const;
+
+            bool weakly_pareto_dominates(const Vec& other) const;
+
+            bool equals(const Vec& other) const;
+            std::size_t hash() const;
+
+            Vec operator+(const Vec& other) const;
+            Vec operator-(const Vec& other) const;
+            bool operator==(const Vec& other) const;
+            bool operator!=(const Vec& other) const;
+    };
 }
 
 
 namespace std {
     using namespace thts;
 
-
+    /**
+     * IntVectorState hash
+    */
     ostream& operator<<(ostream& os, const IntVectorState& state);
     ostream& operator<<(ostream& os, const shared_ptr<const IntVectorState>& state);
+
+
+
+    /**
+     * Vec Hash
+    */
+    template <>
+    struct hash<Vec> {
+        size_t operator()(const Vec&) const;
+    };
+
+    /**
+     * Vec Equals
+    */
+    template <>
+    struct equal_to<Vec> {
+        bool operator()(const Vec& lhs, const Vec& rhs) const;
+    };
+
+    /**
+     * Vec Output stream
+    */
+    ostream& operator<<(ostream& os, const Vec& point);
+
+
+    /**
+     * Vec operators with scalars
+     */
+    Vec operator*(const Vec& v, double s);
+    Vec operator*(double s, const Vec& v);
+    Vec operator+(const Vec& v, double s);
+    Vec operator+(double s, const Vec& v);
+    Vec operator-(const Vec& v, double s);
+    Vec operator-(double s, const Vec& v);
+    Vec operator/(const Vec& v, double s);
+    Vec operator/(double s, const Vec& v);
 
 }

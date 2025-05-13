@@ -6,6 +6,7 @@
 #include <Eigen/Dense>
 
 #include "mo/mo_helper.h"
+#include "mo/mo_thts_types.h"
 
 
 
@@ -24,7 +25,7 @@ namespace thts {
     */
     class ParetoFront {
         protected:
-            std::unordered_set<Eigen::ArrayXd> pf_points;
+            std::unordered_set<Vec> pf_points;
 
         public:
             /**
@@ -36,12 +37,13 @@ namespace thts {
              * Constructor, adding points immediately
              * With an option to say if we know that the set of points is already a pareto front
             */
+            ParetoFront(const std::unordered_set<Vec>& init_points, bool already_pareto_front=false);
             ParetoFront(const std::unordered_set<Eigen::ArrayXd>& init_points, bool already_pareto_front=false);
 
             /**
              * Constructor, with a single point
             */
-            ParetoFront(const Eigen::ArrayXd& heuristic_val);
+            ParetoFront(const Vec& heuristic_val);
 
             /**
              * Copy constructor
@@ -64,7 +66,7 @@ namespace thts {
             /**
              * Pareto domination relationship (if u weakly dominates v)
              */
-            static bool weakly_pareto_dominates(const Eigen::ArrayXd& u, const Eigen::ArrayXd& v);
+            static bool weakly_pareto_dominates(const Vec& u, const Vec& v);
 
             /**
              * Returns the set of points from 'points' that are not (weakly) dominated by any points in 'ref_points'
@@ -73,15 +75,15 @@ namespace thts {
              *  This happens because we remove v from V in prune(U,V) and remove v from U in prune() 
              * So, if v is in 'ref_points' and 'points' then the returned set will *not* contain v.
             */
-            static std::unordered_set<Eigen::ArrayXd> prune(
-                const std::unordered_set<Eigen::ArrayXd>& ref_points, 
-                const std::unordered_set<Eigen::ArrayXd>& points);
+            static std::unordered_set<Vec> prune(
+                const std::unordered_set<Vec>& ref_points,
+                const std::unordered_set<Vec>& points);
 
             /**
              * Returns the Pareto front of the set of 'points'.
              * Because we use weak pareto domination, 'prune(points,points)' would return an empty set
             */
-            static std::unordered_set<Eigen::ArrayXd> prune(const std::unordered_set<Eigen::ArrayXd>& points);
+            static std::unordered_set<Vec> prune(const std::unordered_set<Vec>& points);
 
         public:
             /**
@@ -113,12 +115,12 @@ namespace thts {
              * Adds a vector to this pareto front
              * If have vector v and pareto front U, then U+v = {u+v | u in U}
             */
-            ParetoFront add(const Eigen::ArrayXd& v) const;
+            ParetoFront add(const Vec& v) const;
 
             /** 
              * Get points in pareto front
              */
-            const std::unordered_set<Eigen::ArrayXd>& get_points() const;
+            const std::unordered_set<Vec>& get_points() const;
 
     };
 }
@@ -154,10 +156,10 @@ namespace std {
      * Add vector to pareto front
     */
     
-    ParetoFront operator+(const ParetoFront& pf, const Eigen::ArrayXd& v);
+    ParetoFront operator+(const ParetoFront& pf, const Vec& v);
 
-    
-    ParetoFront operator+(const Eigen::ArrayXd& v, const ParetoFront& pf);
+
+    ParetoFront operator+(const Vec& v, const ParetoFront& pf);
 
     /**
      * Output stream
