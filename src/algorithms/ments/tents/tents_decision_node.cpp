@@ -121,6 +121,8 @@ namespace thts {
      * http://proceedings.mlr.press/v139/dam21a/dam21a.pdf
      * 
      * N.B. ments locks children around calling this, so have lock on children
+     * 
+     * TODO: add normalising q values to range [0,1] (as in ments)
      */
     void TentsDNode::compute_action_weights(
         ActionDistr& action_weights, 

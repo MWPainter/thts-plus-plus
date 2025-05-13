@@ -85,35 +85,50 @@ namespace thts {
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         double temp = get_temp();
 
-        // compute normalisation term
-        normalisation_term = numeric_limits<double>::lowest();
-        double min_q_value = numeric_limits<double>::max();
-        double max_q_value = numeric_limits<double>::lowest();
+        // Get current q values
+        unordered_map<shared_ptr<const Action>,double> q_values;
         for (shared_ptr<const Action> action : *actions) {
-            double q_value = get_soft_q_value(action,opp_coeff);
-            double q_value_over_temp =  q_value / temp;
-            if (normalisation_term < q_value_over_temp) {
-                normalisation_term = q_value_over_temp;
+            q_values[action] = get_soft_q_value(action,opp_coeff);
+        }
+
+        // optionally normalise q values
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        if (manager.normalise_q_values) {
+            double min_q_value = numeric_limits<double>::max();
+            double max_q_value = numeric_limits<double>::lowest();
+
+            for (pair<shared_ptr<const Action>,double> pr : q_values) {
+                double q_value = pr.second;
+                if (q_value < min_q_value) min_q_value = q_value;
+                if (q_value > max_q_value) max_q_value = q_value;
             }
 
-            if (q_value < min_q_value) min_q_value = q_value;
-            if (q_value > max_q_value) max_q_value = q_value;
+            for (pair<shared_ptr<const Action>,double> pr : q_values) {
+                shared_ptr<const Action> action = pr.first;
+                double q_value = pr.second;
+                q_values[action] = (q_value - min_q_value) / (max_q_value - min_q_value + EPS);
+            }
+        }
+
+        // compute normalisation term
+        normalisation_term = numeric_limits<double>::lowest();
+        for (pair<shared_ptr<const Action>,double> pair : q_values) {
+            double q_value = pair.second;
+            double q_value_over_temp =  q_value / temp;
+            if (q_value_over_temp > normalisation_term) {
+                normalisation_term = q_value_over_temp;
+            }
         }
 
         // Get parent distribution
         shared_ptr<ActionDistr> parent_distr = get_parent_distr_from_context(context);
 
         // compute action weights
-        MentsManager& manager = (MentsManager&) *thts_manager;
         sum_action_weights = 0.0;
-        for (shared_ptr<const Action> action : *actions) {
-            double soft_q_value = get_soft_q_value(action,opp_coeff);
-            double action_weight;
-            if (manager.normalise_q_values) {
-                action_weight = exp((soft_q_value - min_q_value) / (max_q_value - min_q_value + EPS));
-            } else {
-                action_weight = exp((soft_q_value/temp) - normalisation_term);
-            }
+        for (pair<shared_ptr<const Action>,double> pr : q_values) {
+            shared_ptr<const Action> action = pr.first;
+            double soft_q_value = pr.second;
+            double action_weight = exp((soft_q_value/temp) - normalisation_term);
             action_weight *= get_parent_action_prob(parent_distr, action);
             action_weights[action] = action_weight;
             sum_action_weights += action_weight;
