@@ -97,6 +97,12 @@ namespace thts {
             double get_max_linear_utility(const Vec& context_weight) const;
 
             /**
+             * Get the hypervolume of this convex hull
+             * ref_point is a reference point that must be weakly dominated by all points in the convex hull
+             */
+            double hypervolume(const Vec& ref_point) const;
+
+            /**
              * TODO: want this directly implemented in operator<<
              * But declaring operator<< as friend wasnt working because I couldnt work out how to declare a templated 
              * function as a friend hmph

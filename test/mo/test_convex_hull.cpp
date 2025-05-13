@@ -33,6 +33,14 @@ static Eigen::ArrayXd make_vec(double a, double b) {
     return v;
 }
 
+static Eigen::ArrayXd make_vec(double a, double b, double c) {
+    Eigen::ArrayXd v(3);
+    v[0] = a;
+    v[1] = b;
+    v[2] = c;
+    return v;
+}
+
 
 
 
@@ -631,4 +639,55 @@ TEST(Ch_Arithmetic, add_vector) {
 
     EXPECT_TRUE(ch2.check_fits_expected(expected_ch2));
     EXPECT_EQ(ch2.size(), 3u);
+}
+
+
+
+
+
+
+
+/**
+ * Hypervolume tests
+ */
+TEST(Ch_Hypervolume, hypervolume_2d) {
+    unordered_set<Vec> points = {
+        make_vec(2.0,1.0),
+        make_vec(1.0,2.0),
+    };
+    TestableConvexHull ch(points);
+
+    Vec ref_point = make_vec(0.0, 0.0);
+    double expected_hypervolume = 3.5;
+    EXPECT_NEAR(ch.hypervolume(ref_point), expected_hypervolume, 1.0e-10);
+}
+
+
+// N.B. actually computed this incorrectly by hand originally
+// Originally had (1,1,2), thought volume was 6.5, but actually 6.3333, as forgot pyramid at corner
+// Changed to (1,1,4) to make hypervolume 11 and not a weird fraction
+TEST(Ch_Hypervolume, hypervolume_3d) {
+    unordered_set<Vec> points = {
+        make_vec(1.0,1.0,4.0),
+        make_vec(2.0,2.0,1.0),
+    };
+    TestableConvexHull ch(points);
+
+
+    Vec ref_point = make_vec(0.0, 0.0, 0.0);
+    double expected_hypervolume = 11.0;
+    EXPECT_NEAR(ch.hypervolume(ref_point), expected_hypervolume, 1.0e-10);
+}
+
+
+TEST(Ch_Hypervolume, hypervolume_error) {
+    unordered_set<Vec> points = {
+        make_vec(1.0,1.0,2.0),
+        make_vec(2.0,2.0,1.0),
+    };
+    TestableConvexHull ch(points);
+
+
+    Vec ref_point = make_vec(2.0, 2.0, 2.0);
+    EXPECT_ANY_THROW(ch.hypervolume(ref_point));
 }

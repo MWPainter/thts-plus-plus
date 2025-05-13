@@ -27,23 +27,6 @@ static Eigen::ArrayXd make_vec(double a, double b) {
     return v;
 }
 
-static Eigen::ArrayXd make_vec(double a, double b, double c) {
-    Eigen::ArrayXd v(3);
-    v[0] = a;
-    v[1] = b;
-    v[2] = c;
-    return v;
-}
-
-static Eigen::ArrayXd make_vec(double a, double b, double c, double d) {
-    Eigen::ArrayXd v(4);
-    v[0] = a;
-    v[1] = b;
-    v[2] = c;
-    v[3] = d;
-    return v;
-}
-
 
 
 

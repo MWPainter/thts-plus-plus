@@ -14,6 +14,12 @@
 #include "coin-or/CoinPackedMatrix.hpp"
 
 
+#include "libqhullcpp/Qhull.h"
+#include "libqhullcpp/QhullFacetList.h"
+#include "libqhullcpp/QhullVertexSet.h"
+#include "libqhullcpp/RboxPoints.h"
+
+
 /**
  * ConvexHull implementation
  */
@@ -560,6 +566,72 @@ namespace thts {
             }
         }
         return max_scalarised_value;
+    }
+
+    /**
+     * Hypeervolume of this convex hull
+     * Using qhull library to calculate this
+     * Needs the actual geometric convex hull, not the multi-objective definition of one
+     * 
+     * Consider points (1,2) and (2,1), with reference point (0,0)
+     * Then the geometric convex hull is (0,0), (0,2), (1,2), (2,1) and (2,0) and the hypervolume is 3.5
+     * 
+     * This can be calculated by projecting the points onto the hyperplane defined from the reference point
+     * For example, (1,2) and (2,1) would be projected to (1,0) and (2,0) onto the x-axis (hyperplane = line in 2D)
+     * Similarly get (0,2) and (0,1) on the y-axis, and qhull can compute {(0,0), (0,2), (1,2), (2,1), (2,0)} is the 
+     * convex hull from the points {(0,0), (1,2), (2,1), (2,0), (0,2), (0,1), (1,0)}
+     * 
+     * Note that because the projections are onto hyperplanes in a standard orientation, to project the points onto 
+     * the hyperplane normal to the ith axis, we just set the ith coordinate to the reference point's ith coordinate
+     * 
+     * Note also that all projected points need to be included in further projections, otherwise the geometric convex 
+     * hull may be incorrect. This is the case in the 3D example in unit tests, where the point (0,0,2) gets missed, 
+     * as it requires projecting the point (1,1,2) onto (0,0,2)
+     * 
+     * This blows up exponentially with dimensions. So may be very slow for higher dimensions
+     */
+    double ConvexHull::hypervolume(const Vec& ref_point) const
+    {
+        // Check that the reference point is weakly dominated by all points in the convex hull
+        for (const Vec& point : ch_points) {
+            if (!point.weakly_pareto_dominates(ref_point)) {
+                throw runtime_error("Reference point needs to be (pareto) weakly dominated by all points in the convex "
+                    "hull to compute hypervolume.");
+            }
+        }
+
+        // Add initial points to the geometric hull points
+        int dim = ref_point.vec.size();
+        unordered_set<Vec> geometric_hull_points;
+
+        geometric_hull_points.insert(ref_point);
+        for (const Vec& point : ch_points) {
+            geometric_hull_points.insert(point);
+        }
+
+        // Project the points onto the hyperplane defined at the reference point, one dimension at a time 
+        for (int i = 0; i < dim; i++) {
+            unordered_set<Vec> projected_points;
+            for (const Vec& point : geometric_hull_points) {
+                Vec projected_point = point;
+                projected_point.vec[i] = ref_point.vec[i];
+                projected_points.insert(projected_point);
+            }
+            geometric_hull_points.insert(projected_points.begin(), projected_points.end());
+        }
+
+        // Convert the geometric hull points to a flat vector for qhull
+        int num_points = geometric_hull_points.size();
+        std::vector<double> qhull_flat_input;
+        qhull_flat_input.reserve(num_points * dim);
+        for (const Vec& point : geometric_hull_points) {
+            qhull_flat_input.insert(qhull_flat_input.end(), point.vec.begin(), point.vec.end());
+        }
+        
+        // Run qhull to compute the convex hull, and output the hypervolume
+        orgQhull::Qhull qhull;
+        qhull.runQhull("", dim, num_points, qhull_flat_input.data(), "Qt Qx");
+        return qhull.volume();
     }
 
     /**
