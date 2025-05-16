@@ -649,12 +649,12 @@ namespace thts {
             unordered_map<string,double> alg_params;
 
             // UCT 
-            // -16.8
+            // -20.8
             alg_id = UCT_ALG_ID;
             alg_params = 
             {
-                {ADAPTIVE_BIAS_PARAM_ID, 0},
-                {BIAS_PARAM_ID, 0.773029},
+                {ADAPTIVE_BIAS_PARAM_ID, 1},
+                {BIAS_PARAM_ID, 0.01},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -673,13 +673,12 @@ namespace thts {
             ));
 
             // MaxUCT 
-            // -16
-            // TODO
+            // -19.4248
             alg_id = MAX_UCT_ALG_ID;
             alg_params = 
             {
                 {ADAPTIVE_BIAS_PARAM_ID, 1},
-                {BIAS_PARAM_ID, 3.11406},
+                {BIAS_PARAM_ID, 2.1},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -698,13 +697,13 @@ namespace thts {
             ));
 
             // HMCTS
-            // -17.6
+            // -23.3571
             alg_id = HMCTS_ALG_ID;
             alg_params = 
             {
                 {ADAPTIVE_BIAS_PARAM_ID, 1},
-                {BIAS_PARAM_ID, 0.0255415},
-                {UCT_BUDGET_PARAM_ID, 1},
+                {BIAS_PARAM_ID, 0.0059},
+                {UCT_BUDGET_PARAM_ID, 4999},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -723,13 +722,13 @@ namespace thts {
             ));
 
             // MENTS
-            // -16
+            // -20.0833
             alg_id = MENTS_ALG_ID;
             alg_params = 
             {
-                {NORMALISE_Q_VALUES_PARAM_ID, 1},
-                {TEMP_PARAM_ID, 0.001},
-                {EPSILON_PARAM_ID, 0.0},
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 0.084},
+                {EPSILON_PARAM_ID, 0.98},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
             run_ids->push_back(RunID(
@@ -749,15 +748,15 @@ namespace thts {
             ));
 
             // BTS
-            // -15.8
+            // -19.3
             alg_id = BTS_ALG_ID;
             alg_params = 
             {
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
-                {TEMP_PARAM_ID, 96.6912},
-                {DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
-                {DECAY_FN_SCALE_PARAM_ID, 30.4339},
-                {EPSILON_PARAM_ID, 0.0001},
+                {TEMP_PARAM_ID, 3.0},
+                {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                {DECAY_FN_SCALE_PARAM_ID, 0.01},
+                {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
             run_ids->push_back(RunID(
@@ -777,19 +776,18 @@ namespace thts {
             ));
 
             // DENTS
-            // -17.2
-            // TODO
+            // -18.5
             alg_id = DENTS_ALG_ID;
             alg_params = 
             {
-                {NORMALISE_Q_VALUES_PARAM_ID, 1},
-                {TEMP_PARAM_ID, 0.001},
-                {DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
-                {DECAY_FN_SCALE_PARAM_ID, 100},
-                {ENTROPY_COEFF_PARAM_ID, 0.001},
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 3.22852},
+                {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                {DECAY_FN_SCALE_PARAM_ID, 100.0},
+                {ENTROPY_COEFF_PARAM_ID, 0.0654013},
                 {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_CONST},
                 {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 100.0},
-                {EPSILON_PARAM_ID, 0.0},
+                {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
             run_ids->push_back(RunID(
@@ -809,13 +807,13 @@ namespace thts {
             ));
 
             // RENTS
-            // -15.8
+            // -19.1
             alg_id = RENTS_ALG_ID;
             alg_params = 
             {
-                {NORMALISE_Q_VALUES_PARAM_ID, 1},
-                {TEMP_PARAM_ID, 0.00939754},
-                {EPSILON_PARAM_ID, 0.398645},
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 0.00253789},
+                {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
             run_ids->push_back(RunID(
@@ -833,15 +831,15 @@ namespace thts {
                 num_threads,
                 eval_threads
             ));
-
+            
             // TENTS
-            // -16.8
+            // -20.8824
             alg_id = TENTS_ALG_ID;
             alg_params = 
             {
-                {NORMALISE_Q_VALUES_PARAM_ID, 1},
-                {TEMP_PARAM_ID, 0.018575},
-                {EPSILON_PARAM_ID, 0.0001},
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 0.247869},
+                {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
             run_ids->push_back(RunID(
@@ -893,12 +891,12 @@ namespace thts {
             unordered_map<string,double> alg_params;
 
             // UCT 
-            // 0.861813
+            // 0.816177
             alg_id = UCT_ALG_ID;
             alg_params = 
             {
                 {ADAPTIVE_BIAS_PARAM_ID, 1},
-                {BIAS_PARAM_ID, 7.38704},
+                {BIAS_PARAM_ID, 3.03027},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -917,13 +915,12 @@ namespace thts {
             ));
 
             // MaxUCT 
-            // 0.826829
-            // TODO
+            // 0.803223
             alg_id = MAX_UCT_ALG_ID;
             alg_params = 
             {
                 {ADAPTIVE_BIAS_PARAM_ID, 1},
-                {BIAS_PARAM_ID, 1.18597},
+                {BIAS_PARAM_ID, 1.34473},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -942,13 +939,13 @@ namespace thts {
             ));
 
             // HMCTS
-            // 0.841411
+            // 0.809554
             alg_id = HMCTS_ALG_ID;
             alg_params = 
             {
-                {ADAPTIVE_BIAS_PARAM_ID, 0},
-                {BIAS_PARAM_ID, 0.0506811},
-                {UCT_BUDGET_PARAM_ID, 2426},
+                {ADAPTIVE_BIAS_PARAM_ID, 1},
+                {BIAS_PARAM_ID, 2.75426},
+                {UCT_BUDGET_PARAM_ID, 4995},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -967,13 +964,13 @@ namespace thts {
             ));
 
             // MENTS
-            // 0.849875
+            // 0.821816
             alg_id = MENTS_ALG_ID;
             alg_params = 
             {
-                {NORMALISE_Q_VALUES_PARAM_ID, 1},
-                {TEMP_PARAM_ID, 0.00159796},
-                {EPSILON_PARAM_ID, 0.132675},
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 0.00621147},
+                {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
             run_ids->push_back(RunID(
@@ -991,17 +988,17 @@ namespace thts {
                 num_threads,
                 eval_threads
             ));
-
+            
             // BTS
-            // 0.854984
+            // 0.829243
             alg_id = BTS_ALG_ID;
             alg_params = 
             {
                 {NORMALISE_Q_VALUES_PARAM_ID, 1},
                 {TEMP_PARAM_ID, 0.827971},
-                {DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
-                {DECAY_FN_SCALE_PARAM_ID, 1.09636},
-                {EPSILON_PARAM_ID, 0.39285},
+                {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                {DECAY_FN_SCALE_PARAM_ID, 0.01},
+                {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
             run_ids->push_back(RunID(
@@ -1021,19 +1018,18 @@ namespace thts {
             ));
 
             // DENTS
-            // 0.85839
-            // TODO
+            // 0.83561
             alg_id = DENTS_ALG_ID;
             alg_params = 
             {
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
-                {TEMP_PARAM_ID, 0.528818},
+                {TEMP_PARAM_ID, 0.820547},
                 {DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
                 {DECAY_FN_SCALE_PARAM_ID, 0.0100092},
-                {ENTROPY_COEFF_PARAM_ID, 0.0010013},
-                {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_CONST},
-                {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 0.0100082},
-                {EPSILON_PARAM_ID, 0.0001},
+                {ENTROPY_COEFF_PARAM_ID, 0.0115623},
+                {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_INV_SQRT},
+                {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 10.0267},
+                {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
             run_ids->push_back(RunID(
@@ -1053,13 +1049,13 @@ namespace thts {
             ));
 
             // RENTS
-            // 0.860058
+            // 0.844765
             alg_id = RENTS_ALG_ID;
             alg_params = 
             {
                 {NORMALISE_Q_VALUES_PARAM_ID, 1},
-                {TEMP_PARAM_ID, 0.00100434},
-                {EPSILON_PARAM_ID, 0.838382},
+                {TEMP_PARAM_ID, 0.001},
+                {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
             run_ids->push_back(RunID(
@@ -1079,13 +1075,13 @@ namespace thts {
             ));
 
             // TENTS
-            // 0.853383
+            // 0.825999
             alg_id = TENTS_ALG_ID;
             alg_params = 
             {
-                {NORMALISE_Q_VALUES_PARAM_ID, 1},
-                {TEMP_PARAM_ID, 0.00181297},
-                {EPSILON_PARAM_ID, 0.218298},
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 0.00512999},
+                {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
             run_ids->push_back(RunID(
@@ -2112,7 +2108,9 @@ namespace thts {
         int eval_threads,
         bayesopt::Parameters params,
         ofstream &results_summary_fs,
-        ofstream &results_evals_fs) :
+        ofstream &results_evals_fs,
+        bool use_std_mean_eval_threshold,
+        double std_mean_eval_threshold) :
             bayesopt::ContinuousModel(RELEVANT_PARAM_IDS.at(alg_id).size(), params),
             num_hyperparams(RELEVANT_PARAM_IDS.at(alg_id).size()),
             env_id(env_id),
@@ -2134,6 +2132,8 @@ namespace thts {
             best_alg_params(),
             results_summary_fs(results_summary_fs),
             results_evals_fs(results_evals_fs),
+            use_std_mean_eval_threshold(use_std_mean_eval_threshold),
+            std_mean_eval_threshold(std_mean_eval_threshold),
             hp_opt_iter(0)
     {
         // error checking
@@ -2201,7 +2201,33 @@ namespace thts {
     };
 
     /**
+     * Helper function to compute mean and std of vector of evals
+     */
+    void compute_mean_and_std_(const vector<double>& evals, double& mean_eval, double& std_eval, double& std_mean_eval)
+    {
+        double evals_sum = 0.0;
+        for (double eval : evals) {
+            evals_sum += eval;
+        }
+        mean_eval = evals_sum / evals.size();
+
+        double std_eval_sum = 0.0;
+        for (double eval : evals) {
+            std_eval_sum += (eval - mean_eval) * (eval - mean_eval);
+        }
+        std_eval = sqrt(std_eval_sum / (evals.size() - 1));
+        std_mean_eval = std_eval / sqrt(evals.size());
+    }
+
+    /**
      * Hyperparam optimiser - fn to optimise
+     * 
+     * If using mean estimate variance threshold, then we keep repeating the params until the variance of the mean 
+     * estimate is below the threshold.
+     * 
+     * If Vbar is the mean estimate, V1 is a rv for value esimate of a run, and std^2=Var(V1)
+     * Then after n repeats, Var(Vbar) = Var(V1) / n approx= std^2 / n
+     * So when std^2 / n < mean_estimate_variance_threshold, then we can stop
      */
     double HyperparamOptimiser::evaluateSample(const bayesopt::vectord &query) 
     {
@@ -2218,18 +2244,36 @@ namespace thts {
             eval_delta,
             rollouts_per_mc_eval,
             max_trial_length,
-            num_repeats,
+            1, //num_repeats, - now manually running multiple repeats
             num_threads,
             eval_threads
         );
-        vector<double> evals = thts::run_expr(run_id, false);
 
-        // Compute mean eval + log stuff
-        double evals_sum = 0.0;
-        for (double eval : evals) {
-            evals_sum += eval;
+        int repeats_run = 0;
+        vector<double> evals;
+        double mean_eval = 0.0;
+        double std_eval = 0.0;
+        double std_mean_eval = 0.0;
+
+        // run initial repeats
+        while (repeats_run < num_repeats) {
+            double eval = thts::run_expr(run_id, true, repeats_run).at(0);
+            evals.push_back(eval);
+            repeats_run++;
         }
-        double mean_eval = evals_sum / evals.size();
+        compute_mean_and_std_(evals, mean_eval, std_eval, std_mean_eval);
+        cout << "Hp_opt_iter " << hp_opt_iter << ". mean_eval=" << mean_eval << ",std_mean_eval=" << std_mean_eval << " > " << std_mean_eval_threshold << endl;
+
+        // While below std threshold, keep running repeats
+        while (use_std_mean_eval_threshold && (std_mean_eval > std_mean_eval_threshold)) {
+            double eval = thts::run_expr(run_id, true, repeats_run).at(0);
+            evals.push_back(eval);
+            repeats_run++;
+            compute_mean_and_std_(evals, mean_eval, std_eval, std_mean_eval);
+            cout << "Hp_opt_iter " << hp_opt_iter << ". mean_eval=" << mean_eval << ",std_mean_eval=" << std_mean_eval << " > " << std_mean_eval_threshold << endl;
+        }
+
+        // Keep track if this was best hyperparams, and log all repeats, log mean_eval in respective hp_opt files
         if (mean_eval > best_eval) {
             best_eval = mean_eval;
             best_alg_params = alg_params;
@@ -2334,27 +2378,44 @@ namespace thts {
     shared_ptr<HyperparamOptimiser> get_hyperparam_optimiser_from_expr_id(
         string expr_id, time_t expr_timestamp, ofstream &hp_opt_summary_fs, ofstream &hp_opt_evals_fs)
     {
-        // Params shared across optimisations (related to envs)
+        // Params shared across optimisations (related to envs / hp_opt, and not algs themselves)
         string env_id = HP_OPT_EXPR_ID_TO_ENV_ID.at(expr_id);
         bool eval_wrt_time = false;
-        double search_runtime = 50000.0;
+        double search_runtime = 10000.0;
         int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
-        double eval_delta = 25000.0;
-        int rollouts_per_mc_eval = (DET_ENVS.contains(env_id)) ? 1 : 1024;
-        int num_repeats = 5;
+        double eval_delta = 10000.0;
+        int rollouts_per_mc_eval = 1024;
+        int num_repeats = 10; // min repeats
         int num_threads = 16;
-        int eval_threads = (DET_ENVS.contains(env_id)) ? 1 : 16;
+        int eval_threads = 16;
+        bool use_std_mean_eval_threshold = true;
 
         // Params being tuned
         string alg_id;
         unordered_map<string, pair<double,double>> alg_params_min_max;
 
-        // Defualt Q values
+        // Defualt Q values and std_mean_eval_thresholds (default values are for sparse rewards on frozen lake envs)
         double min_default_q_value = 0.0;
         if (env_id == FROZEN_LAKE_D_8x8_ENV_ID || env_id == SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID) {
             min_default_q_value = -((double) max_trial_length);
         } else if (env_id == SAILING_ENV_NORTH_ID || env_id == SAILING_ENV_SOUTH_EAST_ID) {
             min_default_q_value = -5.0 * ((double) max_trial_length);
+        }
+
+        // std mean eval thresholds
+        double std_mean_eval_threshold = 1.0; 
+        if (env_id == FROZEN_LAKE_D_8x8_ENV_ID) {
+            std_mean_eval_threshold = 1.0;
+        } else if (env_id == FROZEN_LAKE_S_8x8_ENV_ID) {
+            std_mean_eval_threshold = 0.015;
+        } else if (env_id == SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID) {
+            std_mean_eval_threshold = 0.05;
+        } else if (env_id == SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID) {
+            std_mean_eval_threshold = 0.005; 
+        } else if (env_id == SAILING_ENV_NORTH_ID) {
+            std_mean_eval_threshold = 2.5;
+        } else if (env_id == SAILING_ENV_SOUTH_EAST_ID) {
+            std_mean_eval_threshold = 2.5; 
         }
 
         // UCT
@@ -2398,7 +2459,8 @@ namespace thts {
                 {NORMALISE_Q_VALUES_PARAM_ID, make_pair(0.0, 1.0)},
                 {TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
                 {EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
-                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,0.0)}
+                // {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,0.0)}
+                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,min_default_q_value)}
             };
         }
         // BTS
@@ -2416,7 +2478,8 @@ namespace thts {
                 {DECAY_FN_PARAM_ID, make_pair(0.0, 3.0)},
                 {DECAY_FN_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
                 {EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
-                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,0.0)}
+                // {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,0.0)}
+                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,min_default_q_value)}
             };
         }
         // DENTS
@@ -2437,7 +2500,8 @@ namespace thts {
                 {ENTROPY_DECAY_FN_PARAM_ID, make_pair(0.0, 3.0)},
                 {ENTROPY_DECAY_FN_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
                 {EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
-                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,0.0)}
+                // {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,0.0)}
+                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,min_default_q_value)}
             };
         }
         // RENTS
@@ -2453,7 +2517,8 @@ namespace thts {
                 {NORMALISE_Q_VALUES_PARAM_ID, make_pair(0.0, 1.0)},
                 {TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
                 {EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
-                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,0.0)}
+                // {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,0.0)}
+                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,min_default_q_value)}
             };
         }
         // TENTS
@@ -2469,7 +2534,8 @@ namespace thts {
                 {NORMALISE_Q_VALUES_PARAM_ID, make_pair(0.0, 1.0)},
                 {TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
                 {EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
-                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,0.0)}
+                // {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,0.0)}
+                {DEFAULT_Q_VALUE_PARAM_ID, make_pair(min_default_q_value,min_default_q_value)}
             };
         }
         // HMCTS
@@ -2489,7 +2555,7 @@ namespace thts {
         }
         // Default, haven't set up hp opt experiments for this env
         else 
-        {
+        { 
             stringstream ss;
             ss << "Error in get_hyperparam_optimiser_from_expr_id for expr_id = " << expr_id;
             throw runtime_error(ss.str());
@@ -2498,7 +2564,7 @@ namespace thts {
         // Bayesopt params
         bayesopt::Parameters bo_params;
         bo_params.surr_name = "sGaussianProcessML";
-        bo_params.noise = 1.0; 
+        bo_params.noise = std_mean_eval_threshold*std_mean_eval_threshold; //1.0; 
         bo_params.n_iterations = 190;
         bo_params.n_init_samples = 10;
         bo_params.n_iter_relearn = 10;
@@ -2518,9 +2584,11 @@ namespace thts {
             num_repeats,
             num_threads,
             eval_threads,
-            bo_params,
+            bo_params, 
             hp_opt_summary_fs,
-            hp_opt_evals_fs
+            hp_opt_evals_fs,
+            use_std_mean_eval_threshold,
+            std_mean_eval_threshold
         );
     };
 

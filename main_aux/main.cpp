@@ -21,6 +21,8 @@ int main(int argc, char* argv[]) {
         thts::run_hp_opt(argv[2]);
     } else if (string(argv[1]) == "noise") {
         // thts::estimate_noise_for_hp_opt(argv[2]);
+    } else {
+        cout << "Unknown command: " << argv[1] << endl;
     }
 
     return 0;

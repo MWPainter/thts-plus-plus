@@ -43,7 +43,7 @@ namespace thts {
 
     /**
      * Compute next location helper
-     * 
+     *  
      * Returns the values of x,y (passed by ref) of taking 'action' from 'state'
     */
     shared_ptr<const Int3TupleState> compute_next_state_deterministic(

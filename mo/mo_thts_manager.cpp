@@ -13,7 +13,8 @@ namespace thts {
     MoThtsManager::MoThtsManager(const MoThtsManagerArgs& args) :
         ThtsManager(args),
         reward_dim(args.reward_dim),
-        mo_heuristic_fn(args.mo_heuristic_fn)
+        mo_heuristic_fn(args.mo_heuristic_fn),
+        use_vector_visit_counts(args.use_vector_visit_counts)
     {
         MoThtsEnv& mo_thts_env = *dynamic_pointer_cast<MoThtsEnv>(thts_env()); 
         if (reward_dim == MoThtsManagerArgs::reward_dim_default) {

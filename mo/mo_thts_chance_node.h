@@ -24,6 +24,9 @@ namespace thts {
         // Allow ThtsDNode access to private members
         friend MoThtsDNode;
 
+        protected:
+            Vec vector_visit_count;
+
         public: 
             /**
              * Default constructor.
@@ -76,5 +79,8 @@ namespace thts {
                 const Eigen::ArrayXd trial_cumulative_return_after_node, 
                 const Eigen::ArrayXd trial_cumulative_return,
                 ThtsEnvContext& ctx) = 0;
+
+            double get_num_visits(ThtsEnvContext& ctx);
+            virtual void visit_itfc(ThtsEnvContext& ctx) override;
     };
 }

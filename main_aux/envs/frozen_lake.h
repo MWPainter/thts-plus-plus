@@ -28,11 +28,17 @@ static const std::string FL_6x6_NO_HOLE_MAP[] =
 
 // copied from gymnasium
 static const std::string FL_4x4_MAP[] =
+// {
+//     "SFFF", 
+//     "FHFH", 
+//     "FFFH", 
+//     "HFFG"
+// };
 {
     "SFFF", 
-    "FHFH", 
-    "FFFH", 
-    "HFFG"
+    "FFFF", 
+    "FFFF", 
+    "FFFG"
 };
 
 // copied from gymnasium

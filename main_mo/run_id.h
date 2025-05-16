@@ -17,6 +17,14 @@
 #include "bayesopt/bayesopt.hpp"
 #include "bayesopt/parameters.hpp"
 
+
+// param ids - decay fn options
+enum DECAY_FN_VALUES {
+    DECAY_FN_CONST = 0,
+    DECAY_FN_INV_LOG = 1,
+    DECAY_FN_INV_SQRT = 2,
+};
+
 // env ids - debug
 static const std::string DEBUG_ENV_1_ID = "debug_env_1"; // not stoch + 2 rew
 static const std::string DEBUG_ENV_2_ID = "debug_env_2"; // stoch + 2 rew
@@ -263,7 +271,7 @@ static const std::string EVAL_FT_S5_EXPR_ID = "650_fruit_tree_stoch_5";
 static const std::string EVAL_FT_S7_EXPR_ID = "660_fruit_tree_stoch_7";
 
 // expr ids - lists of czt / chmcts / bts / dents expr_ids
-static const std::unordered_map<std::string,std::string> HP_OPT_MOGYM_CZT_EXPR_ID_TO_ENV_ID =
+static const std::unordered_map<std::string,std::string> HP_OPT_EXPR_ID_TO_ENV_ID =
 {
     {HP_OPT_DST_CZT_EXPR_ID,                VAMPLEW_DST_ENV_ID},
     {HP_OPT_DST_STOCH_CZT_EXPR_ID,          VAMPLEW_STOCH_DST_ENV_ID},
@@ -279,9 +287,7 @@ static const std::unordered_map<std::string,std::string> HP_OPT_MOGYM_CZT_EXPR_I
     {HP_OPT_4R_TIMED_CZT_EXPR_ID,           FOUR_ROOM_TIMED_ENV_ID},
     {HP_OPT_MINECART_DET_CZT_EXPR_ID,       MINECART_DETERMINISTIC_ENV_ID},
     {HP_OPT_MINECART_CZT_EXPR_ID,           MINECART_ENV_ID},
-};
-static const std::unordered_map<std::string,std::string> HP_OPT_MOGYM_CHMCTS_EXPR_ID_TO_ENV_ID =
-{
+    
     {HP_OPT_DST_CHMCTS_EXPR_ID,                VAMPLEW_DST_ENV_ID},
     {HP_OPT_DST_STOCH_CHMCTS_EXPR_ID,          VAMPLEW_STOCH_DST_ENV_ID},
     {HP_OPT_DST_IMPR_CHMCTS_EXPR_ID,           IMPROVED_DST_ENV_ID},
@@ -296,9 +302,7 @@ static const std::unordered_map<std::string,std::string> HP_OPT_MOGYM_CHMCTS_EXP
     {HP_OPT_4R_TIMED_CHMCTS_EXPR_ID,           FOUR_ROOM_TIMED_ENV_ID},
     {HP_OPT_MINECART_DET_CHMCTS_EXPR_ID,       MINECART_DETERMINISTIC_ENV_ID},
     {HP_OPT_MINECART_CHMCTS_EXPR_ID,           MINECART_ENV_ID},
-};
-static const std::unordered_map<std::string,std::string> HP_OPT_MOGYM_SMBTS_EXPR_ID_TO_ENV_ID =
-{   
+    
     {HP_OPT_DST_SMBTS_EXPR_ID,                VAMPLEW_DST_ENV_ID},
     {HP_OPT_DST_STOCH_SMBTS_EXPR_ID,          VAMPLEW_STOCH_DST_ENV_ID},
     {HP_OPT_DST_IMPR_SMBTS_EXPR_ID,           IMPROVED_DST_ENV_ID},
@@ -313,9 +317,7 @@ static const std::unordered_map<std::string,std::string> HP_OPT_MOGYM_SMBTS_EXPR
     {HP_OPT_4R_TIMED_SMBTS_EXPR_ID,           FOUR_ROOM_TIMED_ENV_ID},
     {HP_OPT_MINECART_DET_SMBTS_EXPR_ID,       MINECART_DETERMINISTIC_ENV_ID},
     {HP_OPT_MINECART_SMBTS_EXPR_ID,           MINECART_ENV_ID},
-};
-static const std::unordered_map<std::string,std::string> HP_OPT_MOGYM_SMDENTS_EXPR_ID_TO_ENV_ID =
-{
+    
     {HP_OPT_DST_SMDENTS_EXPR_ID,                VAMPLEW_DST_ENV_ID},
     {HP_OPT_DST_STOCH_SMDENTS_EXPR_ID,          VAMPLEW_STOCH_DST_ENV_ID},
     {HP_OPT_DST_IMPR_SMDENTS_EXPR_ID,           IMPROVED_DST_ENV_ID},
@@ -330,6 +332,78 @@ static const std::unordered_map<std::string,std::string> HP_OPT_MOGYM_SMDENTS_EX
     {HP_OPT_4R_TIMED_SMDENTS_EXPR_ID,           FOUR_ROOM_TIMED_ENV_ID},
     {HP_OPT_MINECART_DET_SMDENTS_EXPR_ID,       MINECART_DETERMINISTIC_ENV_ID},
     {HP_OPT_MINECART_SMDENTS_EXPR_ID,           MINECART_ENV_ID},
+};
+
+static const std::unordered_map<std::string,std::string> CZT_HP_OPT_EXPR_IDS =
+{
+    HP_OPT_DST_CZT_EXPR_ID,
+    HP_OPT_DST_STOCH_CZT_EXPR_ID,
+    HP_OPT_DST_IMPR_CZT_EXPR_ID,
+    HP_OPT_DST_IMPR_STOCH_CZT_EXPR_ID,
+    HP_OPT_FT_CZT_EXPR_ID,
+    HP_OPT_FT_S5_CZT_EXPR_ID,
+    HP_OPT_FT_S7_CZT_EXPR_ID,
+    HP_OPT_BB_CZT_EXPR_ID,
+    HP_OPT_RG_CZT_EXPR_ID,
+    HP_OPT_RG_TIMED_CZT_EXPR_ID,
+    HP_OPT_4R_CZT_EXPR_ID,
+    HP_OPT_4R_TIMED_CZT_EXPR_ID,
+    HP_OPT_MINECART_DET_CZT_EXPR_ID,
+    HP_OPT_MINECART_CZT_EXPR_ID,
+};
+
+static const std::unordered_map<std::string,std::string> CHMCTS_HP_OPT_EXPR_IDS = 
+{
+    HP_OPT_DST_CHMCTS_EXPR_ID
+    HP_OPT_DST_STOCH_CHMCTS_EXPR_ID
+    HP_OPT_DST_IMPR_CHMCTS_EXPR_ID
+    HP_OPT_DST_IMPR_STOCH_CHMCTS_EXPR_ID
+    HP_OPT_FT_CHMCTS_EXPR_ID
+    HP_OPT_FT_S5_CHMCTS_EXPR_ID
+    HP_OPT_FT_S7_CHMCTS_EXPR_ID
+    HP_OPT_BB_CHMCTS_EXPR_ID
+    HP_OPT_RG_CHMCTS_EXPR_ID
+    HP_OPT_RG_TIMED_CHMCTS_EXPR_ID
+    HP_OPT_4R_CHMCTS_EXPR_ID
+    HP_OPT_4R_TIMED_CHMCTS_EXPR_ID
+    HP_OPT_MINECART_DET_CHMCTS_EXPR_ID
+    HP_OPT_MINECART_CHMCTS_EXPR_ID
+};
+
+static const std::unordered_map<std::string,std::string> SMBTS_HP_OPT_EXPR_IDS = 
+{
+    HP_OPT_DST_SMBTS_EXPR_ID
+    HP_OPT_DST_STOCH_SMBTS_EXPR_ID
+    HP_OPT_DST_IMPR_SMBTS_EXPR_ID
+    HP_OPT_DST_IMPR_STOCH_SMBTS_EXPR_ID
+    HP_OPT_FT_SMBTS_EXPR_ID
+    HP_OPT_FT_S5_SMBTS_EXPR_ID
+    HP_OPT_FT_S7_SMBTS_EXPR_ID
+    HP_OPT_BB_SMBTS_EXPR_ID
+    HP_OPT_RG_SMBTS_EXPR_ID
+    HP_OPT_RG_TIMED_SMBTS_EXPR_ID
+    HP_OPT_4R_SMBTS_EXPR_ID
+    HP_OPT_4R_TIMED_SMBTS_EXPR_ID
+    HP_OPT_MINECART_DET_SMBTS_EXPR_ID
+    HP_OPT_MINECART_SMBTS_EXPR_ID
+};
+
+static const std::unordered_map<std::string,std::string> SMDENTS_HP_OPT_EXPR_IDS = 
+{
+    HP_OPT_DST_SMDENTS_EXPR_ID
+    HP_OPT_DST_STOCH_SMDENTS_EXPR_ID
+    HP_OPT_DST_IMPR_SMDENTS_EXPR_ID
+    HP_OPT_DST_IMPR_STOCH_SMDENTS_EXPR_ID
+    HP_OPT_FT_SMDENTS_EXPR_ID
+    HP_OPT_FT_S5_SMDENTS_EXPR_ID
+    HP_OPT_FT_S7_SMDENTS_EXPR_ID
+    HP_OPT_BB_SMDENTS_EXPR_ID
+    HP_OPT_RG_SMDENTS_EXPR_ID
+    HP_OPT_RG_TIMED_SMDENTS_EXPR_ID
+    HP_OPT_4R_SMDENTS_EXPR_ID
+    HP_OPT_4R_TIMED_SMDENTS_EXPR_ID
+    HP_OPT_MINECART_DET_SMDENTS_EXPR_ID
+    HP_OPT_MINECART_SMDENTS_EXPR_ID
 };
 
 // list of all expr ids
@@ -430,9 +504,11 @@ static const std::string SM_SPLIT_VISIT_THRESH_PARAM_ID = "sm_split_visit_thresh
 
 static const std::string SMBTS_SEARCH_TEMP_PARAM_ID = "smbts_search_temp";
 static const std::string SMBTS_EPSILON_PARAM_ID = "smbts_epsilon";
+static const std::string SMBTS_SEARCH_TEMP_DECAY_FN_PARAM_ID = "smbts_search_temp_decay_fn";
 static const std::string SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID = "smbts_use_search_temp_decay";
 static const std::string SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID = "smbts_search_temp_decay_visits_scale";
 
+static const std::string SMDENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID = "smdents_entropy_temp_decay_fn";
 static const std::string SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID = "smdents_entropy_temp_init";
 static const std::string SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID = "smdents_entropy_temp_visits_scale";
 
@@ -458,6 +534,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
             SM_SPLIT_VISIT_THRESH_PARAM_ID,
             SMBTS_SEARCH_TEMP_PARAM_ID,
             SMBTS_EPSILON_PARAM_ID,
+            SMBTS_SEARCH_TEMP_DECAY_FN_PARAM_ID,
             SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID,
             SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID,
         },
@@ -469,8 +546,10 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
             SM_SPLIT_VISIT_THRESH_PARAM_ID,
             SMBTS_SEARCH_TEMP_PARAM_ID,
             SMBTS_EPSILON_PARAM_ID,
+            SMBTS_SEARCH_TEMP_DECAY_FN_PARAM_ID,
             SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID,
             SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID,
+            SMDENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID,
             SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID,
             SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID
         },
@@ -488,6 +567,20 @@ static const std::unordered_set<std::string> INTEGER_PARAM_IDS =
     CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID,
     // SM_MAX_DEPTH,
     SM_SPLIT_VISIT_THRESH_PARAM_ID,
+    SMBTS_SEARCH_TEMP_DECAY_FN_PARAM_ID,
+    SMDENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID,
+};
+
+// List of params to use a log scale in BayesOpt
+static const std::unordered_set<std::string> LOG_SCALE_PARAM_IDS =
+{
+    CZT_BIAS_PARAM_ID,
+    SM_L_INF_THRESH_PARAM_ID,
+    SMBTS_SEARCH_TEMP_PARAM_ID,
+    SMBTS_EPSILON_PARAM_ID,
+    SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID,
+    SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID,
+    SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID,
 };
 
 
@@ -664,7 +757,12 @@ namespace thts {
             double best_eval;
             std::unordered_map<std::string, double> best_alg_params;
 
-            std::ofstream &results_fs;
+            std::ofstream &results_summary_fs;
+            std::ofstream &results_evals_fs;
+
+            bool use_std_mean_eval_threshold;
+            double std_mean_eval_threshold;
+
             int hp_opt_iter;
             
             HyperparamOptimiser(
@@ -681,7 +779,10 @@ namespace thts {
                 int num_threads,
                 int eval_threads,
                 bayesopt::Parameters params,
-                std::ofstream &results_fs);
+                std::ofstream &results_summary_fs,
+                std::ofstream &results_evals_fs,
+                bool use_std_mean_eval_threshold=false,
+                double std_mean_eval_threshold=0.0);
 
             bool is_python_env();
             bool needs_python_interpreter();
@@ -697,7 +798,8 @@ namespace thts {
             void write_header();
 
         private:
-            void write_eval_line(std::unordered_map<std::string,double> alg_params, double eval);
+            void write_eval_lines(std::unordered_map<std::string,double> alg_params, std::vector<double>& evals);
+            void write_summary_line(std::unordered_map<std::string,double> alg_params, double mean_eval);
 
         public:
             void write_best_eval();
@@ -707,7 +809,7 @@ namespace thts {
      * Creates and returns a hyperparamters optimiser from experiment id
     */
     std::shared_ptr<HyperparamOptimiser> get_hyperparam_optimiser_from_expr_id(
-        std::string expr_id, std::time_t expr_timestamp, std::ofstream &hp_opt_fs);
+        std::string expr_id, std::time_t expr_timestamp, std::ofstream &hp_opt_summary_fs, std::ofstream &hp_opt_evals_fs);
 
     /**
      * Lookup expr_id from prefix

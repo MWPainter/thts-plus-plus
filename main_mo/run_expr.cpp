@@ -246,22 +246,31 @@ namespace thts {
      * 
      * We dont try to gracefully exit
     */
-    double run_expr(RunID& run_id, bool eval_at_zero_trials) {
+    vector<double> run_expr(RunID& run_id, bool hp_opt, int hp_opt_replicate) {
         // create results dir + eval file
-        create_results_dir(run_id);
+        if (!hp_opt) {
+            create_results_dir(run_id);
+        }
         string eval_filename = get_mc_eval_results_filename(run_id);
         ofstream eval_file;
-        eval_file.open(eval_filename, ios::out);// | ios::app);
-        write_param_header_to_file(run_id, eval_file);
-        write_eval_header(eval_file);
+        if (!hp_opt) {
+            eval_file.open(eval_filename, ios::out);// | ios::app);
+            write_param_header_to_file(run_id, eval_file);
+            write_eval_header(eval_file);
+        }
 
         // Run experiment 'replicate' many times
-        double avg_mean_over_replicates = 0.0;
+        vector<double> value_estimates = vector<double>(run_id.num_repeats);
         for (int replicate=0; replicate<run_id.num_repeats; replicate++) {
 
             // print
             cout << "Starting run on " << run_id.env_id << " with alg " << run_id.alg_id << " and params " 
-                << helper::unordered_map_pretty_print_string(run_id.alg_params) << ", replicate " << replicate << endl;
+                << helper::unordered_map_pretty_print_string(run_id.alg_params) << ", replicate ";
+            if (!hp_opt) {
+                cout << replicate << endl;
+            } else {
+                cout << hp_opt_replicate << endl;
+            }
                 
             // setup env
             shared_ptr<MoThtsEnv> env = run_id.get_env();
@@ -278,7 +287,7 @@ namespace thts {
 
             // eval at 0 trials
             double mean, stddev, normalised_mean, normalised_stddev;
-            if (eval_at_zero_trials) {
+            if (!hp_opt) {
                 run_mc_eval(
                     mean, 
                     stddev, 
@@ -305,42 +314,44 @@ namespace thts {
                     root_node, 
                     thts_manager, 
                     run_id);
-                write_eval_line(
-                    eval_file, 
-                    replicate, 
-                    search_time_elapsed, 
-                    root_node->get_num_visits(), 
-                    mean, 
-                    stddev, 
-                    normalised_mean, 
-                    normalised_stddev);
+                if (!hp_opt) {
+                    write_eval_line(
+                        eval_file, 
+                        replicate, 
+                        search_time_elapsed, 
+                        root_node->get_num_visits(), 
+                        mean, 
+                        stddev, 
+                        normalised_mean, 
+                        normalised_stddev);
+                }
             }
 
-            // Write tree to file
-            if (replicate == 0) {
-                string tree_filename = get_tree_filename(run_id, replicate);
-                ofstream tree_file;
-                tree_file.open(tree_filename, ios::out);
-                tree_file << root_node->get_pretty_print_string(1) << endl;
-                tree_file.close();
+            if (!hp_opt) {
+                // Write tree to file
+                if (replicate == 0) {
+                    string tree_filename = get_tree_filename(run_id, replicate);
+                    ofstream tree_file;
+                    tree_file.open(tree_filename, ios::out);
+                    tree_file << root_node->get_pretty_print_string(1) << endl;
+                    tree_file.close();
+                }
+
+                // Write debug info
+                if (replicate == 0) {
+                    string debug_filename = get_debug_filename(run_id, replicate);
+                    ofstream debug_file;
+                    debug_file.open(debug_filename, ios::out);
+                    write_debug_info_to_file(root_node, debug_file);
+                    debug_file.close();
+                }
+
+                // Flush
+                eval_file.flush();
             }
 
-            // Write debug info
-            if (replicate == 0) {
-                string debug_filename = get_debug_filename(run_id, replicate);
-                ofstream debug_file;
-                debug_file.open(debug_filename, ios::out);
-                write_debug_info_to_file(root_node, debug_file);
-                debug_file.close();
-            }
-
-            // Flush
-            eval_file.flush();
-
-            // Update avg mean
-            double num_replicates_run = replicate;
-            avg_mean_over_replicates *= (num_replicates_run) / (num_replicates_run+1.0);
-            avg_mean_over_replicates += mean / (num_replicates_run+1.0);
+            // Update results
+            value_estimates[replicate] = mean;
             
             env.reset();
             thts_manager.reset();
@@ -349,10 +360,12 @@ namespace thts {
         }   
 
         // close eval file
-        eval_file.close();
+        if (!hp_opt) {
+            eval_file.close();
+        }
 
         // Return avg mean utility over replicates
-        return avg_mean_over_replicates;
+        return value_estimates;
     }
 
     /**

@@ -48,8 +48,8 @@ static const std::string UCT_BUDGET_PARAM_ID = "uct_budget"; // hmcts's uct budg
 // param ids - decay fn options
 enum DECAY_FN_VALUES {
     DECAY_FN_CONST = 0,
-    DECAY_FN_INV_SQRT = 1,
-    DECAY_FN_INV_LOG = 2,
+    DECAY_FN_INV_LOG = 1,
+    DECAY_FN_INV_SQRT = 2,
 };
 
 // maps alg ids to the param ids that are relevent for it (there is overlap for example many algs use a temp param)
@@ -218,8 +218,8 @@ static const std::unordered_map<std::string,int> ENV_ID_MAX_TRIAL_LEN =
     {SLIPPY_FROZEN_LAKE_S_5x5_ENV_ID,    50},
     {SLIPPY_FROZEN_LAKE_D_6x6_ENV_ID,    50},
     {SLIPPY_FROZEN_LAKE_S_6x6_ENV_ID,    50},
-    {SAILING_ENV_NORTH_ID,      100},
-    {SAILING_ENV_SOUTH_EAST_ID, 100},
+    {SAILING_ENV_NORTH_ID,      32},//100},
+    {SAILING_ENV_SOUTH_EAST_ID, 32},//100},
     {SAILING_8x16_ENV_NORTH_ID,      100},
     {SAILING_8x16_ENV_SOUTH_EAST_ID, 100},
     {SAILING_16x16_ENV_NORTH_ID,      100},
@@ -650,6 +650,10 @@ namespace thts {
 
             std::ofstream &results_summary_fs;
             std::ofstream &results_evals_fs;
+
+            bool use_std_mean_eval_threshold;
+            double std_mean_eval_threshold;
+
             int hp_opt_iter;
             
             HyperparamOptimiser(
@@ -668,7 +672,9 @@ namespace thts {
                 int eval_threads,
                 bayesopt::Parameters params,
                 std::ofstream &results_summary_fs,
-                std::ofstream &results_evals_fs);
+                std::ofstream &results_evals_fs,
+                bool use_std_mean_eval_threshold=false,
+                double std_mean_eval_threshold=0.0);
 
             bool is_python_env();
 

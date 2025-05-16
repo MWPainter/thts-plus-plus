@@ -31,6 +31,21 @@ namespace thts {
         }
     }
 
+    void MoThtsDNode::visit_itfc(ThtsEnvContext& ctx) {
+        ThtsDNode::visit_itfc(ctx);
+        MoThtsContext& mo_ctx = *dynamic_pointer_cast<MoThtsContext>(ctx);
+        vector_visit_count += ctx.context_weight;
+    }
+
+    double MoThtsDNode::get_num_visits(ThtsEnvContext& ctx) {
+        MoThtsManager& mo_thts_manager = *dynamic_pointer_cast<MoThtsManager>(thts_manager());
+        MoThtsContext& mo_ctx = *dynamic_pointer_cast<MoThtsContext>(ctx);
+        if (mo_thts_manager.use_vector_visit_counts) {
+            return vector_visit_count.dot(ctx.context_weight)
+        }
+        return num_visits;
+    }
+
     /**
      * Raise error if call wrong backup fn
     */

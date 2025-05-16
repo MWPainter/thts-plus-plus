@@ -180,14 +180,18 @@ namespace thts {
     /**
      * Performs all of the (replicated) runs corresponding to 'run_id'
     */
-    vector<double> run_expr(RunID& run_id, bool eval_at_zero_trials) {
+    vector<double> run_expr(RunID& run_id, bool hp_opt, int hp_opt_replicate) {
         // create results dir + eval file
-        create_results_dir(run_id);
+        if (!hp_opt) {
+            create_results_dir(run_id);
+        }
         string eval_filename = get_mc_eval_results_filename(run_id);
         ofstream eval_file;
-        eval_file.open(eval_filename, ios::out);// | ios::app);
-        write_param_header_to_file(run_id, eval_file);
-        write_eval_header(eval_file);
+        if (!hp_opt) {
+            eval_file.open(eval_filename, ios::out);// | ios::app);
+            write_param_header_to_file(run_id, eval_file);
+            write_eval_header(eval_file);
+        }
 
         // Run experiment 'replicate' many times
         vector<double> value_estimates = vector<double>(run_id.num_repeats);
@@ -195,7 +199,12 @@ namespace thts {
 
             // print
             cout << "Starting run on " << run_id.env_id << " with alg " << run_id.alg_id << " and params " 
-                << helper::unordered_map_pretty_print_string(run_id.alg_params) << ", replicate " << replicate << endl;
+                << helper::unordered_map_pretty_print_string(run_id.alg_params) << ", replicate ";
+            if (!hp_opt) {
+                cout << replicate << endl;
+            } else {
+                cout << hp_opt_replicate << endl;
+            }
                 
             // setup env
             shared_ptr<ThtsEnv> env = run_id.get_env();
@@ -212,7 +221,7 @@ namespace thts {
 
             // eval at 0 trials
             double mean, stddev;
-            if (eval_at_zero_trials) {
+            if (!hp_opt) {
                 run_mc_eval(
                     mean, 
                     stddev, 
@@ -242,35 +251,39 @@ namespace thts {
                     root_node, 
                     thts_manager, 
                     run_id);
-                write_eval_line(
-                    eval_file, 
-                    replicate, 
-                    search_time_elapsed, 
-                    root_node->get_num_visits(), 
-                    mean, 
-                    stddev);
+                if (!hp_opt) {
+                    write_eval_line(
+                        eval_file, 
+                        replicate, 
+                        search_time_elapsed, 
+                        root_node->get_num_visits(), 
+                        mean, 
+                        stddev);
+                }
             }
 
-            // // Write tree to file
-            // if (replicate == 0) {
-            //     string tree_filename = get_tree_filename(run_id, replicate);
-            //     ofstream tree_file;
-            //     tree_file.open(tree_filename, ios::out);
-            //     tree_file << root_node->get_pretty_print_string(1) << endl;
-            //     tree_file.close();
-            // }
+            if (!hp_opt) {
+                // Write tree to file
+                if (replicate == 0) {
+                    string tree_filename = get_tree_filename(run_id, replicate);
+                    ofstream tree_file;
+                    tree_file.open(tree_filename, ios::out);
+                    tree_file << root_node->get_pretty_print_string(1) << endl;
+                    tree_file.close();
+                }
 
-            // // Write debug info
-            // if (replicate == 0) {
-            //     string debug_filename = get_debug_filename(run_id, replicate);
-            //     ofstream debug_file;
-            //     debug_file.open(debug_filename, ios::out);
-            //     write_debug_info_to_file(root_node, debug_file);
-            //     debug_file.close();
-            // }
+                // Write debug info
+                if (replicate == 0) {
+                    string debug_filename = get_debug_filename(run_id, replicate);
+                    ofstream debug_file;
+                    debug_file.open(debug_filename, ios::out);
+                    write_debug_info_to_file(root_node, debug_file);
+                    debug_file.close();
+                }
 
-            // Flush
-            eval_file.flush();
+                // Flush
+                eval_file.flush();
+            }
 
             // Update results
             value_estimates[replicate] = mean;
@@ -282,7 +295,9 @@ namespace thts {
         }   
 
         // close eval file
-        eval_file.close();
+        if (!hp_opt) {
+            eval_file.close();
+        }
 
         // Return avg mean utility over replicates
         return value_estimates;

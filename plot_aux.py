@@ -110,6 +110,15 @@ def make_lineplot_df(
         plt.show()
     plt.close()
 
+def read_hpopt_file_to_df(filename):
+    df = pd.read_csv(filename)
+    df = df.rename(columns={"eval(mc_estimate_expected_utility)": "V"})
+    return df
+
+def subdf(df, key, val):
+    subdf = df[df[key] == val]
+    return subdf
+
 def read_eval_file_to_df(filename,num_trials_scale):
     """
     Reads the eval file from 'filename'

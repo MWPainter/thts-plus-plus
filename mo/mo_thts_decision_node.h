@@ -43,6 +43,7 @@ namespace thts {
 
         protected:
             Eigen::ArrayXd mo_heuristic_value;
+            Vec vector_visit_count;
 
         public: 
             /**
@@ -95,5 +96,8 @@ namespace thts {
                 const Eigen::ArrayXd trial_cumulative_return_after_node, 
                 const Eigen::ArrayXd trial_cumulative_return,
                 ThtsEnvContext& ctx) = 0;
+
+            double get_num_visits(ThtsEnvContext& ctx);
+            virtual void visit_itfc(ThtsEnvContext& ctx) override;
     };
 }
