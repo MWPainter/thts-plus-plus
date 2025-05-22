@@ -22,7 +22,8 @@ namespace thts {
     
     void CztCNode::visit(MoThtsContext& ctx) 
     {
-        num_visits += 1;
+        BlThtsCNode::visit_itfc(ctx);
+        // num_visits += 1;
     }  
 
     shared_ptr<const State> CztCNode::sample_observation(MoThtsContext& ctx) 

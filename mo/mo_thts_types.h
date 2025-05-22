@@ -59,8 +59,11 @@ namespace thts {
             Eigen::ArrayXd vec;
 
             Vec(const Eigen::ArrayXd& v);
+            Vec(Eigen::ArrayXd&& v);
             Vec(const std::vector<double>& v);
             Vec(const Vec& other);
+            Vec(Vec&& other);
+            Vec(int dim, float val=0.0);
 
             double norm() const;
             Vec normalised() const;
@@ -76,8 +79,20 @@ namespace thts {
 
             Vec operator+(const Vec& other) const;
             Vec operator-(const Vec& other) const;
+            Vec operator*(const Vec& other) const;
+            Vec operator/(const Vec& other) const;
+
+            Vec& operator=(const Vec& other);
+            Vec& operator=(Vec&& other);
+            Vec& operator+=(const Vec& other);
+            Vec& operator-=(const Vec& other);
+            Vec& operator*=(const Vec& other);
+            Vec& operator/=(const Vec& other);
+
             bool operator==(const Vec& other) const;
             bool operator!=(const Vec& other) const;
+
+            double operator[](size_t i) const;
     };
 }
 

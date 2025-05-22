@@ -69,18 +69,53 @@ namespace thts {
 namespace thts {
 
     Vec::Vec(const Eigen::ArrayXd& v) : 
-        vec(v) 
+        vec() 
     {
+        // Apparently eigen does some fast stuff and better not to init in initialiser list
+        // https://stackoverflow.com/questions/47644021/eigen-copy-constructor-vs-operator-performance
+        vec = v;
+    }
+
+    Vec::Vec(Eigen::ArrayXd&& v) : 
+        vec() 
+    {
+        // Apparently eigen does some fast stuff and better not to init in initialiser list
+        // https://stackoverflow.com/questions/47644021/eigen-copy-constructor-vs-operator-performance
+        vec = std::move(v);
     }
 
     Vec::Vec(const std::vector<double>& v) : 
-        vec(Eigen::Map<const Eigen::ArrayXd>(v.data(), v.size())) 
+        vec() 
     {
+        // Apparently eigen does some fast stuff and better not to init in initialiser list
+        // https://stackoverflow.com/questions/47644021/eigen-copy-constructor-vs-operator-performance
+
+        // TODO: check if this makes a copy? Is this invalid if the vector is deallocated? what ive the values in the vector are changed?
+        vec = Eigen::Map<const Eigen::ArrayXd>(v.data(), v.size());
     }
 
     Vec::Vec(const Vec& other) : 
-        vec(other.vec) 
+        vec() 
     {    
+        // Apparently eigen does some fast stuff and better not to init in initialiser list
+        // https://stackoverflow.com/questions/47644021/eigen-copy-constructor-vs-operator-performance
+        vec = other.vec;
+    }
+
+    Vec::Vec(Vec&& other) : 
+        vec() 
+    {    
+        // Apparently eigen does some fast stuff and better not to init in initialiser list
+        // https://stackoverflow.com/questions/47644021/eigen-copy-constructor-vs-operator-performance
+        vec = std::move(other.vec);
+    }
+
+    Vec::Vec(int dim, float val) :
+        vec()
+    {
+        // Apparently eigen does some fast stuff and better not to init in initialiser list
+        // https://stackoverflow.com/questions/47644021/eigen-copy-constructor-vs-operator-performance
+        vec = Eigen::ArrayXd::Constant(dim, val);
     }
 
     double Vec::norm() const {
@@ -133,6 +168,9 @@ namespace thts {
         return cur_hash;
     }
 
+
+
+
     Vec Vec::operator+(const Vec& other) const {
         return Vec(vec + other.vec);
     }
@@ -141,12 +179,61 @@ namespace thts {
         return Vec(vec - other.vec);
     }
 
+    Vec Vec::operator*(const Vec& other) const {
+        return Vec(vec * other.vec);
+    }
+
+    Vec Vec::operator/(const Vec& other) const {
+        return Vec(vec / other.vec);
+    }
+
+
+
+
+    Vec& Vec::operator=(const Vec& other) {
+        vec = other.vec;
+        return *this;
+    }
+    
+    Vec& Vec::operator=(Vec&& other) {
+        vec = std::move(other.vec);
+        return *this;
+    }
+
+    Vec& Vec::operator+=(const Vec& other) {
+        vec += other.vec;
+        return *this;
+    }
+
+    Vec& Vec::operator-=(const Vec& other) {
+        vec -= other.vec;
+        return *this;
+    }
+
+    Vec& Vec::operator*=(const Vec& other) {
+        vec *= other.vec;
+        return *this;
+    }
+
+    Vec& Vec::operator/=(const Vec& other) {
+        vec /= other.vec;
+        return *this;
+    }
+
+
+
     bool Vec::operator==(const Vec& other) const {
         return equals(other);
     }
 
     bool Vec::operator!=(const Vec& other) const {
         return !equals(other);
+    }
+
+
+
+    double Vec::operator[](size_t i) const {
+        return vec[i];
     }
 
 }

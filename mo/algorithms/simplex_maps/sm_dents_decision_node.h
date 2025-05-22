@@ -40,7 +40,7 @@ namespace thts {
             /**
              * BTS code - get value temp
              */
-            virtual double get_value_temp() const;
+            virtual double get_value_temp(MoThtsContext& ctx) const;
 
             /**
              * BTS code - computes the weights for each action.

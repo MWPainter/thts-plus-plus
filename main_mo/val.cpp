@@ -143,8 +143,8 @@ namespace thts {
             policy,  
             manager->max_depth,
             manager,
-            Eigen::ArrayXd::Zero(2)-walk_len,
-            Eigen::ArrayXd::Zero(2)-0.5*walk_len);
+            Vec(Eigen::ArrayXd::Zero(2)-walk_len),
+            Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len));
             
         mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 

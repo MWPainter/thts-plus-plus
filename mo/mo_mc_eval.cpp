@@ -14,8 +14,8 @@ namespace thts {
         shared_ptr<EvalPolicy> policy, 
         int max_trial_length, 
         shared_ptr<MoThtsManager> manager,
-        Eigen::ArrayXd r_min,
-        Eigen::ArrayXd r_max) :
+        Vec r_min,
+        Vec r_max) :
             MCEvaluator(policy,max_trial_length,manager),
             mo_sampled_returns(),
             sampled_ctx_returns(),
@@ -36,7 +36,7 @@ namespace thts {
 
         // Bookkeeping
         int num_actions_taken = 0;
-        Eigen::ArrayXd mo_sample_return = Eigen::ArrayXd::Zero(thts_env->get_reward_dim());
+        Vec mo_sample_return = Vec(thts_env->get_reward_dim(), 0.0);
         // MoThtsContext& context = (MoThtsContext&) *thts_env.sample_context_itfc(thread_id, *manager);
         shared_ptr<MoThtsContext> mo_context = static_pointer_cast<MoThtsContext>(
             thts_env->sample_context_itfc(thread_id, *manager));
@@ -57,31 +57,31 @@ namespace thts {
         }
 
         // store
-        double contextual_return = thts::helper::dot(mo_context->context_weight, mo_sample_return);
-        Eigen::ArrayXd normalised_sample_return = (mo_sample_return - r_min) / (r_max - r_min);
-        double normalised_contextual_return = thts::helper::dot(mo_context->context_weight, normalised_sample_return);
+        double contextual_return = mo_sample_return.dot(mo_context->context_weight);
+        Vec normalised_sample_return = (mo_sample_return - r_min) / (r_max - r_min);
+        double normalised_contextual_return = normalised_sample_return.dot(mo_context->context_weight);
         lock_guard lg(lock);
         mo_sampled_returns.push_back(mo_sample_return);
         sampled_ctx_returns.push_back(contextual_return);
         sampled_normalised_ctx_returns.push_back(normalised_contextual_return);
     }
 
-    Eigen::ArrayXd MoMCEvaluator::get_mean_mo_return() 
+    Vec MoMCEvaluator::get_mean_mo_return() 
     {
         shared_ptr<MoThtsEnv> thts_env = dynamic_pointer_cast<MoThtsEnv>(manager->thts_env());
         int reward_dim = thts_env->get_reward_dim();
         double weight = 1.0 / mo_sampled_returns.size();
-        Eigen::ArrayXd mean = Eigen::ArrayXd::Zero(reward_dim);
-        for (Eigen::ArrayXd val : mo_sampled_returns) {
+        Vec mean = Vec(reward_dim, 0.0);
+        for (Vec val : mo_sampled_returns) {
             mean += weight * val;
         }
         return mean;
 
     }
 
-    double MoMCEvaluator::get_mean_mo_return(Eigen::ArrayXd context_weights)
+    double MoMCEvaluator::get_mean_mo_return(Vec context_weights)
     {
-        return thts::helper::dot(context_weights, get_mean_mo_return());
+        return context_weights.dot(get_mean_mo_return());
     }
 
     double MoMCEvaluator::get_mean_mo_ctx_return()
@@ -104,23 +104,24 @@ namespace thts {
         return mean;
     }
     
-    Eigen::ArrayXd MoMCEvaluator::get_stddev_mo_return()
+    Vec MoMCEvaluator::get_stddev_mo_return()
     {
         shared_ptr<MoThtsEnv> thts_env = dynamic_pointer_cast<MoThtsEnv>(manager->thts_env());
         double reward_dim = thts_env->get_reward_dim();
-        Eigen::ArrayXd mean = get_mean_mo_return();
+        Vec mean = get_mean_mo_return();
         double weight = 1.0 / mo_sampled_returns.size();
-        Eigen::ArrayXd stddev = Eigen::ArrayXd::Zero(reward_dim);
-        for (Eigen::ArrayXd val : mo_sampled_returns) {
-            stddev += weight * (val - mean).pow(2.0);
+        Vec stddev = Vec(reward_dim, 0.0);
+        for (Vec val : mo_sampled_returns) {
+            Vec diff = val - mean;
+            stddev += weight * (diff * diff);
         }
         return stddev;
 
     }
     
-    double MoMCEvaluator::get_stddev_mo_return(Eigen::ArrayXd context_weights)
+    double MoMCEvaluator::get_stddev_mo_return(Vec context_weights)
     {
-        return thts::helper::dot(context_weights, get_stddev_mo_return());
+        return context_weights.dot(get_stddev_mo_return());
     }
     
     double MoMCEvaluator::get_stddev_mean_mo_ctx_return()

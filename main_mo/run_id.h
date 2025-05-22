@@ -334,7 +334,7 @@ static const std::unordered_map<std::string,std::string> HP_OPT_EXPR_ID_TO_ENV_I
     {HP_OPT_MINECART_SMDENTS_EXPR_ID,           MINECART_ENV_ID},
 };
 
-static const std::unordered_map<std::string,std::string> CZT_HP_OPT_EXPR_IDS =
+static const std::unordered_set<std::string> CZT_HP_OPT_EXPR_IDS =
 {
     HP_OPT_DST_CZT_EXPR_ID,
     HP_OPT_DST_STOCH_CZT_EXPR_ID,
@@ -352,58 +352,58 @@ static const std::unordered_map<std::string,std::string> CZT_HP_OPT_EXPR_IDS =
     HP_OPT_MINECART_CZT_EXPR_ID,
 };
 
-static const std::unordered_map<std::string,std::string> CHMCTS_HP_OPT_EXPR_IDS = 
+static const std::unordered_set<std::string> CHCZT_HP_OPT_EXPR_IDS = 
 {
-    HP_OPT_DST_CHMCTS_EXPR_ID
-    HP_OPT_DST_STOCH_CHMCTS_EXPR_ID
-    HP_OPT_DST_IMPR_CHMCTS_EXPR_ID
-    HP_OPT_DST_IMPR_STOCH_CHMCTS_EXPR_ID
-    HP_OPT_FT_CHMCTS_EXPR_ID
-    HP_OPT_FT_S5_CHMCTS_EXPR_ID
-    HP_OPT_FT_S7_CHMCTS_EXPR_ID
-    HP_OPT_BB_CHMCTS_EXPR_ID
-    HP_OPT_RG_CHMCTS_EXPR_ID
-    HP_OPT_RG_TIMED_CHMCTS_EXPR_ID
-    HP_OPT_4R_CHMCTS_EXPR_ID
-    HP_OPT_4R_TIMED_CHMCTS_EXPR_ID
-    HP_OPT_MINECART_DET_CHMCTS_EXPR_ID
-    HP_OPT_MINECART_CHMCTS_EXPR_ID
+    HP_OPT_DST_CHMCTS_EXPR_ID,
+    HP_OPT_DST_STOCH_CHMCTS_EXPR_ID,
+    HP_OPT_DST_IMPR_CHMCTS_EXPR_ID,
+    HP_OPT_DST_IMPR_STOCH_CHMCTS_EXPR_ID,
+    HP_OPT_FT_CHMCTS_EXPR_ID,
+    HP_OPT_FT_S5_CHMCTS_EXPR_ID,
+    HP_OPT_FT_S7_CHMCTS_EXPR_ID,
+    HP_OPT_BB_CHMCTS_EXPR_ID,
+    HP_OPT_RG_CHMCTS_EXPR_ID,
+    HP_OPT_RG_TIMED_CHMCTS_EXPR_ID,
+    HP_OPT_4R_CHMCTS_EXPR_ID,
+    HP_OPT_4R_TIMED_CHMCTS_EXPR_ID,
+    HP_OPT_MINECART_DET_CHMCTS_EXPR_ID,
+    HP_OPT_MINECART_CHMCTS_EXPR_ID,
 };
 
-static const std::unordered_map<std::string,std::string> SMBTS_HP_OPT_EXPR_IDS = 
+static const std::unordered_set<std::string> SMBTS_HP_OPT_EXPR_IDS = 
 {
-    HP_OPT_DST_SMBTS_EXPR_ID
-    HP_OPT_DST_STOCH_SMBTS_EXPR_ID
-    HP_OPT_DST_IMPR_SMBTS_EXPR_ID
-    HP_OPT_DST_IMPR_STOCH_SMBTS_EXPR_ID
-    HP_OPT_FT_SMBTS_EXPR_ID
-    HP_OPT_FT_S5_SMBTS_EXPR_ID
-    HP_OPT_FT_S7_SMBTS_EXPR_ID
-    HP_OPT_BB_SMBTS_EXPR_ID
-    HP_OPT_RG_SMBTS_EXPR_ID
-    HP_OPT_RG_TIMED_SMBTS_EXPR_ID
-    HP_OPT_4R_SMBTS_EXPR_ID
-    HP_OPT_4R_TIMED_SMBTS_EXPR_ID
-    HP_OPT_MINECART_DET_SMBTS_EXPR_ID
-    HP_OPT_MINECART_SMBTS_EXPR_ID
+    HP_OPT_DST_SMBTS_EXPR_ID,
+    HP_OPT_DST_STOCH_SMBTS_EXPR_ID,
+    HP_OPT_DST_IMPR_SMBTS_EXPR_ID,
+    HP_OPT_DST_IMPR_STOCH_SMBTS_EXPR_ID,
+    HP_OPT_FT_SMBTS_EXPR_ID,
+    HP_OPT_FT_S5_SMBTS_EXPR_ID,
+    HP_OPT_FT_S7_SMBTS_EXPR_ID,
+    HP_OPT_BB_SMBTS_EXPR_ID,
+    HP_OPT_RG_SMBTS_EXPR_ID,
+    HP_OPT_RG_TIMED_SMBTS_EXPR_ID,
+    HP_OPT_4R_SMBTS_EXPR_ID,
+    HP_OPT_4R_TIMED_SMBTS_EXPR_ID,
+    HP_OPT_MINECART_DET_SMBTS_EXPR_ID,
+    HP_OPT_MINECART_SMBTS_EXPR_ID,
 };
 
-static const std::unordered_map<std::string,std::string> SMDENTS_HP_OPT_EXPR_IDS = 
+static const std::unordered_set<std::string> SMDENTS_HP_OPT_EXPR_IDS = 
 {
-    HP_OPT_DST_SMDENTS_EXPR_ID
-    HP_OPT_DST_STOCH_SMDENTS_EXPR_ID
-    HP_OPT_DST_IMPR_SMDENTS_EXPR_ID
-    HP_OPT_DST_IMPR_STOCH_SMDENTS_EXPR_ID
-    HP_OPT_FT_SMDENTS_EXPR_ID
-    HP_OPT_FT_S5_SMDENTS_EXPR_ID
-    HP_OPT_FT_S7_SMDENTS_EXPR_ID
-    HP_OPT_BB_SMDENTS_EXPR_ID
-    HP_OPT_RG_SMDENTS_EXPR_ID
-    HP_OPT_RG_TIMED_SMDENTS_EXPR_ID
-    HP_OPT_4R_SMDENTS_EXPR_ID
-    HP_OPT_4R_TIMED_SMDENTS_EXPR_ID
-    HP_OPT_MINECART_DET_SMDENTS_EXPR_ID
-    HP_OPT_MINECART_SMDENTS_EXPR_ID
+    HP_OPT_DST_SMDENTS_EXPR_ID,
+    HP_OPT_DST_STOCH_SMDENTS_EXPR_ID,
+    HP_OPT_DST_IMPR_SMDENTS_EXPR_ID,
+    HP_OPT_DST_IMPR_STOCH_SMDENTS_EXPR_ID,
+    HP_OPT_FT_SMDENTS_EXPR_ID,
+    HP_OPT_FT_S5_SMDENTS_EXPR_ID,
+    HP_OPT_FT_S7_SMDENTS_EXPR_ID,
+    HP_OPT_BB_SMDENTS_EXPR_ID,
+    HP_OPT_RG_SMDENTS_EXPR_ID,
+    HP_OPT_RG_TIMED_SMDENTS_EXPR_ID,
+    HP_OPT_4R_SMDENTS_EXPR_ID,
+    HP_OPT_4R_TIMED_SMDENTS_EXPR_ID,
+    HP_OPT_MINECART_DET_SMDENTS_EXPR_ID,
+    HP_OPT_MINECART_SMDENTS_EXPR_ID,
 };
 
 // list of all expr ids
@@ -495,35 +495,34 @@ static const std::unordered_set<std::string> ALL_EXPR_IDS =
 };
 
 // param ids
-static const std::string CZT_BIAS_PARAM_ID = "czt_bias";
+static const std::string UCB_BIAS_PARAM_ID = "bias";
 static const std::string CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID = "czt_ball_split_visit_thresh";
 
 static const std::string SM_L_INF_THRESH_PARAM_ID = "sm_l_inf_thresh";
 static const std::string SM_MAX_DEPTH = "sm_max_depth";
 static const std::string SM_SPLIT_VISIT_THRESH_PARAM_ID = "sm_split_visit_thresh";
 
-static const std::string SMBTS_SEARCH_TEMP_PARAM_ID = "smbts_search_temp";
-static const std::string SMBTS_EPSILON_PARAM_ID = "smbts_epsilon";
-static const std::string SMBTS_SEARCH_TEMP_DECAY_FN_PARAM_ID = "smbts_search_temp_decay_fn";
-static const std::string SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID = "smbts_use_search_temp_decay";
-static const std::string SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID = "smbts_search_temp_decay_visits_scale";
+static const std::string BTS_EPSILON_PARAM_ID = "epsilon";
+static const std::string BTS_SEARCH_TEMP_PARAM_ID = "search_temp";
+static const std::string BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID = "smbts_search_temp_decay_fn";
+static const std::string BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID = "smbts_search_temp_decay_fn_scale";
 
-static const std::string SMDENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID = "smdents_entropy_temp_decay_fn";
-static const std::string SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID = "smdents_entropy_temp_init";
-static const std::string SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID = "smdents_entropy_temp_visits_scale";
+static const std::string DENTS_ENTROPY_TEMP_INIT_PARAM_ID = "smdents_entropy_temp_init";
+static const std::string DENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID = "smdents_entropy_temp_decay_fn";
+static const std::string DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID = "smdents_entropy_temp_visits_scale";
 
 // relevant alg ids -> param ids
 static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_PARAM_IDS =
 {
     {CZT_ALG_ID,
         {
-            CZT_BIAS_PARAM_ID,
+            UCB_BIAS_PARAM_ID,
             CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID,
         },
     },
     {CHMCTS_ALG_ID,
         {
-            CZT_BIAS_PARAM_ID,
+            UCB_BIAS_PARAM_ID,
             CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID,
         },
     },
@@ -532,11 +531,10 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
             SM_L_INF_THRESH_PARAM_ID,
             // SM_MAX_DEPTH,
             SM_SPLIT_VISIT_THRESH_PARAM_ID,
-            SMBTS_SEARCH_TEMP_PARAM_ID,
-            SMBTS_EPSILON_PARAM_ID,
-            SMBTS_SEARCH_TEMP_DECAY_FN_PARAM_ID,
-            SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID,
-            SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID,
+            BTS_EPSILON_PARAM_ID,
+            BTS_SEARCH_TEMP_PARAM_ID,
+            BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID,
+            BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID,
         },
     },
     {SMDENTS_ALG_ID,
@@ -544,14 +542,13 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
             SM_L_INF_THRESH_PARAM_ID,
             // SM_MAX_DEPTH,
             SM_SPLIT_VISIT_THRESH_PARAM_ID,
-            SMBTS_SEARCH_TEMP_PARAM_ID,
-            SMBTS_EPSILON_PARAM_ID,
-            SMBTS_SEARCH_TEMP_DECAY_FN_PARAM_ID,
-            SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID,
-            SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID,
-            SMDENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID,
-            SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID,
-            SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID
+            BTS_EPSILON_PARAM_ID,
+            BTS_SEARCH_TEMP_PARAM_ID,
+            BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID,
+            BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID,
+            DENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID,
+            DENTS_ENTROPY_TEMP_INIT_PARAM_ID,
+            DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID
         },
     },
 };
@@ -559,7 +556,6 @@ static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_P
 // List of boolean + int param ids
 static const std::unordered_set<std::string> BOOLEAN_PARAM_IDS =
 {
-    SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID,
 };
 
 static const std::unordered_set<std::string> INTEGER_PARAM_IDS =
@@ -567,20 +563,20 @@ static const std::unordered_set<std::string> INTEGER_PARAM_IDS =
     CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID,
     // SM_MAX_DEPTH,
     SM_SPLIT_VISIT_THRESH_PARAM_ID,
-    SMBTS_SEARCH_TEMP_DECAY_FN_PARAM_ID,
-    SMDENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID,
+    BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID,
+    DENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID,
 };
 
 // List of params to use a log scale in BayesOpt
 static const std::unordered_set<std::string> LOG_SCALE_PARAM_IDS =
 {
-    CZT_BIAS_PARAM_ID,
+    UCB_BIAS_PARAM_ID,
     SM_L_INF_THRESH_PARAM_ID,
-    SMBTS_SEARCH_TEMP_PARAM_ID,
-    SMBTS_EPSILON_PARAM_ID,
-    SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID,
-    SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID,
-    SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID,
+    BTS_SEARCH_TEMP_PARAM_ID,
+    BTS_EPSILON_PARAM_ID,
+    BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID,
+    DENTS_ENTROPY_TEMP_INIT_PARAM_ID,
+    DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID,
 };
 
 
@@ -601,7 +597,7 @@ namespace thts {
      *      smbts_search_temp: smbts param
      *      smbts_epsilon: smbts param
      *      smbts_use_search_temp_decay: smbts param
-     *      smbts_search_temp_decay_visits_scale: smbts param
+     *      smbts_search_temp_decay_fn_scale: smbts param
      *      smdents_entropy_temp_init: smdents param
      *      smdents_entropy_temp_visits_scale: smdents param
      * 
@@ -624,17 +620,21 @@ namespace thts {
 
             std::unordered_map<std::string, double> alg_params;
 
-            double czt_bias;
+            double ucb_bias;
             int czt_ball_split_visit_thresh;
+
             double sm_l_inf_thresh;
             int sm_max_depth;
             int sm_split_visit_thresh;
-            double smbts_search_temp;
-            double smbts_epsilon;
-            bool smbts_use_search_temp_decay;
-            double smbts_search_temp_decay_visits_scale;
-            double smdents_entropy_temp_init;
-            double smdents_entropy_temp_visits_scale;
+
+            double bts_epsilon;
+            double bts_search_temp;
+            int bts_search_temp_decay_fn;
+            double bts_search_temp_decay_fn_scale;
+
+            double dents_entropy_temp;
+            int dents_entropy_temp_decay_fn;
+            double dents_entropy_temp_decay_fn_scale;
 
             double search_runtime;
             int max_trial_length;

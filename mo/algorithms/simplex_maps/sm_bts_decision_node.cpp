@@ -28,7 +28,7 @@ namespace thts {
     {
     }
 
-    double SmBtsDNode::get_temp() const {
+    double SmBtsDNode::get_temp(MoThtsContext& ctx) const {
         SmBtsManager& manager = (SmBtsManager&) *thts_manager;
         if (manager.temp_decay_fn == nullptr) {
             return manager.temp;
@@ -37,7 +37,7 @@ namespace thts {
             manager.temp_decay_fn, 
             manager.temp, 
             manager.temp_decay_min_temp, 
-            num_visits, 
+            get_num_visits(ctx), 
             manager.temp_decay_visits_scale);
     }
     
@@ -55,8 +55,8 @@ namespace thts {
 
         SmBtsCNode& child = (SmBtsCNode&) *get_child_node(action);
         lock_guard<mutex> lg(child.get_lock());
-        shared_ptr<TN> simplex = child.simplex_map.get_leaf_tn_node(ctx.context_weight);
-        shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight);
+        shared_ptr<TN> simplex = child.simplex_map.get_leaf_tn_node(ctx.context_weight.vec);
+        shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight.vec);
         entropy = closest_vertex->entropy;
         pure_backup_val = closest_vertex->pure_backup_value_estimate;
         return closest_vertex->value_estimate * opp_coeff;
@@ -89,12 +89,12 @@ namespace thts {
         MoThtsContext& context) const
     {
         // get temp
-        double temp = get_temp();
+        double temp = get_temp(context);
 
         // compute normalisation term
         normalisation_term = numeric_limits<double>::lowest();
         for (shared_ptr<const Action> action : actions) {
-            double ctx_val_over_temp = thts::helper::dot(context.context_weight, q_val_map[action]) / temp;
+            double ctx_val_over_temp = thts::helper::dot(context.context_weight.vec, q_val_map[action]) / temp;
             if (normalisation_term < ctx_val_over_temp) {
                 normalisation_term = ctx_val_over_temp;
             }
@@ -103,7 +103,7 @@ namespace thts {
         // compute action weights
         sum_action_weights = 0.0;
         for (shared_ptr<const Action> action : actions) {
-            double ctx_q_value = thts::helper::dot(context.context_weight, q_val_map[action]);
+            double ctx_q_value = thts::helper::dot(context.context_weight.vec, q_val_map[action]);
             double action_weight = exp((ctx_q_value/temp) - normalisation_term);
             action_weights[action] = action_weight;
             sum_action_weights += action_weight;
@@ -127,7 +127,7 @@ namespace thts {
         SmBtsManager& manager = (SmBtsManager&) *thts_manager;
         double epsilon = manager.epsilon;
         if (is_root_node() && manager.root_node_epsilon > 0.0) epsilon = manager.root_node_epsilon;
-        double lambda = epsilon / log(num_visits+1);
+        double lambda = epsilon / log(get_num_visits(context)+1);
         if (lambda > manager.max_explore_prob) {
             lambda = manager.max_explore_prob;
         }
@@ -138,7 +138,7 @@ namespace thts {
         for (shared_ptr<const Action> action : actions) {
             action_distr[action] *= (1.0 - lambda) / sum_weights;
             // if (manager.prior_policy_search_weight > 0.0) {
-            //     double lambda_tilde = manager.prior_policy_search_weight / log(num_visits+3);
+            //     double lambda_tilde = manager.prior_policy_search_weight / log(get_num_visits(ctx)+3);
             //     action_distr[action] *= (1.0 - lambda_tilde);
             //     action_distr[action] += (1.0 - lambda) * lambda_tilde * policy_prior->at(action);
             // }
@@ -148,7 +148,8 @@ namespace thts {
     
     void SmBtsDNode::visit(MoThtsContext& ctx) 
     {
-        num_visits += 1;
+        SmThtsDNode::visit_itfc(ctx);
+        // num_visits += 1;
 
         if (is_root_node()) {
             NGV& random_ngv = *simplex_map.sample_random_ngv_vertex(*thts_manager);
@@ -184,7 +185,7 @@ namespace thts {
 
         unordered_map<shared_ptr<const Action>,double> ctx_q_val_map;
         for (shared_ptr<const Action> action : *actions) {
-            ctx_q_val_map[action] = thts::helper::dot(ctx.context_weight, q_val_map[action]);
+            ctx_q_val_map[action] = thts::helper::dot(ctx.context_weight.vec, q_val_map[action]);
         }
 
         return helper::get_max_key_break_ties_randomly(ctx_q_val_map, *thts_manager);
@@ -204,8 +205,8 @@ namespace thts {
         num_backups++;
 
         // Get closest NGV in simplex map
-        shared_ptr<TN> simplex = simplex_map.get_leaf_tn_node(ctx.context_weight);
-        shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight);
+        shared_ptr<TN> simplex = simplex_map.get_leaf_tn_node(ctx.context_weight.vec);
+        shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight.vec);
 
         // Make list of vertices to backup
         vector<shared_ptr<NGV>> vertices_to_backup;

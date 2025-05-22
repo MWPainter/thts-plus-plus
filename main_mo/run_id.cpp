@@ -83,17 +83,18 @@ namespace thts {
             expr_timestamp(expr_timestamp),
             alg_id(alg_id),
             alg_params(alg_params),
-            czt_bias(CztManagerArgs::bias_default),
+            ucb_bias(CztManagerArgs::bias_default),
             czt_ball_split_visit_thresh(BlThtsManagerArgs::num_backups_before_allowed_to_split_default),
             sm_l_inf_thresh(SmThtsManagerArgs::simplex_node_l_inf_thresh_default),
             sm_max_depth(SmThtsManagerArgs::simplex_node_max_depth_default),
             sm_split_visit_thresh(SmThtsManagerArgs::simplex_node_split_visit_thresh_default),
-            smbts_search_temp(SmBtsManagerArgs::temp_default),
-            smbts_epsilon(SmBtsManagerArgs::epsilon_default),
-            smbts_use_search_temp_decay(false),
-            smbts_search_temp_decay_visits_scale(SmBtsManagerArgs::temp_decay_visits_scale_default),
-            smdents_entropy_temp_init(SmDentsManagerArgs::value_temp_init_default),
-            smdents_entropy_temp_visits_scale(SmDentsManagerArgs::value_temp_decay_visits_scale_default),
+            bts_epsilon(SmBtsManagerArgs::epsilon_default),
+            bts_search_temp(SmBtsManagerArgs::temp_default),
+            bts_search_temp_decay_fn(DECAY_FN_CONST),
+            bts_search_temp_decay_fn_scale(1.0),
+            dents_entropy_temp(SmDentsManagerArgs::value_temp_init_default),
+            dents_entropy_temp_decay_fn(DECAY_FN_CONST),
+            dents_entropy_temp_decay_fn_scale(1.0),
             search_runtime(search_runtime),
             max_trial_length(max_trial_length),
             eval_delta(eval_delta),
@@ -103,8 +104,8 @@ namespace thts {
             eval_threads(eval_threads),
             num_envs((eval_threads > num_threads) ? eval_threads : num_threads)
     {
-        if (alg_params.contains(CZT_BIAS_PARAM_ID)) {
-            czt_bias = alg_params[CZT_BIAS_PARAM_ID];
+        if (alg_params.contains(UCB_BIAS_PARAM_ID)) {
+            ucb_bias = alg_params[UCB_BIAS_PARAM_ID];
         }
         if (alg_params.contains(CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID)) {
             czt_ball_split_visit_thresh = alg_params[CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID];
@@ -118,23 +119,26 @@ namespace thts {
         if (alg_params.contains(SM_SPLIT_VISIT_THRESH_PARAM_ID)) {
             sm_split_visit_thresh = alg_params[SM_SPLIT_VISIT_THRESH_PARAM_ID];
         }
-        if (alg_params.contains(SMBTS_SEARCH_TEMP_PARAM_ID)) {
-            smbts_search_temp = alg_params[SMBTS_SEARCH_TEMP_PARAM_ID];
+        if (alg_params.contains(BTS_EPSILON_PARAM_ID)) {
+            bts_epsilon = alg_params[BTS_EPSILON_PARAM_ID];
         }
-        if (alg_params.contains(SMBTS_EPSILON_PARAM_ID)) {
-            smbts_epsilon = alg_params[SMBTS_EPSILON_PARAM_ID];
+        if (alg_params.contains(BTS_SEARCH_TEMP_PARAM_ID)) {
+            bts_search_temp = alg_params[BTS_SEARCH_TEMP_PARAM_ID];
         }
-        if (alg_params.contains(SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID)) {
-            smbts_use_search_temp_decay = alg_params[SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID];
+        if (alg_params.contains(BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID)) {
+            bts_search_temp_decay_fn = alg_params[BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID];
         }
-        if (alg_params.contains(SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID)) {
-            smbts_search_temp_decay_visits_scale = alg_params[SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID];
+        if (alg_params.contains(BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID)) {
+            bts_search_temp_decay_fn_scale = alg_params[BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID];
         }
-        if (alg_params.contains(SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID)) {
-            smdents_entropy_temp_init = alg_params[SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID];
+        if (alg_params.contains(DENTS_ENTROPY_TEMP_INIT_PARAM_ID)) {
+            dents_entropy_temp = alg_params[DENTS_ENTROPY_TEMP_INIT_PARAM_ID];
         }
-        if (alg_params.contains(SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID)) {
-            smdents_entropy_temp_visits_scale = alg_params[SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID];
+        if (alg_params.contains(DENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID)) {
+            dents_entropy_temp_decay_fn = alg_params[DENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID];
+        }
+        if (alg_params.contains(DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID)) {
+            dents_entropy_temp_decay_fn_scale = alg_params[DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID];
         }
     }
 
@@ -170,7 +174,7 @@ namespace thts {
             manager_args.mcts_mode = false;
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
-            manager_args.bias = czt_bias;
+            manager_args.bias = ucb_bias;
             manager_args.num_backups_before_allowed_to_split = czt_ball_split_visit_thresh;
             // manager_args.use_transposition_table = true;
             return make_shared<CztManager>(manager_args);
@@ -182,7 +186,7 @@ namespace thts {
             manager_args.mcts_mode = false;
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
-            manager_args.bias = czt_bias;
+            manager_args.bias = ucb_bias;
             manager_args.num_backups_before_allowed_to_split = czt_ball_split_visit_thresh;
             // manager_args.use_transposition_table = true;
             return make_shared<ChCztManager>(manager_args);
@@ -197,24 +201,19 @@ namespace thts {
             manager_args.simplex_node_l_inf_thresh = sm_l_inf_thresh;
             manager_args.simplex_node_split_visit_thresh = sm_split_visit_thresh;
             manager_args.simplex_node_max_depth = sm_max_depth;
-            manager_args.temp = smbts_search_temp;
-            manager_args.epsilon = smbts_epsilon;
-            manager_args.root_node_epsilon = smbts_epsilon;
-            if (smbts_use_search_temp_decay) {
-                manager_args.temp_decay_fn = decayed_temp_inv_sqrt;
-            }
-            manager_args.temp_decay_visits_scale = smbts_search_temp_decay_visits_scale;
-
-            // TODO: this will break, need to clean it up for MO (c&p from aux)
+            manager_args.temp = bts_search_temp;
+            manager_args.epsilon = bts_epsilon;
+            manager_args.root_node_epsilon = bts_epsilon;
+            
             // alpha
-            manager_args.temp = temp;
+            manager_args.temp = bts_search_temp;
             manager_args.temp_decay_fn = nullptr; 
-            if (decay_fn == DECAY_FN_INV_SQRT) {
+            if (bts_search_temp_decay_fn == DECAY_FN_INV_SQRT) {
                 manager_args.temp_decay_fn = decayed_temp_inv_sqrt;
-            } else if (decay_fn == DECAY_FN_INV_LOG) {
+            } else if (bts_search_temp_decay_fn == DECAY_FN_INV_LOG) {
                 manager_args.temp_decay_fn = decayed_temp_inv_log;
             }
-            manager_args.temp_decay_visits_scale = decay_fn_scale;
+            manager_args.temp_decay_visits_scale = bts_search_temp_decay_fn_scale;
 
             // manager_args.use_transposition_table = true;
             return make_shared<SmBtsManager>(manager_args);
@@ -226,39 +225,32 @@ namespace thts {
             manager_args.mcts_mode = false;
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
+
             manager_args.simplex_node_l_inf_thresh = sm_l_inf_thresh;
             manager_args.simplex_node_split_visit_thresh = sm_split_visit_thresh;
             manager_args.simplex_node_max_depth = sm_max_depth;
-            manager_args.temp = smbts_search_temp;
-            manager_args.epsilon = smbts_epsilon;
-            manager_args.root_node_epsilon = smbts_epsilon;
-            if (smbts_use_search_temp_decay) {
-                manager_args.temp_decay_fn = decayed_temp_inv_sqrt;
-            }
-            manager_args.temp_decay_visits_scale = smbts_search_temp_decay_visits_scale;
-            manager_args.value_temp_init = smdents_entropy_temp_init;
-            manager_args.value_temp_decay_visits_scale = smdents_entropy_temp_visits_scale;
+            manager_args.epsilon = bts_epsilon;
 
             // TODO: this will break, need to clean it up for MO (c&p from aux)
             // alpha
-            manager_args.temp = temp;
+            manager_args.temp = bts_search_temp;
             manager_args.temp_decay_fn = nullptr; 
-            if (decay_fn == DECAY_FN_INV_SQRT) {
+            if (bts_search_temp_decay_fn == DECAY_FN_INV_SQRT) {
                 manager_args.temp_decay_fn = decayed_temp_inv_sqrt;
-            } else if (decay_fn == DECAY_FN_INV_LOG) {
+            } else if (bts_search_temp_decay_fn == DECAY_FN_INV_LOG) {
                 manager_args.temp_decay_fn = decayed_temp_inv_log;
             }
-            manager_args.temp_decay_visits_scale = decay_fn_scale;
+            manager_args.temp_decay_visits_scale = bts_search_temp_decay_fn_scale;
 
             // beta
-            manager_args.value_temp_init = entropy_coeff;
+            manager_args.value_temp_init = dents_entropy_temp;
             manager_args.value_temp_decay_fn = nullptr;
-            if (entropy_decay_fn == DECAY_FN_INV_SQRT) {
+            if (dents_entropy_temp_decay_fn == DECAY_FN_INV_SQRT) {
                 manager_args.value_temp_decay_fn = decayed_temp_inv_sqrt;
-            } else if (entropy_decay_fn == DECAY_FN_INV_LOG) {
+            } else if (dents_entropy_temp_decay_fn == DECAY_FN_INV_LOG) {
                 manager_args.value_temp_decay_fn = decayed_temp_inv_log;
             }
-            manager_args.value_temp_decay_visits_scale = entropy_decay_fn_scale;
+            manager_args.value_temp_decay_visits_scale = dents_entropy_temp_decay_fn_scale;
 
 
             // manager_args.use_transposition_table = true;
@@ -347,19 +339,19 @@ namespace thts {
 
             unordered_map<string,double> alg_params =
             {
-                {CZT_BIAS_PARAM_ID, 4.0},
+                {UCB_BIAS_PARAM_ID, 4.0},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
                 {SM_L_INF_THRESH_PARAM_ID, 0.05},
                 // {SM_MAX_DEPTH, 10.0},
                 // {SM_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 100.0},
-                {SMBTS_EPSILON_PARAM_ID, 0.1},
-                // {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 0.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
-                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 0.5},
-                {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_PARAM_ID, 100.0},
+                {BTS_EPSILON_PARAM_ID, 0.1},
+                // {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 0.0},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
+                {DENTS_ENTROPY_TEMP_INIT_PARAM_ID, 0.5},
+                {DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
             };
 
             vector<string> alg_ids = 
@@ -416,19 +408,19 @@ namespace thts {
 
             unordered_map<string,double> alg_params =
             {
-                {CZT_BIAS_PARAM_ID, 100.0},
+                {UCB_BIAS_PARAM_ID, 100.0},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
                 {SM_L_INF_THRESH_PARAM_ID, 0.05},
                 // {SM_MAX_DEPTH, 10.0},
                 // {SM_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 1.0},
-                {SMBTS_EPSILON_PARAM_ID, 0.1},
-                // {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 0.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
-                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 0.1},
-                {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_PARAM_ID, 1.0},
+                {BTS_EPSILON_PARAM_ID, 0.1},
+                // {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 0.0},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
+                {DENTS_ENTROPY_TEMP_INIT_PARAM_ID, 0.1},
+                {DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
             };
 
             vector<string> alg_ids = 
@@ -474,19 +466,19 @@ namespace thts {
 
             unordered_map<string,double> alg_params =
             {
-                {CZT_BIAS_PARAM_ID, 21.7744}, //4.0},
+                {UCB_BIAS_PARAM_ID, 21.7744}, //4.0},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
                 {SM_L_INF_THRESH_PARAM_ID, 0.05},
                 // {SM_MAX_DEPTH, 10.0},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                // {SMBTS_SEARCH_TEMP_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 100.0},
-                {SMBTS_EPSILON_PARAM_ID, 0.5},
-                // {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 0.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
-                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 100.0},
-                {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
+                // {BTS_SEARCH_TEMP_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_PARAM_ID, 100.0},
+                {BTS_EPSILON_PARAM_ID, 0.5},
+                // {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 0.0},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
+                {DENTS_ENTROPY_TEMP_INIT_PARAM_ID, 100.0},
+                {DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
             };
 
             vector<string> alg_ids = 
@@ -532,19 +524,19 @@ namespace thts {
 
             unordered_map<string,double> alg_params =
             {
-                {CZT_BIAS_PARAM_ID, 21.7744}, //4.0},
+                {UCB_BIAS_PARAM_ID, 21.7744}, //4.0},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
                 {SM_L_INF_THRESH_PARAM_ID, 0.05},
                 // {SM_MAX_DEPTH, 10.0},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                // {SMBTS_SEARCH_TEMP_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 100.0},
-                {SMBTS_EPSILON_PARAM_ID, 0.5},
-                // {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 0.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
-                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 100.0},
-                {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
+                // {BTS_SEARCH_TEMP_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_PARAM_ID, 100.0},
+                {BTS_EPSILON_PARAM_ID, 0.5},
+                // {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 0.0},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
+                {DENTS_ENTROPY_TEMP_INIT_PARAM_ID, 100.0},
+                {DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
             };
 
             vector<string> alg_ids = 
@@ -594,7 +586,7 @@ namespace thts {
                 // CZT
                 unordered_map<string,double> czt_alg_params =
                 {
-                    {CZT_BIAS_PARAM_ID, 25.0},
+                    {UCB_BIAS_PARAM_ID, 25.0},
                     {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 5.0},
                 };
                 run_ids->push_back(RunID(
@@ -633,10 +625,10 @@ namespace thts {
                 {
                     {SM_L_INF_THRESH_PARAM_ID, 0.375},
                     {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                    {SMBTS_SEARCH_TEMP_PARAM_ID, 50.0},
-                    {SMBTS_EPSILON_PARAM_ID, 0.25},
-                    {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                    {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
+                    {BTS_SEARCH_TEMP_PARAM_ID, 50.0},
+                    {BTS_EPSILON_PARAM_ID, 0.25},
+                    {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                    {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
                 };
                 run_ids->push_back(RunID(
                     env_id,
@@ -658,12 +650,12 @@ namespace thts {
                 {
                     {SM_L_INF_THRESH_PARAM_ID, 0.375},
                     {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                    {SMBTS_SEARCH_TEMP_PARAM_ID, 50.0},
-                    {SMBTS_EPSILON_PARAM_ID, 0.25},
-                    {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                    {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
-                    {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 100.0},
-                    {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
+                    {BTS_SEARCH_TEMP_PARAM_ID, 50.0},
+                    {BTS_EPSILON_PARAM_ID, 0.25},
+                    {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                    {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
+                    {DENTS_ENTROPY_TEMP_INIT_PARAM_ID, 100.0},
+                    {DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
                 };
                 run_ids->push_back(RunID(
                     env_id,
@@ -703,7 +695,7 @@ namespace thts {
                 // CZT
                 unordered_map<string,double> czt_alg_params =
                 {
-                    {CZT_BIAS_PARAM_ID, 25.0},
+                    {UCB_BIAS_PARAM_ID, 25.0},
                     {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 5.0},
                 };
                 run_ids->push_back(RunID(
@@ -742,10 +734,10 @@ namespace thts {
                 {
                     {SM_L_INF_THRESH_PARAM_ID, 0.375},
                     {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                    {SMBTS_SEARCH_TEMP_PARAM_ID, 50.0},
-                    {SMBTS_EPSILON_PARAM_ID, 0.25},
-                    {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                    {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
+                    {BTS_SEARCH_TEMP_PARAM_ID, 50.0},
+                    {BTS_EPSILON_PARAM_ID, 0.25},
+                    {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                    {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 1.0},
                 };
                 run_ids->push_back(RunID(
                     env_id,
@@ -767,12 +759,12 @@ namespace thts {
                 {
                     {SM_L_INF_THRESH_PARAM_ID, 0.375},
                     {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                    {SMBTS_SEARCH_TEMP_PARAM_ID, 50.0},
-                    {SMBTS_EPSILON_PARAM_ID, 0.25},
-                    {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                    {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 0.1},
-                    {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 100.0},
-                    {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
+                    {BTS_SEARCH_TEMP_PARAM_ID, 50.0},
+                    {BTS_EPSILON_PARAM_ID, 0.25},
+                    {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                    {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 0.1},
+                    {DENTS_ENTROPY_TEMP_INIT_PARAM_ID, 100.0},
+                    {DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 1.0},
                 };
                 run_ids->push_back(RunID(
                     env_id,
@@ -809,7 +801,7 @@ namespace thts {
             // CZT
             unordered_map<string,double> czt_alg_params =
             {
-                {CZT_BIAS_PARAM_ID, 3.96968},
+                {UCB_BIAS_PARAM_ID, 3.96968},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 5.0},
             };
             run_ids->push_back(RunID(
@@ -830,7 +822,7 @@ namespace thts {
             // CHMCTS
             unordered_map<string,double> chmcts_alg_params =
             {
-                {CZT_BIAS_PARAM_ID, 33.7555},
+                {UCB_BIAS_PARAM_ID, 33.7555},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 5.0},
             };
             run_ids->push_back(RunID(
@@ -853,10 +845,10 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.000144821},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 58.5697},
-                {SMBTS_EPSILON_PARAM_ID, 0.414515},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9972},
+                {BTS_SEARCH_TEMP_PARAM_ID, 58.5697},
+                {BTS_EPSILON_PARAM_ID, 0.414515},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9972},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -878,12 +870,12 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.000145879},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 64.4872},
-                {SMBTS_EPSILON_PARAM_ID, 0.409571},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9981},
-                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 99.998},
-                {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 0.0196627},
+                {BTS_SEARCH_TEMP_PARAM_ID, 64.4872},
+                {BTS_EPSILON_PARAM_ID, 0.409571},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9981},
+                {DENTS_ENTROPY_TEMP_INIT_PARAM_ID, 99.998},
+                {DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 0.0196627},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -920,7 +912,7 @@ namespace thts {
             // CZT
             unordered_map<string,double> czt_alg_params =
             {
-                {CZT_BIAS_PARAM_ID, 3.96968},
+                {UCB_BIAS_PARAM_ID, 3.96968},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 5.0},
             };
             run_ids->push_back(RunID(
@@ -941,7 +933,7 @@ namespace thts {
             // CHMCTS
             unordered_map<string,double> chmcts_alg_params =
             {
-                {CZT_BIAS_PARAM_ID, 3.96968},
+                {UCB_BIAS_PARAM_ID, 3.96968},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 5.0},
             };
             run_ids->push_back(RunID(
@@ -964,10 +956,10 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.05},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 58.5697},
-                {SMBTS_EPSILON_PARAM_ID, 0.414515},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9972},
+                {BTS_SEARCH_TEMP_PARAM_ID, 58.5697},
+                {BTS_EPSILON_PARAM_ID, 0.414515},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9972},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -989,12 +981,12 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.05},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 64.4872},
-                {SMBTS_EPSILON_PARAM_ID, 0.409571},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9981},
-                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 99.998},
-                {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 0.0196627},
+                {BTS_SEARCH_TEMP_PARAM_ID, 64.4872},
+                {BTS_EPSILON_PARAM_ID, 0.409571},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9981},
+                {DENTS_ENTROPY_TEMP_INIT_PARAM_ID, 99.998},
+                {DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 0.0196627},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -1031,7 +1023,7 @@ namespace thts {
             // CZT
             unordered_map<string,double> czt_alg_params =
             {
-                {CZT_BIAS_PARAM_ID, 21.7744},
+                {UCB_BIAS_PARAM_ID, 21.7744},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 99.0},
             };
             run_ids->push_back(RunID(
@@ -1052,7 +1044,7 @@ namespace thts {
             // CHMCTS
             unordered_map<string,double> chmcts_alg_params =
             {
-                {CZT_BIAS_PARAM_ID, 27.9106},
+                {UCB_BIAS_PARAM_ID, 27.9106},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
             };
             run_ids->push_back(RunID(
@@ -1075,10 +1067,10 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.358604}, 
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 84.9397},
-                {SMBTS_EPSILON_PARAM_ID, 0.5},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 0.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.1271},
+                {BTS_SEARCH_TEMP_PARAM_ID, 84.9397},
+                {BTS_EPSILON_PARAM_ID, 0.5},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 0.0},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.1271},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -1100,12 +1092,12 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.499995}, 
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 100.0},
-                {SMBTS_EPSILON_PARAM_ID, 0.5},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 0.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 61.3259},
-                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 48.2209},
-                {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 70.5693},
+                {BTS_SEARCH_TEMP_PARAM_ID, 100.0},
+                {BTS_EPSILON_PARAM_ID, 0.5},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 0.0},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 61.3259},
+                {DENTS_ENTROPY_TEMP_INIT_PARAM_ID, 48.2209},
+                {DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 70.5693},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -1142,7 +1134,7 @@ namespace thts {
             // CZT
             unordered_map<string,double> czt_alg_params =
             {
-                {CZT_BIAS_PARAM_ID, 21.7744},
+                {UCB_BIAS_PARAM_ID, 21.7744},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 99.0},
             };
             run_ids->push_back(RunID(
@@ -1163,7 +1155,7 @@ namespace thts {
             // CHMCTS
             unordered_map<string,double> chmcts_alg_params =
             {
-                {CZT_BIAS_PARAM_ID, 27.9106},
+                {UCB_BIAS_PARAM_ID, 27.9106},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
             };
             run_ids->push_back(RunID(
@@ -1186,10 +1178,10 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.21801}, 
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 57.7995},
-                {SMBTS_EPSILON_PARAM_ID, 0.0772343},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9983},
+                {BTS_SEARCH_TEMP_PARAM_ID, 57.7995},
+                {BTS_EPSILON_PARAM_ID, 0.0772343},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9983},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -1211,12 +1203,12 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.326269},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 79.0565},
-                {SMBTS_EPSILON_PARAM_ID, 0.103549},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9784},
-                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 66.5046},
-                {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 0.0234992},
+                {BTS_SEARCH_TEMP_PARAM_ID, 79.0565},
+                {BTS_EPSILON_PARAM_ID, 0.103549},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 99.9784},
+                {DENTS_ENTROPY_TEMP_INIT_PARAM_ID, 66.5046},
+                {DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 0.0234992},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -1253,7 +1245,7 @@ namespace thts {
             // CZT
             unordered_map<string,double> czt_alg_params =
             {
-                {CZT_BIAS_PARAM_ID, 21.7744},
+                {UCB_BIAS_PARAM_ID, 21.7744},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 99.0},
             };
             run_ids->push_back(RunID(
@@ -1274,7 +1266,7 @@ namespace thts {
             // CHMCTS
             unordered_map<string,double> chmcts_alg_params =
             {
-                {CZT_BIAS_PARAM_ID, 27.9106},
+                {UCB_BIAS_PARAM_ID, 27.9106},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
             };
             run_ids->push_back(RunID(
@@ -1297,10 +1289,10 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.499993}, 
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 63.4425},
-                {SMBTS_EPSILON_PARAM_ID, 0.404392},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 0.0201612},
+                {BTS_SEARCH_TEMP_PARAM_ID, 63.4425},
+                {BTS_EPSILON_PARAM_ID, 0.404392},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 0.0201612},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -1323,12 +1315,12 @@ namespace thts {
                 {SM_L_INF_THRESH_PARAM_ID, 0.499991}, 
                 {SM_L_INF_THRESH_PARAM_ID, 0.145879},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, 74.9865},
-                {SMBTS_EPSILON_PARAM_ID, 0.499985},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, 1.0},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 10.4606},
-                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, 100.0},
-                {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 99.9976},
+                {BTS_SEARCH_TEMP_PARAM_ID, 74.9865},
+                {BTS_EPSILON_PARAM_ID, 0.499985},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, 10.4606},
+                {DENTS_ENTROPY_TEMP_INIT_PARAM_ID, 100.0},
+                {DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, 99.9976},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -1500,7 +1492,6 @@ namespace thts {
             expr_timestamp,
             alg_id,
             alg_params,
-            eval_wrt_time,
             search_runtime,
             eval_delta,
             rollouts_per_mc_eval,
@@ -1555,7 +1546,7 @@ namespace thts {
     void HyperparamOptimiser::write_header()
     {
         // expr params
-        results_fs << "env_id,alg_id,search_runtime,max_trial_length,rollouts_per_mc_eval,num_repeats,"
+        results_summary_fs << "env_id,alg_id,search_runtime,max_trial_length,rollouts_per_mc_eval,num_repeats,"
             << "num_threads" << endl
             << env_id << ","
             << alg_id << ","
@@ -1567,23 +1558,30 @@ namespace thts {
             << endl << endl;
         
         // hyperparams (with sample number (hp_opt_iter) and eval at start/end)
-        results_fs << "hp_opt_iter,";
+        results_summary_fs << "hp_opt_iter,";
         for (string& param_id : alg_param_ids) {
-            results_fs << param_id << ",";
+            results_summary_fs << param_id << ",";
         } 
-        results_fs << "eval(mc_estimate_expected_utility),best_eval_so_far" << endl;
+        results_summary_fs << "eval(mc_estimate_expected_utility),best_eval_so_far" << endl;
 
         // Print out the min an max params trying
-        results_fs << "MIN,";
+        results_summary_fs << "MIN,";
         for (string param_id : alg_param_ids) {
-            results_fs << alg_params_min_max[param_id].first << ",";
+            results_summary_fs << alg_params_min_max[param_id].first << ",";
         } 
-        results_fs << "MIN" << endl;
-        results_fs << "MAX,";
+        results_summary_fs << "MIN" << endl;
+        results_summary_fs << "MAX,";
         for (string param_id : alg_param_ids) {
-            results_fs << alg_params_min_max[param_id].second << ",";
+            results_summary_fs << alg_params_min_max[param_id].second << ",";
         } 
-        results_fs << "MAX" << endl;
+        results_summary_fs << "MAX" << endl;
+        
+        // for evals fs, just want the list of hyperparms, and the eval
+        results_evals_fs << "hp_opt_iter,replicate,";
+        for (string& param_id : alg_param_ids) {
+            results_evals_fs << param_id << ",";
+        } 
+        results_evals_fs << "eval(mc_estimate_expected_utility)" << endl;
 
     };
 
@@ -1633,7 +1631,6 @@ namespace thts {
     {
         // Params shared across optimisations (related to envs / hp_opt, and not algs themselves)
         string env_id = HP_OPT_EXPR_ID_TO_ENV_ID.at(expr_id);
-        bool eval_wrt_time = true;
         double search_runtime = 1.0;
         int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
         double eval_delta = 1.0;
@@ -1648,6 +1645,7 @@ namespace thts {
         unordered_map<string, pair<double,double>> alg_params_min_max;
 
         // Defualt Q values and std_mean_eval_thresholds (default values are for sparse rewards on frozen lake envs)
+        // TODO: this needs to be a vector, not float in MO stuf
         double min_default_q_value = 0.0;
         if (env_id == DST_ENV_ID || env_id == DST_CONC_ENV_ID || env_id == DST_MIRR_ENV_ID) {
             min_default_q_value = -((double) max_trial_length);
@@ -1686,7 +1684,7 @@ namespace thts {
         {
             alg_id = CZT_ALG_ID;
             alg_params_min_max = {
-                {CZT_BIAS_PARAM_ID, make_pair(0.001, 1000.0)},
+                {UCB_BIAS_PARAM_ID, make_pair(0.001, 1000.0)},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
             };
         }
@@ -1695,7 +1693,7 @@ namespace thts {
         {
             alg_id = CHMCTS_ALG_ID;
             alg_params_min_max = {
-                {CZT_BIAS_PARAM_ID, make_pair(0.001, 1000.0)},
+                {UCB_BIAS_PARAM_ID, make_pair(0.001, 1000.0)},
                 {CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
             };
         }
@@ -1706,11 +1704,10 @@ namespace thts {
             alg_params_min_max = {
                 {SM_L_INF_THRESH_PARAM_ID, make_pair(0.0001, 0.5)},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
-                {SMBTS_EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
-                {SMBTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, make_pair(0.0,3.0)},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, make_pair(0.0, 1.0)},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
+                {BTS_EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
+                {BTS_SEARCH_TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, make_pair(0.0,3.0)},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
             };
         }
         // SMDENTS
@@ -1720,14 +1717,13 @@ namespace thts {
             alg_params_min_max = {
                 {SM_L_INF_THRESH_PARAM_ID, make_pair(0.0001, 0.5)},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
-                {SMBTS_SEARCH_TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
-                {SMBTS_EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
-                {SMBTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, make_pair(0.0,3.0)},
-                {SMBTS_SEARCH_TEMP_USE_DECAY_PARAM_ID, make_pair(0.0, 1.0)},
-                {SMBTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
-                {SMDENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID, make_pair(0.0,3.0)},
-                {SMDENTS_ENTROPY_TEMP_INIT_PARAM_ID, make_pair(0.001, 1000.0)},
-                {SMDENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
+                {BTS_EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
+                {BTS_SEARCH_TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
+                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, make_pair(0.0,3.0)},
+                {BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
+                {DENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID, make_pair(0.0,3.0)},
+                {DENTS_ENTROPY_TEMP_INIT_PARAM_ID, make_pair(0.001, 1000.0)},
+                {DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
             };
         }
         // Default, haven't set up hp opt experiments for this env
@@ -1753,7 +1749,6 @@ namespace thts {
             expr_timestamp,
             alg_id,
             alg_params_min_max,
-            eval_wrt_time,
             search_runtime,
             max_trial_length,
             eval_delta,

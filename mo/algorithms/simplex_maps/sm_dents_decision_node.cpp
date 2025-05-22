@@ -25,13 +25,13 @@ namespace thts {
     {
     }
 
-    double SmDentsDNode::get_value_temp() const {
+    double SmDentsDNode::get_value_temp(MoThtsContext& ctx) const {
         SmDentsManager& manager = (SmDentsManager&) *thts_manager;
         return compute_decayed_temp(
             manager.value_temp_decay_fn, 
             manager.value_temp_init, 
             manager.value_temp_decay_min_temp, 
-            num_visits, 
+            get_num_visits(ctx), 
             manager.value_temp_decay_visits_scale);
     }
 
@@ -52,13 +52,13 @@ namespace thts {
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
 
         // get temp
-        double temp = get_temp();
-        double val_temp = get_value_temp();
+        double temp = get_temp(context);
+        double val_temp = get_value_temp(context);
 
         // compute normalisation term (ctx_val already includes opp coeff)
         normalisation_term = numeric_limits<double>::lowest();
         for (shared_ptr<const Action> action : actions) {
-            double ctx_val = thts::helper::dot(context.context_weight, q_val_map[action]);
+            double ctx_val = thts::helper::dot(context.context_weight.vec, q_val_map[action]);
             ctx_val += opp_coeff * val_temp * entropy_map[action];
             double ctx_val_over_temp = ctx_val / temp;
             if (normalisation_term < ctx_val_over_temp) {
@@ -69,7 +69,7 @@ namespace thts {
         // compute action weights
         sum_action_weights = 0.0;
         for (shared_ptr<const Action> action : actions) {
-            double ctx_q_value = thts::helper::dot(context.context_weight, q_val_map[action]);
+            double ctx_q_value = thts::helper::dot(context.context_weight.vec, q_val_map[action]);
             ctx_q_value += opp_coeff * val_temp * entropy_map[action];
             double action_weight = exp((ctx_q_value/temp) - normalisation_term);
             action_weights[action] = action_weight;
@@ -91,8 +91,8 @@ namespace thts {
         num_backups++;
 
         // Get closest NGV in simplex map
-        shared_ptr<TN> simplex = simplex_map.get_leaf_tn_node(ctx.context_weight);
-        shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight);
+        shared_ptr<TN> simplex = simplex_map.get_leaf_tn_node(ctx.context_weight.vec);
+        shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight.vec);
 
         // Make list of vertices to backup
         vector<shared_ptr<NGV>> vertices_to_backup;

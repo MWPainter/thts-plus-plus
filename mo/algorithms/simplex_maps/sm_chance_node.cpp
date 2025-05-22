@@ -28,7 +28,8 @@ namespace thts {
     
     void SmThtsCNode::visit(MoThtsContext& ctx) 
     {
-        num_visits += 1;
+        MoThtsCNode::visit_itfc(ctx);
+        // num_visits += 1;
     } 
 
     string SmThtsCNode::get_simplex_map_pretty_print_string() const {

@@ -34,7 +34,8 @@ namespace thts {
     
     void CztDNode::visit(MoThtsContext& ctx) 
     {
-        num_visits += 1;
+        BlThtsDNode::visit_itfc(ctx);
+        // num_visits += 1;
     } 
 
     void CztDNode::fill_cz_values_and_ball_ptrs(
@@ -54,7 +55,7 @@ namespace thts {
             // Compute the confidence interval of a ball with radius 1 and no visits
             if (!has_child_node_itfc(action)) {
                 double unit_ball_radius = 1.0;
-                action_cz_value = 2.0 * unit_ball_radius + manager.bias * sqrt(log(num_visits+3));
+                action_cz_value = 2.0 * unit_ball_radius + manager.bias * sqrt(log(get_num_visits(ctx)+3));
                 cz_values[action] = action_cz_value;
                 cz_balls[action] = nullptr;
 
@@ -63,15 +64,15 @@ namespace thts {
                 unordered_map<shared_ptr<CzBall>,double> cz_pre_indices;
                 CztCNode& child = *get_child_node(action);
                 shared_ptr<vector<shared_ptr<CzBall>>> relevant_balls = child.ball_list.get_relevant_balls(
-                    ctx.context_weight);
+                    ctx.context_weight.vec); 
 
                 for (shared_ptr<CzBall> ball_ptr : *relevant_balls) {
                     double ball_cz_pre_index_value = 0.0;
                     CzBall& ball = *ball_ptr;
 
-                    ball_cz_pre_index_value += opp_coeff * ball.get_scalarised_avg_return_or_value(ctx.context_weight);
+                    ball_cz_pre_index_value += opp_coeff * ball.get_scalarised_avg_return_or_value(ctx.context_weight.vec);
                     ball_cz_pre_index_value += 2.0 * ball.radius();
-                    ball_cz_pre_index_value += manager.bias * ball.confidence_radius(num_visits);
+                    ball_cz_pre_index_value += manager.bias * ball.confidence_radius(get_num_visits(ctx));
                     cz_pre_indices[ball_ptr] = ball_cz_pre_index_value;
                 }
 
@@ -135,9 +136,9 @@ namespace thts {
             scalarised_values[action] = numeric_limits<double>::lowest();
             if (has_child_node_itfc(action)) {
                 shared_ptr<vector<shared_ptr<CzBall>>> relevant_balls = 
-                    get_child_node(action)->ball_list.get_relevant_balls(ctx.context_weight);
+                    get_child_node(action)->ball_list.get_relevant_balls(ctx.context_weight.vec);
                 for (shared_ptr<CzBall> ball_ptr : *relevant_balls) {
-                    double ball_val = ball_ptr->get_scalarised_avg_return_or_value(ctx.context_weight);
+                    double ball_val = ball_ptr->get_scalarised_avg_return_or_value(ctx.context_weight.vec);
                     if (ball_val > scalarised_values[action]) {
                         scalarised_values[action] = ball_val;
                     }
@@ -163,7 +164,7 @@ namespace thts {
             chosen_ball = child.ball_list.get_init_ball();
         }
         child.ball_list.avg_return_update_ball_list(
-            trial_cumulative_return_after_node, ctx.context_weight, chosen_ball);
+            trial_cumulative_return_after_node, ctx.context_weight.vec, chosen_ball);
     }
 
     string CztDNode::get_pretty_print_val() const {

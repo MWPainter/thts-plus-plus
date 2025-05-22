@@ -21,7 +21,8 @@ namespace thts {
     
     void BlThtsDNode::visit(MoThtsContext& ctx) 
     {
-        num_visits += 1;
+        MoThtsDNode::visit_itfc(ctx);
+        // num_visits += 1;
     } 
 
     string BlThtsDNode::get_ball_list_pretty_print_string() const {

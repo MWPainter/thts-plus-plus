@@ -319,7 +319,7 @@ namespace thts {
                         eval_file, 
                         replicate, 
                         search_time_elapsed, 
-                        root_node->get_num_visits(), 
+                        root_node->get_scalar_num_visits(), 
                         mean, 
                         stddev, 
                         normalised_mean, 
@@ -409,11 +409,20 @@ namespace thts {
     }
 
     /**
-     * Returns the filename for the mc eval results file
+     * Returns the filename for the mc eval results file (summary of hp opt)
     */ 
-    string get_hp_opt_results_filename(string expr_id, time_t timestamp) {
+    string get_hp_opt_summary_filename(string expr_id, time_t timestamp) {
         stringstream ss;
-        ss << HP_OPT_RESULTS_DIR << expr_id << "_" << timestamp << ".txt";
+        ss << HP_OPT_RESULTS_DIR << expr_id << "_summary_" << timestamp << ".txt";
+        return ss.str();
+    }
+
+    /**
+     * Returns the filename for the mc eval results file (all evaluations of each params)
+    */ 
+    string get_hp_opt_evals_filename(string expr_id, time_t timestamp) {
+        stringstream ss;
+        ss << HP_OPT_RESULTS_DIR << expr_id << "_evals_" << timestamp << ".txt";
         return ss.str();
     }
 
@@ -430,13 +439,18 @@ namespace thts {
         
         // Create output filestream
         create_hp_opt_results_dir();
-        string hp_opt_filename = get_hp_opt_results_filename(expr_id, expr_timestamp);
-        ofstream hp_opt_file;
-        hp_opt_file.open(hp_opt_filename, ios::out);// | ios::app);
+
+        string hp_opt_summary_filename = get_hp_opt_summary_filename(expr_id, expr_timestamp);
+        ofstream hp_opt_summary_file;
+        hp_opt_summary_file.open(hp_opt_summary_filename, ios::out);// | ios::app);
+
+        string hp_opt_evals_filename = get_hp_opt_evals_filename(expr_id, expr_timestamp);
+        ofstream hp_opt_evals_file;
+        hp_opt_evals_file.open(hp_opt_evals_filename, ios::out);// | ios::app);
 
         // Get the hp_opt
         shared_ptr<HyperparamOptimiser> hp_opt = get_hyperparam_optimiser_from_expr_id(
-            expr_id, expr_timestamp, hp_opt_file);
+            expr_id, expr_timestamp, hp_opt_summary_file, hp_opt_evals_file);
 
         // If running python, make interpreter and release gil
         shared_ptr<py::scoped_interpreter> py_interpreter;
@@ -456,8 +470,9 @@ namespace thts {
         // Write best eval to file at end
         hp_opt->write_best_eval();
 
-        // Close file
-        hp_opt_file.close();
+        // Close files
+        hp_opt_summary_file.close();
+        hp_opt_evals_file.close();
     }
 
     /**

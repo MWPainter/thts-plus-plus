@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mo/mo_thts_manager.h"
+#include "mo/mo_thts_types.h"
 
 #include <Eigen/Dense>
 
@@ -16,10 +17,10 @@ namespace thts {
      */
     class MoThtsContext : public ThtsEnvContext {
         public:
-            Eigen::ArrayXd context_weight;
+            Vec context_weight;
 
             MoThtsContext(MoThtsManager& manager);
-            MoThtsContext(Eigen::ArrayXd weight);
+            MoThtsContext(Vec weight);
             virtual ~MoThtsContext() = default;
         
             static Eigen::ArrayXd sample_uniform_random_simplex_for_weight(MoThtsManager& manager);

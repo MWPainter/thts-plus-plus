@@ -38,8 +38,8 @@ namespace thts {
         num_backups++;
         
         // Get closest NGV in simplex map
-        shared_ptr<TN> simplex = simplex_map.get_leaf_tn_node(ctx.context_weight);
-        shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight);
+        shared_ptr<TN> simplex = simplex_map.get_leaf_tn_node(ctx.context_weight.vec);
+        shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight.vec);
 
         // Make list of vertices to backup
         vector<shared_ptr<NGV>> vertices_to_backup;

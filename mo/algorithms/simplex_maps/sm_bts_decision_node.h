@@ -46,7 +46,7 @@ namespace thts {
             /**
              * BTS code - get search temp
              */
-            virtual double get_temp() const;
+            virtual double get_temp(MoThtsContext& ctx) const;
 
             /**
              * BTS code - Helper to get the q-value of an action. 

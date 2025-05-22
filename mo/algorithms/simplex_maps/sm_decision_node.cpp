@@ -24,13 +24,14 @@ namespace thts {
                 decision_timestep,
                 static_pointer_cast<const MoThtsCNode>(parent)),
             // simplex_map(thts_manager->reward_dim, thts_manager->default_q_value)
-            simplex_map(thts_manager->reward_dim, mo_heuristic_value)
+            simplex_map(thts_manager->reward_dim, mo_heuristic_value.vec)
     {
     }
     
     void SmThtsDNode::visit(MoThtsContext& ctx) 
     {
-        num_visits += 1;
+        MoThtsDNode::visit_itfc(ctx);
+        // num_visits += 1;
     } 
 
     string SmThtsDNode::get_simplex_map_pretty_print_string() const {

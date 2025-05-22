@@ -72,7 +72,7 @@ namespace thts {
         cur_node->lock();
         cur_node->visit_itfc(context);
         MoThtsDNode& mo_cur_node = (MoThtsDNode&) *cur_node;
-        rewards.push_back(mo_cur_node.mo_heuristic_value);
+        rewards.push_back(mo_cur_node.mo_heuristic_value.vec);
         cur_node->unlock();
     }
 

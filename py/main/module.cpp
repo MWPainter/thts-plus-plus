@@ -504,8 +504,8 @@ void czt_test() {
         policy,  
         manager->max_depth,
         manager,
-        Eigen::ArrayXd::Zero(2)-walk_len,
-        Eigen::ArrayXd::Zero(2)-0.5*walk_len);
+        Vec(Eigen::ArrayXd::Zero(2)-walk_len),
+        Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len));
     // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
@@ -599,8 +599,8 @@ void czt_4d_test() {
         policy,  
         manager->max_depth,
         manager,
-        Eigen::ArrayXd::Zero(4)-walk_len,
-        Eigen::ArrayXd::Ones(4)/(1.0-thts_env->get_gamma()));
+        Vec(Eigen::ArrayXd::Zero(4)-walk_len),
+        Vec(Eigen::ArrayXd::Ones(4)/(1.0-thts_env->get_gamma())));
     // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
@@ -895,8 +895,8 @@ void sm_bts_test() {
         policy,  
         manager->max_depth,
         manager,
-        Eigen::ArrayXd::Zero(2)-walk_len,
-        Eigen::ArrayXd::Zero(2)-0.5*walk_len); 
+        Vec(Eigen::ArrayXd::Zero(2)-walk_len),
+        Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len));
     // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
@@ -989,8 +989,8 @@ void sm_bts_4d_test() {
         policy,  
         manager->max_depth,
         manager,
-        Eigen::ArrayXd::Zero(4)-walk_len,
-        Eigen::ArrayXd::Ones(4)/(1.0-thts_env->get_gamma())); 
+        Vec(Eigen::ArrayXd::Zero(4)-walk_len),
+        Vec(Eigen::ArrayXd::Ones(4)/(1.0-thts_env->get_gamma())));
     // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
@@ -1081,8 +1081,8 @@ void sm_dents_test() {
         policy,  
         manager->max_depth,
         manager,
-        Eigen::ArrayXd::Zero(2)-walk_len,
-        Eigen::ArrayXd::Zero(2)-0.5*walk_len); 
+        Vec(Eigen::ArrayXd::Zero(2)-walk_len),
+        Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len));
     // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
@@ -1173,8 +1173,8 @@ void sm_bts_bin_tree_test() {
         policy,  
         manager->max_depth,
         manager,
-        Eigen::ArrayXd::Zero(2)-walk_len,
-        Eigen::ArrayXd::Zero(2)-0.5*walk_len); 
+        Vec(Eigen::ArrayXd::Zero(2)-walk_len),
+        Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len)); 
     // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
@@ -1266,8 +1266,8 @@ void sm_bts_bin_tree_4d_test() {
         policy,  
         manager->max_depth,
         manager,
-        Eigen::ArrayXd::Zero(4)-walk_len,
-        Eigen::ArrayXd::Ones(4)/(1.0-thts_env->get_gamma())); 
+        Vec(Eigen::ArrayXd::Zero(4)-walk_len),
+        Vec(Eigen::ArrayXd::Ones(4)/(1.0-thts_env->get_gamma()))); 
     // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
@@ -1358,8 +1358,8 @@ void chmcts_test() {
         policy,  
         manager->max_depth,
         manager,
-        Eigen::ArrayXd::Zero(2)-walk_len,
-        Eigen::ArrayXd::Zero(2)-0.5*walk_len);
+        Vec(Eigen::ArrayXd::Zero(2)-walk_len),
+        Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len));
     // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
@@ -1439,8 +1439,8 @@ void chmcts_4d_test() {
         policy,  
         manager->max_depth,
         manager,
-        Eigen::ArrayXd::Zero(4)-walk_len,
-        Eigen::ArrayXd::Ones(4)/(1.0-thts_env->get_gamma()));
+        Vec(Eigen::ArrayXd::Zero(4)-walk_len),
+        Vec(Eigen::ArrayXd::Ones(4)/(1.0-thts_env->get_gamma())));
     // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 

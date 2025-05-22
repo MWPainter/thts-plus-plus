@@ -29,7 +29,8 @@ namespace thts {
     
     void ChThtsCNode::visit(MoThtsContext& ctx) 
     {
-        num_visits += 1;
+        MoThtsCNode::visit_itfc(ctx);
+        // num_visits += 1;
     } 
 
     void ChThtsCNode::backup(

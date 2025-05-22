@@ -23,7 +23,8 @@ namespace thts {
     
     void BlThtsCNode::visit(MoThtsContext& ctx) 
     {
-        num_visits += 1;
+        MoThtsCNode::visit_itfc(ctx);
+        // num_visits += 1;
     } 
 
     string BlThtsCNode::get_ball_list_pretty_print_string() const {

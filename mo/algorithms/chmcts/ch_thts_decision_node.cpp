@@ -24,7 +24,8 @@ namespace thts {
     
     void ChThtsDNode::visit(MoThtsContext& ctx) 
     {
-        num_visits += 1;
+        MoThtsDNode::visit_itfc(ctx);
+        // num_visits += 1;
     } 
 
     /**
