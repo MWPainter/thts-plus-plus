@@ -76,12 +76,9 @@ namespace thts {
         MentsManager& manager = (MentsManager&) *thts_manager;
         if (manager.temp_decay_fn == nullptr) return manager.temp;
 
-        double visits_scale = manager.temp_decay_visits_scale;
-        if (is_root_node() && manager.temp_decay_root_node_visits_scale > 0.0) {
-            visits_scale = manager.temp_decay_root_node_visits_scale;
-        }
+        double visits_scale = manager.temp_decay_fn_x_scale;
         return compute_decayed_temp(
-            manager.temp_decay_fn, manager.temp, manager.temp_decay_min_temp, num_visits, visits_scale);
+            manager.temp_decay_fn, manager.temp, manager.temp_decay_fn_min_temp, num_visits, visits_scale);
 
     }
     

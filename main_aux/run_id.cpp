@@ -2,6 +2,8 @@
 
 #include "main_aux/run_expr.h"
 
+#include "helper.h"
+
 #include "algorithms/uct/uct_manager.h"
 #include "algorithms/uct/hmcts_manager.h"
 #include "algorithms/ments/ments_manager.h"
@@ -62,16 +64,20 @@ namespace thts {
         int max_trial_length,
         int num_repeats,
         int num_threads,
-        int eval_threads) :
+        int eval_threads,
+        bool mcts_mode) :
             env_id(env_id),
             expr_id(expr_id),
             expr_timestamp(expr_timestamp),
             alg_id(alg_id),
             alg_params(alg_params),
+            mcts_mode(mcts_mode),
             adaptive_bias(UctManagerArgs::adaptive_bias_default),
             bias(UctManagerArgs::bias_default),
             hmcts_uct_budget(HmctsManagerArgs::uct_budget_threshold_default),
             normalise_q_values(MentsManagerArgs::normalise_q_values_default),
+            default_q_value(0.0),
+            epsilon(MentsManagerArgs::epsilon_default),
             temp(MentsManagerArgs::temp_default),
             decay_fn(DECAY_FN_CONST),
             decay_fn_scale(1.0),
@@ -88,35 +94,39 @@ namespace thts {
             eval_threads(eval_threads),
             num_envs((eval_threads > num_threads) ? eval_threads : num_threads)
     {
-        if (alg_params.contains(ADAPTIVE_BIAS_PARAM_ID)) {
-            adaptive_bias = alg_params[ADAPTIVE_BIAS_PARAM_ID];
-        }
-        if (alg_params.contains(BIAS_PARAM_ID)) {
-            bias = alg_params[BIAS_PARAM_ID];
-        }
-        if (alg_params.contains(UCT_BUDGET_PARAM_ID)) {
-            hmcts_uct_budget = alg_params[UCT_BUDGET_PARAM_ID];
-        }
-        if (alg_params.contains(NORMALISE_Q_VALUES_PARAM_ID)) {
-            normalise_q_values = alg_params[NORMALISE_Q_VALUES_PARAM_ID];
-        }
-        if (alg_params.contains(TEMP_PARAM_ID)) {
-            temp = alg_params[TEMP_PARAM_ID];
-        }
-        if (alg_params.contains(DECAY_FN_PARAM_ID)) {
-            decay_fn = alg_params[DECAY_FN_PARAM_ID];
-        }
-        if (alg_params.contains(DECAY_FN_SCALE_PARAM_ID)) {
-            decay_fn_scale = alg_params[DECAY_FN_SCALE_PARAM_ID];
-        }
-        if (alg_params.contains(ENTROPY_COEFF_PARAM_ID)) {
-            entropy_coeff = alg_params[ENTROPY_COEFF_PARAM_ID];
-        }
-        if (alg_params.contains(ENTROPY_DECAY_FN_PARAM_ID)) {
-            entropy_decay_fn = alg_params[ENTROPY_DECAY_FN_PARAM_ID];
-        }
-        if (alg_params.contains(ENTROPY_DECAY_FN_SCALE_PARAM_ID)) {
-            entropy_decay_fn_scale = alg_params[ENTROPY_DECAY_FN_SCALE_PARAM_ID];
+        for (pair<string,double> pair : alg_params) {
+            string param_id = pair.first;
+            double param_val = pair.second;
+
+            if (param_id == MCTS_MODE_PARAM_ID) {
+                mcts_mode = (bool) param_val;
+            } else if (param_id == ADAPTIVE_BIAS_PARAM_ID) {
+                adaptive_bias = (bool) param_val;
+            } else if (param_id == BIAS_PARAM_ID) {
+                bias = param_val;
+            } else if (param_id == UCT_BUDGET_PARAM_ID) {
+                hmcts_uct_budget = (int) param_val;
+            } else if (param_id == NORMALISE_Q_VALUES_PARAM_ID) {
+                normalise_q_values = (bool) param_val;
+            } else if (param_id == DEFAULT_Q_VALUE_PARAM_ID) {
+                default_q_value = param_val;
+            } else if (param_id == EPSILON_PARAM_ID) {
+                epsilon = param_val;
+            } else if (param_id == TEMP_PARAM_ID) {
+                temp = param_val;
+            } else if (param_id == DECAY_FN_PARAM_ID) {
+                decay_fn = (int) param_val;
+            } else if (param_id == DECAY_FN_SCALE_PARAM_ID) {
+                decay_fn_scale = param_val;
+            } else if (param_id == ENTROPY_COEFF_PARAM_ID) {
+                entropy_coeff = param_val;
+            } else if (param_id == ENTROPY_DECAY_FN_PARAM_ID) {
+                entropy_decay_fn = (int) param_val;
+            } else if (param_id == ENTROPY_DECAY_FN_SCALE_PARAM_ID) {
+                entropy_decay_fn_scale = param_val;
+            } else {
+                throw runtime_error("RunID::RunID: Unknown param id: " + param_id);
+            }
         }
     }
 
@@ -142,40 +152,49 @@ namespace thts {
     {
         if (alg_id == UCT_ALG_ID || alg_id == MAX_UCT_ALG_ID) {
             UctManagerArgs manager_args(env);
-            manager_args.max_depth = max_trial_length;
-            manager_args.mcts_mode = false;
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
+            manager_args.max_depth = max_trial_length;
+
+            manager_args.mcts_mode = mcts_mode;
+            manager_args.heuristic_fn = mcts_mode ? thts::helper::rollout_heuristic_fn : thts::helper::zero_heuristic_fn;
+
             manager_args.adaptive_bias = adaptive_bias;
             manager_args.bias = bias;
+
             return make_shared<UctManager>(manager_args);
         }
 
         if (alg_id == MENTS_ALG_ID || alg_id == RENTS_ALG_ID || alg_id == TENTS_ALG_ID) {
             MentsManagerArgs manager_args(env);
-            manager_args.max_depth = max_trial_length;
-            manager_args.mcts_mode = false;
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
+            manager_args.max_depth = max_trial_length;
+
+            manager_args.mcts_mode = mcts_mode;
+            manager_args.heuristic_fn = mcts_mode ? thts::helper::rollout_heuristic_fn : thts::helper::zero_heuristic_fn;
+
             manager_args.normalise_q_values = normalise_q_values;
+            manager_args.default_q_value = default_q_value;
+            manager_args.epsilon = epsilon;
+            
             manager_args.temp = temp;
-            if (alg_params.contains(DEFAULT_Q_VALUE_PARAM_ID)) {
-                manager_args.default_q_value = alg_params.at(DEFAULT_Q_VALUE_PARAM_ID);
-            }
+
             return make_shared<MentsManager>(manager_args);
         }
 
         if (alg_id == BTS_ALG_ID) {
             DentsManagerArgs manager_args(env);
-            manager_args.max_depth = max_trial_length;
-            manager_args.mcts_mode = false;
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
-            manager_args.normalise_q_values = normalise_q_values;
+            manager_args.max_depth = max_trial_length;
 
-            if (alg_params.contains(DEFAULT_Q_VALUE_PARAM_ID)) {
-                manager_args.default_q_value = alg_params.at(DEFAULT_Q_VALUE_PARAM_ID);
-            }
+            manager_args.mcts_mode = mcts_mode;
+            manager_args.heuristic_fn = mcts_mode ? thts::helper::rollout_heuristic_fn : thts::helper::zero_heuristic_fn;
+
+            manager_args.normalise_q_values = normalise_q_values;
+            manager_args.default_q_value = default_q_value;
+            manager_args.epsilon = epsilon;
 
             // alpha
             manager_args.temp = temp;
@@ -185,22 +204,23 @@ namespace thts {
             } else if (decay_fn == DECAY_FN_INV_LOG) {
                 manager_args.temp_decay_fn = decayed_temp_inv_log;
             }
-            manager_args.temp_decay_visits_scale = decay_fn_scale;
+            manager_args.temp_decay_fn_x_scale = decay_fn_scale;
             
             return make_shared<DentsManager>(manager_args);
         }
 
         if (alg_id == DENTS_ALG_ID) {
             DentsManagerArgs manager_args(env);
-            manager_args.max_depth = max_trial_length;
-            manager_args.mcts_mode = false;
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
-            manager_args.normalise_q_values = normalise_q_values;
+            manager_args.max_depth = max_trial_length;
 
-            if (alg_params.contains(DEFAULT_Q_VALUE_PARAM_ID)) {
-                manager_args.default_q_value = alg_params.at(DEFAULT_Q_VALUE_PARAM_ID);
-            }
+            manager_args.mcts_mode = mcts_mode;
+            manager_args.heuristic_fn = mcts_mode ? thts::helper::rollout_heuristic_fn : thts::helper::zero_heuristic_fn;
+
+            manager_args.normalise_q_values = normalise_q_values;
+            manager_args.default_q_value = default_q_value;
+            manager_args.epsilon = epsilon;
 
             // alpha
             manager_args.temp = temp;
@@ -210,27 +230,30 @@ namespace thts {
             } else if (decay_fn == DECAY_FN_INV_LOG) {
                 manager_args.temp_decay_fn = decayed_temp_inv_log;
             }
-            manager_args.temp_decay_visits_scale = decay_fn_scale;
+            manager_args.temp_decay_fn_x_scale = decay_fn_scale;
 
             // beta
-            manager_args.value_temp_init = entropy_coeff;
-            manager_args.value_temp_decay_fn = nullptr;
+            manager_args.entropy_temp = entropy_coeff;
+            manager_args.entropy_temp_decay_fn = nullptr;
             if (entropy_decay_fn == DECAY_FN_INV_SQRT) {
-                manager_args.value_temp_decay_fn = decayed_temp_inv_sqrt;
+                manager_args.entropy_temp_decay_fn = decayed_temp_inv_sqrt;
             } else if (entropy_decay_fn == DECAY_FN_INV_LOG) {
-                manager_args.value_temp_decay_fn = decayed_temp_inv_log;
+                manager_args.entropy_temp_decay_fn = decayed_temp_inv_log;
             }
-            manager_args.value_temp_decay_visits_scale = entropy_decay_fn_scale;
+            manager_args.entropy_temp_decay_fn_x_scale = entropy_decay_fn_scale;
             
             return make_shared<DentsManager>(manager_args);
         }
 
         if (alg_id == HMCTS_ALG_ID) {
             HmctsManagerArgs manager_args(env);
-            manager_args.max_depth = max_trial_length;
-            manager_args.mcts_mode = false;
             manager_args.num_threads = num_threads;
             manager_args.num_envs = num_envs;
+            manager_args.max_depth = max_trial_length;
+
+            manager_args.mcts_mode = mcts_mode;
+            manager_args.heuristic_fn = mcts_mode ? thts::helper::rollout_heuristic_fn : thts::helper::zero_heuristic_fn;
+
             manager_args.adaptive_bias = adaptive_bias;
             manager_args.bias = bias;
 
@@ -673,12 +696,12 @@ namespace thts {
             ));
 
             // MaxUCT 
-            // -19.4248
+            // -20.25
             alg_id = MAX_UCT_ALG_ID;
             alg_params = 
             {
                 {ADAPTIVE_BIAS_PARAM_ID, 1},
-                {BIAS_PARAM_ID, 2.1},
+                {BIAS_PARAM_ID, 1.92},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -697,12 +720,12 @@ namespace thts {
             ));
 
             // HMCTS
-            // -23.3571
+            // -21.3    
             alg_id = HMCTS_ALG_ID;
             alg_params = 
             {
                 {ADAPTIVE_BIAS_PARAM_ID, 1},
-                {BIAS_PARAM_ID, 0.0059},
+                {BIAS_PARAM_ID, 0.0085},
                 {UCT_BUDGET_PARAM_ID, 4999},
             };
             run_ids->push_back(RunID(
@@ -722,13 +745,13 @@ namespace thts {
             ));
 
             // MENTS
-            // -20.0833
+            // -18.5
             alg_id = MENTS_ALG_ID;
             alg_params = 
             {
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
-                {TEMP_PARAM_ID, 0.084},
-                {EPSILON_PARAM_ID, 0.98},
+                {TEMP_PARAM_ID, 0.0038},
+                {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
             run_ids->push_back(RunID(
@@ -748,14 +771,14 @@ namespace thts {
             ));
 
             // BTS
-            // -19.3
+            // -19.36
             alg_id = BTS_ALG_ID;
             alg_params = 
             {
-                {NORMALISE_Q_VALUES_PARAM_ID, 0},
-                {TEMP_PARAM_ID, 3.0},
-                {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
-                {DECAY_FN_SCALE_PARAM_ID, 0.01},
+                {NORMALISE_Q_VALUES_PARAM_ID, 1},
+                {TEMP_PARAM_ID, 72.9},
+                {DECAY_FN_PARAM_ID, DECAY_FN_INV_SQRT},
+                {DECAY_FN_SCALE_PARAM_ID, 100.0},
                 {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
@@ -776,17 +799,17 @@ namespace thts {
             ));
 
             // DENTS
-            // -18.5
+            // -17.2
             alg_id = DENTS_ALG_ID;
             alg_params = 
             {
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
-                {TEMP_PARAM_ID, 3.22852},
-                {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
+                {TEMP_PARAM_ID, 98.6}, // 
+                {DECAY_FN_PARAM_ID, DECAY_FN_INV_SQRT},
                 {DECAY_FN_SCALE_PARAM_ID, 100.0},
-                {ENTROPY_COEFF_PARAM_ID, 0.0654013},
+                {ENTROPY_COEFF_PARAM_ID, 0.032}, //
                 {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_CONST},
-                {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 100.0},
+                {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 0.01},
                 {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
@@ -807,12 +830,12 @@ namespace thts {
             ));
 
             // RENTS
-            // -19.1
+            // -18.1
             alg_id = RENTS_ALG_ID;
             alg_params = 
             {
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
-                {TEMP_PARAM_ID, 0.00253789},
+                {TEMP_PARAM_ID, 0.24},
                 {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
@@ -833,12 +856,12 @@ namespace thts {
             ));
             
             // TENTS
-            // -20.8824
+            // -18.8
             alg_id = TENTS_ALG_ID;
             alg_params = 
             {
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
-                {TEMP_PARAM_ID, 0.247869},
+                {TEMP_PARAM_ID, 0.077},
                 {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
@@ -891,12 +914,12 @@ namespace thts {
             unordered_map<string,double> alg_params;
 
             // UCT 
-            // 0.816177
+            // 0.820304
             alg_id = UCT_ALG_ID;
             alg_params = 
             {
                 {ADAPTIVE_BIAS_PARAM_ID, 1},
-                {BIAS_PARAM_ID, 3.03027},
+                {BIAS_PARAM_ID, 2.44},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -915,12 +938,12 @@ namespace thts {
             ));
 
             // MaxUCT 
-            // 0.803223
+            // 0.808782
             alg_id = MAX_UCT_ALG_ID;
             alg_params = 
             {
                 {ADAPTIVE_BIAS_PARAM_ID, 1},
-                {BIAS_PARAM_ID, 1.34473},
+                {BIAS_PARAM_ID, 1.36},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -964,12 +987,12 @@ namespace thts {
             ));
 
             // MENTS
-            // 0.821816
+            // 0.833115
             alg_id = MENTS_ALG_ID;
             alg_params = 
             {
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
-                {TEMP_PARAM_ID, 0.00621147},
+                {TEMP_PARAM_ID, 0.0022},
                 {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
@@ -990,14 +1013,14 @@ namespace thts {
             ));
             
             // BTS
-            // 0.829243
+            // 0.833384
             alg_id = BTS_ALG_ID;
             alg_params = 
             {
                 {NORMALISE_Q_VALUES_PARAM_ID, 1},
-                {TEMP_PARAM_ID, 0.827971},
-                {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
-                {DECAY_FN_SCALE_PARAM_ID, 0.01},
+                {TEMP_PARAM_ID, 0.0016},
+                {DECAY_FN_PARAM_ID, DECAY_FN_INV_SQRT},
+                {DECAY_FN_SCALE_PARAM_ID, 0.53},
                 {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
@@ -1022,13 +1045,13 @@ namespace thts {
             alg_id = DENTS_ALG_ID;
             alg_params = 
             {
-                {NORMALISE_Q_VALUES_PARAM_ID, 0},
-                {TEMP_PARAM_ID, 0.820547},
-                {DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
-                {DECAY_FN_SCALE_PARAM_ID, 0.0100092},
-                {ENTROPY_COEFF_PARAM_ID, 0.0115623},
+                {NORMALISE_Q_VALUES_PARAM_ID, 1},
+                {TEMP_PARAM_ID, 0.0014},
+                {DECAY_FN_PARAM_ID, DECAY_FN_INV_SQRT},
+                {DECAY_FN_SCALE_PARAM_ID, 0.013},
+                {ENTROPY_COEFF_PARAM_ID, 0.37},
                 {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_INV_SQRT},
-                {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 10.0267},
+                {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 11.9},
                 {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
@@ -1049,12 +1072,12 @@ namespace thts {
             ));
 
             // RENTS
-            // 0.844765
+            // 0.838962
             alg_id = RENTS_ALG_ID;
             alg_params = 
             {
-                {NORMALISE_Q_VALUES_PARAM_ID, 1},
-                {TEMP_PARAM_ID, 0.001},
+                {NORMALISE_Q_VALUES_PARAM_ID, 0},
+                {TEMP_PARAM_ID, 0.0011},
                 {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
@@ -1075,12 +1098,12 @@ namespace thts {
             ));
 
             // TENTS
-            // 0.825999
+            // 0.831394
             alg_id = TENTS_ALG_ID;
             alg_params = 
             {
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
-                {TEMP_PARAM_ID, 0.00512999},
+                {TEMP_PARAM_ID, 0.0084},
                 {EPSILON_PARAM_ID, 1.0},
                 {DEFAULT_Q_VALUE_PARAM_ID, default_q_value},
             };
@@ -1625,6 +1648,7 @@ namespace thts {
             alg_id = UCT_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {ADAPTIVE_BIAS_PARAM_ID, 0},
                 {BIAS_PARAM_ID, 20.0638},
             };
@@ -1649,6 +1673,7 @@ namespace thts {
             alg_id = MAX_UCT_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {ADAPTIVE_BIAS_PARAM_ID, 1},
                 {BIAS_PARAM_ID, 0.599484},
             };
@@ -1674,6 +1699,7 @@ namespace thts {
             alg_id = HMCTS_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {ADAPTIVE_BIAS_PARAM_ID, 1},
                 {BIAS_PARAM_ID, 0.599484},
                 {UCT_BUDGET_PARAM_ID, 1},
@@ -1699,6 +1725,7 @@ namespace thts {
             alg_id = MENTS_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
                 {TEMP_PARAM_ID, 7.0341},
                 {EPSILON_PARAM_ID, 0.000876699},
@@ -1726,6 +1753,7 @@ namespace thts {
             alg_id = BTS_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
                 {TEMP_PARAM_ID, 21.6892},
                 {DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
@@ -1755,6 +1783,7 @@ namespace thts {
             alg_id = DENTS_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
                 {TEMP_PARAM_ID, 4.40294},
                 {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
@@ -1786,6 +1815,7 @@ namespace thts {
             alg_id = RENTS_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
                 {TEMP_PARAM_ID, 20.0744},
                 {EPSILON_PARAM_ID, 0.998703},
@@ -1812,6 +1842,7 @@ namespace thts {
             alg_id = TENTS_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {NORMALISE_Q_VALUES_PARAM_ID, 1},
                 {TEMP_PARAM_ID, 25.4172},
                 {EPSILON_PARAM_ID, 0.0590783},
@@ -1870,6 +1901,7 @@ namespace thts {
             alg_id = UCT_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {ADAPTIVE_BIAS_PARAM_ID, 0},
                 {BIAS_PARAM_ID, 20.9906},
             };
@@ -1894,6 +1926,7 @@ namespace thts {
             alg_id = MAX_UCT_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {ADAPTIVE_BIAS_PARAM_ID, 1},
                 {BIAS_PARAM_ID, 1.0},
             };
@@ -1919,6 +1952,7 @@ namespace thts {
             alg_id = HMCTS_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {ADAPTIVE_BIAS_PARAM_ID, 0},
                 {BIAS_PARAM_ID, 52.5813},
                 {UCT_BUDGET_PARAM_ID, 4990},
@@ -1944,6 +1978,7 @@ namespace thts {
             alg_id = MENTS_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
                 {TEMP_PARAM_ID, 5.25483},
                 {EPSILON_PARAM_ID, 0.16076},
@@ -1971,6 +2006,7 @@ namespace thts {
             alg_id = BTS_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
                 {TEMP_PARAM_ID, 30.0578},
                 {DECAY_FN_PARAM_ID, DECAY_FN_INV_LOG},
@@ -2000,6 +2036,7 @@ namespace thts {
             alg_id = DENTS_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
                 {TEMP_PARAM_ID, 6.04038},
                 {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
@@ -2031,6 +2068,7 @@ namespace thts {
             alg_id = RENTS_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {NORMALISE_Q_VALUES_PARAM_ID, 0},
                 {TEMP_PARAM_ID, 26.8291},
                 {EPSILON_PARAM_ID, 0.0},
@@ -2057,6 +2095,7 @@ namespace thts {
             alg_id = TENTS_ALG_ID;
             alg_params = 
             {
+                {MCTS_MODE_PARAM_ID, 1},
                 {NORMALISE_Q_VALUES_PARAM_ID, 1},
                 {TEMP_PARAM_ID, 26.721},
                 {EPSILON_PARAM_ID, 0.0001},
@@ -2106,6 +2145,7 @@ namespace thts {
         int num_repeats,
         int num_threads,
         int eval_threads,
+        bool mcts_mode,
         bayesopt::Parameters params,
         ofstream &results_summary_fs,
         ofstream &results_evals_fs,
@@ -2128,6 +2168,7 @@ namespace thts {
             num_threads(num_threads),
             eval_threads(eval_threads),
             num_envs((eval_threads > num_threads) ? eval_threads : num_threads),
+            mcts_mode(mcts_mode),
             best_eval(numeric_limits<double>::lowest()),
             best_alg_params(),
             results_summary_fs(results_summary_fs),
@@ -2246,7 +2287,8 @@ namespace thts {
             max_trial_length,
             1, //num_repeats, - now manually running multiple repeats
             num_threads,
-            eval_threads
+            eval_threads,
+            mcts_mode
         );
 
         int repeats_run = 0;
@@ -2383,7 +2425,7 @@ namespace thts {
         bool eval_wrt_time = false;
         double search_runtime = 10000.0;
         int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
-        double eval_delta = 10000.0;
+        double eval_delta = 10000.0; 
         int rollouts_per_mc_eval = 1024;
         int num_repeats = 10; // min repeats
         int num_threads = 16;
@@ -2396,11 +2438,11 @@ namespace thts {
 
         // Defualt Q values and std_mean_eval_thresholds (default values are for sparse rewards on frozen lake envs)
         double min_default_q_value = 0.0;
-        if (env_id == FROZEN_LAKE_D_8x8_ENV_ID || env_id == SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID) {
-            min_default_q_value = -((double) max_trial_length);
-        } else if (env_id == SAILING_ENV_NORTH_ID || env_id == SAILING_ENV_SOUTH_EAST_ID) {
-            min_default_q_value = -5.0 * ((double) max_trial_length);
-        }
+        // if (env_id == FROZEN_LAKE_D_8x8_ENV_ID || env_id == SLIPPY_FROZEN_LAKE_D_4x4_ENV_ID) {
+        //     min_default_q_value = -((double) max_trial_length);
+        // } else if (env_id == SAILING_ENV_NORTH_ID || env_id == SAILING_ENV_SOUTH_EAST_ID) {
+        //     min_default_q_value = -5.0 * ((double) max_trial_length);
+        // } 
 
         // std mean eval thresholds
         double std_mean_eval_threshold = 1.0; 
@@ -2413,10 +2455,12 @@ namespace thts {
         } else if (env_id == SLIPPY_FROZEN_LAKE_S_4x4_ENV_ID) {
             std_mean_eval_threshold = 0.005; 
         } else if (env_id == SAILING_ENV_NORTH_ID) {
-            std_mean_eval_threshold = 2.5;
+            std_mean_eval_threshold = 0.5;
         } else if (env_id == SAILING_ENV_SOUTH_EAST_ID) {
-            std_mean_eval_threshold = 2.5; 
+            std_mean_eval_threshold = 0.5; 
         }
+
+        bool mcts_mode = (env_id == SAILING_ENV_NORTH_ID || env_id == SAILING_ENV_SOUTH_EAST_ID);
 
         // UCT
         if (expr_id == HP_OPT_600_UCT_EXPR_ID 
@@ -2584,6 +2628,7 @@ namespace thts {
             num_repeats,
             num_threads,
             eval_threads,
+            mcts_mode,
             bo_params, 
             hp_opt_summary_fs,
             hp_opt_evals_fs,

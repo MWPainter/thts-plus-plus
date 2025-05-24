@@ -8,7 +8,7 @@ namespace thts::helper {
      * Implementation of the default zero heuristic function.
      */
     template <unsigned int dim>
-    Eigen::ArrayXd mo_zero_heuristic_fn(shared_ptr<const State> state, shared_ptr<ThtsEnv> env) {
+    Eigen::ArrayXd mo_zero_heuristic_fn(shared_ptr<const State> state, MoThtsEnv& env, MoThtsManager& manager, int depth) {
         return Eigen::ArrayXd::Zero(dim);
     }
 }

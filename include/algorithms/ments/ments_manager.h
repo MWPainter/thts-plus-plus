@@ -16,9 +16,8 @@ namespace thts {
         static constexpr double max_explore_prob_default=1.0;
 
         static constexpr TempDecayFnPtr temp_decay_fn_default=nullptr;
-        static constexpr double temp_decay_min_temp_default=1.0e-6;
-        static constexpr double temp_decay_visits_scale_default=1.0;
-        static constexpr double temp_decay_root_node_visits_scale_default=-1.0;
+        static constexpr double temp_decay_fn_min_temp_default=1.0e-6;
+        static constexpr double temp_decay_fn_x_scale_default=1.0;
 
         static constexpr double default_q_value_default=0.0;
         static const bool shift_pseudo_q_values_default=false;
@@ -35,9 +34,8 @@ namespace thts {
         double max_explore_prob;
 
         TempDecayFnPtr temp_decay_fn;
-        double temp_decay_min_temp;
-        double temp_decay_visits_scale;
-        double temp_decay_root_node_visits_scale;
+        double temp_decay_fn_min_temp;
+        double temp_decay_fn_x_scale;
 
         double default_q_value;
         bool shift_pseudo_q_values;
@@ -55,9 +53,8 @@ namespace thts {
             root_node_epsilon(root_node_epsilon_default),
             max_explore_prob(max_explore_prob_default),
             temp_decay_fn(temp_decay_fn_default),
-            temp_decay_min_temp(temp_decay_min_temp_default),
-            temp_decay_visits_scale(temp_decay_visits_scale_default),
-            temp_decay_root_node_visits_scale(temp_decay_root_node_visits_scale_default),
+            temp_decay_fn_min_temp(temp_decay_fn_min_temp_default),
+            temp_decay_fn_x_scale(temp_decay_fn_x_scale_default),
             default_q_value(default_q_value_default),
             shift_pseudo_q_values(shift_pseudo_q_values_default),
             psuedo_q_value_offset(psuedo_q_value_offset_default),
@@ -97,14 +94,11 @@ namespace thts {
      * Member variables (temperature decay):
      *      temp_decay_fn: 
      *          The temperature decay function to use. Default = nullptr, meaning no temperature decay
-     *      temp_decay_min_temp:
+     *      temp_decay_fn_min_temp:
      *          The minimum temperature that we allow the temperature to be decayed to
-     *      temp_decay_visits_scale:
+     *      temp_decay_fn_x_scale:
      *          A weight to scale 'num_visits' by in the input to the decay function. Essentially scaling the x-axis of 
      *          the decay function.
-     *      temp_decay_root_node_visits_scale:
-     *          An alternative value to use for 'visits_scale' at the root search node. The default value of -1.0 
-     *          indicates we should use the value of 'visits_scale' at the root node too.
      * 
      * Member variables (values / backups):
      *      default_q_value:
@@ -140,9 +134,8 @@ namespace thts {
             double max_explore_prob;
 
             TempDecayFnPtr temp_decay_fn;
-            double temp_decay_min_temp;
-            double temp_decay_visits_scale;
-            double temp_decay_root_node_visits_scale;
+            double temp_decay_fn_min_temp;
+            double temp_decay_fn_x_scale;
 
             double default_q_value;
             bool shift_pseudo_q_values;
@@ -160,9 +153,8 @@ namespace thts {
                 root_node_epsilon(args.root_node_epsilon),
                 max_explore_prob(args.max_explore_prob),
                 temp_decay_fn(args.temp_decay_fn),
-                temp_decay_min_temp(args.temp_decay_min_temp),
-                temp_decay_visits_scale(args.temp_decay_visits_scale),
-                temp_decay_root_node_visits_scale(args.temp_decay_root_node_visits_scale),
+                temp_decay_fn_min_temp(args.temp_decay_fn_min_temp),
+                temp_decay_fn_x_scale(args.temp_decay_fn_x_scale),
                 default_q_value(args.default_q_value),
                 shift_pseudo_q_values(args.shift_pseudo_q_values),
                 psuedo_q_value_offset(args.psuedo_q_value_offset),

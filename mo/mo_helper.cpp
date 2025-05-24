@@ -57,7 +57,7 @@ namespace thts::helper {
     {
     };
     
-    Eigen::ArrayXd ConstHeuristicFn::heuristic_fn(std::shared_ptr<const State> s, std::shared_ptr<ThtsEnv> env) 
+    Eigen::ArrayXd ConstHeuristicFn::heuristic_fn(std::shared_ptr<const State> s, MoThtsEnv& env, MoThtsManager& manager, int depth) 
     {
         return const_val;
     }

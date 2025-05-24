@@ -27,16 +27,13 @@ namespace thts {
      */
     double DentsDNode::get_value_temp() const {
         DentsManager& manager = (DentsManager&) *thts_manager;
-        if (manager.value_temp_decay_fn == nullptr) return manager.value_temp_init;
+        if (manager.entropy_temp_decay_fn == nullptr) return manager.entropy_temp;
 
-        double visits_scale = manager.value_temp_decay_visits_scale;
-        if (is_root_node() && manager.value_temp_decay_root_node_visits_scale > 0.0) {
-            visits_scale = manager.value_temp_decay_root_node_visits_scale;
-        }
+        double visits_scale = manager.entropy_temp_decay_fn_x_scale;
         return compute_decayed_temp(
-            manager.value_temp_decay_fn, 
-            manager.value_temp_init, 
-            manager.value_temp_decay_min_temp, 
+            manager.entropy_temp_decay_fn, 
+            manager.entropy_temp, 
+            manager.entropy_temp_decay_fn_min_temp, 
             num_visits, 
             visits_scale);
     }

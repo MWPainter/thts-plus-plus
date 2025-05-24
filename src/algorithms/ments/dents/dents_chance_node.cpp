@@ -30,14 +30,14 @@ namespace thts {
      */
     double DentsCNode::get_value_temp() const {
         DentsManager& manager = (DentsManager&) *thts_manager;
-        if (manager.value_temp_decay_fn == nullptr) return manager.value_temp_init;
+        if (manager.entropy_temp_decay_fn == nullptr) return manager.entropy_temp;
 
         return compute_decayed_temp(
-            manager.value_temp_decay_fn, 
-            manager.value_temp_init, 
-            manager.value_temp_decay_min_temp, 
+            manager.entropy_temp_decay_fn, 
+            manager.entropy_temp, 
+            manager.entropy_temp_decay_fn_min_temp, 
             num_visits, 
-            manager.value_temp_decay_visits_scale);
+            manager.entropy_temp_decay_fn_x_scale);
     }
 
     /**

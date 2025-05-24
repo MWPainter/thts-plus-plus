@@ -4,16 +4,24 @@
 
 #include <memory>
 
-// forward declar ThtsEnv
+// forward declares
 namespace thts {
     class ThtsEnv;
+    class ThtsManager;
 }
 
 namespace thts::helper {
     /**
      * A default heuristic function that returns a constant zero
      */
-    double zero_heuristic_fn(std::shared_ptr<const State> state, std::shared_ptr<ThtsEnv> env=nullptr);
+    double zero_heuristic_fn(
+        std::shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth=0);
+
+    /**
+     * The rollout heuristic function, that returns an MC estimate of 'state' with a rollout with random policy
+     */
+    double rollout_heuristic_fn(
+        std::shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth);
 
     /**
      * String split function

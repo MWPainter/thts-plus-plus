@@ -32,6 +32,7 @@ static const std::string TENTS_ALG_ID = "tents";
 static const std::string HMCTS_ALG_ID = "hmcts";
 
 // param ids
+static const std::string MCTS_MODE_PARAM_ID = "mcts_mode"; 
 static const std::string ADAPTIVE_BIAS_PARAM_ID = "adaptive_bias";      // adaptive bias (uct, etc)
 static const std::string BIAS_PARAM_ID = "bias";                        // bias param (uct, etc)
 static const std::string NORMALISE_Q_VALUES_PARAM_ID = "normalise_q_values"; // normalise q values (boltzmann search algorithms)
@@ -218,8 +219,8 @@ static const std::unordered_map<std::string,int> ENV_ID_MAX_TRIAL_LEN =
     {SLIPPY_FROZEN_LAKE_S_5x5_ENV_ID,    50},
     {SLIPPY_FROZEN_LAKE_D_6x6_ENV_ID,    50},
     {SLIPPY_FROZEN_LAKE_S_6x6_ENV_ID,    50},
-    {SAILING_ENV_NORTH_ID,      32},//100},
-    {SAILING_ENV_SOUTH_EAST_ID, 32},//100},
+    {SAILING_ENV_NORTH_ID,      100},
+    {SAILING_ENV_SOUTH_EAST_ID, 100},
     {SAILING_8x16_ENV_NORTH_ID,      100},
     {SAILING_8x16_ENV_SOUTH_EAST_ID, 100},
     {SAILING_16x16_ENV_NORTH_ID,      100},
@@ -534,11 +535,16 @@ namespace thts {
 
             std::unordered_map<std::string, double> alg_params;
 
+            bool mcts_mode;
+
             bool adaptive_bias;
             double bias;
             int hmcts_uct_budget;
 
             bool normalise_q_values;
+            double default_q_value;
+            double epsilon;
+
             double temp;
             int decay_fn;
             double decay_fn_scale;
@@ -578,7 +584,8 @@ namespace thts {
                 int max_trial_length,
                 int num_repeats,
                 int num_threads,
-                int eval_threads);
+                int eval_threads,
+                bool mcts_mode=false);
 
             /**
              * A unique results directory for each RunID
@@ -645,6 +652,8 @@ namespace thts {
             int eval_threads;
             int num_envs;
 
+            bool mcts_mode;
+
             double best_eval;
             std::unordered_map<std::string, double> best_alg_params;
 
@@ -670,6 +679,7 @@ namespace thts {
                 int num_repeats,
                 int num_threads,
                 int eval_threads,
+                bool mcts_mode,
                 bayesopt::Parameters params,
                 std::ofstream &results_summary_fs,
                 std::ofstream &results_evals_fs,

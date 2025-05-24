@@ -7,28 +7,25 @@ namespace thts {
      * Args object so that params can be set in a more named args way
      */
     struct DentsManagerArgs : public MentsManagerArgs {
-        static constexpr TempDecayFnPtr value_temp_decay_fn_default=decayed_temp_inv_sqrt;
-        static constexpr double value_temp_init_default=1.0;
-        static constexpr double value_temp_decay_min_temp_default=1.0e-6;
-        static constexpr double value_temp_decay_visits_scale_default=1.0;
-        static constexpr double value_temp_decay_root_node_visits_scale_default=-1.0;
+        static constexpr TempDecayFnPtr entropy_temp_decay_fn_default=decayed_temp_inv_sqrt;
+        static constexpr double entropy_temp_default=1.0;
+        static constexpr double entropy_temp_decay_fn_min_temp_default=1.0e-6;
+        static constexpr double entropy_temp_decay_fn_x_scale_default=1.0;
         static const bool use_dp_value_default=true;
 
-        TempDecayFnPtr value_temp_decay_fn;
-        double value_temp_init;
-        double value_temp_decay_min_temp;
-        double value_temp_decay_visits_scale;
-        double value_temp_decay_root_node_visits_scale;
+        TempDecayFnPtr entropy_temp_decay_fn;
+        double entropy_temp;
+        double entropy_temp_decay_fn_min_temp;
+        double entropy_temp_decay_fn_x_scale;
 
         bool use_dp_value;
 
         DentsManagerArgs(std::shared_ptr<ThtsEnv> thts_env) :
             MentsManagerArgs(thts_env),
-            value_temp_decay_fn(value_temp_decay_fn_default),
-            value_temp_init(value_temp_init_default),
-            value_temp_decay_min_temp(value_temp_decay_min_temp_default),
-            value_temp_decay_visits_scale(value_temp_decay_visits_scale_default),
-            value_temp_decay_root_node_visits_scale(value_temp_decay_root_node_visits_scale_default),
+            entropy_temp_decay_fn(entropy_temp_decay_fn_default),
+            entropy_temp(entropy_temp_default),
+            entropy_temp_decay_fn_min_temp(entropy_temp_decay_fn_min_temp_default),
+            entropy_temp_decay_fn_x_scale(entropy_temp_decay_fn_x_scale_default),
             use_dp_value(use_dp_value_default) {}
 
         virtual ~DentsManagerArgs() = default;
@@ -40,20 +37,20 @@ namespace thts {
      * The 'value_temp' refers to the temperature coefficient of entropy when computing (soft) values
      * 
      * Member variables (value temp decay):
-     *      value_temp_decay_fn:
+     *      entropy_temp_decay_fn:
      *          The decay function to use for the value temp. A value of nullptr can be used to indicate that this 
      *          decay shouldn't be used (in which case this algorithm will run similarly to MENTS, but with seperately 
      *          computed value and entropy, rather than the single soft value)
-     *      value_temp_init:
+     *      entropy_temp:
      *          The initial value for the value temp
-     *      value_temp_decay_min_temp:
+     *      entropy_temp_decay_fn_min_temp:
      *          The minimum temperature to use for the value temp
-     *      value_temp_decay_visits_scale:
+     *      entropy_temp_decay_fn_x_scale:
      *          The scaling to use with the valuje_temp decay function. This is an x-axis scaling for the number of 
      *          visits input into the temp decay function
      *      value_temp_decay_root_node_visits_scale:
      *          Same as the visits scale, but for the root node. Default value of -1.0 indicates to use the same value 
-     *          as 'value_temp_decay_visits_scale'
+     *          as 'entropy_temp_decay_fn_x_scale'
      * 
      * Member variables (values):
      *      use_dp_value:
@@ -63,21 +60,19 @@ namespace thts {
      */
     class DentsManager : public MentsManager {
         public:
-            TempDecayFnPtr value_temp_decay_fn;
-            double value_temp_init;
-            double value_temp_decay_min_temp;
-            double value_temp_decay_visits_scale;
-            double value_temp_decay_root_node_visits_scale;
+            TempDecayFnPtr entropy_temp_decay_fn;
+            double entropy_temp;
+            double entropy_temp_decay_fn_min_temp;
+            double entropy_temp_decay_fn_x_scale;
 
             bool use_dp_value;
 
             DentsManager(const DentsManagerArgs& args) :
                 MentsManager(args),
-                value_temp_decay_fn(args.value_temp_decay_fn),
-                value_temp_init(args.value_temp_init),
-                value_temp_decay_min_temp(args.value_temp_decay_min_temp),
-                value_temp_decay_visits_scale(args.value_temp_decay_visits_scale),
-                value_temp_decay_root_node_visits_scale(args.value_temp_decay_root_node_visits_scale),
+                entropy_temp_decay_fn(args.entropy_temp_decay_fn),
+                entropy_temp(args.entropy_temp),
+                entropy_temp_decay_fn_min_temp(args.entropy_temp_decay_fn_min_temp),
+                entropy_temp_decay_fn_x_scale(args.entropy_temp_decay_fn_x_scale),
                 use_dp_value(args.use_dp_value) {};
     };
 }

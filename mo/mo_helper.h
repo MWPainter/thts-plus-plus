@@ -42,6 +42,6 @@ namespace thts::helper {
     struct ConstHeuristicFn {
         Eigen::ArrayXd const_val;
         ConstHeuristicFn(Eigen::ArrayXd& const_val);
-        Eigen::ArrayXd heuristic_fn(std::shared_ptr<const State> s, std::shared_ptr<ThtsEnv> env);
+        Eigen::ArrayXd heuristic_fn(std::shared_ptr<const State> s, MoThtsEnv& env, MoThtsManager& manager, int depth);
     };
 }

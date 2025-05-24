@@ -28,11 +28,11 @@ namespace thts {
     double SmDentsDNode::get_value_temp(MoThtsContext& ctx) const {
         SmDentsManager& manager = (SmDentsManager&) *thts_manager;
         return compute_decayed_temp(
-            manager.value_temp_decay_fn, 
-            manager.value_temp_init, 
-            manager.value_temp_decay_min_temp, 
+            manager.entropy_temp_decay_fn, 
+            manager.entropy_temp, 
+            manager.entropy_temp_decay_fn_min_temp, 
             get_num_visits(ctx), 
-            manager.value_temp_decay_visits_scale);
+            manager.entropy_temp_decay_fn_x_scale);
     }
 
     void SmDentsDNode::compute_action_weights(

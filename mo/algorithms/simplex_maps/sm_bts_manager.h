@@ -19,8 +19,8 @@ namespace thts {
         static constexpr double max_explore_prob_default=1.0;
 
         static constexpr TempDecayFnPtr temp_decay_fn_default=nullptr;
-        static constexpr double temp_decay_min_temp_default=1.0e-6;
-        static constexpr double temp_decay_visits_scale_default=1.0;
+        static constexpr double temp_decay_fn_min_temp_default=1.0e-6;
+        static constexpr double temp_decay_fn_x_scale_default=1.0;
 
         double temp; 
         double epsilon;
@@ -28,8 +28,8 @@ namespace thts {
         double max_explore_prob;
 
         TempDecayFnPtr temp_decay_fn;
-        double temp_decay_min_temp;
-        double temp_decay_visits_scale;
+        double temp_decay_fn_min_temp;
+        double temp_decay_fn_x_scale;
 
         SmBtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env, Eigen::ArrayXd default_q_value) :
             SmThtsManagerArgs(thts_env, default_q_value),
@@ -38,8 +38,8 @@ namespace thts {
             root_node_epsilon(root_node_epsilon_default),
             max_explore_prob(max_explore_prob_default),
             temp_decay_fn(temp_decay_fn_default),
-            temp_decay_min_temp(temp_decay_min_temp_default),
-            temp_decay_visits_scale(temp_decay_visits_scale_default)
+            temp_decay_fn_min_temp(temp_decay_fn_min_temp_default),
+            temp_decay_fn_x_scale(temp_decay_fn_x_scale_default)
         {
         }
 
@@ -61,8 +61,8 @@ namespace thts {
             double max_explore_prob;
 
             TempDecayFnPtr temp_decay_fn;
-            double temp_decay_min_temp;
-            double temp_decay_visits_scale;
+            double temp_decay_fn_min_temp;
+            double temp_decay_fn_x_scale;
 
             /**
              * Constructor.
@@ -74,8 +74,8 @@ namespace thts {
                 root_node_epsilon(args.root_node_epsilon),
                 max_explore_prob(args.max_explore_prob),
                 temp_decay_fn(args.temp_decay_fn),
-                temp_decay_min_temp(args.temp_decay_min_temp),
-                temp_decay_visits_scale(args.temp_decay_visits_scale)
+                temp_decay_fn_min_temp(args.temp_decay_fn_min_temp),
+                temp_decay_fn_x_scale(args.temp_decay_fn_x_scale)
             {
             }
 

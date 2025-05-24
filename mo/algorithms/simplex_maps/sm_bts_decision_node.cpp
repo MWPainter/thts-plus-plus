@@ -36,9 +36,9 @@ namespace thts {
         return compute_decayed_temp(
             manager.temp_decay_fn, 
             manager.temp, 
-            manager.temp_decay_min_temp, 
+            manager.temp_decay_fn_min_temp, 
             get_num_visits(ctx), 
-            manager.temp_decay_visits_scale);
+            manager.temp_decay_fn_x_scale);
     }
     
     Eigen::ArrayXd SmBtsDNode::get_q_value(

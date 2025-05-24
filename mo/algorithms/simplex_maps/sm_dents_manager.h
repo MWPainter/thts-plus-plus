@@ -13,24 +13,24 @@ namespace thts {
      * Args object so that params can be set in a more named args way
      */
     struct SmDentsManagerArgs : public SmBtsManagerArgs {
-        static constexpr TempDecayFnPtr value_temp_decay_fn_default=decayed_temp_inv_sqrt;
-        static constexpr double value_temp_init_default=1.0;
-        static constexpr double value_temp_decay_min_temp_default=1.0e-6;
-        static constexpr double value_temp_decay_visits_scale_default=1.0;
+        static constexpr TempDecayFnPtr entropy_temp_decay_fn_default=decayed_temp_inv_sqrt;
+        static constexpr double entropy_temp_default=1.0;
+        static constexpr double entropy_temp_decay_fn_min_temp_default=1.0e-6;
+        static constexpr double entropy_temp_decay_fn_x_scale_default=1.0;
         static constexpr double value_temp_decay_root_node_visits_scale_default=-1.0;
         static const bool use_dp_value_default=true;
 
-        TempDecayFnPtr value_temp_decay_fn;
-        double value_temp_init;
-        double value_temp_decay_min_temp;
-        double value_temp_decay_visits_scale;
+        TempDecayFnPtr entropy_temp_decay_fn;
+        double entropy_temp;
+        double entropy_temp_decay_fn_min_temp;
+        double entropy_temp_decay_fn_x_scale;
 
         SmDentsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env, Eigen::ArrayXd default_q_value) :
             SmBtsManagerArgs(thts_env, default_q_value),
-            value_temp_decay_fn(value_temp_decay_fn_default),
-            value_temp_init(value_temp_init_default),
-            value_temp_decay_min_temp(value_temp_decay_min_temp_default),
-            value_temp_decay_visits_scale(value_temp_decay_visits_scale_default)
+            entropy_temp_decay_fn(entropy_temp_decay_fn_default),
+            entropy_temp(entropy_temp_default),
+            entropy_temp_decay_fn_min_temp(entropy_temp_decay_fn_min_temp_default),
+            entropy_temp_decay_fn_x_scale(entropy_temp_decay_fn_x_scale_default)
         {
         }
 
@@ -46,20 +46,20 @@ namespace thts {
      */
     class SmDentsManager : public SmBtsManager {
         public:
-            TempDecayFnPtr value_temp_decay_fn;
-            double value_temp_init;
-            double value_temp_decay_min_temp;
-            double value_temp_decay_visits_scale;
+            TempDecayFnPtr entropy_temp_decay_fn;
+            double entropy_temp;
+            double entropy_temp_decay_fn_min_temp;
+            double entropy_temp_decay_fn_x_scale;
 
             /**
              * Constructor.
              */    
             SmDentsManager(const SmDentsManagerArgs& args) : 
                 SmBtsManager(args),
-                value_temp_decay_fn(args.value_temp_decay_fn),
-                value_temp_init(args.value_temp_init),
-                value_temp_decay_min_temp(args.value_temp_decay_min_temp),
-                value_temp_decay_visits_scale(args.value_temp_decay_visits_scale)
+                entropy_temp_decay_fn(args.entropy_temp_decay_fn),
+                entropy_temp(args.entropy_temp),
+                entropy_temp_decay_fn_min_temp(args.entropy_temp_decay_fn_min_temp),
+                entropy_temp_decay_fn_x_scale(args.entropy_temp_decay_fn_x_scale)
             {
             }
 

@@ -35,7 +35,7 @@ namespace thts {
         if (thts_manager->heuristic_fn != nullptr 
             && !thts_manager->thts_env()->is_sink_state_itfc(state,*thts_manager->get_thts_context())) 
         {
-            heuristic_value = thts_manager->heuristic_fn(state, thts_manager->thts_env());
+            heuristic_value = thts_manager->heuristic_fn(state, *thts_manager->thts_env(), *thts_manager, decision_depth);
         }
     }
 

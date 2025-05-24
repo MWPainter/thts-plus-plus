@@ -23,8 +23,9 @@
  */
 
 namespace thts {
-    // Forward declare thts env
+    // Forward declare
     class ThtsEnv;
+    class ThtsManager;
 
     /**
      * A abstract base type to use for Observations.
@@ -172,7 +173,7 @@ namespace thts {
      * First used in thts_decision_node.h and thts_chance_node.h
      * N.B. The & here is to get address as we want function pointers
      */  
-    double _DummyHeuristicFn(std::shared_ptr<const State> s, std::shared_ptr<ThtsEnv> env);
+    double _DummyHeuristicFn(std::shared_ptr<const State> s, ThtsEnv& env, ThtsManager& manager, int depth);
     typedef decltype(&_DummyHeuristicFn) HeuristicFnPtr;
 
     /**

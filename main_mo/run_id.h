@@ -18,12 +18,113 @@
 #include "bayesopt/parameters.hpp"
 
 
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Algorithm config
+// ---------------------------------------------------------------------------------------------------------------------
+
+// alg ids 
+static const std::string CZT_ALG_ID = "czt";
+static const std::string CH_CZT_ALG_ID = "chczt";
+static const std::string SM_BTS_ALG_ID = "smbts";
+static const std::string SM_DENTS_ALG_ID = "smdents";
+
+// param ids
+static const std::string UCB_BIAS_PARAM_ID = "bias";
+static const std::string CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID = "czt_ball_split_visit_thresh";
+
+static const std::string SM_L_INF_THRESH_PARAM_ID = "sm_l_inf_thresh";
+static const std::string SM_MAX_DEPTH = "sm_max_depth";
+static const std::string SM_SPLIT_VISIT_THRESH_PARAM_ID = "sm_split_visit_thresh";
+
+static const std::string BTS_EPSILON_PARAM_ID = "epsilon";
+static const std::string BTS_SEARCH_TEMP_PARAM_ID = "search_temp";
+static const std::string BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID = "search_temp_decay_fn";
+static const std::string BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID = "search_temp_decay_fn_x_scale";
+
+static const std::string DENTS_ENTROPY_TEMP_PARAM_ID = "entropy_temp";
+static const std::string DENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID = "entropy_temp_decay_fn";
+static const std::string DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID = "entropy_temp_fn_x_scale";
+
 // param ids - decay fn options
 enum DECAY_FN_VALUES {
     DECAY_FN_CONST = 0,
     DECAY_FN_INV_LOG = 1,
     DECAY_FN_INV_SQRT = 2,
 };
+
+// relevant alg ids -> param ids
+static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_PARAM_IDS =
+{
+    {CZT_ALG_ID,
+        {
+            UCB_BIAS_PARAM_ID,
+            CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID,
+        },
+    },
+    {CH_CZT_ALG_ID,
+        {
+            UCB_BIAS_PARAM_ID,
+            CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID,
+        },
+    },
+    {SM_BTS_ALG_ID,
+        {
+            SM_L_INF_THRESH_PARAM_ID,
+            // SM_MAX_DEPTH,
+            SM_SPLIT_VISIT_THRESH_PARAM_ID,
+            BTS_EPSILON_PARAM_ID,
+            BTS_SEARCH_TEMP_PARAM_ID,
+            BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID,
+            BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID,
+        },
+    },
+    {SM_DENTS_ALG_ID,
+        {
+            SM_L_INF_THRESH_PARAM_ID,
+            // SM_MAX_DEPTH,
+            SM_SPLIT_VISIT_THRESH_PARAM_ID,
+            BTS_EPSILON_PARAM_ID,
+            BTS_SEARCH_TEMP_PARAM_ID,
+            BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID,
+            BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID,
+            DENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID,
+            DENTS_ENTROPY_TEMP_PARAM_ID,
+            DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID
+        },
+    },
+};
+
+// List of boolean + int param ids
+static const std::unordered_set<std::string> BOOLEAN_PARAM_IDS =
+{
+};
+
+static const std::unordered_set<std::string> INTEGER_PARAM_IDS =
+{
+    CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID,
+    // SM_MAX_DEPTH,
+    SM_SPLIT_VISIT_THRESH_PARAM_ID,
+    BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID,
+    DENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID,
+};
+
+// List of params to use a log scale in BayesOpt
+static const std::unordered_set<std::string> LOG_SCALE_PARAM_IDS =
+{
+    UCB_BIAS_PARAM_ID,
+    SM_L_INF_THRESH_PARAM_ID,
+    BTS_SEARCH_TEMP_PARAM_ID,
+    BTS_EPSILON_PARAM_ID,
+    BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID,
+    DENTS_ENTROPY_TEMP_PARAM_ID,
+    DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID,
+};
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Environment config
+// ---------------------------------------------------------------------------------------------------------------------
 
 // env ids - debug
 static const std::string DEBUG_ENV_1_ID = "debug_env_1"; // not stoch + 2 rew
@@ -153,11 +254,11 @@ static const std::unordered_map<std::string,int> ENV_ID_MAX_TRIAL_LEN =
     {VAMPLEW_STOCH_DST_ENV_ID,50},
 };
 
-// alg ids 
-static const std::string CZT_ALG_ID = "czt";
-static const std::string CHMCTS_ALG_ID = "chmcts";
-static const std::string SMBTS_ALG_ID = "smbts";
-static const std::string SMDENTS_ALG_ID = "smdents";
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Experiment config
+// ---------------------------------------------------------------------------------------------------------------------
 
 // expr ids - testing - for VS debugging
 static const std::string DEBUG_EXPR_ID = "000_debug";
@@ -494,91 +595,6 @@ static const std::unordered_set<std::string> ALL_EXPR_IDS =
     EVAL_FT_S7_EXPR_ID,
 };
 
-// param ids
-static const std::string UCB_BIAS_PARAM_ID = "bias";
-static const std::string CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID = "czt_ball_split_visit_thresh";
-
-static const std::string SM_L_INF_THRESH_PARAM_ID = "sm_l_inf_thresh";
-static const std::string SM_MAX_DEPTH = "sm_max_depth";
-static const std::string SM_SPLIT_VISIT_THRESH_PARAM_ID = "sm_split_visit_thresh";
-
-static const std::string BTS_EPSILON_PARAM_ID = "epsilon";
-static const std::string BTS_SEARCH_TEMP_PARAM_ID = "search_temp";
-static const std::string BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID = "smbts_search_temp_decay_fn";
-static const std::string BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID = "smbts_search_temp_decay_fn_scale";
-
-static const std::string DENTS_ENTROPY_TEMP_INIT_PARAM_ID = "smdents_entropy_temp_init";
-static const std::string DENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID = "smdents_entropy_temp_decay_fn";
-static const std::string DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID = "smdents_entropy_temp_visits_scale";
-
-// relevant alg ids -> param ids
-static const std::unordered_map<std::string,std::vector<std::string>> RELEVANT_PARAM_IDS =
-{
-    {CZT_ALG_ID,
-        {
-            UCB_BIAS_PARAM_ID,
-            CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID,
-        },
-    },
-    {CHMCTS_ALG_ID,
-        {
-            UCB_BIAS_PARAM_ID,
-            CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID,
-        },
-    },
-    {SMBTS_ALG_ID,
-        {
-            SM_L_INF_THRESH_PARAM_ID,
-            // SM_MAX_DEPTH,
-            SM_SPLIT_VISIT_THRESH_PARAM_ID,
-            BTS_EPSILON_PARAM_ID,
-            BTS_SEARCH_TEMP_PARAM_ID,
-            BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID,
-            BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID,
-        },
-    },
-    {SMDENTS_ALG_ID,
-        {
-            SM_L_INF_THRESH_PARAM_ID,
-            // SM_MAX_DEPTH,
-            SM_SPLIT_VISIT_THRESH_PARAM_ID,
-            BTS_EPSILON_PARAM_ID,
-            BTS_SEARCH_TEMP_PARAM_ID,
-            BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID,
-            BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID,
-            DENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID,
-            DENTS_ENTROPY_TEMP_INIT_PARAM_ID,
-            DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID
-        },
-    },
-};
-
-// List of boolean + int param ids
-static const std::unordered_set<std::string> BOOLEAN_PARAM_IDS =
-{
-};
-
-static const std::unordered_set<std::string> INTEGER_PARAM_IDS =
-{
-    CZT_BALL_SPLIT_VISIT_THRESH_PARAM_ID,
-    // SM_MAX_DEPTH,
-    SM_SPLIT_VISIT_THRESH_PARAM_ID,
-    BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID,
-    DENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID,
-};
-
-// List of params to use a log scale in BayesOpt
-static const std::unordered_set<std::string> LOG_SCALE_PARAM_IDS =
-{
-    UCB_BIAS_PARAM_ID,
-    SM_L_INF_THRESH_PARAM_ID,
-    BTS_SEARCH_TEMP_PARAM_ID,
-    BTS_EPSILON_PARAM_ID,
-    BTS_SEARCH_TEMP_DECAY_VISITS_SCALE_PARAM_ID,
-    DENTS_ENTROPY_TEMP_INIT_PARAM_ID,
-    DENTS_ENTROPY_TEMP_VISITS_SCALE_PARAM_ID,
-};
-
 
 namespace thts {
     /**
@@ -628,6 +644,7 @@ namespace thts {
             int sm_split_visit_thresh;
 
             double bts_epsilon;
+            
             double bts_search_temp;
             int bts_search_temp_decay_fn;
             double bts_search_temp_decay_fn_scale;

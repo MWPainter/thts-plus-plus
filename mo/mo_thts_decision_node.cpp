@@ -22,13 +22,14 @@ namespace thts {
         int decision_timestep,
         shared_ptr<const MoThtsCNode> parent) :
             ThtsDNode(thts_manager, state, decision_depth, decision_timestep, parent),
-            mo_heuristic_value(thts_manager->reward_dim),
-            vector_visit_count(thts_manager->reward_dim)
+            mo_heuristic_value(thts_manager->reward_dim, 0.0),
+            vector_visit_count(thts_manager->reward_dim, 0.0)
     {
         if (thts_manager->mo_heuristic_fn != nullptr
             && !thts_manager->thts_env()->is_sink_state_itfc(state, *thts_manager->get_thts_context()))
         {
-            mo_heuristic_value = thts_manager->mo_heuristic_fn(state, thts_manager->thts_env());
+            MoThtsEnv& mo_thts_env = (MoThtsEnv&) *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());
+            mo_heuristic_value = thts_manager->mo_heuristic_fn(state, mo_thts_env, *thts_manager, decision_depth);
         }
     }
 
