@@ -695,11 +695,6 @@ namespace thts {
             bool is_python_env();
 
             /**
-             * Returns if the env we are using needs a python interpreter
-            */
-            bool needs_python_interpreter();
-
-            /**
              * Returns an instance of ThtsEnv to use for this run
             */
             std::shared_ptr<MoThtsEnv> get_env();
@@ -802,7 +797,6 @@ namespace thts {
                 double std_mean_eval_threshold=0.0);
 
             bool is_python_env();
-            bool needs_python_interpreter();
 
             virtual std::unordered_map<std::string, double> get_alg_params_from_bayesopt_vec(bayesopt::vectord vec);
 
@@ -842,11 +836,6 @@ namespace thts {
      * Checks if env corresponding to 'env_id' is a python env
      */
     bool is_python_env(std::string env_id);
-
-    /**
-     * Checks if env needs a python interpreter
-     */
-    bool needs_python_interpreter(std::string env_id);
 
     /**
      * Create the env corresponding to 'env_id' and return is

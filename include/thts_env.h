@@ -1,6 +1,6 @@
 #pragma once
 
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_manager.h"
 #include "thts_types.h"
 
@@ -86,7 +86,7 @@ namespace thts {
              * Returns:
              *      True if 'state' is a sink state and false otherwise
              */
-            virtual bool is_sink_state_itfc(std::shared_ptr<const State> state, ThtsEnvContext& ctx) const = 0;
+            virtual bool is_sink_state_itfc(std::shared_ptr<const State> state, ThtsContext& ctx) const = 0;
 
             /**
              * Returns a list of actions that are valid in a given state.
@@ -99,7 +99,7 @@ namespace thts {
              *      Returns a list of actions available from 'state'
              */
             virtual std::shared_ptr<ActionVector> get_valid_actions_itfc(
-                std::shared_ptr<const State> state, ThtsEnvContext& ctx) const = 0;
+                std::shared_ptr<const State> state, ThtsContext& ctx) const = 0;
 
             /**
              * Returns a distribution over successor states from a state action pair.
@@ -119,7 +119,7 @@ namespace thts {
             virtual std::shared_ptr<StateDistr> get_transition_distribution_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
-                ThtsEnvContext& ctx) const = 0;
+                ThtsContext& ctx) const = 0;
 
             /**
              * Samples an successor state when taking an action from a state.
@@ -139,7 +139,7 @@ namespace thts {
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
                 RandManager& rand_manager,
-                ThtsEnvContext& ctx) const = 0;
+                ThtsContext& ctx) const = 0;
 
             /**
              * Returns a distribution over observations from a (next) state, action pair.
@@ -161,7 +161,7 @@ namespace thts {
             virtual std::shared_ptr<ObservationDistr> get_observation_distribution_itfc(
                 std::shared_ptr<const Action> action, 
                 std::shared_ptr<const State> next_state,
-                ThtsEnvContext& ctx) const;
+                ThtsContext& ctx) const;
 
             /**
              * Samples an observation when arriving in a (next) state after taking an action.
@@ -183,7 +183,7 @@ namespace thts {
                 std::shared_ptr<const Action> action, 
                 std::shared_ptr<const State> next_state, 
                 RandManager& rand_manager,
-                ThtsEnvContext& ctx) const;
+                ThtsContext& ctx) const;
             
             /**
              * Returns the reward for a given state, action, observation tuple.
@@ -205,7 +205,7 @@ namespace thts {
             virtual double get_reward_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
-                ThtsEnvContext& ctx) const = 0;
+                ThtsContext& ctx) const = 0;
 
             /**
              * Samples a context that can be used to store information throughout a single trial.
@@ -224,10 +224,10 @@ namespace thts {
              *      tid: Thts search thread id
              * 
              * Returns:
-             *      A ThtsEnvContext object, that will be passed to the Thts functions for a single trial, used to 
+             *      A ThtsContext object, that will be passed to the Thts functions for a single trial, used to 
              *      provide some context or space for caching.
              */
-            virtual std::shared_ptr<ThtsEnvContext> sample_context_itfc(int tid, RandManager& rand_manager) const;
+            virtual std::shared_ptr<ThtsContext> sample_context_itfc(int tid, RandManager& rand_manager) const;
 
             /**
              * Resets any per trial state in this environment

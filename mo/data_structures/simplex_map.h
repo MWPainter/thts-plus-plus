@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "mo/data_structures/convex_hull.h"
 
 
 // Forward declare namespace
@@ -480,5 +481,10 @@ namespace thts {
              * Prett print
             */
             std::string get_pretty_print_string() const;
+
+            /**
+             * Return a convex hull approximation
+             */
+            ConvexHull get_approximate_convex_hull() const;
     };
 }

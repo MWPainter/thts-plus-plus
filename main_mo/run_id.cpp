@@ -148,12 +148,6 @@ namespace thts {
         return thts::is_python_env(env_id);
     }
 
-
-    bool RunID::needs_python_interpreter() 
-    {
-        return thts::needs_python_interpreter(env_id);
-    }
-
     shared_ptr<MoThtsEnv> RunID::get_env() 
     {
         return thts::get_env(*this);
@@ -1424,11 +1418,6 @@ namespace thts {
         return thts::is_python_env(env_id);
     }
 
-    bool HyperparamOptimiser::needs_python_interpreter() 
-    {
-        return thts::needs_python_interpreter(env_id);
-    }
-
     unordered_map<string, double> HyperparamOptimiser::get_alg_params_from_bayesopt_vec(bayesopt::vectord vec)
     {
         unordered_map<string, double> alg_params;
@@ -1822,16 +1811,6 @@ namespace thts {
             || DEBUG_PY_ENVS.contains(env_id) 
             || PY_ENVS.contains(env_id) 
             || TIMED_ENV_ID_TO_GYM_ID.contains(env_id));
-    }
-
-    /**
-     * Checks if envs needs a python interpreter
-     */
-    bool needs_python_interpreter(string env_id) 
-    {
-        return (is_python_env(env_id)
-            || env_id.find(TOY_TREE_DENSE_ENV_ID) != string::npos
-            || env_id.find(TOY_TREE_SPARSE_ENV_ID) != string::npos);
     }
 
     /**

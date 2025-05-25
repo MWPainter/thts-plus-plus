@@ -2,9 +2,14 @@
 
 #include <Eigen/Dense>
 
+#include <Python.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/embed.h>
+
 #include "thts_types.h"
 #include "mo/mo_thts_types.h"
 #include "thts_env.h"
+#include "thts_manager.h"
 
 /**
  * Hash and equal_to for Eigen::ArrayXd
@@ -44,4 +49,16 @@ namespace thts::helper {
         ConstHeuristicFn(Eigen::ArrayXd& const_val);
         Eigen::ArrayXd heuristic_fn(std::shared_ptr<const State> s, MoThtsEnv& env, MoThtsManager& manager, int depth);
     };
+        
+    Eigen::ArrayXd sample_uniform_random_simplex_vector(RandManager& manager, int dim);
+
+    /**
+     * Generate well spaced points
+     * - interface to python functions to generate well spaced points on a hypersphere/simplex
+     * - handles if python interpreter is initialised or not (temporarily initialises an interpreter if not)
+     * - assumes that thread calling this function has the GIL, OR, is the only thread running python code at the moment
+     */
+    std::vector<Eigen::ArrayXd> get_well_spaced_points(int num_points, int dim, bool is_simplex=false);
+    std::vector<Eigen::ArrayXd> get_well_spaced_hyperphere_points(int num_points, int dim);
+    std::vector<Eigen::ArrayXd> get_well_spaced_simplex_points(int num_points, int dim);
 }

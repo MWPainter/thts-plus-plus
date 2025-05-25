@@ -140,7 +140,7 @@ namespace thts {
      * Parent node will set the total budget. 
      * Update local seq halving variables if needed
      */
-    void HmctsDNode::visit(ThtsEnvContext& ctx) {
+    void HmctsDNode::visit(ThtsContext& ctx) {
         if (running_seq_halving()) {
             visit_update_budgets();
         }
@@ -155,7 +155,7 @@ namespace thts {
      * Realised when writing this that we might accidentally double select a child when using multithreading leading 
      * to one being picked slightly more than the other. But with the randomisation it should be ok enough
      */
-    shared_ptr<const Action> HmctsDNode::select_action_sequential_halving(ThtsEnvContext& ctx) {
+    shared_ptr<const Action> HmctsDNode::select_action_sequential_halving(ThtsContext& ctx) {
         // Pull uninitialised arms if needed
         vector<shared_ptr<const Action>> actions_yet_to_try;
         for (shared_ptr<const Action> action : *actions) {
@@ -193,7 +193,7 @@ namespace thts {
      * 
      * If doing sequential halving here, then use that function, otherwise uct
      */
-    shared_ptr<const Action> HmctsDNode::select_action(ThtsEnvContext& ctx) {
+    shared_ptr<const Action> HmctsDNode::select_action(ThtsContext& ctx) {
         if (running_seq_halving()) {
             return select_action_sequential_halving(ctx);
         }
@@ -237,15 +237,15 @@ namespace thts {
  * Boilerplate ThtsDNode interface implementation. Copied from thts_decision_node_template.h.
  */
 namespace thts {
-    void HmctsDNode::visit_itfc(ThtsEnvContext& ctx) {
+    void HmctsDNode::visit_itfc(ThtsContext& ctx) {
         visit(ctx);
     }
 
-    shared_ptr<const Action> HmctsDNode::select_action_itfc(ThtsEnvContext& ctx) {
+    shared_ptr<const Action> HmctsDNode::select_action_itfc(ThtsContext& ctx) {
         return select_action(ctx);
     }
 
-    shared_ptr<const Action> HmctsDNode::recommend_action_itfc(ThtsEnvContext& ctx) const {
+    shared_ptr<const Action> HmctsDNode::recommend_action_itfc(ThtsContext& ctx) const {
         return recommend_action(ctx);
     }
 
@@ -254,7 +254,7 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
         backup(
             trial_rewards_before_node, 

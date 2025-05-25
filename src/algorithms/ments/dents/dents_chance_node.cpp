@@ -50,7 +50,7 @@ namespace thts {
         const std::vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx)
+        ThtsContext& ctx)
     {   
         MentsCNode::num_backups++;
 

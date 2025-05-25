@@ -5,6 +5,8 @@
 #include "mo/mo_thts_chance_node.h"
 #include "mo/mo_thts_manager.h"
 
+#include "mo/data_structures/convex_hull.h"
+
 #include <memory>
 #include <mutex>
 #include <sstream>
@@ -71,7 +73,7 @@ namespace thts {
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                ThtsEnvContext& ctx) override final;
+                ThtsContext& ctx) override final;
 
             /**
              * Override of thts backup function for multi objective.
@@ -95,11 +97,23 @@ namespace thts {
                 const std::vector<Eigen::ArrayXd>& trial_rewards_after_node, 
                 const Eigen::ArrayXd trial_cumulative_return_after_node, 
                 const Eigen::ArrayXd trial_cumulative_return,
-                ThtsEnvContext& ctx) = 0;
+                ThtsContext& ctx) = 0;
 
-            double get_num_visits(ThtsEnvContext& ctx) const;
+            /**
+             * THTS interface
+             */
+            virtual void visit_itfc(ThtsContext& ctx) override;
+
+            /**
+             * Get the number of visits, possibly using contextual visit counts
+             */
+            double get_num_visits(ThtsContext& ctx) const;
             double get_scalar_num_visits() const;
             Vec get_vector_num_visits() const;
-            virtual void visit_itfc(ThtsEnvContext& ctx) override;
+
+            /**
+             * Get an (approximate) convex hull from this node
+             */
+            virtual ConvexHull get_convex_hull() const;
     };
 }

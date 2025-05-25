@@ -54,7 +54,7 @@ namespace thts {
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                ThtsEnvContext& ctx) override final;
+                ThtsContext& ctx) override final;
 
             /**
              * Override of thts backup function for multi objective.
@@ -78,11 +78,11 @@ namespace thts {
                 const std::vector<Eigen::ArrayXd>& trial_rewards_after_node, 
                 const Eigen::ArrayXd trial_cumulative_return_after_node, 
                 const Eigen::ArrayXd trial_cumulative_return,
-                ThtsEnvContext& ctx) = 0;
+                ThtsContext& ctx) = 0;
 
-            double get_num_visits(ThtsEnvContext& ctx) const;
+            double get_num_visits(ThtsContext& ctx) const;
             double get_scalar_num_visits() const;
             Vec get_vector_num_visits() const;
-            virtual void visit_itfc(ThtsEnvContext& ctx) override;
+            virtual void visit_itfc(ThtsContext& ctx) override;
     };
 }

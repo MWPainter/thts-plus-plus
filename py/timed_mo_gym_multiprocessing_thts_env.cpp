@@ -55,7 +55,7 @@ namespace thts::python {
     Eigen::ArrayXd TimedMoGymMultiprocessingThtsEnv::get_mo_reward(
         shared_ptr<const PyState> state, 
         shared_ptr<const PyAction> action,
-        ThtsEnvContext& ctx) const 
+        ThtsContext& ctx) const 
     {
         shared_mem_wrapper->rpc_id = RPC_get_reward;
         shared_mem_wrapper->value_type = SMT_strings;

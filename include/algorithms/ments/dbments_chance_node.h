@@ -9,7 +9,7 @@
 #include "algorithms/common/dp_chance_node.h"
 #include "algorithms/common/dp_decision_node.h"
 #include "thts_env.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_manager.h"
 
 #include <memory>
@@ -54,7 +54,7 @@ namespace thts {
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                ThtsEnvContext& ctx);
+                ThtsContext& ctx);
 
         protected:
             /**

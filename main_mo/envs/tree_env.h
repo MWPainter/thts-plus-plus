@@ -52,13 +52,6 @@ namespace thts{
             virtual std::shared_ptr<ThtsEnv> clone();
 
             /**
-             * Loading rewards from cached
-             * Uses util/generate_well_spaced_vectors.py to generate and util/cached_hypersphere_points/.* for cache
-             */
-            void load_cached_rewards(int num_rewards, int num_actions);
-            void generate_cached_rewards(int num_rewards, int num_actions);
-
-            /**
              * Mark destructor as virtual for subclassing.
              */
             virtual ~ToyTreeEnv() = default;
@@ -161,22 +154,22 @@ namespace thts{
          */
         public:
             virtual std::shared_ptr<const State> get_initial_state_itfc() const;
-            virtual bool is_sink_state_itfc(std::shared_ptr<const State> state, ThtsEnvContext& ctx) const override;
+            virtual bool is_sink_state_itfc(std::shared_ptr<const State> state, ThtsContext& ctx) const override;
             virtual std::shared_ptr<ActionVector> get_valid_actions_itfc(
                 std::shared_ptr<const State> state,
-                ThtsEnvContext& ctx) const override;
+                ThtsContext& ctx) const override;
             virtual std::shared_ptr<StateDistr> get_transition_distribution_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action,
-                ThtsEnvContext& ctx) const override;
+                ThtsContext& ctx) const override;
             virtual std::shared_ptr<const State> sample_transition_distribution_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
                  RandManager& rand_manager,
-                ThtsEnvContext& ctx) const override;
+                ThtsContext& ctx) const override;
             virtual Eigen::ArrayXd get_mo_reward_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action,
-                ThtsEnvContext& ctx) const override;
+                ThtsContext& ctx) const override;
     };
 }

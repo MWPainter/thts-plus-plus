@@ -74,7 +74,7 @@ namespace thts {
      * Parent node will set the total budget. 
      * Update local seq halving variables if needed
      */
-    void HmctsCNode::visit(ThtsEnvContext& ctx) {
+    void HmctsCNode::visit(ThtsContext& ctx) {
         if (running_seq_halving()) {
             visit_update_budgets();
         }
@@ -126,7 +126,7 @@ namespace thts {
      * Sample observation calls sample_observation_random.
      * Or the seq halving version if we're running that at the moment
      */
-    shared_ptr<const State> HmctsCNode::sample_observation(ThtsEnvContext& ctx) {
+    shared_ptr<const State> HmctsCNode::sample_observation(ThtsContext& ctx) {
         if (running_seq_halving()) {
             return sample_observation_budgeted();
         }
@@ -177,13 +177,13 @@ namespace thts {
  * Boilerplate ThtsCNode interface implementation. Copied from thts_chance_node_template.h.
  */
 namespace thts {
-    void HmctsCNode::visit_itfc(ThtsEnvContext& ctx) {
-        ThtsEnvContext& ctx_itfc = (ThtsEnvContext&) ctx;
+    void HmctsCNode::visit_itfc(ThtsContext& ctx) {
+        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
         visit(ctx_itfc);
     }
 
-    shared_ptr<const Observation> HmctsCNode::sample_observation_itfc(ThtsEnvContext& ctx) {
-        ThtsEnvContext& ctx_itfc = (ThtsEnvContext&) ctx;
+    shared_ptr<const Observation> HmctsCNode::sample_observation_itfc(ThtsContext& ctx) {
+        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
         shared_ptr<const State> obsv = sample_observation(ctx_itfc);
         return static_pointer_cast<const Observation>(obsv);
     }
@@ -193,9 +193,9 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
-        ThtsEnvContext& ctx_itfc = (ThtsEnvContext&) ctx;
+        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
         backup(
             trial_rewards_before_node, 
             trial_rewards_after_node, 

@@ -30,7 +30,7 @@
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
 #include "thts_env.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_manager.h"
 
 #include <memory>
@@ -231,15 +231,15 @@ namespace thts {
          * casts.
          */
         public:
-            virtual void visit_itfc(ThtsEnvContext& ctx);
-            virtual std::shared_ptr<const Action> select_action_itfc(ThtsEnvContext& ctx);
-            virtual std::shared_ptr<const Action> recommend_action_itfc(ThtsEnvContext& ctx) const;
+            virtual void visit_itfc(ThtsContext& ctx);
+            virtual std::shared_ptr<const Action> select_action_itfc(ThtsContext& ctx);
+            virtual std::shared_ptr<const Action> recommend_action_itfc(ThtsContext& ctx) const;
             virtual void backup_itfc(
                 const std::vector<double>& trial_rewards_before_node, 
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                ThtsEnvContext& ctx);
+                ThtsContext& ctx);
 
             virtual std::shared_ptr<ThtsCNode> create_child_node_helper_itfc(
                 std::shared_ptr<const Action> action) const;
@@ -364,18 +364,18 @@ namespace thts {
  * Boilerplate ThtsDNode interface implementation. Copied from thts_decision_node_template.h.
  */
 namespace thts {
-    void _DNode::visit_itfc(ThtsEnvContext& ctx) {
+    void _DNode::visit_itfc(ThtsContext& ctx) {
         _Context& ctx_itfc = (_Context&) ctx;
         visit(ctx_itfc);
     }
 
-    shared_ptr<const Action> _DNode::select_action_itfc(ThtsEnvContext& ctx) {
+    shared_ptr<const Action> _DNode::select_action_itfc(ThtsContext& ctx) {
         _Context& ctx_itfc = (_Context&) ctx;
         shared_ptr<const _A> action = select_action(ctx_itfc);
         return static_pointer_cast<const Action>(action);
     }
 
-    shared_ptr<const Action> _DNode::recommend_action_itfc(ThtsEnvContext& ctx) const {
+    shared_ptr<const Action> _DNode::recommend_action_itfc(ThtsContext& ctx) const {
         _Context& ctx_itfc = (_Context&) ctx;
         shared_ptr<const _A> action = recommend_action(ctx_itfc);
         return static_pointer_cast<const Action>(action);
@@ -386,7 +386,7 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
         _Context& ctx_itfc = (_Context&) ctx;
         backup(

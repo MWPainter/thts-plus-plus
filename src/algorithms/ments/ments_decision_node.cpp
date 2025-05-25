@@ -89,7 +89,7 @@ namespace thts {
      * visit on these nodes. If this node is a leaf, then a backup should essentially be a no-op. However, for the 
      * soft_backup in chance nodes to work, the number of backups needs to be updated, even at leaf nodes.
      */
-    void MentsDNode::visit(ThtsEnvContext& ctx) {
+    void MentsDNode::visit(ThtsContext& ctx) {
         ThtsDNode::visit_itfc(ctx);
         if (is_leaf()) {
             num_backups++;
@@ -147,7 +147,7 @@ namespace thts {
         ActionDistr& action_weights, 
         double& sum_action_weights, 
         double& normalisation_term, 
-        ThtsEnvContext& context) const
+        ThtsContext& context) const
     {
         // get temp
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
@@ -213,7 +213,7 @@ namespace thts {
      */
     void MentsDNode::compute_action_distribution(
         ActionDistr& action_distr, 
-        ThtsEnvContext& context) const 
+        ThtsContext& context) const 
     {  
         // compute boltzmann weights
         double sum_weights;
@@ -261,7 +261,7 @@ namespace thts {
      * - Samples an action
      * - Creates the node if it doesn't exist already
      */
-    shared_ptr<const Action> MentsDNode::select_action_ments(ThtsEnvContext& ctx) {
+    shared_ptr<const Action> MentsDNode::select_action_ments(ThtsContext& ctx) {
         ActionDistr action_distr;
         compute_action_distribution(action_distr, ctx);
         shared_ptr<const Action> selected_action = helper::sample_from_distribution(action_distr, *thts_manager);
@@ -274,7 +274,7 @@ namespace thts {
     /**
      * Calls the ments implementation of select action
      */
-    shared_ptr<const Action> MentsDNode::select_action(ThtsEnvContext& ctx) {
+    shared_ptr<const Action> MentsDNode::select_action(ThtsContext& ctx) {
         return select_action_ments(ctx);
     }
 
@@ -329,7 +329,7 @@ namespace thts {
      * 
      * Recommends an action based on the options provided by MentsManager.
      */
-    shared_ptr<const Action> MentsDNode::recommend_action(ThtsEnvContext& ctx) const {
+    shared_ptr<const Action> MentsDNode::recommend_action(ThtsContext& ctx) const {
         MentsManager& manager = (MentsManager&) *thts_manager;
         if (manager.recommend_most_visited) {
             return recommend_action_most_visited();
@@ -351,7 +351,7 @@ namespace thts {
      * 
      * Also don't forget to increment num_backups
      */
-    void MentsDNode::backup_soft(ThtsEnvContext& ctx) {
+    void MentsDNode::backup_soft(ThtsContext& ctx) {
         num_backups++;
 
         ActionDistr action_weights;
@@ -374,7 +374,7 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
         backup_soft(ctx);
     }
@@ -432,19 +432,19 @@ namespace thts {
  * Boilerplate ThtsDNode interface implementation. Copied from thts_decision_node_template.h.
  */
 namespace thts {
-    void MentsDNode::visit_itfc(ThtsEnvContext& ctx) {
-        ThtsEnvContext& ctx_itfc = (ThtsEnvContext&) ctx;
+    void MentsDNode::visit_itfc(ThtsContext& ctx) {
+        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
         visit(ctx_itfc);
     }
 
-    shared_ptr<const Action> MentsDNode::select_action_itfc(ThtsEnvContext& ctx) {
-        ThtsEnvContext& ctx_itfc = (ThtsEnvContext&) ctx;
+    shared_ptr<const Action> MentsDNode::select_action_itfc(ThtsContext& ctx) {
+        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
         shared_ptr<const Action> action = select_action(ctx_itfc);
         return static_pointer_cast<const Action>(action);
     }
 
-    shared_ptr<const Action> MentsDNode::recommend_action_itfc(ThtsEnvContext& ctx) const {
-        ThtsEnvContext& ctx_itfc = (ThtsEnvContext&) ctx;
+    shared_ptr<const Action> MentsDNode::recommend_action_itfc(ThtsContext& ctx) const {
+        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
         shared_ptr<const Action> action = recommend_action(ctx_itfc);
         return static_pointer_cast<const Action>(action);
     }
@@ -454,9 +454,9 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
-        ThtsEnvContext& ctx_itfc = (ThtsEnvContext&) ctx;
+        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
         backup(
             trial_rewards_before_node, 
             trial_rewards_after_node, 

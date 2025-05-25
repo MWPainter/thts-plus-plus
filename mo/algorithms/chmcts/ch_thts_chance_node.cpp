@@ -101,13 +101,13 @@ namespace thts {
  * Boilerplate ThtsDNode interface implementation. Copied from thts_decision_node_template.h.
  */
 namespace thts {
-    void ChThtsCNode::visit_itfc(ThtsEnvContext& ctx) 
+    void ChThtsCNode::visit_itfc(ThtsContext& ctx) 
     {
         MoThtsContext& ctx_itfc = (MoThtsContext&) ctx;
         visit(ctx_itfc);
     }
     
-    shared_ptr<const Observation> ChThtsCNode::sample_observation_itfc(ThtsEnvContext& ctx) 
+    shared_ptr<const Observation> ChThtsCNode::sample_observation_itfc(ThtsContext& ctx) 
     {
         MoThtsContext& ctx_itfc = (MoThtsContext&) ctx;
         shared_ptr<const State> obs = sample_observation(ctx_itfc);
@@ -119,7 +119,7 @@ namespace thts {
         const std::vector<Eigen::ArrayXd>& trial_rewards_after_node, 
         const Eigen::ArrayXd trial_cumulative_return_after_node, 
         const Eigen::ArrayXd trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
         MoThtsContext& ctx_itfc = (MoThtsContext&) ctx;
         backup(

@@ -635,6 +635,15 @@ namespace thts {
     }
 
     /**
+     * Get the sparsity metric from this convex hull
+     * Equation (18) in: https://arxiv.org/pdf/2103.09568
+     */
+    double ConvexHull::sparsity_metric() const
+    {
+        throw runtime_error("Yet to implement sparsity_metric");
+    }
+
+    /**
      * Pretty printing
     */
     void ConvexHull::write_to_ostream(ostream& os) const

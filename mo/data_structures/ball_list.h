@@ -7,6 +7,7 @@
 #include <vector>
 #include <unordered_map>
 
+#include "mo/data_structures/convex_hull.h"
 
 
 namespace thts {
@@ -110,6 +111,11 @@ namespace thts {
              * Returns num backups
             */
             int get_num_backups() const;
+
+            /**
+             * Return a convex hull approximation
+             */
+            ConvexHull get_approximate_convex_hull() const;
             
 
         private:

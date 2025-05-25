@@ -84,7 +84,7 @@ namespace thts {
     /**
      * Default implementation of visit just increments the number of times visited counter.
      */
-    void ThtsDNode::visit_itfc(ThtsEnvContext& ctx) {
+    void ThtsDNode::visit_itfc(ThtsContext& ctx) {
         num_visits += 1;
     }
 

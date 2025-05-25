@@ -72,7 +72,7 @@ namespace thts::python {
             virtual double get_reward_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
-                ThtsEnvContext& ctx) const override;
+                ThtsContext& ctx) const override;
             
             /**
              * Mo get reward itfc
@@ -84,16 +84,16 @@ namespace thts::python {
             virtual Eigen::ArrayXd get_mo_reward(
                 std::shared_ptr<const PyState> state, 
                 std::shared_ptr<const PyAction> action,
-                ThtsEnvContext& ctx) const;
+                ThtsContext& ctx) const;
             virtual Eigen::ArrayXd get_mo_reward_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action,
-                ThtsEnvContext& ctx) const override;
+                ThtsContext& ctx) const override;
                 
             /**
              * No pycontext, just return MoThtsContext when context get
             */
-            virtual std::shared_ptr<ThtsEnvContext> sample_context_itfc(
+            virtual std::shared_ptr<ThtsContext> sample_context_itfc(
                 int tid, RandManager& rand_manager) const override;
 
 
@@ -101,27 +101,27 @@ namespace thts::python {
              * Virtual functions that exist in both children that need to point to right place
             */
             virtual std::shared_ptr<const State> get_initial_state_itfc() const override;
-            virtual bool is_sink_state_itfc(std::shared_ptr<const State> state, ThtsEnvContext& ctx) const override;
+            virtual bool is_sink_state_itfc(std::shared_ptr<const State> state, ThtsContext& ctx) const override;
             virtual std::shared_ptr<ActionVector> get_valid_actions_itfc(
-                std::shared_ptr<const State> state, ThtsEnvContext& ctx) const override;
+                std::shared_ptr<const State> state, ThtsContext& ctx) const override;
             virtual std::shared_ptr<StateDistr> get_transition_distribution_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
-                ThtsEnvContext& ctx) const override;
+                ThtsContext& ctx) const override;
             virtual std::shared_ptr<const State> sample_transition_distribution_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
                  RandManager& rand_manager, 
-                 ThtsEnvContext& ctx) const override;
+                 ThtsContext& ctx) const override;
             virtual std::shared_ptr<ObservationDistr> get_observation_distribution_itfc(
                 std::shared_ptr<const Action> action, 
                 std::shared_ptr<const State> next_state, 
-                ThtsEnvContext& ctx) const override;
+                ThtsContext& ctx) const override;
             virtual std::shared_ptr<const Observation> sample_observation_distribution_itfc(
                 std::shared_ptr<const Action> action, 
                 std::shared_ptr<const State> next_state, 
                  RandManager& rand_manager, 
-                 ThtsEnvContext& ctx) const override;
+                 ThtsContext& ctx) const override;
             virtual void reset_itfc() const override;
     };
 }

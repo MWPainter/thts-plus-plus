@@ -31,7 +31,7 @@ namespace thts {
     void MoThtsPool::run_selection_phase(
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>>& nodes_to_backup, 
         vector<Eigen::ArrayXd>& rewards, 
-        ThtsEnvContext& context,
+        ThtsContext& context,
         int tid)
     {
         bool new_decision_node_created_this_trial = false;
@@ -87,7 +87,7 @@ namespace thts {
     void MoThtsPool::run_backup_phase(
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>>& nodes_to_backup, 
         vector<Eigen::ArrayXd>& rewards, 
-        ThtsEnvContext& context)
+        ThtsContext& context)
     {
         if (nodes_to_backup.size() == 0) return;
 
@@ -135,7 +135,7 @@ namespace thts {
         vector<Eigen::ArrayXd> rewards; 
 
         thts_manager->thts_env(tid)->reset_itfc();
-        shared_ptr<ThtsEnvContext> context = 
+        shared_ptr<ThtsContext> context = 
             thts_manager->thts_env(tid)->sample_context_itfc(tid, *thts_manager);
         thts_manager->register_thts_context(tid,context);
         run_selection_phase(nodes_to_backup, rewards, *context, tid);

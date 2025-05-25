@@ -141,7 +141,7 @@ namespace thts{
          * thts_env.{h,cpp}. 
          * 
          * TODO: decide if need to override any of these (yes if want a partially observable environment, or want a 
-         * custom ThtsEnvContext object).
+         * custom ThtsContext object).
          */
         public:
             /**
@@ -161,7 +161,7 @@ namespace thts{
              *      Returns a distribution over observations from taking 'action' in state 'state'.
              */
             virtual std::shared_ptr<Int3TupleStateDistr> get_observation_distribution(
-                std::shared_ptr<const IntAction> action, std::shared_ptr<const Int3TupleState> next_state, ThtsEnvContext& ctx) const;
+                std::shared_ptr<const IntAction> action, std::shared_ptr<const Int3TupleState> next_state, ThtsContext& ctx) const;
 
             /**
              * Samples an observation when arriving in a (next) state after taking an action.
@@ -181,7 +181,7 @@ namespace thts{
             virtual std::shared_ptr<const Int3TupleState> sample_observation_distribution(
                 std::shared_ptr<const IntAction> action, 
                 std::shared_ptr<const Int3TupleState> next_state, 
-                RandManager& rand_manager, ThtsEnvContext& ctx) const;
+                RandManager& rand_manager, ThtsContext& ctx) const;
 
             /**
              * Samples a context that can be used to store information throughout a single trial.
@@ -194,10 +194,10 @@ namespace thts{
              *      state: The initial state
              * 
              * Returns:
-             *      A ThtsEnvContext object, that will be passed to the Thts functions for a single trial, used to 
+             *      A ThtsContext object, that will be passed to the Thts functions for a single trial, used to 
              *      provide some context or space for caching.
              */
-            virtual std::shared_ptr<ThtsEnvContext> sample_context(int tid, RandManager& rand_manager) const;
+            virtual std::shared_ptr<ThtsContext> sample_context(int tid, RandManager& rand_manager) const;
 
 
 
@@ -206,24 +206,24 @@ namespace thts{
          */
         public:
             virtual std::shared_ptr<const State> get_initial_state_itfc() const override;
-            virtual bool is_sink_state_itfc(std::shared_ptr<const State> state, ThtsEnvContext& ctx) const override;
-            virtual std::shared_ptr<ActionVector> get_valid_actions_itfc(std::shared_ptr<const State> state, ThtsEnvContext& ctx) const override;
+            virtual bool is_sink_state_itfc(std::shared_ptr<const State> state, ThtsContext& ctx) const override;
+            virtual std::shared_ptr<ActionVector> get_valid_actions_itfc(std::shared_ptr<const State> state, ThtsContext& ctx) const override;
             virtual std::shared_ptr<StateDistr> get_transition_distribution_itfc(
-                std::shared_ptr<const State> state, std::shared_ptr<const Action> action, ThtsEnvContext& ctx) const override;
+                std::shared_ptr<const State> state, std::shared_ptr<const Action> action, ThtsContext& ctx) const override;
             virtual std::shared_ptr<const State> sample_transition_distribution_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
-                 RandManager& rand_manager, ThtsEnvContext& ctx) const override;
+                 RandManager& rand_manager, ThtsContext& ctx) const override;
             virtual std::shared_ptr<ObservationDistr> get_observation_distribution_itfc(
-                std::shared_ptr<const Action> action, std::shared_ptr<const State> next_state, ThtsEnvContext& ctx) const override;
+                std::shared_ptr<const Action> action, std::shared_ptr<const State> next_state, ThtsContext& ctx) const override;
             virtual std::shared_ptr<const Observation> sample_observation_distribution_itfc(
                 std::shared_ptr<const Action> action, 
                 std::shared_ptr<const State> next_state, 
-                 RandManager& rand_manager, ThtsEnvContext& ctx) const override;
+                 RandManager& rand_manager, ThtsContext& ctx) const override;
             virtual double get_reward_itfc(
                 std::shared_ptr<const State> state, 
-                std::shared_ptr<const Action> action, ThtsEnvContext& ctx) const override;
-            virtual std::shared_ptr<ThtsEnvContext> sample_context_itfc(int tid, RandManager& rand_manager) const override;
+                std::shared_ptr<const Action> action, ThtsContext& ctx) const override;
+            virtual std::shared_ptr<ThtsContext> sample_context_itfc(int tid, RandManager& rand_manager) const override;
         
         /**
          * Implemented in thts_env.{h,cpp}

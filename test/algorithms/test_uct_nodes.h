@@ -39,40 +39,40 @@ namespace thts::test {
             MOCK_METHOD(
                 bool, 
                 is_sink_state_itfc, 
-                (shared_ptr<const State>,ThtsEnvContext&), 
+                (shared_ptr<const State>,ThtsContext&), 
                 (const, override));
             MOCK_METHOD(
                 shared_ptr<ActionVector>, 
                 get_valid_actions_itfc, 
-                (shared_ptr<const State>,ThtsEnvContext&), 
+                (shared_ptr<const State>,ThtsContext&), 
                 (const, override));
             MOCK_METHOD(
                 shared_ptr<StateDistr>, 
                 get_transition_distribution_itfc, 
-                (shared_ptr<const State>,shared_ptr<const Action>,ThtsEnvContext&), 
+                (shared_ptr<const State>,shared_ptr<const Action>,ThtsContext&), 
                 (const,override));
             MOCK_METHOD(
                 shared_ptr<const State>, 
                 sample_transition_distribution_itfc, 
-                (shared_ptr<const State>,shared_ptr<const Action>,RandManager&,ThtsEnvContext&), 
+                (shared_ptr<const State>,shared_ptr<const Action>,RandManager&,ThtsContext&), 
                 (const,override));
             MOCK_METHOD(
                 shared_ptr<ObservationDistr>, 
                 get_observation_distribution_itfc, 
-                (shared_ptr<const Action>,shared_ptr<const State>,ThtsEnvContext&), 
+                (shared_ptr<const Action>,shared_ptr<const State>,ThtsContext&), 
                 (const,override));
             MOCK_METHOD(
                 shared_ptr<const Observation>, 
                 sample_observation_distribution_itfc, 
-                (shared_ptr<const Action>,shared_ptr<const State>,RandManager&,ThtsEnvContext&), 
+                (shared_ptr<const Action>,shared_ptr<const State>,RandManager&,ThtsContext&), 
                 (const,override));
             MOCK_METHOD(
                 double, 
                 get_reward_itfc, 
-                (shared_ptr<const State>,shared_ptr<const Action>,ThtsEnvContext&),
+                (shared_ptr<const State>,shared_ptr<const Action>,ThtsContext&),
                 (const, override));
             MOCK_METHOD(
-                std::shared_ptr<ThtsEnvContext>, 
+                std::shared_ptr<ThtsContext>, 
                 sample_context_itfc, 
                 (int,RandManager&),
                 (const, override));
@@ -112,7 +112,7 @@ namespace thts::test {
             void set_children(CNodeChildMap child_map) { children = child_map; }
 
             // expose methods
-            void fill_ucb_values(unordered_map<shared_ptr<const Action>,double>& ucb_values, ThtsEnvContext& ctx) const
+            void fill_ucb_values(unordered_map<shared_ptr<const Action>,double>& ucb_values, ThtsContext& ctx) const
             {
                 UctDNode::fill_ucb_values(ucb_values, ctx);
             }
@@ -162,7 +162,7 @@ namespace thts::test {
      * Note that ::testing::Action and thts::Action overload each other, so need to be careful.
      */
     typedef unordered_map<shared_ptr<const Action>,double> UcbValueMap;
-    typedef void FillUcbValuesType(UcbValueMap&, ThtsEnvContext&);
+    typedef void FillUcbValuesType(UcbValueMap&, ThtsContext&);
 
     class MockFillUcbValuesAction : public ActionInterface<FillUcbValuesType> {
         public:
@@ -170,7 +170,7 @@ namespace thts::test {
             MockFillUcbValuesAction(UcbValueMap& ucb_values) : 
                 ActionInterface<FillUcbValuesType>(), stored_values(ucb_values) {}
 
-            void Perform(const std::tuple<UcbValueMap&, ThtsEnvContext&>& args) override {
+            void Perform(const std::tuple<UcbValueMap&, ThtsContext&>& args) override {
                 UcbValueMap& ucb_values = std::get<0>(args);
                 for (std::pair<shared_ptr<const thts::Action>,double> pr : stored_values) {
                     ucb_values[pr.first] = pr.second;
@@ -196,11 +196,11 @@ namespace thts::test {
             MOCK_METHOD(
                 void, 
                 fill_ucb_values, 
-                ((unordered_map<shared_ptr<const Action>,double>&), ThtsEnvContext&), 
+                ((unordered_map<shared_ptr<const Action>,double>&), ThtsContext&), 
                 (const, override));
 
             // expose methods
-            std::shared_ptr<const Action> select_action_ucb(ThtsEnvContext& ctx) {
+            std::shared_ptr<const Action> select_action_ucb(ThtsContext& ctx) {
                 return UctDNode::select_action_ucb(ctx);
             }
 
@@ -219,7 +219,7 @@ namespace thts::test {
             MOCK_METHOD(
                 std::shared_ptr<const Action>, 
                 select_action_ucb,
-                (ThtsEnvContext& ctx),
+                (ThtsContext& ctx),
                 (override));
             
             MOCK_METHOD(

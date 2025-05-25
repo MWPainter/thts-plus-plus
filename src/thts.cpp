@@ -131,7 +131,7 @@ namespace thts {
     void ThtsPool::run_selection_phase(
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>>& nodes_to_backup, 
         vector<double>& rewards, 
-        ThtsEnvContext& context,
+        ThtsContext& context,
         int tid)
     {
         bool new_decision_node_created_this_trial = false;
@@ -192,7 +192,7 @@ namespace thts {
     void ThtsPool::run_backup_phase(
         vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>>& nodes_to_backup, 
         vector<double>& rewards, 
-        ThtsEnvContext& context)
+        ThtsContext& context)
     {
         double total_return = 0.0;
         for (double& reward : rewards) total_return += reward;
@@ -259,7 +259,7 @@ namespace thts {
         vector<double> rewards; 
         
         thts_manager->thts_env(tid)->reset_itfc();
-        shared_ptr<ThtsEnvContext> context = 
+        shared_ptr<ThtsContext> context = 
             thts_manager->thts_env(tid)->sample_context_itfc(tid, *thts_manager);
         thts_manager->register_thts_context(tid,context);
         run_selection_phase(nodes_to_backup, rewards, *context, tid);

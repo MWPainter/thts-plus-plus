@@ -39,7 +39,7 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         avg_return = opp_coeff * -numeric_limits<double>::infinity();
@@ -101,7 +101,7 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx)
+        ThtsContext& ctx)
     {
         backup(
             trial_rewards_before_node, 

@@ -39,7 +39,7 @@ namespace thts {
      * Gets the action distribution for a parent node 
      * Or just null pointer if we're the root node
     */
-    shared_ptr<ActionDistr> RentsDNode::get_parent_distr_from_context(ThtsEnvContext& ctx) const {
+    shared_ptr<ActionDistr> RentsDNode::get_parent_distr_from_context(ThtsContext& ctx) const {
         if (decision_depth < 1) return nullptr;
         return ctx.get_value_ptr<ActionDistr>(_parent_distr_key);
     }
@@ -47,7 +47,7 @@ namespace thts {
     /**
      * Puts the action distribution for this node into the thts env context
     */
-    void RentsDNode::put_node_distr_in_context(shared_ptr<ActionDistr> action_distr, ThtsEnvContext& ctx) const {
+    void RentsDNode::put_node_distr_in_context(shared_ptr<ActionDistr> action_distr, ThtsContext& ctx) const {
         ctx.put_value(_node_distr_key, action_distr);
     }
 
@@ -79,7 +79,7 @@ namespace thts {
         ActionDistr& action_weights, 
         double& sum_action_weights, 
         double& normalisation_term, 
-        ThtsEnvContext& context) const
+        ThtsContext& context) const
     {
         // get temp
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
@@ -152,7 +152,7 @@ namespace thts {
      * - Samples an action
      * - Creates the node if it doesn't exist already
      */
-    shared_ptr<const Action> RentsDNode::select_action_rents(ThtsEnvContext& ctx) {
+    shared_ptr<const Action> RentsDNode::select_action_rents(ThtsContext& ctx) {
         shared_ptr<ActionDistr> action_distr = make_shared<ActionDistr>();
         compute_action_distribution(*action_distr, ctx);
         put_node_distr_in_context(action_distr, ctx);
@@ -166,7 +166,7 @@ namespace thts {
     /**
      * Calls the rents implementation of select action
      */
-    shared_ptr<const Action> RentsDNode::select_action(ThtsEnvContext& ctx) {
+    shared_ptr<const Action> RentsDNode::select_action(ThtsContext& ctx) {
         return select_action_rents(ctx);
     }
 

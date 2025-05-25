@@ -9,7 +9,7 @@
 #include "algorithms/common/dp_chance_node.h"
 #include "algorithms/common/dp_decision_node.h"
 #include "thts_env.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_manager.h"
 
 #include <memory>
@@ -53,7 +53,7 @@ namespace thts {
              * Args:
              *      ctx: A context provided to all thts functions throughout a trial to pass intermediate/transient info
              */
-            virtual void visit(ThtsEnvContext& ctx);
+            virtual void visit(ThtsContext& ctx);
             
             /**
              * Uses the DPDNode to recommend an action according to the DP values.
@@ -71,7 +71,7 @@ namespace thts {
              * Returns:
              *      The recommended action
              */
-            virtual std::shared_ptr<const Action> recommend_action(ThtsEnvContext& ctx) const;
+            virtual std::shared_ptr<const Action> recommend_action(ThtsContext& ctx) const;
             
             /**
              * Calls both the soft backup from MentsDNode and dp backup from DPDNode
@@ -81,7 +81,7 @@ namespace thts {
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                ThtsEnvContext& ctx);
+                ThtsContext& ctx);
 
         protected:
             /**

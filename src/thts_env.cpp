@@ -31,7 +31,7 @@ namespace thts {
     shared_ptr<ObservationDistr> ThtsEnv::get_observation_distribution_itfc(
         shared_ptr<const Action> action, 
         shared_ptr<const State> next_state,
-        ThtsEnvContext& ctx) const 
+        ThtsContext& ctx) const 
     {
         if (_is_fully_observable) {
             shared_ptr<ObservationDistr> distr = make_shared<ObservationDistr>();
@@ -53,7 +53,7 @@ namespace thts {
         shared_ptr<const Action> action, 
         shared_ptr<const State> next_state, 
         RandManager& rand_manager,
-        ThtsEnvContext& ctx) const 
+        ThtsContext& ctx) const 
     {
         if (_is_fully_observable) {
             return static_pointer_cast<const Observation>(next_state);
@@ -65,12 +65,12 @@ namespace thts {
     /**
      * Default implementation of 'sample_context'
      * 
-     * Returns an (default constructed) ThtsEnvContext, which is really just a wrapper around an empty map. It's useful 
+     * Returns an (default constructed) ThtsContext, which is really just a wrapper around an empty map. It's useful 
      * to return this type so we can subclass it, rather than forcing Thts algorithms to use a specific map for a 
      * context.
      */
-    shared_ptr<ThtsEnvContext> ThtsEnv::sample_context_itfc(int tid, RandManager& rand_manager) const {
-        return make_shared<ThtsEnvContext>();
+    shared_ptr<ThtsContext> ThtsEnv::sample_context_itfc(int tid, RandManager& rand_manager) const {
+        return make_shared<ThtsContext>();
     }
 
     /**

@@ -46,6 +46,6 @@ namespace thts::python {
             virtual Eigen::ArrayXd get_mo_reward(
                 std::shared_ptr<const PyState> state, 
                 std::shared_ptr<const PyAction> action,
-                ThtsEnvContext& ctx) const override;
+                ThtsContext& ctx) const override;
     };
 }

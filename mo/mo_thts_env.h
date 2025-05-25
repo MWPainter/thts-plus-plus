@@ -1,7 +1,7 @@
 #pragma once
 
 #include "thts_env.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_types.h"
 #include "mo/mo_thts_context.h"
 
@@ -50,7 +50,7 @@ namespace thts {
             virtual double get_reward_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action,
-                ThtsEnvContext& ctx) const override;
+                ThtsContext& ctx) const override;
             
             /**
              * Returns the multi objective reward for a given state, action, observation tuple.
@@ -69,12 +69,12 @@ namespace thts {
             virtual Eigen::ArrayXd get_mo_reward_itfc(
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action,
-                ThtsEnvContext& ctx) const = 0;
+                ThtsContext& ctx) const = 0;
 
             /**
              * Override sample context itfc to return a MoThtsContext
              */
-            virtual std::shared_ptr<ThtsEnvContext> sample_context_itfc(
+            virtual std::shared_ptr<ThtsContext> sample_context_itfc(
                 int tid, RandManager& rand_manager) const override;
     };
 }

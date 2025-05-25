@@ -74,14 +74,14 @@ namespace thts {
          * casts.
          */
         public:
-            virtual void visit_itfc(ThtsEnvContext& ctx) override;
-            virtual std::shared_ptr<const Observation> sample_observation_itfc(ThtsEnvContext& ctx) override;
+            virtual void visit_itfc(ThtsContext& ctx) override;
+            virtual std::shared_ptr<const Observation> sample_observation_itfc(ThtsContext& ctx) override;
             virtual void backup_itfc(
                 const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 
                 const std::vector<Eigen::ArrayXd>& trial_rewards_after_node, 
                 const Eigen::ArrayXd trial_cumulative_return_after_node, 
                 const Eigen::ArrayXd trial_cumulative_return,
-                ThtsEnvContext& ctx) override;
+                ThtsContext& ctx) override;
 
             virtual std::shared_ptr<ThtsDNode> create_child_node_helper_itfc(
                 std::shared_ptr<const Observation> observation, 

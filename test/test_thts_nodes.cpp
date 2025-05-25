@@ -46,7 +46,7 @@ TEST(ThtsNode_CreateChild, test_normal_usage)
     int mock_decision_timestep = 21;
 
     //Make env and root node
-    ThtsEnvContext ctx;
+    ThtsContext ctx;
     shared_ptr<TestThtsDNode> root_node = make_shared<TestThtsDNode>(
         manager_ptr,
         thts_env->get_initial_state_itfc(),
@@ -153,7 +153,7 @@ TEST(ThtsNode_CreateChild, test_transposition_table)
     int mock_decision_timestep = 21;
 
     //Make env and root node
-    ThtsEnvContext ctx;
+    ThtsContext ctx;
     shared_ptr<TestThtsDNode> root_node = make_shared<TestThtsDNode>(
         manager_ptr,
         thts_env->get_initial_state_itfc(),
@@ -279,7 +279,7 @@ TEST(ThtsNode_PrettyPrint, test_no_transposition)
     int mock_decision_timestep = 21;
 
     //Make env and root node
-    ThtsEnvContext ctx;
+    ThtsContext ctx;
     shared_ptr<TestThtsDNode> root_node = make_shared<TestThtsDNode>(
         manager_ptr,
         thts_env->get_initial_state_itfc(),
@@ -375,7 +375,7 @@ TEST(ThtsNode_PrettyPrint, test_transposition_table)
     int mock_decision_timestep = 21;
 
     //Make env and root node
-    ThtsEnvContext ctx;
+    ThtsContext ctx;
     shared_ptr<TestThtsDNode> root_node = make_shared<TestThtsDNode>(
         manager_ptr,
         thts_env->get_initial_state_itfc(),

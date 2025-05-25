@@ -35,7 +35,7 @@ namespace thts {
      * Gets a uniform random action.
     */
     shared_ptr<const Action> EvalPolicy::get_random_action(
-        shared_ptr<const State> state, ThtsEnvContext& ctx) 
+        shared_ptr<const State> state, ThtsContext& ctx) 
     {
         shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(state, ctx);
         int indx = manager->get_rand_int(0, actions->size());
@@ -45,7 +45,7 @@ namespace thts {
     /**
      * Gets the best recommendation from the current node.
     */
-    shared_ptr<const Action> EvalPolicy::get_action(shared_ptr<const State> state, ThtsEnvContext& context) {
+    shared_ptr<const Action> EvalPolicy::get_action(shared_ptr<const State> state, ThtsContext& context) {
         if (cur_node == nullptr) return get_random_action(state,context);
         return cur_node->recommend_action_itfc(context);
     }
@@ -108,7 +108,7 @@ namespace thts {
         // Bookkeeping
         int num_actions_taken = 0;
         double sample_return = 0.0;
-        shared_ptr<ThtsEnvContext> context = thts_env->sample_context_itfc(thread_id, *manager);
+        shared_ptr<ThtsContext> context = thts_env->sample_context_itfc(thread_id, *manager);
         manager->register_thts_context(thread_id, context);
         shared_ptr<const State> state = thts_env->get_initial_state_itfc();
 

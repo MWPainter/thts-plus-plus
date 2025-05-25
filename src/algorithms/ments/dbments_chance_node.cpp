@@ -34,7 +34,7 @@ namespace thts {
         const std::vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx)
+        ThtsContext& ctx)
     {   
         backup_soft();
         backup_dp<DBMentsDNode>(children, local_reward, is_opponent());

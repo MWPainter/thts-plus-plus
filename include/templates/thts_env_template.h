@@ -21,7 +21,7 @@
 #pragma once
 
 #include "thts_env.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_manager.h"
 #include "thts_types.h"
 
@@ -251,7 +251,7 @@ namespace thts{
                 std::shared_ptr<const State> state, 
                 std::shared_ptr<const Action> action, 
                 std::shared_ptr<const Observation> observation=nullptr) const;
-            virtual std::shared_ptr<ThtsEnvContext> sample_context_itfc(std::shared_ptr<const State> state) const;
+            virtual std::shared_ptr<ThtsContext> sample_context_itfc(std::shared_ptr<const State> state) const;
         
         /**
          * Implemented in thts_env.{h,cpp}
@@ -353,7 +353,7 @@ namespace thts {
     shared_ptr<_Context> _Env::sample_context(shared_ptr<const _S> state) const
     {
         shared_ptr<const State> state_itfc = static_pointer_cast<const State>(state);
-        shared_ptr<ThtsEnvContext> context = ThtsEnv::sample_context_itfc(state_itfc);
+        shared_ptr<ThtsContext> context = ThtsEnv::sample_context_itfc(state_itfc);
         return static_pointer_cast<_Context>(context);
     }
 }
@@ -450,10 +450,10 @@ namespace thts {
         return get_reward(state_itfc, action_itfc, obsv_itfc);
     }
 
-    shared_ptr<ThtsEnvContext> _Env::sample_context_itfc(shared_ptr<const State> state) const
+    shared_ptr<ThtsContext> _Env::sample_context_itfc(shared_ptr<const State> state) const
     {
         shared_ptr<const _S> state_itfc = static_pointer_cast<const _S>(state);
         shared_ptr<_Context> context = sample_context(state_itfc);
-        return static_pointer_cast<ThtsEnvContext>(context);
+        return static_pointer_cast<ThtsContext>(context);
     }
 }

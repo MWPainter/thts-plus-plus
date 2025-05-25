@@ -8,9 +8,11 @@
 #include <vector>
 
 #include "main_mo/envs/tree_env.h"
-#include <iostream>
 #include <pybind11/pybind11.h>
 #include <pybind11/embed.h>
+
+#include <iostream>
+#include "py/py_helper.h"
 
 using namespace std;
 
@@ -60,7 +62,7 @@ int main(int argc, char* argv[]) {
 //     }
 
 //     RandManager manager;
-//     ThtsEnvContext ctx;
+//     ThtsContext ctx;
 //     shared_ptr<const State> cur_state = env1.get_initial_state_itfc();
 //     shared_ptr<const Action> act = static_pointer_cast<const Action>(make_shared<const IntAction>(9));
 //     for (i=0; i<5; i++) {

@@ -103,6 +103,12 @@ namespace thts {
             double hypervolume(const Vec& ref_point) const;
 
             /**
+             * Get the sparsity metric from this convex hull
+             * Equation (18) in: https://arxiv.org/pdf/2103.09568
+             */
+            double sparsity_metric() const;
+
+            /**
              * TODO: want this directly implemented in operator<<
              * But declaring operator<< as friend wasnt working because I couldnt work out how to declare a templated 
              * function as a friend hmph

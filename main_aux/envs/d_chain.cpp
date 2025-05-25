@@ -102,7 +102,7 @@ namespace thts {
  */
 namespace thts {
     shared_ptr<IntStateDistr> DChainEnv::get_observation_distribution(
-        shared_ptr<const IntAction> action, shared_ptr<const IntState> next_state, ThtsEnvContext& ctx) const 
+        shared_ptr<const IntAction> action, shared_ptr<const IntState> next_state, ThtsContext& ctx) const 
     {
         shared_ptr<const Action> act_itfc = static_pointer_cast<const Action>(action);
         shared_ptr<const State> next_state_itfc = static_pointer_cast<const State>(next_state);
@@ -119,7 +119,7 @@ namespace thts {
     shared_ptr<const IntState> DChainEnv::sample_observation_distribution(
         shared_ptr<const IntAction> action, 
         shared_ptr<const IntState> next_state, 
-        RandManager& rand_manager, ThtsEnvContext& ctx) const 
+        RandManager& rand_manager, ThtsContext& ctx) const 
     {
         shared_ptr<const Action> act_itfc = static_pointer_cast<const Action>(action);
         shared_ptr<const State> next_state_itfc = static_pointer_cast<const State>(next_state);
@@ -128,10 +128,10 @@ namespace thts {
         return static_pointer_cast<const IntState>(obsv_itfc);
     }
 
-    shared_ptr<ThtsEnvContext> DChainEnv::sample_context(int tid, RandManager& rand_manager) const
+    shared_ptr<ThtsContext> DChainEnv::sample_context(int tid, RandManager& rand_manager) const
     {
-        shared_ptr<ThtsEnvContext> context = ThtsEnv::sample_context_itfc(tid, rand_manager);
-        return static_pointer_cast<ThtsEnvContext>(context);
+        shared_ptr<ThtsContext> context = ThtsEnv::sample_context_itfc(tid, rand_manager);
+        return static_pointer_cast<ThtsContext>(context);
     }
 }
 
@@ -148,12 +148,12 @@ namespace thts {
         return static_pointer_cast<const State>(init_state);
     }
 
-    bool DChainEnv::is_sink_state_itfc(shared_ptr<const State> state, ThtsEnvContext& ctx) const {
+    bool DChainEnv::is_sink_state_itfc(shared_ptr<const State> state, ThtsContext& ctx) const {
         shared_ptr<const IntState> state_itfc = static_pointer_cast<const IntState>(state);
         return is_sink_state(state_itfc);
     }
 
-    shared_ptr<ActionVector> DChainEnv::get_valid_actions_itfc(shared_ptr<const State> state, ThtsEnvContext& ctx) const {
+    shared_ptr<ActionVector> DChainEnv::get_valid_actions_itfc(shared_ptr<const State> state, ThtsContext& ctx) const {
         shared_ptr<const IntState> state_itfc = static_pointer_cast<const IntState>(state);
         shared_ptr<vector<shared_ptr<const IntAction>>> valid_actions_itfc = get_valid_actions(state_itfc);
 
@@ -165,7 +165,7 @@ namespace thts {
     }
 
     shared_ptr<StateDistr> DChainEnv::get_transition_distribution_itfc(
-        shared_ptr<const State> state, shared_ptr<const Action> action, ThtsEnvContext& ctx) const 
+        shared_ptr<const State> state, shared_ptr<const Action> action, ThtsContext& ctx) const 
     {
         shared_ptr<const IntState> state_itfc = static_pointer_cast<const IntState>(state);
         shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);
@@ -181,7 +181,7 @@ namespace thts {
     }
 
     shared_ptr<const State> DChainEnv::sample_transition_distribution_itfc(
-       shared_ptr<const State> state, shared_ptr<const Action> action, RandManager& rand_manager, ThtsEnvContext& ctx) const 
+       shared_ptr<const State> state, shared_ptr<const Action> action, RandManager& rand_manager, ThtsContext& ctx) const 
     {
         shared_ptr<const IntState> state_itfc = static_pointer_cast<const IntState>(state);
         shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);
@@ -190,7 +190,7 @@ namespace thts {
     }
 
     shared_ptr<ObservationDistr> DChainEnv::get_observation_distribution_itfc(
-        shared_ptr<const Action> action, shared_ptr<const State> next_state, ThtsEnvContext& ctx) const
+        shared_ptr<const Action> action, shared_ptr<const State> next_state, ThtsContext& ctx) const
     {
         shared_ptr<const IntAction> act_itfc = static_pointer_cast<const IntAction>(action);
         shared_ptr<const IntState> next_state_itfc = static_pointer_cast<const IntState>(next_state);
@@ -207,7 +207,7 @@ namespace thts {
     shared_ptr<const Observation> DChainEnv::sample_observation_distribution_itfc(
         shared_ptr<const Action> action, 
         shared_ptr<const State> next_state,
-         RandManager& rand_manager, ThtsEnvContext& ctx) const
+         RandManager& rand_manager, ThtsContext& ctx) const
     {
         shared_ptr<const IntAction> act_itfc = static_pointer_cast<const IntAction>(action);
         shared_ptr<const IntState> next_state_itfc = static_pointer_cast<const IntState>(next_state);
@@ -219,17 +219,17 @@ namespace thts {
     double DChainEnv::get_reward_itfc(
         shared_ptr<const State> state, 
         shared_ptr<const Action> action, 
-        ThtsEnvContext& ctx) const
+        ThtsContext& ctx) const
     {
         shared_ptr<const IntState> state_itfc = static_pointer_cast<const IntState>(state);
         shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);
         return get_reward(state_itfc, action_itfc);
     }
 
-    shared_ptr<ThtsEnvContext> DChainEnv::sample_context_itfc(int tid, RandManager& rand_manager) const
+    shared_ptr<ThtsContext> DChainEnv::sample_context_itfc(int tid, RandManager& rand_manager) const
     {
-        shared_ptr<ThtsEnvContext> context = sample_context(tid, rand_manager);
-        return static_pointer_cast<ThtsEnvContext>(context);
+        shared_ptr<ThtsContext> context = sample_context(tid, rand_manager);
+        return static_pointer_cast<ThtsContext>(context);
     }
 
     void DChainEnv::reset_itfc() const 

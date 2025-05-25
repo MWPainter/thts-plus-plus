@@ -115,7 +115,7 @@ namespace thts {
              * Args:
              *      ctx: object holding context information for the current trial   
              */
-            virtual void visit_itfc(ThtsEnvContext& ctx);
+            virtual void visit_itfc(ThtsContext& ctx);
 
             /**
              * The sample observation function. Selects an observation to explore from this node.
@@ -128,7 +128,7 @@ namespace thts {
              * Returns:
              *      The sampled observation
              */
-            virtual std::shared_ptr<const Observation> sample_observation_itfc(ThtsEnvContext& ctx) = 0;
+            virtual std::shared_ptr<const Observation> sample_observation_itfc(ThtsContext& ctx) = 0;
 
             /**
              * Thts backup function.
@@ -152,7 +152,7 @@ namespace thts {
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                ThtsEnvContext& ctx) = 0;
+                ThtsContext& ctx) = 0;
 
             /**
              * Creates a child node and inserts it in the unordered_map 'children'.

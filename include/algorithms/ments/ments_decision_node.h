@@ -7,7 +7,7 @@
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
 #include "thts_env.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_manager.h"
 
 #include <memory>
@@ -122,7 +122,7 @@ namespace thts {
                 ActionDistr& action_weights, 
                 double& sum_action_weights, 
                 double& normalisation_term, 
-                ThtsEnvContext& context) const;
+                ThtsContext& context) const;
 
             /**
              * Computes the action distribution for each action. (Including probability mass from epsilon exploration).
@@ -137,7 +137,7 @@ namespace thts {
              */
             void compute_action_distribution(
                 ActionDistr& action_distr, 
-                ThtsEnvContext& context) const;
+                ThtsContext& context) const;
 
             /**
              * Implements select_action for ments
@@ -148,7 +148,7 @@ namespace thts {
              * Returns:
              *      The action selected.
              */
-            std::shared_ptr<const Action> select_action_ments(ThtsEnvContext& ctx);
+            std::shared_ptr<const Action> select_action_ments(ThtsContext& ctx);
 
             /**
              * Implements recommend_action for ments.
@@ -180,7 +180,7 @@ namespace thts {
              * Args:
              *      ctx: A thts env context
              */
-            void backup_soft(ThtsEnvContext& ctx);
+            void backup_soft(ThtsContext& ctx);
 
 
 
@@ -206,7 +206,7 @@ namespace thts {
              * Args:
              *      ctx: A context provided to all thts functions throughout a trial to pass intermediate/transient info
              */
-            virtual void visit(ThtsEnvContext& ctx);
+            virtual void visit(ThtsContext& ctx);
             
             /**
              * Implements the thts select_action function for the node
@@ -217,7 +217,7 @@ namespace thts {
              * Returns:
              *      The selected action
              */
-            virtual std::shared_ptr<const Action> select_action(ThtsEnvContext& ctx);
+            virtual std::shared_ptr<const Action> select_action(ThtsContext& ctx);
             
             /**
              * Implements the thts recommend_action function for the node
@@ -228,7 +228,7 @@ namespace thts {
              * Returns:
              *      The recommended action
              */
-            virtual std::shared_ptr<const Action> recommend_action(ThtsEnvContext& ctx) const;
+            virtual std::shared_ptr<const Action> recommend_action(ThtsContext& ctx) const;
             
             /**
              * Implements the thts backup function for the node
@@ -244,7 +244,7 @@ namespace thts {
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                ThtsEnvContext& ctx);
+                ThtsContext& ctx);
 
         protected:
             /**
@@ -341,15 +341,15 @@ namespace thts {
          * casts.
          */
         public:
-            virtual void visit_itfc(ThtsEnvContext& ctx);
-            virtual std::shared_ptr<const Action> select_action_itfc(ThtsEnvContext& ctx);
-            virtual std::shared_ptr<const Action> recommend_action_itfc(ThtsEnvContext& ctx) const;
+            virtual void visit_itfc(ThtsContext& ctx);
+            virtual std::shared_ptr<const Action> select_action_itfc(ThtsContext& ctx);
+            virtual std::shared_ptr<const Action> recommend_action_itfc(ThtsContext& ctx) const;
             virtual void backup_itfc(
                 const std::vector<double>& trial_rewards_before_node, 
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                ThtsEnvContext& ctx);
+                ThtsContext& ctx);
 
             virtual std::shared_ptr<ThtsCNode> create_child_node_helper_itfc(
                 std::shared_ptr<const Action> action) const;

@@ -32,7 +32,7 @@ namespace thts {
     /**
      * Visit just needs to increment num_visits.
      */
-    void UctCNode::visit(ThtsEnvContext& ctx) {
+    void UctCNode::visit(ThtsContext& ctx) {
         ThtsCNode::visit_itfc(ctx);
     }
 
@@ -50,7 +50,7 @@ namespace thts {
     /**
      * Sample observation calls sample_observation_random.
      */
-    shared_ptr<const State> UctCNode::sample_observation(ThtsEnvContext& ctx) {
+    shared_ptr<const State> UctCNode::sample_observation(ThtsContext& ctx) {
         return sample_observation_random();
     }
 
@@ -70,7 +70,7 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
         backup_average_return(trial_cumulative_return_after_node);
     }
@@ -126,13 +126,13 @@ namespace thts {
  * Boilerplate ThtsCNode interface implementation. Copied from thts_chance_node_template.h.
  */
 namespace thts {
-    void UctCNode::visit_itfc(ThtsEnvContext& ctx) {
-        ThtsEnvContext& ctx_itfc = (ThtsEnvContext&) ctx;
+    void UctCNode::visit_itfc(ThtsContext& ctx) {
+        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
         visit(ctx_itfc);
     }
 
-    shared_ptr<const Observation> UctCNode::sample_observation_itfc(ThtsEnvContext& ctx) {
-        ThtsEnvContext& ctx_itfc = (ThtsEnvContext&) ctx;
+    shared_ptr<const Observation> UctCNode::sample_observation_itfc(ThtsContext& ctx) {
+        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
         shared_ptr<const State> obsv = sample_observation(ctx_itfc);
         return static_pointer_cast<const Observation>(obsv);
     }
@@ -142,9 +142,9 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
-        ThtsEnvContext& ctx_itfc = (ThtsEnvContext&) ctx;
+        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
         backup(
             trial_rewards_before_node, 
             trial_rewards_after_node, 

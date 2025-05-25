@@ -10,7 +10,7 @@
 #include "algorithms/common/ent_chance_node.h"
 #include "algorithms/common/ent_decision_node.h"
 #include "thts_env.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_manager.h"
 
 #include <memory>
@@ -83,7 +83,7 @@ namespace thts {
              * Returns:
              *      The recommended action
              */
-            virtual std::shared_ptr<const Action> recommend_action(ThtsEnvContext& ctx) const;   
+            virtual std::shared_ptr<const Action> recommend_action(ThtsContext& ctx) const;   
             
             /**
              * Calls both the entropy backup and dp backup from DPDNode
@@ -93,7 +93,7 @@ namespace thts {
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                ThtsEnvContext& ctx);
+                ThtsContext& ctx);
 
         protected:
             /**

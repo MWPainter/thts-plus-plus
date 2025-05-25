@@ -3,7 +3,7 @@
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
 #include "thts_env.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_manager.h"
 #include "thts_types.h"
 
@@ -61,13 +61,13 @@ namespace thts {
              * Gets a uniform random action.
             */
             std::shared_ptr<const Action> get_random_action(
-                std::shared_ptr<const State> state, ThtsEnvContext& ctx);
+                std::shared_ptr<const State> state, ThtsContext& ctx);
 
             /**
              * Gets the best recommendation from the current node.
             */
             std::shared_ptr<const Action> get_action(
-                std::shared_ptr<const State> state, ThtsEnvContext& context);
+                std::shared_ptr<const State> state, ThtsContext& context);
 
             /**
              * Updates 'cur_node' for the last step taken in a trial.

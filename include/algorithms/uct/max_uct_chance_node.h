@@ -4,7 +4,7 @@
 #include "algorithms/uct/uct_manager.h"
 #include "algorithms/uct/uct_chance_node.h"
 #include "algorithms/uct/uct_decision_node.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 
 #include <memory>
 #include <sstream>
@@ -60,7 +60,7 @@ namespace thts {
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                ThtsEnvContext& ctx);
+                ThtsContext& ctx);
 
         protected:
             /**
@@ -154,7 +154,7 @@ namespace thts {
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                ThtsEnvContext& ctx) override;
+                ThtsContext& ctx) override;
 
             virtual std::shared_ptr<ThtsDNode> create_child_node_helper_itfc(
                 std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state=nullptr) const override;

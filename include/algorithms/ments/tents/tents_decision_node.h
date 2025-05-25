@@ -6,7 +6,7 @@
 
 #include "algorithms/ments/ments_decision_node.h"
 #include "thts_env.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_manager.h"
 
 #include <map>
@@ -120,7 +120,7 @@ namespace thts {
                 ActionDistr& action_weights, 
                 double& sum_action_weights, 
                 double& normalisation_term, 
-                ThtsEnvContext& context) const;
+                ThtsContext& context) const;
 
             /**
              * Updates the tents maps for the backup, using the selected action stored in ctx
@@ -128,7 +128,7 @@ namespace thts {
              * Args:
              *      ctx: A thts env context
             */
-           void backup_update_map(ThtsEnvContext& ctx);
+           void backup_update_map(ThtsContext& ctx);
 
             /**
              * Implements the tents backup. I.e. soft_value = temp * spmax()
@@ -136,7 +136,7 @@ namespace thts {
              * Args:
              *      ctx: A thts env context
              */
-            void backup_tents(ThtsEnvContext& ctx);
+            void backup_tents(ThtsContext& ctx);
 
 
 
@@ -169,7 +169,7 @@ namespace thts {
              * Returns:
              *      The selected action
              */
-            virtual std::shared_ptr<const Action> select_action(ThtsEnvContext& ctx);
+            virtual std::shared_ptr<const Action> select_action(ThtsContext& ctx);
             
             /**
              * Implements the thts backup function for the node
@@ -188,7 +188,7 @@ namespace thts {
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                ThtsEnvContext& ctx);
+                ThtsContext& ctx);
 
         protected:
             /**

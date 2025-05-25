@@ -490,7 +490,7 @@ void czt_test() {
 
     // Pretty ball lists
     cout << "Printing CZT ball lists for first decision." << endl << endl;
-    ThtsEnvContext ctx;
+    ThtsContext ctx;
     shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
     for (shared_ptr<const Action> action : *actions) {
         cout << "CZT ball list for action " << *action << ":" << endl;
@@ -585,7 +585,7 @@ void czt_4d_test() {
 
     // Pretty ball lists
     cout << "Printing CZT ball lists for first decision." << endl << endl;
-    ThtsEnvContext ctx;
+    ThtsContext ctx;
     shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
     for (shared_ptr<const Action> action : *actions) {
         cout << "CZT ball list for action " << *action << ":" << endl;
@@ -748,7 +748,7 @@ void mo_gym_env_test(string thts_unique_filename="/") {
 
     // Pretty ball lists
     cout << "Printing CZT ball lists for first decision." << endl << endl;
-    ThtsEnvContext ctx;
+    ThtsContext ctx;
     shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
     for (shared_ptr<const Action> action : *actions) {
         cout << "CZT ball list for action " << *action << ":" << endl;
@@ -881,7 +881,7 @@ void sm_bts_test() {
     // Pretty ball lists
     cout << "Printing SM-BTS simplex map at root node ball lists for first decision." << endl;
     cout << root_node->get_simplex_map_pretty_print_string() << endl << endl;
-    ThtsEnvContext ctx;
+    ThtsContext ctx;
     shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
     for (shared_ptr<const Action> action : *actions) {
         cout << "Simplex map ball list for action " << *action << ":" << endl;
@@ -975,7 +975,7 @@ void sm_bts_4d_test() {
     // Pretty ball lists
     cout << "Printing SM-BTS simplex map at root node ball lists for first decision." << endl;
     cout << root_node->get_simplex_map_pretty_print_string() << endl << endl;
-    // ThtsEnvContext ctx;
+    // ThtsContext ctx;
     // shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
     // for (shared_ptr<const Action> action : *actions) {
     //     cout << "Simplex map ball list for action " << *action << ":" << endl;
@@ -1067,7 +1067,7 @@ void sm_dents_test() {
     // Pretty ball lists
     cout << "Printing SM-DENTS simplex map at root node ball lists for first decision." << endl;
     cout << root_node->get_simplex_map_pretty_print_string() << endl << endl;
-    ThtsEnvContext ctx;
+    ThtsContext ctx;
     shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
     for (shared_ptr<const Action> action : *actions) {
         cout << "Simplex map ball list for action " << *action << ":" << endl;
@@ -1159,7 +1159,7 @@ void sm_bts_bin_tree_test() {
     // Pretty ball lists
     cout << "Printing SM-BTS simplex map at root node ball lists for first decision." << endl;
     cout << root_node->get_simplex_map_pretty_print_string() << endl << endl;
-    ThtsEnvContext ctx;
+    ThtsContext ctx;
     shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
     for (shared_ptr<const Action> action : *actions) {
         cout << "Simplex map ball list for action " << *action << ":" << endl;
@@ -1252,7 +1252,7 @@ void sm_bts_bin_tree_4d_test() {
     // // Pretty ball lists
     // cout << "Printing SM-BTS simplex map at root node ball lists for first decision." << endl;
     // cout << root_node->get_simplex_map_pretty_print_string() << endl << endl;
-    // ThtsEnvContext ctx;
+    // ThtsContext ctx;
     // shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
     // for (shared_ptr<const Action> action : *actions) {
     //     cout << "Simplex map ball list for action " << *action << ":" << endl;
@@ -1344,7 +1344,7 @@ void chmcts_test() {
 
     // Pretty ball lists
     cout << "Printing convex hulls for first decision." << endl << endl;
-    ThtsEnvContext ctx;
+    ThtsContext ctx;
     shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
     for (shared_ptr<const Action> action : *actions) {
         cout << "CH for action " << *action << ":" << endl;
@@ -1425,7 +1425,7 @@ void chmcts_4d_test() {
 
     // Pretty ball lists
     cout << "Printing convex hulls for first decision." << endl << endl;
-    ThtsEnvContext ctx;
+    ThtsContext ctx;
     shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
     for (shared_ptr<const Action> action : *actions) {
         cout << "CH for action " << *action << ":" << endl;

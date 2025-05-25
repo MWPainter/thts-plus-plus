@@ -73,12 +73,12 @@ namespace thts::test{
                 return make_shared<IntPairState>(IntPairState(-1,-1));
             }
 
-            bool is_sink_state(shared_ptr<const IntPairState> state, ThtsEnvContext& ctx) const {
+            bool is_sink_state(shared_ptr<const IntPairState> state, ThtsContext& ctx) const {
                 return state->state.second == chain_length;
             }
 
             shared_ptr<IntActionVector> get_valid_actions(
-                shared_ptr<const IntPairState> state, ThtsEnvContext& ctx) const 
+                shared_ptr<const IntPairState> state, ThtsContext& ctx) const 
             {
                 shared_ptr<IntActionVector> valid_actions = make_shared<IntActionVector>();
 
@@ -99,7 +99,7 @@ namespace thts::test{
             }
 
             shared_ptr<IntPairStateDistr> get_transition_distribution(
-                shared_ptr<const IntPairState> state, shared_ptr<const IntAction> action, ThtsEnvContext& ctx) const 
+                shared_ptr<const IntPairState> state, shared_ptr<const IntAction> action, ThtsContext& ctx) const 
             {
                 shared_ptr<const IntPairState> next_state = sample_transition_distribution(state,action,ctx);
                 shared_ptr<IntPairStateDistr> transition_distribution = make_shared<IntPairStateDistr>(); 
@@ -110,7 +110,7 @@ namespace thts::test{
             shared_ptr<const IntPairState> sample_transition_distribution(
                 shared_ptr<const IntPairState> state, 
                 shared_ptr<const IntAction> action,
-                ThtsEnvContext& ctx) const 
+                ThtsContext& ctx) const 
             {
                 shared_ptr<IntPairState> new_state = make_shared<IntPairState>(0,0);
                 if (state->state.first == -1) {
@@ -127,7 +127,7 @@ namespace thts::test{
                 shared_ptr<const IntPairState> state, 
                 shared_ptr<const IntAction> action, 
                 RandManager& rand_manager,
-                ThtsEnvContext& ctx) const 
+                ThtsContext& ctx) const 
             {
                 return sample_transition_distribution(state,action,ctx);
             }
@@ -135,7 +135,7 @@ namespace thts::test{
             double get_reward(
                 shared_ptr<const IntPairState> state, 
                 shared_ptr<const IntAction> action, 
-                ThtsEnvContext& ctx) const 
+                ThtsContext& ctx) const 
             {
                 if (state->state.first == -1) {
                     return 0.0;
@@ -161,13 +161,13 @@ namespace thts::test{
                 return static_pointer_cast<const State>(init_state);
             }
 
-            virtual bool is_sink_state_itfc(shared_ptr<const State> state, ThtsEnvContext& ctx) const override {
+            virtual bool is_sink_state_itfc(shared_ptr<const State> state, ThtsContext& ctx) const override {
                 shared_ptr<const IntPairState> state_itfc = static_pointer_cast<const IntPairState>(state);
                 return is_sink_state(state_itfc, ctx);
             }
 
             virtual shared_ptr<ActionVector> get_valid_actions_itfc(
-                shared_ptr<const State> state, ThtsEnvContext& ctx) const override 
+                shared_ptr<const State> state, ThtsContext& ctx) const override 
             {
                 shared_ptr<const IntPairState> state_itfc = static_pointer_cast<const IntPairState>(state);
                 shared_ptr<IntActionVector> valid_actions_itfc = get_valid_actions(state_itfc, ctx);
@@ -180,7 +180,7 @@ namespace thts::test{
             }
 
             virtual shared_ptr<StateDistr> get_transition_distribution_itfc(
-                shared_ptr<const State> state, shared_ptr<const Action> action, ThtsEnvContext& ctx) const override 
+                shared_ptr<const State> state, shared_ptr<const Action> action, ThtsContext& ctx) const override 
             {
                 shared_ptr<const IntPairState> state_itfc = static_pointer_cast<const IntPairState>(state);
                 shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);
@@ -199,7 +199,7 @@ namespace thts::test{
                 shared_ptr<const State> state, 
                 shared_ptr<const Action> action, 
                 RandManager& rand_manager, 
-                ThtsEnvContext& ctx) const override 
+                ThtsContext& ctx) const override 
             {
                 shared_ptr<const IntPairState> state_itfc = static_pointer_cast<const IntPairState>(state);
                 shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);
@@ -211,7 +211,7 @@ namespace thts::test{
             virtual std::shared_ptr<ObservationDistr> get_observation_distribution_itfc(
                 std::shared_ptr<const Action> action, 
                 std::shared_ptr<const State> next_state, 
-                ThtsEnvContext& ctx) const override
+                ThtsContext& ctx) const override
             {
                 return thts::ThtsEnv::get_observation_distribution_itfc(action, next_state, ctx);
             }
@@ -220,7 +220,7 @@ namespace thts::test{
                 std::shared_ptr<const Action> action, 
                 std::shared_ptr<const State> next_state, 
                 RandManager& rand_manager, 
-                ThtsEnvContext& ctx) const override 
+                ThtsContext& ctx) const override 
             {
                 return thts::ThtsEnv::sample_observation_distribution_itfc(action, next_state, rand_manager, ctx);
             }
@@ -228,7 +228,7 @@ namespace thts::test{
             virtual double get_reward_itfc(
                 shared_ptr<const State> state, 
                 shared_ptr<const Action> action,
-                ThtsEnvContext& ctx) const override
+                ThtsContext& ctx) const override
             {
                 shared_ptr<const IntPairState> state_itfc = static_pointer_cast<const IntPairState>(state);
                 shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);

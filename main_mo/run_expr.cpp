@@ -121,10 +121,16 @@ namespace thts {
         eval_out_file << "replicate,"
             << "search_time" << ","
             << "num_trials" << ","
-            << "mc_eval_utility_mean" << ","
-            << "mc_eval_utility_std" << ","
-            << "mc_eval_normalised_utility_mean" << ","
-            << "mc_eval_normalised_utility_std" << endl;
+            << "eum_mean" << ","
+            << "eum_std" << ","
+            << "norm_eum_mean" << ","
+            << "norm_eum_std" << ","
+            << "rand_eum_mean" << ","
+            << "rand_eum_std" << ","
+            << "rand_norm_eum_mean" << ","
+            << "rand_norm_eum_std" << ","
+            << "hypervolume_metric" << "," 
+            << "sparsity_metric" << endl;
     }
 
     /**
@@ -135,23 +141,35 @@ namespace thts {
         int replicate, 
         double search_time, 
         int num_trials, 
-        double mc_eval_utility_mean, 
-        double mc_eval_utility_std, 
-        double mc_eval_normalised_utility_mean, 
-        double mc_eval_normalised_utility_std) 
+        double eum_mean, 
+        double eum_std, 
+        double norm_eum_mean, 
+        double norm_eum_std,
+        double rand_eum_mean,
+        double rand_eum_std,
+        double rand_norm_eum_mean,
+        double rand_norm_eum_std,
+        double hypervolume_metric,
+        double sparsity_metric)
     {
         eval_out_file 
             << replicate << ","
             << search_time << ","
             << num_trials << ","
-            << mc_eval_utility_mean << ","
-            << mc_eval_utility_std << ","
-            << mc_eval_normalised_utility_mean << ","
-            << mc_eval_normalised_utility_std << endl;
+            << eum_mean << ","
+            << eum_std << ","
+            << norm_eum_mean << ","
+            << norm_eum_std << ","
+            << rand_eum_mean << ","
+            << rand_eum_std << ","
+            << rand_norm_eum_mean << ","
+            << rand_norm_eum_std << ","
+            << hypervolume_metric << "," 
+            << sparsity_metric << endl;
     }
 
     /**
-     * Perform an mc eval
+     * Perform an mc eval (with either randomly sampled or well spaced points from simplex)
      * Returns the mean and std via the double& values
     */
     void run_mc_eval(
@@ -162,16 +180,76 @@ namespace thts {
         shared_ptr<MoThtsEnv> env, 
         shared_ptr<MoThtsDNode> root_node, 
         shared_ptr<MoThtsManager> thts_manager,
-        RunID& run_id) 
+        RunID& run_id,
+        bool well_spaced) 
     {   
         shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(root_node, env, thts_manager);
         MoMCEvaluator evaluator(
-            eval_policy, run_id.max_trial_length, thts_manager, run_id.get_env_min_value(), run_id.get_env_max_value());
+            eval_policy, 
+            run_id.max_trial_length, 
+            thts_manager, 
+            run_id.get_env_min_value(), 
+            run_id.get_env_max_value(),
+            well_spaced);
         evaluator.run_rollouts(run_id.rollouts_per_mc_eval, run_id.eval_threads);
         mean = evaluator.get_mean_mo_ctx_return();
         std_dev = evaluator.get_stddev_mean_mo_ctx_return();
         normalised_mean = evaluator.get_mean_mo_normalised_ctx_return();
         normalised_std_dev = evaluator.get_stddev_mean_mo_normalised_ctx_return();
+    }
+
+    /**
+     * Compute evals
+     */
+    void compute_evals(
+        double& eum_mean,
+        double& eum_std_dev,
+        double& norm_eum_mean,
+        double& norm_eum_std_dev,
+        double& rand_eum_mean,
+        double& rand_eum_std_dev,
+        double& rand_norm_eum_mean,
+        double& rand_norm_eum_std_dev,
+        double& hypervolume_metric,
+        double& sparsity_metric,
+        shared_ptr<MoThtsEnv> env, 
+        shared_ptr<MoThtsDNode> root_node, 
+        shared_ptr<MoThtsManager> thts_manager,
+        RunID& run_id,
+        bool just_well_spaced) 
+    {
+        // MC eval with well spaced context weights
+        run_mc_eval(
+            eum_mean, 
+            eum_std_dev, 
+            norm_eum_mean, 
+            norm_eum_std_dev, 
+            env, 
+            root_node, 
+            thts_manager, 
+            run_id, 
+            true);
+        
+        if (just_well_spaced) {
+            return;
+        }
+
+        // MC eval with randomly sampled context weights
+        run_mc_eval(
+            rand_eum_mean, 
+            rand_eum_std_dev, 
+            rand_norm_eum_mean, 
+            rand_norm_eum_std_dev, 
+            env, 
+            root_node, 
+            thts_manager, 
+            run_id, 
+            false);
+
+        // Compute hypervolume and sparsity metrics
+        ConvexHull root_node_ch = root_node->get_convex_hull();
+        hypervolume_metric = root_node_ch.hypervolume(run_id.get_env_min_value());
+        sparsity_metric = root_node_ch.sparsity_metric();
     }
 
     /**
@@ -286,18 +364,41 @@ namespace thts {
             shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(thts_manager, root_node, run_id.num_threads);
 
             // eval at 0 trials
-            double mean, stddev, normalised_mean, normalised_stddev;
+            double eum, eum_std, norm_eum, norm_eum_std;
+            double rand_eum, rand_eum_std, rand_norm_eum, rand_norm_eum_std;
+            double hypervolume_metric, sparsity_metric;
             if (!hp_opt) {
-                run_mc_eval(
-                    mean, 
-                    stddev, 
-                    normalised_mean, 
-                    normalised_stddev, 
+                compute_evals(
+                    eum, 
+                    eum_std, 
+                    norm_eum, 
+                    norm_eum_std, 
+                    rand_eum, 
+                    rand_eum_std, 
+                    rand_norm_eum, 
+                    rand_norm_eum_std, 
+                    hypervolume_metric,
+                    sparsity_metric,
                     env, 
                     root_node, 
                     thts_manager, 
-                    run_id);
-                write_eval_line(eval_file, replicate, 0.0, 0, mean, stddev, normalised_mean, normalised_stddev);
+                    run_id,
+                    false);
+                write_eval_line(
+                    eval_file, 
+                    replicate, 
+                    0.0, 
+                    0, 
+                    eum, 
+                    eum_std, 
+                    norm_eum, 
+                    norm_eum_std, 
+                    rand_eum, 
+                    rand_eum_std, 
+                    rand_norm_eum, 
+                    rand_norm_eum_std, 
+                    hypervolume_metric,
+                    sparsity_metric);
             }
 
             // run trials, evaluating every eval delta
@@ -305,25 +406,38 @@ namespace thts {
             while (search_time_elapsed < run_id.search_runtime) {
                 thts_pool->run_trials(numeric_limits<int>::max(), run_id.eval_delta);
                 search_time_elapsed += run_id.eval_delta;
-                run_mc_eval(
-                    mean, 
-                    stddev, 
-                    normalised_mean, 
-                    normalised_stddev, 
+                compute_evals(
+                    eum, 
+                    eum_std, 
+                    norm_eum, 
+                    norm_eum_std, 
+                    rand_eum, 
+                    rand_eum_std, 
+                    rand_norm_eum, 
+                    rand_norm_eum_std, 
+                    hypervolume_metric,
+                    sparsity_metric,
                     env, 
                     root_node, 
                     thts_manager, 
-                    run_id);
+                    run_id,
+                    hp_opt);
                 if (!hp_opt) {
                     write_eval_line(
                         eval_file, 
                         replicate, 
                         search_time_elapsed, 
                         root_node->get_scalar_num_visits(), 
-                        mean, 
-                        stddev, 
-                        normalised_mean, 
-                        normalised_stddev);
+                        eum, 
+                        eum_std, 
+                        norm_eum, 
+                        norm_eum_std, 
+                        rand_eum, 
+                        rand_eum_std, 
+                        rand_norm_eum, 
+                        rand_norm_eum_std, 
+                        hypervolume_metric,
+                        sparsity_metric);
                 }
             }
 
@@ -351,7 +465,7 @@ namespace thts {
             }
 
             // Update results
-            value_estimates[replicate] = mean;
+            value_estimates[replicate] = eum;
             
             env.reset();
             thts_manager.reset();
@@ -379,7 +493,7 @@ namespace thts {
         // Check if any run ids need python
         bool need_python = false;
         for (RunID& run_id : *run_ids) {
-            if (run_id.needs_python_interpreter()) {
+            if (run_id.is_python_env()) {
                 need_python = true;
                 break;
             }
@@ -455,7 +569,7 @@ namespace thts {
         // If running python, make interpreter and release gil
         shared_ptr<py::scoped_interpreter> py_interpreter;
         shared_ptr<py::gil_scoped_release> release;
-        if (hp_opt->needs_python_interpreter()) {
+        if (hp_opt->is_python_env()) {
             py_interpreter = make_shared<py::scoped_interpreter>();
             release = make_shared<py::gil_scoped_release>();
         }

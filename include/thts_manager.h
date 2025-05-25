@@ -238,7 +238,7 @@ namespace thts {
      *          A shared lock to protect accesses to the thts_context_map, 
      *          used as reader/writer lock (shared_lock/unique_lock)
      *      thts_context_map:
-     *          A mapping from thts thread id to the current ThtsEnvContext for the trial it is running
+     *          A mapping from thts thread id to the current ThtsContext for the trial it is running
      */
     class ThtsManager : public RandManager {
         protected:
@@ -261,7 +261,7 @@ namespace thts {
             std::unordered_map<std::thread::id, int> thread_id_map;
 
             std::shared_mutex thts_context_map_lock;
-            thts::helper::unordered_map<int,std::shared_ptr<ThtsEnvContext>> thts_context_map;
+            thts::helper::unordered_map<int,std::shared_ptr<ThtsContext>> thts_context_map;
 
             /**
              * Constructor. Initialises values directly other than random number generation.
@@ -294,13 +294,13 @@ namespace thts {
             /**
              * Register the thts context 'ctx' with thts thread id 'tid'
             */
-            void register_thts_context(int tid, std::shared_ptr<ThtsEnvContext> ctx);
+            void register_thts_context(int tid, std::shared_ptr<ThtsContext> ctx);
 
             /**
              * Gets the current thts context for the calling thread
             */
-            std::shared_ptr<ThtsEnvContext> get_thts_context();
-            std::shared_ptr<ThtsEnvContext> get_thts_context(int tid);
+            std::shared_ptr<ThtsContext> get_thts_context();
+            std::shared_ptr<ThtsContext> get_thts_context(int tid);
 
             /**
              * Any classes intended to be inherited from should make destructor virtual

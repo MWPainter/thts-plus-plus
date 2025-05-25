@@ -1,8 +1,18 @@
 #include "mo/mo_helper.h"
 
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <sstream>
+
 #include "helper_templates.h"
+#include "thts_manager.h"
 
 #include <stdexcept>
+
+using namespace std;
+namespace py = pybind11;
 
 
 namespace std {
@@ -60,5 +70,113 @@ namespace thts::helper {
     Eigen::ArrayXd ConstHeuristicFn::heuristic_fn(std::shared_ptr<const State> s, MoThtsEnv& env, MoThtsManager& manager, int depth) 
     {
         return const_val;
+    }
+
+    /**
+     * https://cs.stackexchange.com/questions/3227/uniform-sampling-from-a-simplex
+     */
+    Eigen::ArrayXd sample_uniform_random_simplex_vector(RandManager& manager, int dim)
+    {
+        Eigen::ArrayXd sampled_weight = Eigen::ArrayXd(dim);
+        double exp_rvs_run_sum[dim];
+        double exp_rvs_sum = 0.0; 
+        for (int i=0; i<dim; i++) {
+            double exp_rv = manager.get_rand_exp();
+            exp_rvs_sum += exp_rv;
+            exp_rvs_run_sum[i] = exp_rvs_sum;
+        }
+        double prev_run_sum = 0.0;
+        for (int i=0; i<dim; i++) {
+            sampled_weight[i] = (exp_rvs_run_sum[i] - prev_run_sum) / exp_rvs_sum;
+            prev_run_sum = exp_rvs_run_sum[i];
+        }
+        return sampled_weight;
+    } 
+
+
+    /**
+     * Get filename for cached points
+     */
+    string well_spaced_points_filename(int num_points, int dim, bool is_simplex)
+    {
+        stringstream ss;
+        ss << "util/cached_";
+        if (is_simplex) {
+            ss << "simplex";
+        } else {
+            ss << "hypersphere";
+        }
+        ss << "_points/" << to_string(dim) << "_dim/" << to_string(num_points) << "_points.txt";
+        return ss.str();
+    }
+
+    /**
+     * Generate well spaced points via python script
+     */
+    void ensure_well_spaced_points_generated(int num_points, int dim, bool is_simplex)
+    {
+        // If file already exists, we did this work before
+        string filename = well_spaced_points_filename(num_points, dim, is_simplex);
+        if (filesystem::exists(filename)) {
+            return;
+        }
+
+        cout << "Generating well spaced points (";
+        if (is_simplex) {
+            cout << "simplex";
+        } else {
+            cout << "hypersphere";
+        }
+        cout  << ", " << dim << "dims, " << num_points 
+            << "points) for the first time. This may take a little while." << endl;
+
+        // Ensure a python interpreter exists and gil acquired
+        unique_ptr<py::scoped_interpreter> py_interpreter;
+        std::unique_ptr<py::gil_scoped_acquire> acquire;
+        if (Py_IsInitialized()) {
+            acquire = make_unique<py::gil_scoped_acquire>();
+        } else {
+            py_interpreter = make_unique<py::scoped_interpreter>();
+        }
+
+        // Run appropriate python function
+        py::module_ py_module = py::module_::import("util.generate_well_spaced_vectors");
+        string fn_name = is_simplex ? "generate_and_cache_simplex_points" : "generate_and_cache_hypersphere_points";
+        py::object py_gen_and_cache_points_fn = py_module.attr(fn_name.c_str());
+        py_gen_and_cache_points_fn(num_points, dim);
+        
+        cout << "Finished generating well spaced points." << endl;
+    }
+
+    /**
+     * Makes sure well spaced points are generated
+     * Loads them in from the cached file
+     */
+    vector<Eigen::ArrayXd> get_well_spaced_points(int num_points, int dim, bool is_simplex)
+    {
+        ensure_well_spaced_points_generated(num_points, dim, is_simplex);
+        string filename = well_spaced_points_filename(num_points, dim, is_simplex);
+
+        ifstream cache_file(filename);
+        string line;
+        vector<Eigen::ArrayXd> vectors;
+        vectors.reserve(num_points);
+        while (getline(cache_file,line)) {
+            vector<string> vec_as_string = thts::helper::string_split(line);
+            Eigen::ArrayXd vec(dim);
+            for (int i=0; i<dim; i++) {
+                vec[i] = stod(vec_as_string[i]);
+            }
+            vectors.push_back(vec);
+        }
+        return vectors;
+    }
+
+    vector<Eigen::ArrayXd> get_well_spaced_hyperphere_points(int num_points, int dim) {
+        return get_well_spaced_points(num_points, dim, false);
+    }
+
+    vector<Eigen::ArrayXd> get_well_spaced_simplex_points(int num_points, int dim) {
+        return get_well_spaced_points(num_points, dim, true);
     }
 }

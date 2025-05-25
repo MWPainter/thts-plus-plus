@@ -2,10 +2,12 @@
 
 #include <Python.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/embed.h>
 
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include <sys/sem.h>
 #include <sys/shm.h>

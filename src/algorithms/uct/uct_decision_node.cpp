@@ -57,7 +57,7 @@ namespace thts {
     /**
      * Visit just needs to call base implmentation in ThtsDNode: increments num_visits
      */
-    void UctDNode::visit(ThtsEnvContext& ctx) {
+    void UctDNode::visit(ThtsContext& ctx) {
         ThtsDNode::visit_itfc(ctx);
     }
 
@@ -91,7 +91,7 @@ namespace thts {
      * TODO: Consider fine grained locking if want to optimise. Probably don't need bias and values to be held super 
      *      consistent throughout function.
      */
-    void UctDNode::fill_ucb_values(unordered_map<shared_ptr<const Action>,double>& ucb_values, ThtsEnvContext& ctx) const {
+    void UctDNode::fill_ucb_values(unordered_map<shared_ptr<const Action>,double>& ucb_values, ThtsContext& ctx) const {
         shared_ptr<UctManager> manager = static_pointer_cast<UctManager>(thts_manager);
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
 
@@ -140,7 +140,7 @@ namespace thts {
      * 
      * Otherwise we do standard UCB, by 'pulling each arm' (action) once first.
      */
-    shared_ptr<const Action> UctDNode::select_action_ucb(ThtsEnvContext& ctx) {
+    shared_ptr<const Action> UctDNode::select_action_ucb(ThtsContext& ctx) {
         // Pull uninitialised arms if needed
         if (!has_prior()) {
             vector<shared_ptr<const Action>> actions_yet_to_try;
@@ -188,7 +188,7 @@ namespace thts {
      * Decides randomly if we need to do epsilon exploration, and appropriately calls the ucb (or random) select action
      * function for if we didn't (or did) want to explore this trial.
      */
-    shared_ptr<const Action> UctDNode::select_action(ThtsEnvContext& ctx) {
+    shared_ptr<const Action> UctDNode::select_action(ThtsContext& ctx) {
         shared_ptr<UctManager> manager = static_pointer_cast<UctManager>(thts_manager);
         if (manager->epsilon_exploration > 0.0) {
             if (manager->get_rand_uniform() < manager->epsilon_exploration) {
@@ -246,7 +246,7 @@ namespace thts {
      * 
      * Recommends an action based on the options provided by UctManager.
      */
-    shared_ptr<const Action> UctDNode::recommend_action(ThtsEnvContext& ctx) const {
+    shared_ptr<const Action> UctDNode::recommend_action(ThtsContext& ctx) const {
         UctManager& manager = (UctManager&) *thts_manager;
         if (manager.recommend_most_visited) {
             return recommend_action_most_visited();
@@ -270,7 +270,7 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
         backup_average_return(trial_cumulative_return_after_node);
     }
@@ -322,15 +322,15 @@ namespace thts {
  * Boilerplate ThtsDNode interface implementation. Copied from thts_decision_node_template.h.
  */
 namespace thts {
-    void UctDNode::visit_itfc(ThtsEnvContext& ctx) {
+    void UctDNode::visit_itfc(ThtsContext& ctx) {
         visit(ctx);
     }
 
-    shared_ptr<const Action> UctDNode::select_action_itfc(ThtsEnvContext& ctx) {
+    shared_ptr<const Action> UctDNode::select_action_itfc(ThtsContext& ctx) {
         return select_action(ctx);
     }
 
-    shared_ptr<const Action> UctDNode::recommend_action_itfc(ThtsEnvContext& ctx) const {
+    shared_ptr<const Action> UctDNode::recommend_action_itfc(ThtsContext& ctx) const {
         return recommend_action(ctx);
     }
 
@@ -339,7 +339,7 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx)
+        ThtsContext& ctx)
     {
         backup(
             trial_rewards_before_node, 

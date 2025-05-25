@@ -1,9 +1,9 @@
-#include "test_thts_env_context.h"
+#include "test_thts_context.h"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
 // testing
-#include "thts_env_context.h"
+#include "thts_context.h"
 
 // includes
 #include <string>
@@ -18,7 +18,7 @@ using namespace thts;
  */
 TEST(EnvContext_CheckIsMapWithoutDefaults, test_normal_use) 
 {
-    ThtsEnvContext context;
+    ThtsContext context;
     context.put_value("Hello,", make_shared<double>(1.0));
     context.put_value("World!", make_shared<double>(2.5));
     EXPECT_EQ(context.get_value<double>("Hello,"), 1.0);
@@ -27,7 +27,7 @@ TEST(EnvContext_CheckIsMapWithoutDefaults, test_normal_use)
 
 TEST(EnvContext_CheckIsMapWithoutDefaults, test_missing_key) 
 {
-    ThtsEnvContext context;
+    ThtsContext context;
     context.put_value("Hello,", make_shared<double>(1.0));
     context.put_value("World!", make_shared<double>(2.5));
     EXPECT_ANY_THROW(context.get_value_raw("NotInContext"));

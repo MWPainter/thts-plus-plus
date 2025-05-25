@@ -10,7 +10,7 @@
 // includes
 #include "test/test_thts_env.h"
 #include "thts.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 
 #include <iostream>
 #include <unordered_map>
@@ -32,10 +32,10 @@ TEST(Uct_Ucb, compute_ucb_values_no_prior) {
     shared_ptr<MockThtsEnv_ForUct> mock_env = make_shared<MockThtsEnv_ForUct>();
     EXPECT_CALL(*mock_env, sample_context_itfc)
         .Times(1)
-        .WillOnce(Return(make_shared<ThtsEnvContext>()));
+        .WillOnce(Return(make_shared<ThtsContext>()));
     shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
     uct_manager->bias = 2.0;
-    shared_ptr<ThtsEnvContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
+    shared_ptr<ThtsContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
     
     // Actions
     shared_ptr<ActionVector> actions = make_shared<ActionVector>(3);
@@ -103,10 +103,10 @@ TEST(Uct_Ucb, compute_ucb_values_with_prior) {
     shared_ptr<MockThtsEnv_ForUct> mock_env = make_shared<MockThtsEnv_ForUct>();
     EXPECT_CALL(*mock_env, sample_context_itfc)
         .Times(1)
-        .WillOnce(Return(make_shared<ThtsEnvContext>()));
+        .WillOnce(Return(make_shared<ThtsContext>()));
     shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
     uct_manager->bias = 2.0;
-    shared_ptr<ThtsEnvContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
+    shared_ptr<ThtsContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
     
     // Actions
     shared_ptr<ActionVector> actions = make_shared<ActionVector>(3);
@@ -169,10 +169,10 @@ TEST(Uct_Ucb, compute_ucb_values_opponent) {
     shared_ptr<MockThtsEnv_ForUct> mock_env = make_shared<MockThtsEnv_ForUct>();
     EXPECT_CALL(*mock_env, sample_context_itfc)
         .Times(1)
-        .WillOnce(Return(make_shared<ThtsEnvContext>()));
+        .WillOnce(Return(make_shared<ThtsContext>()));
     shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
     uct_manager->bias = 2.0;
-    shared_ptr<ThtsEnvContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
+    shared_ptr<ThtsContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
     
     // Actions
     shared_ptr<ActionVector> actions = make_shared<ActionVector>(3);
@@ -223,10 +223,10 @@ TEST(Uct_SelectAction, uct_actions_yet_to_sample_no_prior) {
     shared_ptr<MockThtsEnv_ForUct> mock_env = make_shared<MockThtsEnv_ForUct>();
     EXPECT_CALL(*mock_env, sample_context_itfc)
         .Times(1)
-        .WillOnce(Return(make_shared<ThtsEnvContext>()));
+        .WillOnce(Return(make_shared<ThtsContext>()));
     shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
     uct_manager->bias = 2.0;
-    shared_ptr<ThtsEnvContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
+    shared_ptr<ThtsContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
 
     // Mock random number generation
     EXPECT_CALL(*uct_manager, get_rand_int)
@@ -287,10 +287,10 @@ TEST(Uct_SelectAction, uct_all_actions_previously_chosen) {
     shared_ptr<MockThtsEnv_ForUct> mock_env = make_shared<MockThtsEnv_ForUct>();
     EXPECT_CALL(*mock_env, sample_context_itfc)
         .Times(1)
-        .WillOnce(Return(make_shared<ThtsEnvContext>()));
+        .WillOnce(Return(make_shared<ThtsContext>()));
     shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
     uct_manager->bias = 2.0;
-    shared_ptr<ThtsEnvContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
+    shared_ptr<ThtsContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
 
     // Mock random number generation
     EXPECT_CALL(*uct_manager, get_rand_int)
@@ -350,10 +350,10 @@ TEST(Uct_SelectAction, uct_with_prior) {
     shared_ptr<MockThtsEnv_ForUct> mock_env = make_shared<MockThtsEnv_ForUct>();
     EXPECT_CALL(*mock_env, sample_context_itfc)
         .Times(1)
-        .WillOnce(Return(make_shared<ThtsEnvContext>()));
+        .WillOnce(Return(make_shared<ThtsContext>()));
     shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
     uct_manager->bias = 2.0;
-    shared_ptr<ThtsEnvContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
+    shared_ptr<ThtsContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
 
     // Mock random number generation
     EXPECT_CALL(*uct_manager, get_rand_int)
@@ -416,10 +416,10 @@ TEST(Uct_SelectAction, random_action) {
     shared_ptr<MockThtsEnv_ForUct> mock_env = make_shared<MockThtsEnv_ForUct>();
     EXPECT_CALL(*mock_env, sample_context_itfc)
         .Times(1)
-        .WillOnce(Return(make_shared<ThtsEnvContext>()));
+        .WillOnce(Return(make_shared<ThtsContext>()));
     shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
     uct_manager->bias = 2.0;
-    shared_ptr<ThtsEnvContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
+    shared_ptr<ThtsContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
 
     // Mock random number generation
     EXPECT_CALL(*uct_manager, get_rand_int)
@@ -474,10 +474,10 @@ TEST(Uct_SelectAction, epsilon_exploration) {
     shared_ptr<MockThtsEnv_ForUct> mock_env = make_shared<MockThtsEnv_ForUct>();
     EXPECT_CALL(*mock_env, sample_context_itfc)
         .Times(1)
-        .WillOnce(Return(make_shared<ThtsEnvContext>()));
+        .WillOnce(Return(make_shared<ThtsContext>()));
     shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
     uct_manager->bias = 2.0;
-    shared_ptr<ThtsEnvContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
+    shared_ptr<ThtsContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
 
     // Mock random number generation
     EXPECT_CALL(*uct_manager, get_rand_uniform)
@@ -527,11 +527,11 @@ TEST(Uct_RecommendAction, most_visited) {
     shared_ptr<MockThtsEnv_ForUct> mock_env = make_shared<MockThtsEnv_ForUct>();
     EXPECT_CALL(*mock_env, sample_context_itfc)
         .Times(1)
-        .WillOnce(Return(make_shared<ThtsEnvContext>()));
+        .WillOnce(Return(make_shared<ThtsContext>()));
     shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
     uct_manager->bias = 2.0;
     uct_manager->recommend_most_visited = true;
-    shared_ptr<ThtsEnvContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
+    shared_ptr<ThtsContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
 
     // Mock random number generation
     EXPECT_CALL(*uct_manager, get_rand_int)
@@ -575,11 +575,11 @@ TEST(Uct_RecommendAction, empirical_best) {
     shared_ptr<MockThtsEnv_ForUct> mock_env = make_shared<MockThtsEnv_ForUct>();
     EXPECT_CALL(*mock_env, sample_context_itfc)
         .Times(1)
-        .WillOnce(Return(make_shared<ThtsEnvContext>()));
+        .WillOnce(Return(make_shared<ThtsContext>()));
     shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
     uct_manager->bias = 2.0;
     uct_manager->recommend_most_visited = false;
-    shared_ptr<ThtsEnvContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
+    shared_ptr<ThtsContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
 
     // Mock random number generation
     EXPECT_CALL(*uct_manager, get_rand_int)

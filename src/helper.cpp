@@ -1,6 +1,6 @@
 #include "helper.h"
 
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_env.h"
 #include "thts_manager.h"
 
@@ -22,7 +22,7 @@ namespace thts::helper {
     double rollout_heuristic_fn(
         shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth) 
     {
-        ThtsEnvContext& ctx = *manager.get_thts_context();
+        ThtsContext& ctx = *manager.get_thts_context();
         int rollout_steps_left = manager.max_depth - depth;
         double rollout_reward = 0.0;
 

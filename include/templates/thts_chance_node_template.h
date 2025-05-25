@@ -30,7 +30,7 @@
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
 #include "thts_env.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_manager.h"
 
 #include <memory>
@@ -227,14 +227,14 @@ namespace thts {
          * casts.
          */
         public:
-            virtual void visit_itfc(ThtsEnvContext& ctx);
-            virtual std::shared_ptr<const Observation> sample_observation_itfc(ThtsEnvContext& ctx);
+            virtual void visit_itfc(ThtsContext& ctx);
+            virtual std::shared_ptr<const Observation> sample_observation_itfc(ThtsContext& ctx);
             virtual void backup_itfc(
                 const std::vector<double>& trial_rewards_before_node, 
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                ThtsEnvContext& ctx);
+                ThtsContext& ctx);
 
             virtual std::shared_ptr<ThtsDNode> create_child_node_helper_itfc(
                 std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state=nullptr) const;
@@ -360,12 +360,12 @@ namespace thts {
  * Boilerplate ThtsCNode interface implementation. Copied from thts_chance_node_template.h.
  */
 namespace thts {
-    void _CNode::visit_itfc(ThtsEnvContext& ctx) {
+    void _CNode::visit_itfc(ThtsContext& ctx) {
         _Context& ctx_itfc = (_Context&) ctx;
         visit(ctx_itfc);
     }
 
-    shared_ptr<const Observation> _CNode::sample_observation_itfc(ThtsEnvContext& ctx) {
+    shared_ptr<const Observation> _CNode::sample_observation_itfc(ThtsContext& ctx) {
         _Context& ctx_itfc = (_Context&) ctx;
         shared_ptr<const _O> obsv = sample_observation(ctx_itfc);
         return static_pointer_cast<const Observation>(obsv);
@@ -376,7 +376,7 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
         _Context& ctx_itfc = (_Context&) ctx;
         backup(

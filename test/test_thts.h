@@ -95,7 +95,7 @@ namespace thts::test {
             void run_selection_phase(
                 vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>>& nodes_to_backup, 
                 vector<double>& rewards, 
-                ThtsEnvContext& context,
+                ThtsContext& context,
                 int tid)
             {
                 ThtsPool::run_selection_phase(nodes_to_backup, rewards, context, tid);
@@ -103,7 +103,7 @@ namespace thts::test {
             void run_backup_phase(
                 vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>>& nodes_to_backup, 
                 vector<double>& rewards, 
-                ThtsEnvContext& context)
+                ThtsContext& context)
             {
                 ThtsPool::run_backup_phase(nodes_to_backup, rewards, context);
             }
@@ -134,12 +134,12 @@ namespace thts::test {
                     TestThtsDNode(thts_manager,state,decision_depth,decision_timestep) {}
 
             MOCK_METHOD(bool, is_sink, (), (const, override));
-            MOCK_METHOD(void, visit_itfc, (ThtsEnvContext&), (override));
-            MOCK_METHOD(shared_ptr<const Action>, select_action_itfc, (ThtsEnvContext&), (override));
+            MOCK_METHOD(void, visit_itfc, (ThtsContext&), (override));
+            MOCK_METHOD(shared_ptr<const Action>, select_action_itfc, (ThtsContext&), (override));
             MOCK_METHOD(
                 void, 
                 backup_itfc, 
-                (const vector<double>&,const vector<double>&,const double,const double,ThtsEnvContext&), 
+                (const vector<double>&,const vector<double>&,const double,const double,ThtsContext&), 
                 (override));
             MOCK_METHOD(
                 shared_ptr<ThtsCNode>, 
@@ -164,13 +164,13 @@ namespace thts::test {
                 int decision_timestep) :
                     TestThtsCNode(thts_manager,state,action,decision_depth,decision_timestep) {}
 
-            MOCK_METHOD(void, visit_itfc, (ThtsEnvContext&), (override));
+            MOCK_METHOD(void, visit_itfc, (ThtsContext&), (override));
             MOCK_METHOD(
-                shared_ptr<const Observation>, sample_observation_itfc, (ThtsEnvContext&), (override));
+                shared_ptr<const Observation>, sample_observation_itfc, (ThtsContext&), (override));
             MOCK_METHOD(
                 void, 
                 backup_itfc, 
-                (const vector<double>&,const vector<double>&,const double,const double,ThtsEnvContext&), 
+                (const vector<double>&,const vector<double>&,const double,const double,ThtsContext&), 
                 (override));
             MOCK_METHOD(
                 shared_ptr<ThtsDNode>, 
@@ -190,7 +190,7 @@ namespace thts::test {
             MOCK_METHOD(
                 double, 
                 get_reward_itfc, 
-                (shared_ptr<const State>,shared_ptr<const Action>,ThtsEnvContext&),
+                (shared_ptr<const State>,shared_ptr<const Action>,ThtsContext&),
                 (const, override));
     };
 

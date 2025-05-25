@@ -7,7 +7,7 @@
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
 #include "thts_env.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_manager.h"
 
 #include <memory>
@@ -55,7 +55,7 @@ namespace thts {
              * Returns:
              *      The sampled next state
              */
-            std::shared_ptr<const State> sample_observation_random(ThtsEnvContext& ctx);
+            std::shared_ptr<const State> sample_observation_random(ThtsContext& ctx);
 
             /**
              * Implements a soft backup for ments. (Average of child nodes values + immediate reward R(s,a))
@@ -87,7 +87,7 @@ namespace thts {
              * Args:
              *      ctx: A context provided to all thts functions throughout a trial to pass intermediate/transient info
              */
-            void visit(ThtsEnvContext& ctx);
+            void visit(ThtsContext& ctx);
             
             /**
              * Implements the thts sample_observation function for the node
@@ -98,7 +98,7 @@ namespace thts {
              * Returns:
              *      The sampled observation
              */
-            std::shared_ptr<const State> sample_observation(ThtsEnvContext& ctx);
+            std::shared_ptr<const State> sample_observation(ThtsContext& ctx);
             
             /**
              * Implements the thts backup function for the node
@@ -120,7 +120,7 @@ namespace thts {
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                ThtsEnvContext& ctx);
+                ThtsContext& ctx);
 
         protected:
             /**
@@ -221,14 +221,14 @@ namespace thts {
          * casts.
          */
         public:
-            virtual void visit_itfc(ThtsEnvContext& ctx);
-            virtual std::shared_ptr<const Observation> sample_observation_itfc(ThtsEnvContext& ctx);
+            virtual void visit_itfc(ThtsContext& ctx);
+            virtual std::shared_ptr<const Observation> sample_observation_itfc(ThtsContext& ctx);
             virtual void backup_itfc(
                 const std::vector<double>& trial_rewards_before_node, 
                 const std::vector<double>& trial_rewards_after_node, 
                 const double trial_cumulative_return_after_node, 
                 const double trial_cumulative_return,
-                ThtsEnvContext& ctx);
+                ThtsContext& ctx);
 
             virtual std::shared_ptr<ThtsDNode> create_child_node_helper_itfc(
                 std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state=nullptr) const;

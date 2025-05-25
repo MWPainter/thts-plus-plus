@@ -65,7 +65,7 @@ namespace thts::python {
     double MoPyMultiprocessingThtsEnv::get_reward_itfc(
         shared_ptr<const State> state, 
         shared_ptr<const Action> action, 
-        ThtsEnvContext& ctx) const 
+        ThtsContext& ctx) const 
     {
         return MoThtsEnv::get_reward_itfc(state, action, ctx);
     }
@@ -87,7 +87,7 @@ namespace thts::python {
     Eigen::ArrayXd MoPyMultiprocessingThtsEnv::get_mo_reward(
         shared_ptr<const PyState> state, 
         shared_ptr<const PyAction> action,
-        ThtsEnvContext& ctx) const 
+        ThtsContext& ctx) const 
     {
         shared_mem_wrapper->rpc_id = RPC_get_reward;
         shared_mem_wrapper->value_type = SMT_strings;
@@ -106,15 +106,15 @@ namespace thts::python {
     Eigen::ArrayXd MoPyMultiprocessingThtsEnv::get_mo_reward_itfc(
         shared_ptr<const State> state, 
         shared_ptr<const Action> action,
-        ThtsEnvContext& ctx) const
+        ThtsContext& ctx) const
     {
-        ThtsEnvContext& py_ctx = (ThtsEnvContext&) ctx;
+        ThtsContext& py_ctx = (ThtsContext&) ctx;
         shared_ptr<const PyState> state_itfc = static_pointer_cast<const PyState>(state);
         shared_ptr<const PyAction> action_itfc = static_pointer_cast<const PyAction>(action);
         return get_mo_reward(state_itfc, action_itfc, py_ctx); 
     }
      
-    shared_ptr<ThtsEnvContext> MoPyMultiprocessingThtsEnv::sample_context_itfc(
+    shared_ptr<ThtsContext> MoPyMultiprocessingThtsEnv::sample_context_itfc(
         int tid, RandManager& rand_manager) const 
     {
         return MoThtsEnv::sample_context_itfc(tid, rand_manager);  
@@ -133,13 +133,13 @@ namespace thts::python {
         return PyMultiprocessingThtsEnv::get_initial_state_itfc();
     }
     
-    bool MoPyMultiprocessingThtsEnv::is_sink_state_itfc(shared_ptr<const State> state, ThtsEnvContext& ctx) const
+    bool MoPyMultiprocessingThtsEnv::is_sink_state_itfc(shared_ptr<const State> state, ThtsContext& ctx) const
     {
         return PyMultiprocessingThtsEnv::is_sink_state_itfc(state, ctx);
     }
     
     shared_ptr<ActionVector> MoPyMultiprocessingThtsEnv::get_valid_actions_itfc(
-        shared_ptr<const State> state, ThtsEnvContext& ctx) const
+        shared_ptr<const State> state, ThtsContext& ctx) const
     {
         return PyMultiprocessingThtsEnv::get_valid_actions_itfc(state, ctx);
     }
@@ -147,7 +147,7 @@ namespace thts::python {
     shared_ptr<StateDistr> MoPyMultiprocessingThtsEnv::get_transition_distribution_itfc(
         shared_ptr<const State> state, 
         shared_ptr<const Action> action, 
-        ThtsEnvContext& ctx) const
+        ThtsContext& ctx) const
     {
         return PyMultiprocessingThtsEnv::get_transition_distribution_itfc(state, action, ctx);
     }
@@ -156,7 +156,7 @@ namespace thts::python {
         shared_ptr<const State> state, 
         shared_ptr<const Action> action, 
             RandManager& rand_manager, 
-            ThtsEnvContext& ctx) const
+            ThtsContext& ctx) const
     {
         return PyMultiprocessingThtsEnv::sample_transition_distribution_itfc(state, action, rand_manager, ctx);
     }
@@ -164,7 +164,7 @@ namespace thts::python {
     shared_ptr<ObservationDistr> MoPyMultiprocessingThtsEnv::get_observation_distribution_itfc(
         shared_ptr<const Action> action, 
         shared_ptr<const State> next_state, 
-        ThtsEnvContext& ctx) const
+        ThtsContext& ctx) const
     {
         return PyMultiprocessingThtsEnv::get_observation_distribution_itfc(action, next_state, ctx);
     }
@@ -173,7 +173,7 @@ namespace thts::python {
         shared_ptr<const Action> action, 
         shared_ptr<const State> next_state, 
             RandManager& rand_manager, 
-            ThtsEnvContext& ctx) const
+            ThtsContext& ctx) const
     {
         return PyMultiprocessingThtsEnv::sample_observation_distribution_itfc(action, next_state, rand_manager, ctx);
     }

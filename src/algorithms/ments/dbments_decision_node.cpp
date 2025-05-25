@@ -22,7 +22,7 @@ namespace thts {
     /**
      * Call both ments and dp visit functions
      */
-    void DBMentsDNode::visit(ThtsEnvContext& ctx) {
+    void DBMentsDNode::visit(ThtsContext& ctx) {
         MentsDNode::visit(ctx);
         DPDNode::visit_dp(is_leaf());
     }
@@ -44,7 +44,7 @@ namespace thts {
     /**
      * Implements recommend action to call best dp value
     */
-    shared_ptr<const Action> DBMentsDNode::recommend_action(ThtsEnvContext& ctx) const {
+    shared_ptr<const Action> DBMentsDNode::recommend_action(ThtsContext& ctx) const {
         MentsManager& manager = (MentsManager&) *thts_manager;
         if (manager.recommend_most_visited) {
             return recommend_action_most_visited();
@@ -62,7 +62,7 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
         backup_soft(ctx);
         backup_dp<DBMentsCNode>(children, is_opponent());

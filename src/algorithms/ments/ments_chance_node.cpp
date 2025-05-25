@@ -33,14 +33,14 @@ namespace thts {
     /**
      * Visit just needs to increment num_visits.
      */
-    void MentsCNode::visit(ThtsEnvContext& ctx) {
+    void MentsCNode::visit(ThtsContext& ctx) {
         ThtsCNode::visit_itfc(ctx);
     }
 
     /**
      * Implementation of sample_observation, that uses the sample from distribution helper function.
      */
-    shared_ptr<const State> MentsCNode::sample_observation_random(ThtsEnvContext& ctx) {
+    shared_ptr<const State> MentsCNode::sample_observation_random(ThtsContext& ctx) {
         // shared_ptr<const State> sampled_state = helper::sample_from_distribution(*next_state_distr, *thts_manager);
         shared_ptr<const State> sampled_state = thts_manager->thts_env()->sample_transition_distribution_itfc(
             state, action, *thts_manager, ctx);
@@ -53,7 +53,7 @@ namespace thts {
     /**
      * Sample observation calls sample_observation_random.
      */
-    shared_ptr<const State> MentsCNode::sample_observation(ThtsEnvContext& ctx) {
+    shared_ptr<const State> MentsCNode::sample_observation(ThtsContext& ctx) {
         return sample_observation_random(ctx);
     }
 
@@ -100,7 +100,7 @@ namespace thts {
         const std::vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx)
+        ThtsContext& ctx)
     {   
         backup_soft();
     }
@@ -157,13 +157,13 @@ namespace thts {
  * Boilerplate ThtsCNode interface implementation. Copied from thts_chance_node_template.h.
  */
 namespace thts {
-    void MentsCNode::visit_itfc(ThtsEnvContext& ctx) {
-        ThtsEnvContext& ctx_itfc = (ThtsEnvContext&) ctx;
+    void MentsCNode::visit_itfc(ThtsContext& ctx) {
+        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
         visit(ctx_itfc);
     }
 
-    shared_ptr<const Observation> MentsCNode::sample_observation_itfc(ThtsEnvContext& ctx) {
-        ThtsEnvContext& ctx_itfc = (ThtsEnvContext&) ctx;
+    shared_ptr<const Observation> MentsCNode::sample_observation_itfc(ThtsContext& ctx) {
+        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
         shared_ptr<const State> obsv = sample_observation(ctx_itfc);
         return static_pointer_cast<const Observation>(obsv);
     }
@@ -173,9 +173,9 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
-        ThtsEnvContext& ctx_itfc = (ThtsEnvContext&) ctx;
+        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
         backup(
             trial_rewards_before_node, 
             trial_rewards_after_node, 

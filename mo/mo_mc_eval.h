@@ -10,13 +10,15 @@ namespace thts {
     /**
      * MO MC Evaluator
     */
-    class MoMCEvaluator : virtual public MCEvaluator {
+    class MoMCEvaluator : public MCEvaluator {
         protected:
             std::vector<Vec> mo_sampled_returns;
             std::vector<double> sampled_ctx_returns;
             std::vector<double> sampled_normalised_ctx_returns;
             Vec r_min;
             Vec r_max;
+            bool well_spaced_eval;
+            std::vector<Vec> context_weights;
 
             /**
              * Runs a single rollout and stores the result in 'sampled_returns'.
@@ -31,9 +33,15 @@ namespace thts {
                 int max_trial_length,
                 std::shared_ptr<MoThtsManager> manager,
                 Vec r_min,
-                Vec r_max);
+                Vec r_max,
+                bool well_spaced_eval=false);
             
             virtual ~MoMCEvaluator() = default;
+
+            /**
+             * Override of run rollouts
+            */
+            virtual void run_rollouts(int num_rollouts, int num_threads) override;
 
             /**
              * Returns the mean return of 'sampled_returns'

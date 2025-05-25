@@ -64,7 +64,7 @@ TEST(Env_MdpImplementation, test_interaction_as_expected)
         .Times(0);
 
     // init state
-    ThtsEnvContext ctx;
+    ThtsContext ctx;
     shared_ptr<const IntPairState> init_state = env.get_initial_state();
     EXPECT_EQ(init_state->state.first, 0);
     EXPECT_EQ(init_state->state.second, 0);
@@ -160,7 +160,7 @@ TEST(Env_MdpImplementation, test_interface_interaction_as_expected)
         .Times(0);
 
     // init state
-    ThtsEnvContext ctx;
+    ThtsContext ctx;
     shared_ptr<const State> init_state_itfc = env.get_initial_state_itfc();
     shared_ptr<const IntPairState> init_state = static_pointer_cast<const IntPairState>(init_state_itfc);
     EXPECT_EQ(init_state->state.first, 0);
@@ -280,7 +280,7 @@ TEST(Env_MdpImplementation, todo__test_get_transition_distribution__todo_fix_tht
     TestThtsEnv stoch_env(1,0.25);
 
     // deterministic get transition distr
-    ThtsEnvContext ctx;
+    ThtsContext ctx;
     shared_ptr<IntPairStateDistr> deter_distr_ptr = deter_env.get_transition_distribution(init_state, r_act, ctx);
     IntPairStateDistr& deter_distr = *deter_distr_ptr;
     EXPECT_EQ(deter_distr[r_state], 1.0); // this doesnt work

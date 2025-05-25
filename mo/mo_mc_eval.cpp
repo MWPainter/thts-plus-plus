@@ -15,13 +15,16 @@ namespace thts {
         int max_trial_length, 
         shared_ptr<MoThtsManager> manager,
         Vec r_min,
-        Vec r_max) :
+        Vec r_max,
+        bool well_spaced_eval) :
             MCEvaluator(policy,max_trial_length,manager),
             mo_sampled_returns(),
             sampled_ctx_returns(),
             sampled_normalised_ctx_returns(),
             r_min(r_min),
-            r_max(r_max)
+            r_max(r_max),
+            well_spaced_eval(well_spaced_eval),
+            context_weights()
     {
     }
 
@@ -29,6 +32,12 @@ namespace thts {
      * Runs a single rollout and stores the result in 'sampled_returns'.
     */
     void MoMCEvaluator::run_rollout(int thread_id, EvalPolicy& thread_policy) {
+        // Get context for this rollout
+        lock.lock();
+        Vec context_vec = context_weights.back();
+        context_weights.pop_back();
+        lock.unlock();
+
         // Reset
         shared_ptr<MoThtsEnv> thts_env = dynamic_pointer_cast<MoThtsEnv>(manager->thts_env(thread_id));
         thread_policy.reset();
@@ -37,9 +46,11 @@ namespace thts {
         // Bookkeeping
         int num_actions_taken = 0;
         Vec mo_sample_return = Vec(thts_env->get_reward_dim(), 0.0);
-        // MoThtsContext& context = (MoThtsContext&) *thts_env.sample_context_itfc(thread_id, *manager);
-        shared_ptr<MoThtsContext> mo_context = static_pointer_cast<MoThtsContext>(
-            thts_env->sample_context_itfc(thread_id, *manager));
+
+        // Start trial
+        // shared_ptr<MoThtsContext> mo_context = static_pointer_cast<MoThtsContext>(
+        //     thts_env->sample_context_itfc(thread_id, *manager));
+        shared_ptr<MoThtsContext> mo_context = make_shared<MoThtsContext>(context_vec);
         manager->register_thts_context(thread_id, mo_context);
         shared_ptr<const State> state = thts_env->get_initial_state_itfc();
 
@@ -56,7 +67,7 @@ namespace thts {
             state = next_state;
         }
 
-        // store
+        // store rollout result
         double contextual_return = mo_sample_return.dot(mo_context->context_weight);
         Vec normalised_sample_return = (mo_sample_return - r_min) / (r_max - r_min);
         double normalised_contextual_return = normalised_sample_return.dot(mo_context->context_weight);
@@ -64,6 +75,29 @@ namespace thts {
         mo_sampled_returns.push_back(mo_sample_return);
         sampled_ctx_returns.push_back(contextual_return);
         sampled_normalised_ctx_returns.push_back(normalised_contextual_return);
+    }
+
+    /**
+     * Fill out context weights, and then call MCEvaluator version
+     */
+    void MoMCEvaluator::run_rollouts(int num_rollouts, int num_threads) 
+    {
+        context_weights.clear();
+        context_weights.reserve(num_rollouts);
+        int dim = r_max.vec.size();
+        if (well_spaced_eval) {
+            vector<Eigen::ArrayXd> well_spaced_vectors = thts::helper::get_well_spaced_simplex_points(num_rollouts,dim);
+            for (Eigen::ArrayXd& vec_arr : well_spaced_vectors) {
+                context_weights.push_back(vec_arr);
+            }
+        } else {
+            for (int i=0; i<num_rollouts; i++) {
+                RandManager rand_manager;
+                context_weights.push_back(thts::helper::sample_uniform_random_simplex_vector(rand_manager,dim));
+            }
+        }
+
+        MCEvaluator::run_rollouts(num_rollouts, num_threads);
     }
 
     Vec MoMCEvaluator::get_mean_mo_return() 

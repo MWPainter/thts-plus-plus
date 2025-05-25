@@ -31,7 +31,7 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
         avg_return = 0.0;
         double sum_child_backups = 0;
@@ -94,9 +94,9 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
-        ThtsEnvContext& ctx_itfc = (ThtsEnvContext&) ctx;
+        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
         backup(
             trial_rewards_before_node, 
             trial_rewards_after_node, 

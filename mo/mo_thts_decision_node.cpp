@@ -33,13 +33,13 @@ namespace thts {
         }
     }
 
-    void MoThtsDNode::visit_itfc(ThtsEnvContext& ctx) {
+    void MoThtsDNode::visit_itfc(ThtsContext& ctx) {
         ThtsDNode::visit_itfc(ctx);
         MoThtsContext& mo_ctx = (MoThtsContext&) ctx;
         vector_visit_count += mo_ctx.context_weight;
     }
 
-    double MoThtsDNode::get_num_visits(ThtsEnvContext& ctx) const {
+    double MoThtsDNode::get_num_visits(ThtsContext& ctx) const {
         MoThtsManager& mo_thts_manager = (MoThtsManager&) *thts_manager;
         MoThtsContext& mo_ctx = (MoThtsContext&) ctx;
         if (mo_thts_manager.use_vector_visit_counts) {
@@ -64,8 +64,16 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
         throw runtime_error("Called single objective backup function for multi objective node");
+    }
+
+    /**
+     * Get an (approximate) convex hull from this node
+     */
+    ConvexHull MoThtsDNode::get_convex_hull() const 
+    {
+        throw runtime_error("Calling MoThtsDNode::get_convex_hull, has this been overriden in algorithm trying to use?");
     }
 }

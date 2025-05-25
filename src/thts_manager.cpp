@@ -78,7 +78,7 @@ namespace thts {
     /**
      * Register the thts context 'ctx' with thts thread id 'tid'
     */
-    void ThtsManager::register_thts_context(int tid, std::shared_ptr<ThtsEnvContext> ctx) {
+    void ThtsManager::register_thts_context(int tid, std::shared_ptr<ThtsContext> ctx) {
         unique_lock<shared_mutex> writer_lg(thts_context_map_lock);
         thts_context_map[tid] = ctx;
     }
@@ -86,7 +86,7 @@ namespace thts {
     /**
      * Gets the current thts context for the calling thread
     */
-    std::shared_ptr<ThtsEnvContext> ThtsManager::get_thts_context() {
+    std::shared_ptr<ThtsContext> ThtsManager::get_thts_context() {
         int tid = get_thts_thread_id();
         return get_thts_context(tid);
     }
@@ -95,10 +95,10 @@ namespace thts {
     /**
      * Gets the current thts context for the calling thread
     */
-    std::shared_ptr<ThtsEnvContext> ThtsManager::get_thts_context(int tid) {
+    std::shared_ptr<ThtsContext> ThtsManager::get_thts_context(int tid) {
         shared_lock<shared_mutex> reader_lg(thts_context_map_lock);
         if (!thts_context_map.contains(tid)) {
-            return make_shared<ThtsEnvContext>();
+            return make_shared<ThtsContext>();
         }
         return thts_context_map[tid];
     }

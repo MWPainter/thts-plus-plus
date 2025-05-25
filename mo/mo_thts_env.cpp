@@ -34,7 +34,7 @@ namespace thts {
     double MoThtsEnv::get_reward_itfc(
         std::shared_ptr<const State> state, 
         std::shared_ptr<const Action> action,
-        ThtsEnvContext& ctx) const 
+        ThtsContext& ctx) const 
     {
         throw runtime_error("Shouldn't call get_reward_itfc from a multi-objective env.");
     }
@@ -42,7 +42,7 @@ namespace thts {
     /**
      * Mo Contexts
     */
-    shared_ptr<ThtsEnvContext> MoThtsEnv::sample_context_itfc(int tid, RandManager& rand_manager) const {
+    shared_ptr<ThtsContext> MoThtsEnv::sample_context_itfc(int tid, RandManager& rand_manager) const {
         MoThtsManager& mo_manager = (MoThtsManager&) rand_manager;
         return make_shared<MoThtsContext>(mo_manager);
     }

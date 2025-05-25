@@ -1064,6 +1064,15 @@ namespace thts {
         ss << "}" << endl;
         return ss.str();
     }
+
+    /**
+     * Gets an approximate convex hull from this ball list
+     */
+    ConvexHull SimplexMap::get_approximate_convex_hull() const 
+    {
+        throw runtime_error("Approximate convex hull from simplex map not written yet");
+        return ConvexHull();
+    }
 }
 
 

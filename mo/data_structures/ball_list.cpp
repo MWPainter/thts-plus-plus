@@ -248,4 +248,13 @@ namespace thts {
         chosen_ball->set_value(value);
     }
 
+    /**
+     * Gets an approximate convex hull from this ball list
+     */
+    ConvexHull CzBallList::get_approximate_convex_hull() const 
+    {
+        throw runtime_error("Approximate convex hull from ball list not written yet");
+        return ConvexHull();
+    }
+
 }

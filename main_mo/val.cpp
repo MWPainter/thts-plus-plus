@@ -7,7 +7,7 @@
 #include "algorithms/uct/uct_manager.h"
 #include "py/test_env.h"
 #include "thts.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 
 // test 1
 #include "algorithms/est/est_decision_node.h"

@@ -6,7 +6,7 @@
 
 #include "algorithms/ments/ments_decision_node.h"
 #include "thts_env.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_manager.h"
 
 #include <memory>
@@ -54,7 +54,7 @@ namespace thts {
              *      The action distribution the parent node used, or, nullptr if this node has no parent decision node 
              *      (i.e. it is the root node/top level node)
             */
-            std::shared_ptr<ActionDistr> get_parent_distr_from_context(ThtsEnvContext& ctx) const;
+            std::shared_ptr<ActionDistr> get_parent_distr_from_context(ThtsContext& ctx) const;
 
             /**
              * Puts the action distribution for this node into the thts env context
@@ -63,7 +63,7 @@ namespace thts {
              *      action_distr: The distribution over actions computed in the select action phase to be stored
              *      ctx: A thts env context to store the distribution
             */
-           void put_node_distr_in_context(std::shared_ptr<ActionDistr> action_distr, ThtsEnvContext& ctx) const;
+           void put_node_distr_in_context(std::shared_ptr<ActionDistr> action_distr, ThtsContext& ctx) const;
 
            /**
             * Get prob from parent distribution (handling boundary cases at the root node)
@@ -104,7 +104,7 @@ namespace thts {
                 ActionDistr& action_weights, 
                 double& sum_action_weights, 
                 double& normalisation_term, 
-                ThtsEnvContext& context) const;
+                ThtsContext& context) const;
 
             /**
              * Implements select_action for rents.
@@ -118,7 +118,7 @@ namespace thts {
              * Returns:
              *      The action selected.
              */
-            std::shared_ptr<const Action> select_action_rents(ThtsEnvContext& ctx);
+            std::shared_ptr<const Action> select_action_rents(ThtsContext& ctx);
 
 
 
@@ -149,7 +149,7 @@ namespace thts {
              * Returns:
              *      The selected action
              */
-            virtual std::shared_ptr<const Action> select_action(ThtsEnvContext& ctx);
+            virtual std::shared_ptr<const Action> select_action(ThtsContext& ctx);
 
         protected:
             /**

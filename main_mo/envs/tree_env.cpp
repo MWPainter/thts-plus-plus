@@ -9,6 +9,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/embed.h>
 
+#include <mo/mo_helper.h>
+
 using namespace std; 
 namespace py = pybind11;
 
@@ -19,9 +21,8 @@ namespace thts {
         num_actions(num_actions),
         tree_depth(tree_depth),
         sparse(sparse),
-        reward_vectors()
+        reward_vectors(thts::helper::get_well_spaced_hyperphere_points(num_actions,num_rewards))
     {
-        load_cached_rewards(num_rewards, num_actions);
     }
 
     ToyTreeEnv::ToyTreeEnv(const ToyTreeEnv& other) :
@@ -35,52 +36,6 @@ namespace thts {
 
     shared_ptr<ThtsEnv> ToyTreeEnv::clone() {
         return std::dynamic_pointer_cast<ThtsEnv>(std::make_shared<ToyTreeEnv>(*this));
-    }
-
-    /**
-     * Reserves space for reward vectors
-     * Checks if file exists (and if not called generate_cached_rewards)
-     * Open file and read in vectors
-     */
-    void ToyTreeEnv::load_cached_rewards(int num_rewards, int num_actions)
-    {
-        reward_vectors.reserve(num_actions);
-
-        string filepath = "util/cached_hypersphere_points/" 
-            + to_string(num_rewards) + "dim/" 
-            + to_string(num_actions) + "points.txt";
-        if (!filesystem::exists(filepath)) {
-            generate_cached_rewards(num_rewards, num_actions);
-        }
-
-        ifstream cache_file(filepath);
-        string line;
-        while (getline(cache_file,line)) {
-            vector<string> vec_as_string = thts::helper::string_split(line);
-            Eigen::ArrayXd vec(num_rewards);
-            for (int i=0; i<num_rewards; i++) {
-                vec[i] = stod(vec_as_string[i]);
-            }
-            reward_vectors.push_back(vec);
-        }
-    }
-
-    /**
-     * Calls the 'generate_and_cache_hypersphere_points(num_points, dim)' function in 
-     * 'util/generate_well_spaced_vectors.py' file
-     */
-    void ToyTreeEnv::generate_cached_rewards(int num_rewards, int num_actions)
-    {
-        cout << "In ToyTreeEnv: loading env with " << num_actions << " many actions and rewards with dim " 
-            << num_rewards << " for the first time. Running python script to generate well spaced points and cache"
-            << " them." << endl;
-
-        py::gil_scoped_acquire acquire;
-        py::module_ py_module = py::module_::import("util.generate_well_spaced_vectors");
-        py::object py_gen_and_cache_points_fn = py_module.attr("generate_and_cache_hypersphere_points");
-        py_gen_and_cache_points_fn(num_actions, num_rewards);
-        
-        cout << "In ToyTreeEnv: finished generating and caching points from python script." << endl;
     }
 
     /**
@@ -166,14 +121,14 @@ namespace thts {
         return static_pointer_cast<const State>(init_state);
     }
 
-    bool ToyTreeEnv::is_sink_state_itfc(shared_ptr<const State> state, ThtsEnvContext& ctx) const 
+    bool ToyTreeEnv::is_sink_state_itfc(shared_ptr<const State> state, ThtsContext& ctx) const 
     {
         shared_ptr<const IntVectorState> state_itfc = static_pointer_cast<const IntVectorState>(state);
         return is_sink_state(state_itfc);
     }
 
     shared_ptr<ActionVector> ToyTreeEnv::get_valid_actions_itfc(
-        shared_ptr<const State> state, ThtsEnvContext& ctx) const 
+        shared_ptr<const State> state, ThtsContext& ctx) const 
     {
         shared_ptr<const IntVectorState> state_itfc = static_pointer_cast<const IntVectorState>(state);
         shared_ptr<vector<shared_ptr<const IntAction>>> valid_actions_itfc = get_valid_actions(state_itfc);
@@ -186,7 +141,7 @@ namespace thts {
     }
 
     shared_ptr<StateDistr> ToyTreeEnv::get_transition_distribution_itfc(
-        shared_ptr<const State> state, shared_ptr<const Action> action, ThtsEnvContext& ctx) const 
+        shared_ptr<const State> state, shared_ptr<const Action> action, ThtsContext& ctx) const 
     {
         shared_ptr<const IntVectorState> state_itfc = static_pointer_cast<const IntVectorState>(state);
         shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);
@@ -205,7 +160,7 @@ namespace thts {
        shared_ptr<const State> state, 
        shared_ptr<const Action> action, 
        RandManager& rand_manager, 
-       ThtsEnvContext& ctx) const 
+       ThtsContext& ctx) const 
     {
         shared_ptr<const IntVectorState> state_itfc = static_pointer_cast<const IntVectorState>(state);
         shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);
@@ -216,7 +171,7 @@ namespace thts {
     Eigen::ArrayXd ToyTreeEnv::get_mo_reward_itfc(
         shared_ptr<const State> state, 
         shared_ptr<const Action> action,
-        ThtsEnvContext& ctx) const
+        ThtsContext& ctx) const
     {
         shared_ptr<const IntVectorState> state_itfc = static_pointer_cast<const IntVectorState>(state);
         shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);

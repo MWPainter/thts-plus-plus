@@ -128,7 +128,7 @@ namespace thts {
         ActionDistr& action_weights, 
         double& sum_action_weights, 
         double& normalisation_term, 
-        ThtsEnvContext& context) const
+        ThtsContext& context) const
     {
         sum_action_weights = 0.0;
         normalisation_term = 0.0;
@@ -163,7 +163,7 @@ namespace thts {
      * Calls the ments implementation of select action and stores the action in the context at 
      * "{decision_depth}" -> selected_action
      */
-    shared_ptr<const Action> TentsDNode::select_action(ThtsEnvContext& ctx) {
+    shared_ptr<const Action> TentsDNode::select_action(ThtsContext& ctx) {
         shared_ptr<const Action> selected_action = select_action_ments(ctx);
         ctx.put_value_const(_selected_action_key, selected_action);
         return selected_action;
@@ -174,7 +174,7 @@ namespace thts {
      * Get q_value (possibly from child)
      * Update value in map
     */
-   void TentsDNode::backup_update_map(ThtsEnvContext& ctx) {
+   void TentsDNode::backup_update_map(ThtsContext& ctx) {
         shared_ptr<const Action> selected_action = ctx.get_value_ptr_const<Action>(_selected_action_key);
         double new_q_value;
 
@@ -196,7 +196,7 @@ namespace thts {
      * to negate again, so that values are stored w.r.t. the first player.
      * And remember to increment number of backups!
     */
-   void TentsDNode::backup_tents(ThtsEnvContext& ctx) {
+   void TentsDNode::backup_tents(ThtsContext& ctx) {
         num_backups++;
 
         backup_update_map(ctx);
@@ -214,7 +214,7 @@ namespace thts {
         const vector<double>& trial_rewards_after_node, 
         const double trial_cumulative_return_after_node, 
         const double trial_cumulative_return,
-        ThtsEnvContext& ctx) 
+        ThtsContext& ctx) 
     {
         backup_tents(ctx);
     }

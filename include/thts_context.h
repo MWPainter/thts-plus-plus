@@ -16,7 +16,7 @@ namespace thts {
      *    context: A mapping from string keys to abitrary void* pointers for arbitrary data store.
      *    context_const: Same as context, but for const void* pointers.
      */
-     class ThtsEnvContext {
+     class ThtsContext {
 
           private:
                std::unordered_map<std::string, std::shared_ptr<void>> context;
@@ -26,7 +26,7 @@ namespace thts {
                /**
                 * Mark destructor virtual in case class is inherited from
                 */
-               virtual ~ThtsEnvContext() = default;
+               virtual ~ThtsContext() = default;
 
                /**
                 * Gets a value from this context for a given key string.

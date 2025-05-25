@@ -2,7 +2,7 @@
 
 #include "thts_chance_node.h"
 #include "thts_decision_node.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_manager.h"
 
 
@@ -28,16 +28,16 @@ namespace thts::test{
                 int decision_timestep) :
                     ThtsDNode(thts_manager,state,decision_depth,decision_timestep) {}
 
-            shared_ptr<const Action> select_action_itfc(ThtsEnvContext& ctx) { return nullptr; }
+            shared_ptr<const Action> select_action_itfc(ThtsContext& ctx) { return nullptr; }
 
-            shared_ptr<const Action> recommend_action_itfc(ThtsEnvContext& ctx) const { return nullptr; }
+            shared_ptr<const Action> recommend_action_itfc(ThtsContext& ctx) const { return nullptr; }
 
             void backup_itfc(
                     const vector<double>& trial_rewards_before_node, 
                     const vector<double>& trial_rewards_after_node, 
                     const double trial_cumulative_return_after_node, 
                     const double trial_cumulative_return,
-                    ThtsEnvContext& ctx) {}
+                    ThtsContext& ctx) {}
 
             bool is_leaf() { return false; }
 
@@ -71,14 +71,14 @@ namespace thts::test{
                 int decision_timestep) :
                     ThtsCNode(thts_manager,state,action,decision_depth,decision_timestep) {}
 
-            shared_ptr<const Observation> sample_observation_itfc(ThtsEnvContext& ctx) { return nullptr; }
+            shared_ptr<const Observation> sample_observation_itfc(ThtsContext& ctx) { return nullptr; }
 
             void backup_itfc(
                     const vector<double>& trial_rewards_before_node, 
                     const vector<double>& trial_rewards_after_node, 
                     const double trial_cumulative_return_after_node, 
                     const double trial_cumulative_return,
-                    ThtsEnvContext& ctx) {}
+                    ThtsContext& ctx) {}
 
             shared_ptr<const State> compute_next_state_from_observation_itfc(
                 shared_ptr<const Observation> observation) const 

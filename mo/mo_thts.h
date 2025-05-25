@@ -1,7 +1,7 @@
 #pragma once
 
 #include "thts.h"
-#include "thts_env_context.h"
+#include "thts_context.h"
 #include "thts_logger.h"
 #include "thts_manager.h"
 #include "mo/mo_thts_decision_node.h"
@@ -67,7 +67,7 @@ namespace thts {
             void run_selection_phase(
                 std::vector<std::pair<std::shared_ptr<ThtsDNode>,std::shared_ptr<ThtsCNode>>>& nodes_to_backup, 
                 std::vector<Eigen::ArrayXd>& rewards, 
-                ThtsEnvContext& context,
+                ThtsContext& context,
                 int tid);
 
             /**
@@ -81,7 +81,7 @@ namespace thts {
             void run_backup_phase(
                 std::vector<std::pair<std::shared_ptr<ThtsDNode>,std::shared_ptr<ThtsCNode>>>& nodes_to_backup, 
                 std::vector<Eigen::ArrayXd>& rewards, 
-                ThtsEnvContext& context);
+                ThtsContext& context);
 
             /**
              * Performs a single thts trial. Called by worker_fn.
