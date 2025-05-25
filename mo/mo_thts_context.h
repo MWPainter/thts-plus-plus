@@ -1,9 +1,10 @@
 #pragma once
 
+#include "thts_context.h"
+
 #include "mo/mo_thts_manager.h"
 #include "mo/mo_thts_types.h"
 #include "mo/mo_helper.h"
-#include "thts_context.h"
 
 #include <Eigen/Dense>
 
