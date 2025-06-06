@@ -40,6 +40,8 @@ namespace thts {
         const Eigen::ArrayXd trial_cumulative_return,
         MoThtsContext& ctx)
     {
+        increment_and_update_backup_count();
+        
         // compute total backups from children
         int total_child_backups = 0;
         for (pair<const shared_ptr<const Observation>,shared_ptr<ThtsDNode>>& child_pair : children) {
@@ -68,6 +70,10 @@ namespace thts {
 
         // remember to incr num_backups
         num_backups++;
+    }
+
+    double ChThtsCNode::get_contextual_q_value(const MoThtsContext& ctx) {
+        return convex_hull.get_max_linear_utility(ctx.context_weight);
     }
 
     string ChThtsCNode::get_convex_hull_pretty_print_string() const {

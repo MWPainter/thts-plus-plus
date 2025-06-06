@@ -150,11 +150,11 @@ namespace thts {
 
         cout << "CZT evaluations from MoMCEval." << endl;
         cout << "Mean MO return." << endl;
-        cout << mo_mc_eval.get_mean_mo_return() << endl;
+        cout << mo_mc_eval.get_mo_return_mean() << endl;
         cout << "Mean MO ctx return." << endl;
-        cout << mo_mc_eval.get_mean_mo_ctx_return() << endl;
+        cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
         cout << "Mean MO normalised ctx return." << endl;
-        cout << mo_mc_eval.get_mean_mo_normalised_ctx_return() << endl;
+        cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
     }
 
     /**

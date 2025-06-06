@@ -250,11 +250,20 @@ namespace thts {
 
     /**
      * Gets an approximate convex hull from this ball list
+     * 
+     * Just going to put all of the MO values stored in balls into the convex hull and let it prune and do its thing
+     * Bit concerned with some values being vewry old/stale leading to innaccurate values
+     * Also about there being a lot fo values and lots of randomness leading to a maximisation bias
+     * But going to just try it and see if it works
      */
     ConvexHull CzBallList::get_approximate_convex_hull() const 
     {
-        throw runtime_error("Approximate convex hull from ball list not written yet");
-        return ConvexHull();
+        unordered_set<Vec> ball_avg_returns;
+        for (shared_ptr<CzBall> ball : *get_all_balls()) {
+            lock_guard<mutex> lg(ball->stats_lock);
+            ball_avg_returns.insert(ball->avg_return_or_value);
+        }
+        return ConvexHull(ball_avg_returns);
     }
 
 }

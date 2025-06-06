@@ -446,6 +446,17 @@ namespace thts {
     }
 
     /**
+     * Get the dimension of vectors in the convex hull, assuming it's not empty
+     * Returns -1 if it is empty
+     */
+    int ConvexHull::reward_dim() const {
+        if (ch_points.size() == 0) {
+            return -1;
+        }
+        return ch_points.begin()->dim();
+    }
+
+    /**
      * Copied from mo/pareto_front.cc
     */
     size_t ConvexHull::size() const {
@@ -592,6 +603,11 @@ namespace thts {
      */
     double ConvexHull::hypervolume(const Vec& ref_point) const
     {
+        // If no points, then no hypervolume
+        if (ch_points.size() == 0) {
+            return 0.0;
+        }
+
         // Check that the reference point is weakly dominated by all points in the convex hull
         for (const Vec& point : ch_points) {
             if (!point.weakly_pareto_dominates(ref_point)) {
@@ -640,7 +656,82 @@ namespace thts {
      */
     double ConvexHull::sparsity_metric() const
     {
-        throw runtime_error("Yet to implement sparsity_metric");
+        size_t num_points = size();
+        if (num_points < 2) {
+            return 0.0;
+        }
+        int rew_dim = reward_dim();
+        vector<double> dim_j_values;
+        dim_j_values.reserve(num_points);
+        for (size_t i=0; i < num_points; i++) {
+            dim_j_values.push_back(0.0);
+        }
+        double sparsity_sum = 0.0;
+        for (int j=0; j < rew_dim; j++) {
+            // put values for dim j into array
+            size_t i=0;
+            for (const Vec& v : ch_points) {
+                dim_j_values[i++] = v.vec[j];
+            }
+            // sort array
+            std::sort(dim_j_values.begin(), dim_j_values.end());
+            // compute sparsity sum term for this dimension
+            for (i=0; i < num_points-1; i++) {
+                double diff = dim_j_values[i] - dim_j_values[i+1];
+                sparsity_sum +=  diff * diff / (num_points - 1.0);
+            }
+        }
+        return sparsity_sum;
+    }
+
+    /**
+     * Minimum delta such that u+delta >= v
+     */
+    double min_shift_to_pareto_dominate(const Vec& u, const Vec& v) 
+    {
+        Vec diff = v-u;
+        double min_delta = 0.0;
+        for (int i=0; i<diff.dim(); i++) {
+            if (diff.vec[i] > min_delta) {
+                min_delta = diff.vec[i];
+            }
+        }
+        return min_delta;
+    }
+
+    /**
+     * See defn in here https://arxiv.org/pdf/2103.09568
+     * For each point in convex hull
+     * Find the minimum 'shift' required by some point for it to be dominated
+     * The result is then the maximum over the outer loop of points
+     * 
+     * So inner loop = find minimum shift for another point to be able to dominate this point
+     * Then we want to find the minimum shift such that all points can be dominated like that
+     * Which is the maximum in the outer loop
+     */
+    double ConvexHull::additive_eps_metric() const 
+    {
+        size_t num_points = ch_points.size();
+        if (num_points < 2) {
+            return 0.0;
+        }
+        double eps = numeric_limits<double>::lowest();
+        for (const Vec& v : ch_points) {
+            double min_delta = numeric_limits<double>::max();
+            for (const Vec& u : ch_points) {
+                if (u == v) {
+                    continue;
+                }
+                double delta = min_shift_to_pareto_dominate(u,v);
+                if (delta < min_delta) {
+                    min_delta = delta;
+                }
+            }
+            if (min_delta > eps) {
+                eps = min_delta;
+            }
+        }
+        return eps;
     }
 
     /**

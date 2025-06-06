@@ -46,17 +46,17 @@ namespace thts {
             /**
              * Returns the mean return of 'sampled_returns'
             */
-            Vec get_mean_mo_return();
-            double get_mean_mo_return(Vec context_weights);
-            double get_mean_mo_ctx_return();
-            double get_mean_mo_normalised_ctx_return();
+            Vec get_mo_return_mean();
+            double get_mo_return_mean(Vec context_weights);
+            double get_mo_ctx_return_mean();
+            double get_normalised_mo_ctx_return_mean();
 
             /**
                 * Returns the stddev of 'sampled_returns'
             */
-            Vec get_stddev_mo_return();
-            double get_stddev_mo_return(Vec context_weights);
-            double get_stddev_mean_mo_ctx_return();
-            double get_stddev_mean_mo_normalised_ctx_return();
+            Vec get_mo_return_variance();
+            double get_mo_return_variance(Vec context_weights);
+            double get_mo_ctx_return_variance();
+            double get_normalised_mo_ctx_return_variance();
     };
 }

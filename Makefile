@@ -34,6 +34,7 @@ MO_SOURCES += $(wildcard mo/algorithms/*.cpp)
 MO_SOURCES += $(wildcard mo/algorithms/chmcts/*.cpp)
 MO_SOURCES += $(wildcard mo/algorithms/contextual_zooming/*.cpp)
 MO_SOURCES += $(wildcard mo/algorithms/simplex_maps/*.cpp)
+MO_SOURCES += $(wildcard mo/algorithms/prior/*.cpp)
 MO_SOURCES += $(wildcard mo/data_structures/*.cpp)
 MO_OBJECTS = $(patsubst mo/%.cpp, bin/mo/%.o, $(MO_SOURCES))
 

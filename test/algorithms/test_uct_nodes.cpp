@@ -57,7 +57,7 @@ TEST(Uct_Ucb, compute_ucb_values_no_prior) {
 
     // Uct D Node
     shared_ptr<MockUctDNode_ComputeUcbMock> uct_d_node = make_shared<MockUctDNode_ComputeUcbMock>(uct_manager);
-    EXPECT_CALL(*uct_d_node, compute_ucb_term)
+    EXPECT_CALL(*uct_d_node, compute_ucb_confidence_interval_term)
         .Times(3)
         .WillOnce(Return(1.0))
         .WillRepeatedly(Return(3.0));
@@ -137,7 +137,7 @@ TEST(Uct_Ucb, compute_ucb_values_with_prior) {
 
     // Uct D Node
     shared_ptr<MockUctDNode_ComputeUcbMock> uct_d_node = make_shared<MockUctDNode_ComputeUcbMock>(uct_manager);
-    EXPECT_CALL(*uct_d_node, compute_ucb_term)
+    EXPECT_CALL(*uct_d_node, compute_ucb_confidence_interval_term)
         .Times(3)
         .WillOnce(Return(1.0))
         .WillRepeatedly(Return(3.0));
@@ -194,7 +194,7 @@ TEST(Uct_Ucb, compute_ucb_values_opponent) {
 
     // Uct D Node
     shared_ptr<MockUctDNode_ComputeUcbMock> uct_d_node = make_shared<MockUctDNode_ComputeUcbMock>(uct_manager);
-    EXPECT_CALL(*uct_d_node, compute_ucb_term)
+    EXPECT_CALL(*uct_d_node, compute_ucb_confidence_interval_term)
         .Times(3)
         .WillOnce(Return(1.0))
         .WillRepeatedly(Return(3.0));

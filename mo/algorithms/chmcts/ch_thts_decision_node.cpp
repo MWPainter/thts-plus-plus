@@ -35,23 +35,29 @@ namespace thts {
     shared_ptr<const Action> ChThtsDNode::recommend_action(MoThtsContext& ctx) const 
     {  
         unordered_map<shared_ptr<const Action>,double> utilities;
-        for (const pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : children) {
-            shared_ptr<const Action> action = child_pair.first;
-            ChThtsCNode& ch_child = (ChThtsCNode&) *child_pair.second;
-            lock_guard<mutex> lg(ch_child.get_lock()); 
-            utilities[action] = ch_child.convex_hull.get_max_linear_utility(ctx.context_weight);
-        }  
-        
-        // If no children, act randomly
-        if (utilities.size() == 0) {
-            shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
-            int index = thts_manager->get_rand_int(0, actions->size());
-            return actions->at(index);
-        }
-
-        // Return best utility
+        fill_contextual_q_values(utilities, ctx, numeric_limits<double>::min());
         return thts::helper::get_max_key_break_ties_randomly(utilities, *thts_manager);
     }
+    // shared_ptr<const Action> ChThtsDNode::recommend_action(MoThtsContext& ctx) const 
+    // {  
+    //     unordered_map<shared_ptr<const Action>,double> utilities;
+    //     for (const pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : children) {
+    //         shared_ptr<const Action> action = child_pair.first;
+    //         ChThtsCNode& ch_child = (ChThtsCNode&) *child_pair.second;
+    //         lock_guard<mutex> lg(ch_child.get_lock()); 
+    //         utilities[action] = ch_child.convex_hull.get_max_linear_utility(ctx.context_weight);
+    //     }  
+        
+    //     // If no children, act randomly
+    //     if (utilities.size() == 0) {
+    //         shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
+    //         int index = thts_manager->get_rand_int(0, actions->size());
+    //         return actions->at(index);
+    //     }
+
+    //     // Return best utility
+    //     return thts::helper::get_max_key_break_ties_randomly(utilities, *thts_manager);
+    // }
  
     void ChThtsDNode::backup(
         const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 
@@ -60,6 +66,8 @@ namespace thts {
         const Eigen::ArrayXd trial_cumulative_return,
         MoThtsContext& ctx)
     {
+        increment_and_update_backup_count();
+
         convex_hull = ConvexHull();
         for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : children) {
             ChThtsCNode& ch_child = (ChThtsCNode&) *child_pair.second;
@@ -71,11 +79,37 @@ namespace thts {
         num_backups++;
     }
 
+    double ChThtsDNode::get_contextual_q_value(const MoThtsContext& ctx) {
+        return convex_hull.get_max_linear_utility(ctx.context_weight);
+    }
+
+    void ChThtsDNode::fill_contextual_q_values(
+        unordered_map<shared_ptr<const Action>,double>& q_values, 
+        MoThtsContext& ctx, 
+        double default_q_value) const
+    {
+        ThtsEnv& env = *thts_manager->thts_env();
+        shared_ptr<ActionVector> actions = env.get_valid_actions_itfc(state,ctx);
+        for (shared_ptr<const Action> action : *actions) {
+            if (!has_child_node_itfc(action)) {
+                q_values[action] = default_q_value;
+                continue;
+            }
+            ChThtsCNode& child = (ChThtsCNode&) *get_child_node_itfc(action);
+            lock_guard<mutex> lg(child.node_lock);
+            q_values[action] = child.get_contextual_q_value(ctx.context_weight);
+        }
+    }
+
     string ChThtsDNode::get_convex_hull_pretty_print_string() const
     {
         stringstream ss;
         ss << convex_hull;
         return ss.str();
+    }
+
+    ConvexHull ChThtsDNode::get_convex_hull() const {
+        return convex_hull;
     }
 }
 

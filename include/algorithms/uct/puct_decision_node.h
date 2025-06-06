@@ -39,7 +39,7 @@ namespace thts {
             /**
              * Implements the updated form of the ucb term for puct.
              */
-            virtual double compute_ucb_term(int num_visits, int child_visits) const;
+            virtual double compute_ucb_confidence_interval_term(int num_visits, int child_visits) const;
 
             /**
              * Helper to make a PuctCNode child object.

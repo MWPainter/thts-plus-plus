@@ -19,12 +19,20 @@
 
 #include "mo/algorithms/chmcts/ch_czt_manager.h"
 #include "mo/algorithms/chmcts/ch_czt_decision_node.h"
+#include "mo/algorithms/chmcts/ch_bts_manager.h"
+#include "mo/algorithms/chmcts/ch_bts_decision_node.h"
+#include "mo/algorithms/chmcts/ch_uct_manager.h"
+#include "mo/algorithms/chmcts/ch_uct_decision_node.h"
 #include "mo/algorithms/contextual_zooming/czt_manager.h"
 #include "mo/algorithms/contextual_zooming/czt_decision_node.h"
 #include "mo/algorithms/simplex_maps/sm_bts_manager.h"
 #include "mo/algorithms/simplex_maps/sm_bts_decision_node.h"
 #include "mo/algorithms/simplex_maps/sm_dents_manager.h"
 #include "mo/algorithms/simplex_maps/sm_dents_decision_node.h"
+#include "mo/algorithms/prior/ch_hvuct_manager.h"
+#include "mo/algorithms/prior/ch_hvuct_decision_node.h"
+#include "mo/algorithms/prior/ch_pareto_uct_manager.h"
+#include "mo/algorithms/prior/ch_pareto_uct_decision_node.h"
 #include "mo/mo_mc_eval.h"
 #include "mo/mo_thts.h"
 #include "mo/mo_thts_context.h"
@@ -511,11 +519,11 @@ void czt_test() {
 
     cout << "CZT evaluations from MoMCEval." << endl;
     cout << "Mean MO return." << endl;
-    cout << mo_mc_eval.get_mean_mo_return() << endl;
+    cout << mo_mc_eval.get_mo_return_mean() << endl;
     cout << "Mean MO ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_ctx_return() << endl;
+    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_normalised_ctx_return() << endl;
+    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
 
     // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
     // for (int i=0; i<num_threads; i++) {
@@ -606,11 +614,11 @@ void czt_4d_test() {
 
     cout << "CZT evaluations from MoMCEval." << endl;
     cout << "Mean MO return." << endl;
-    cout << mo_mc_eval.get_mean_mo_return() << endl;
+    cout << mo_mc_eval.get_mo_return_mean() << endl;
     cout << "Mean MO ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_ctx_return() << endl;
+    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_normalised_ctx_return() << endl;
+    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
 
     // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
     // for (int i=0; i<num_threads; i++) {
@@ -774,11 +782,11 @@ void mo_gym_env_test(string thts_unique_filename="/") {
 
     cout << "CZT evaluations from MoMCEval." << endl;
     cout << "Mean MO return." << endl;
-    cout << mo_mc_eval.get_mean_mo_return() << endl;
+    cout << mo_mc_eval.get_mo_return_mean() << endl;
     cout << "Mean MO ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_ctx_return() << endl;
+    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_normalised_ctx_return() << endl;
+    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
 
     // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
     // for (int i=0; i<num_threads; i++) {
@@ -902,11 +910,11 @@ void sm_bts_test() {
 
     cout << "SM-BTS evaluations from MoMCEval." << endl;
     cout << "Mean MO return." << endl;
-    cout << mo_mc_eval.get_mean_mo_return() << endl;
+    cout << mo_mc_eval.get_mo_return_mean() << endl;
     cout << "Mean MO ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_ctx_return() << endl;
+    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_normalised_ctx_return() << endl;
+    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
 
     // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
     // for (int i=0; i<num_threads; i++) {
@@ -996,11 +1004,11 @@ void sm_bts_4d_test() {
 
     cout << "SM-BTS evaluations from MoMCEval." << endl;
     cout << "Mean MO return." << endl;
-    cout << mo_mc_eval.get_mean_mo_return() << endl;
+    cout << mo_mc_eval.get_mo_return_mean() << endl;
     cout << "Mean MO ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_ctx_return() << endl;
+    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_normalised_ctx_return() << endl;
+    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
 
     // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
     // for (int i=0; i<num_threads; i++) {
@@ -1088,11 +1096,11 @@ void sm_dents_test() {
 
     cout << "SM-DENTS evaluations from MoMCEval." << endl;
     cout << "Mean MO return." << endl;
-    cout << mo_mc_eval.get_mean_mo_return() << endl;
+    cout << mo_mc_eval.get_mo_return_mean() << endl;
     cout << "Mean MO ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_ctx_return() << endl;
+    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_normalised_ctx_return() << endl;
+    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
 
     // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
     // for (int i=0; i<num_threads; i++) {
@@ -1180,11 +1188,11 @@ void sm_bts_bin_tree_test() {
 
     cout << "SM-BTS evaluations from MoMCEval." << endl;
     cout << "Mean MO return." << endl;
-    cout << mo_mc_eval.get_mean_mo_return() << endl;
+    cout << mo_mc_eval.get_mo_return_mean() << endl;
     cout << "Mean MO ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_ctx_return() << endl;
+    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_normalised_ctx_return() << endl;
+    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
 
     // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
     // for (int i=0; i<num_threads; i++) {
@@ -1273,11 +1281,11 @@ void sm_bts_bin_tree_4d_test() {
 
     cout << "SM-BTS evaluations from MoMCEval." << endl;
     cout << "Mean MO return." << endl;
-    cout << mo_mc_eval.get_mean_mo_return() << endl;
+    cout << mo_mc_eval.get_mo_return_mean() << endl;
     cout << "Mean MO ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_ctx_return() << endl;
+    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_normalised_ctx_return() << endl;
+    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
 
     // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
     // for (int i=0; i<num_threads; i++) {
@@ -1365,11 +1373,11 @@ void chmcts_test() {
 
     cout << "CHMCTS evaluations from MoMCEval." << endl;
     cout << "Mean MO return." << endl;
-    cout << mo_mc_eval.get_mean_mo_return() << endl;
+    cout << mo_mc_eval.get_mo_return_mean() << endl;
     cout << "Mean MO ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_ctx_return() << endl;
+    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_normalised_ctx_return() << endl;
+    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
 }
 
 void chmcts_4d_test() { 
@@ -1446,11 +1454,11 @@ void chmcts_4d_test() {
 
     cout << "CHMCTS evaluations from MoMCEval." << endl;
     cout << "Mean MO return." << endl;
-    cout << mo_mc_eval.get_mean_mo_return() << endl;
+    cout << mo_mc_eval.get_mo_return_mean() << endl;
     cout << "Mean MO ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_ctx_return() << endl;
+    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_mean_mo_normalised_ctx_return() << endl;
+    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
 }
 
 // void ch_lin_prog_debugging() {
@@ -1783,6 +1791,323 @@ void chmcts_4d_test() {
 //     }
 // }
 
+void ch_bts_test() {
+
+    // params
+    double temp = 4.0;
+
+    int walk_len = 5;
+    double stay_prob = 0.0;
+
+    int num_trials = 10000;
+    int print_tree_depth = 2;
+    int num_threads = 4;
+
+    // Setup env 
+    shared_ptr<thts::test::TestMoThtsEnv> thts_env = make_shared<thts::test::TestMoThtsEnv>(walk_len, stay_prob);
+
+    // Make thts manager 
+    shared_ptr<ChBtsManagerArgs> args = make_shared<ChBtsManagerArgs>(thts_env);
+    args->seed = 60415;
+    args->max_depth = walk_len * 4;
+    args->mcts_mode = false;
+    args->temp = temp;
+    args->num_threads = num_threads;
+    args->num_envs = num_threads; 
+    shared_ptr<ChBtsManager> manager = make_shared<ChBtsManager>(*args);
+
+    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
+    // subinterpreters
+    shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
+    shared_ptr<ChBtsDNode> root_node = make_shared<ChBtsDNode>(manager, init_state, 0, 0);
+    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
+    shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
+    chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
+    // py::gil_scoped_release rel;
+    thts_pool->run_trials(num_trials);
+    std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
+
+    // Print out a tree
+    // Make sure have gil again if using python objects
+    // py::gil_scoped_acquire acq;
+    cout << "CH-BTS with " << num_threads << " threads (took " << dur.count() << ")";
+    if (print_tree_depth > 0) {
+        cout << " and looks like:\n";
+        cout << root_node->get_pretty_print_string(print_tree_depth);
+    } 
+    cout << endl << endl; 
+
+    // Convex hull
+    cout << "CH at root:" << endl << root_node->get_convex_hull_pretty_print_string() << endl << endl;
+
+    // Pretty ball lists
+    cout << "Printing convex hulls for first decision." << endl << endl;
+    ThtsContext ctx;
+    shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
+    for (shared_ptr<const Action> action : *actions) {
+        cout << "CH for action " << *action << ":" << endl;
+        cout << root_node->get_child_node(action)->get_convex_hull_pretty_print_string() << endl << endl;
+    }
+
+    // Test out Mo MC Eval
+    int num_eval_rollouts = 250;
+    shared_ptr<EvalPolicy> policy = make_shared<EvalPolicy>(root_node, thts_env, manager);
+    MoMCEvaluator mo_mc_eval(
+        policy,  
+        manager->max_depth,
+        manager,
+        Vec(Eigen::ArrayXd::Zero(2)-walk_len),
+        Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len));
+    // py::gil_scoped_release rel2;
+    mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
+
+    cout << "CH-BTS evaluations from MoMCEval." << endl;
+    cout << "Mean MO return." << endl;
+    cout << mo_mc_eval.get_mo_return_mean() << endl;
+    cout << "Mean MO ctx return." << endl;
+    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
+    cout << "Mean MO normalised ctx return." << endl;
+    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+}
+
+void ch_uct_test() {
+
+    // params
+    double bias = 4.0;
+
+    int walk_len = 5;
+    double stay_prob = 0.0;
+
+    int num_trials = 10000;
+    int print_tree_depth = 2;
+    int num_threads = 4;
+
+    // Setup env 
+    shared_ptr<thts::test::TestMoThtsEnv> thts_env = make_shared<thts::test::TestMoThtsEnv>(walk_len, stay_prob);
+
+    // Make thts manager 
+    shared_ptr<ChUctManagerArgs> args = make_shared<ChUctManagerArgs>(thts_env);
+    args->seed = 60415;
+    args->max_depth = walk_len * 4;
+    args->mcts_mode = false;
+    args->bias = bias;
+    args->num_threads = num_threads;
+    args->num_envs = num_threads; 
+    shared_ptr<ChUctManager> manager = make_shared<ChUctManager>(*args);
+
+    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
+    // subinterpreters
+    shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
+    shared_ptr<ChUctDNode> root_node = make_shared<ChUctDNode>(manager, init_state, 0, 0);
+    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
+    shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
+    chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
+    // py::gil_scoped_release rel;
+    thts_pool->run_trials(num_trials);
+    std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
+
+    // Print out a tree
+    // Make sure have gil again if using python objects
+    // py::gil_scoped_acquire acq;
+    cout << "CH-UCT with " << num_threads << " threads (took " << dur.count() << ")";
+    if (print_tree_depth > 0) {
+        cout << " and looks like:\n";
+        cout << root_node->get_pretty_print_string(print_tree_depth);
+    } 
+    cout << endl << endl; 
+
+    // Convex hull
+    cout << "CH at root:" << endl << root_node->get_convex_hull_pretty_print_string() << endl << endl;
+
+    // Pretty ball lists
+    cout << "Printing convex hulls for first decision." << endl << endl;
+    ThtsContext ctx;
+    shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
+    for (shared_ptr<const Action> action : *actions) {
+        cout << "CH for action " << *action << ":" << endl;
+        cout << root_node->get_child_node(action)->get_convex_hull_pretty_print_string() << endl << endl;
+    }
+
+    // Test out Mo MC Eval
+    int num_eval_rollouts = 250;
+    shared_ptr<EvalPolicy> policy = make_shared<EvalPolicy>(root_node, thts_env, manager);
+    MoMCEvaluator mo_mc_eval(
+        policy,  
+        manager->max_depth,
+        manager,
+        Vec(Eigen::ArrayXd::Zero(2)-walk_len),
+        Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len));
+    // py::gil_scoped_release rel2;
+    mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
+
+    cout << "CH-UCT evaluations from MoMCEval." << endl;
+    cout << "Mean MO return." << endl;
+    cout << mo_mc_eval.get_mo_return_mean() << endl;
+    cout << "Mean MO ctx return." << endl;
+    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
+    cout << "Mean MO normalised ctx return." << endl;
+    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+}
+
+void ch_hvuct_test() {
+
+    // params
+    double bias = 4.0;
+
+    int walk_len = 5;
+    double stay_prob = 0.0;
+
+    int num_trials = 10000;
+    int print_tree_depth = 2;
+    int num_threads = 4;
+
+    // Setup env 
+    shared_ptr<thts::test::TestMoThtsEnv> thts_env = make_shared<thts::test::TestMoThtsEnv>(walk_len, stay_prob);
+
+    // Make thts manager 
+    shared_ptr<ChHvUctManagerArgs> args = make_shared<ChHvUctManagerArgs>(thts_env);
+    args->seed = 60415;
+    args->max_depth = walk_len * 4;
+    args->mcts_mode = false;
+    args->bias = bias;
+    args->hv_reference_point = make_shared<Vec>(Eigen::ArrayXd::Zero(2)-walk_len);
+    args->num_threads = num_threads;
+    args->num_envs = num_threads; 
+    shared_ptr<ChHvUctManager> manager = make_shared<ChHvUctManager>(*args);
+
+    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
+    // subinterpreters
+    shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
+    shared_ptr<ChHvUctDNode> root_node = make_shared<ChHvUctDNode>(manager, init_state, 0, 0);
+    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
+    shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
+    chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
+    // py::gil_scoped_release rel;
+    thts_pool->run_trials(num_trials);
+    std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
+
+    // Print out a tree
+    // Make sure have gil again if using python objects
+    // py::gil_scoped_acquire acq;
+    cout << "CH-HvUCT with " << num_threads << " threads (took " << dur.count() << ")";
+    if (print_tree_depth > 0) {
+        cout << " and looks like:\n";
+        cout << root_node->get_pretty_print_string(print_tree_depth);
+    } 
+    cout << endl << endl; 
+
+    // Convex hull
+    cout << "CH at root:" << endl << root_node->get_convex_hull_pretty_print_string() << endl << endl;
+
+    // Pretty ball lists
+    cout << "Printing convex hulls for first decision." << endl << endl;
+    ThtsContext ctx;
+    shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
+    for (shared_ptr<const Action> action : *actions) {
+        cout << "CH for action " << *action << ":" << endl;
+        cout << root_node->get_child_node(action)->get_convex_hull_pretty_print_string() << endl << endl;
+    }
+
+    // Test out Mo MC Eval
+    int num_eval_rollouts = 250;
+    shared_ptr<EvalPolicy> policy = make_shared<EvalPolicy>(root_node, thts_env, manager);
+    MoMCEvaluator mo_mc_eval(
+        policy,  
+        manager->max_depth,
+        manager,
+        Vec(Eigen::ArrayXd::Zero(2)-walk_len),
+        Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len));
+    // py::gil_scoped_release rel2;
+    mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
+
+    cout << "CH-HvUCT evaluations from MoMCEval." << endl;
+    cout << "Mean MO return." << endl;
+    cout << mo_mc_eval.get_mo_return_mean() << endl;
+    cout << "Mean MO ctx return." << endl;
+    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
+    cout << "Mean MO normalised ctx return." << endl;
+    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+}
+
+void ch_pareto_uct_test() {
+
+    // params
+    double bias = 4.0;
+
+    int walk_len = 5;
+    double stay_prob = 0.0;
+
+    int num_trials = 10000;
+    int print_tree_depth = 2;
+    int num_threads = 1;
+
+    // Setup env 
+    shared_ptr<thts::test::TestMoThtsEnv> thts_env = make_shared<thts::test::TestMoThtsEnv>(walk_len, stay_prob);
+
+    // Make thts manager 
+    shared_ptr<ChParetoUctManagerArgs> args = make_shared<ChParetoUctManagerArgs>(thts_env);
+    args->seed = 60415;
+    args->max_depth = walk_len * 4;
+    args->mcts_mode = false;
+    args->bias = bias;
+    args->num_threads = num_threads;
+    args->num_envs = num_threads; 
+    shared_ptr<ChParetoUctManager> manager = make_shared<ChParetoUctManager>(*args);
+
+    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
+    // subinterpreters
+    shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
+    shared_ptr<ChParetoUctDNode> root_node = make_shared<ChParetoUctDNode>(manager, init_state, 0, 0);
+    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
+    shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
+    chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
+    // py::gil_scoped_release rel;
+    thts_pool->run_trials(num_trials);
+    std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
+
+    // Print out a tree
+    // Make sure have gil again if using python objects
+    // py::gil_scoped_acquire acq;
+    cout << "CH-ParetoUCT with " << num_threads << " threads (took " << dur.count() << ")";
+    if (print_tree_depth > 0) {
+        cout << " and looks like:\n";
+        cout << root_node->get_pretty_print_string(print_tree_depth);
+    } 
+    cout << endl << endl; 
+
+    // Convex hull
+    cout << "CH at root:" << endl << root_node->get_convex_hull_pretty_print_string() << endl << endl;
+
+    // Pretty ball lists
+    cout << "Printing convex hulls for first decision." << endl << endl;
+    ThtsContext ctx;
+    shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
+    for (shared_ptr<const Action> action : *actions) {
+        cout << "CH for action " << *action << ":" << endl;
+        cout << root_node->get_child_node(action)->get_convex_hull_pretty_print_string() << endl << endl;
+    }
+
+    // Test out Mo MC Eval
+    int num_eval_rollouts = 250;
+    shared_ptr<EvalPolicy> policy = make_shared<EvalPolicy>(root_node, thts_env, manager);
+    MoMCEvaluator mo_mc_eval(
+        policy,  
+        manager->max_depth,
+        manager,
+        Vec(Eigen::ArrayXd::Zero(2)-walk_len),
+        Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len));
+    // py::gil_scoped_release rel2;
+    mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
+
+    cout << "CH-ParetoUCT evaluations from MoMCEval." << endl;
+    cout << "Mean MO return." << endl;
+    cout << mo_mc_eval.get_mo_return_mean() << endl;
+    cout << "Mean MO ctx return." << endl;
+    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
+    cout << "Mean MO normalised ctx return." << endl;
+    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+}
+
 // C++ entry point for debugging
 int main(int argc, char *argv[]) {
     py::scoped_interpreter py_interpreter;
@@ -1834,15 +2159,15 @@ int main(int argc, char *argv[]) {
     */
     // sm_bts_test();
     // sm_bts_4d_test();
-    sm_bts_bin_tree_test();
-    sm_bts_bin_tree_4d_test();
-    sm_dents_test();
+    // sm_bts_bin_tree_test();
+    // sm_bts_bin_tree_4d_test();
+    // sm_dents_test();
 
     /**
      * Testing chmcts
     */
     chmcts_test();
-    chmcts_4d_test();
+    // chmcts_4d_test();
 
     /**
      * Debugging Convex hull linear programs
@@ -1862,6 +2187,12 @@ int main(int argc, char *argv[]) {
      * Debugging simplex maps on fruit tree
      */
     // compare_czt_bts_fruit_tree();
+
+    // New algorithms
+    ch_bts_test();
+    ch_uct_test();
+    ch_hvuct_test();
+    ch_pareto_uct_test();
 
     return 0;
 }

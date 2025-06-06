@@ -11,11 +11,15 @@
 
 
 namespace thts {
+    // Frwd
+    class CzBallList;
 
     /**
      * CzBall implementation
     */
     class CzBall {
+        friend CzBallList;
+
         protected:
             double _radius;
             Eigen::ArrayXd _center;

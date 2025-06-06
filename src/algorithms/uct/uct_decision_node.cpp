@@ -64,7 +64,7 @@ namespace thts {
     /**
      * Computes the ucb term used in action selection. I.e. sqrt(log N(s) / N(s,a)).
      */
-    double UctDNode::compute_ucb_term(int num_visits, int child_visits) const {
+    double UctDNode::compute_ucb_confidence_interval_term(int num_visits, int child_visits) const {
         double num_visits_d = (num_visits > 0) ? (double)num_visits : 1.0;
         double child_visits_d = (child_visits > 0) ? (double)child_visits : 1.0;
         return sqrt(log(num_visits_d) / child_visits_d);
@@ -116,7 +116,7 @@ namespace thts {
             double action_ucb_value = 0.0;
 
             int child_visits = (has_child_node(action)) ? get_child_node(action)->num_visits : 0;
-            action_ucb_value += compute_ucb_term(num_visits, child_visits);
+            action_ucb_value += compute_ucb_confidence_interval_term(num_visits, child_visits);
             action_ucb_value *= bias;
             if (has_prior()) {
                 action_ucb_value *= policy_prior->at(action);

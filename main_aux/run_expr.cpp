@@ -470,10 +470,10 @@ namespace thts {
     //         get_env_min_value(env_id, max_trial_length[env_id]), 
     //         get_env_max_value(env_id, max_trial_length[env_id]));
     //     evaluator.run_rollouts(rollouts_per_mc_eval[env_id], eval_threads[env_id]);
-    //     double mean = evaluator.get_mean_mo_ctx_return();
-    //     double std_dev = evaluator.get_stddev_mean_mo_ctx_return();
-    //     double normalised_mean = evaluator.get_mean_mo_normalised_ctx_return();
-    //     double normalised_std_dev = evaluator.get_stddev_mean_mo_normalised_ctx_return();
+    //     double mean = evaluator.get_mo_ctx_return_mean();
+    //     double std_dev = evaluator.get_mo_ctx_return_variance();
+    //     double normalised_mean = evaluator.get_normalised_mo_ctx_return_mean();
+    //     double normalised_std_dev = evaluator.get_normalised_mo_ctx_return_variance();
 
     //     // Print info
     //     cout << "Mean: " << mean << endl   

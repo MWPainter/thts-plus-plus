@@ -15,7 +15,10 @@ namespace thts {
         int decision_timestep,
         shared_ptr<const MoThtsDNode> parent) :
             ThtsCNode(thts_manager, state, action, decision_depth, decision_timestep, parent),
-            vector_visit_count(thts_manager->reward_dim)
+            vector_visit_count(thts_manager->reward_dim),
+            local_backups(0),
+            total_cnode_backups_in_subtree(0),
+            total_dnode_backups_in_subtree(0)
     {
     }
 
@@ -25,11 +28,10 @@ namespace thts {
         vector_visit_count += mo_ctx.context_weight;
     }
 
-    double MoThtsCNode::get_num_visits(ThtsContext& ctx) const {
+    double MoThtsCNode::get_num_visits(MoThtsContext& ctx) const {
         MoThtsManager& mo_thts_manager = (MoThtsManager&) *thts_manager;
-        MoThtsContext& mo_ctx = (MoThtsContext&) ctx;
         if (mo_thts_manager.use_vector_visit_counts) {
-            return vector_visit_count.dot(mo_ctx.context_weight);
+            return vector_visit_count.dot(ctx.context_weight);
         }
         return num_visits;
     }
@@ -53,5 +55,30 @@ namespace thts {
         ThtsContext& ctx) 
     {
         throw runtime_error("Called single objective backup function for multi objective node");
+    }
+
+    void MoThtsCNode::increment_and_update_backup_count() {
+        local_backups++;
+        
+        total_cnode_backups_in_subtree = local_backups;
+        total_dnode_backups_in_subtree = 0;
+        for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pair : children) {
+            MoThtsDNode& child = (MoThtsDNode&) *pair.second;
+            lock_guard<mutex> lg(child.node_lock);
+            total_cnode_backups_in_subtree += child.total_cnode_backups_in_subtree;
+            total_dnode_backups_in_subtree += child.total_dnode_backups_in_subtree;
+        }
+    }
+
+    int MoThtsCNode::get_total_backups_in_subtree() {
+        return total_cnode_backups_in_subtree + total_dnode_backups_in_subtree;
+    }
+
+    int MoThtsCNode::get_cnode_backups_in_subtree() {
+        return total_cnode_backups_in_subtree;
+    }
+
+    int MoThtsCNode::get_dnode_backups_in_subtree() {
+        return total_dnode_backups_in_subtree;
     }
 }

@@ -34,7 +34,7 @@ namespace thts {
     
     void CztDNode::visit(MoThtsContext& ctx) 
     {
-        BlThtsDNode::visit_itfc(ctx);
+        BlThtsDNode::visit(ctx);
         // num_visits += 1;
     } 
 
@@ -156,6 +156,8 @@ namespace thts {
         const Eigen::ArrayXd trial_cumulative_return,
         MoThtsContext& ctx) 
     {
+        increment_and_update_backup_count();
+
         shared_ptr<const Action> chosen_action = ctx.get_value_ptr_const<Action>(_action_ctx_key);
         shared_ptr<CzBall> chosen_ball = ctx.get_value_ptr<CzBall>(_ball_ctx_key);
         CztCNode& child = *get_child_node(chosen_action);
@@ -169,6 +171,16 @@ namespace thts {
 
     string CztDNode::get_pretty_print_val() const {
         return "";
+    }
+
+    ConvexHull CztDNode::get_convex_hull() const {
+        ConvexHull approx_convex_hull;
+        for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pair : children) {
+            CztDNode& child = (CztDNode&) *pair.second;
+            lock_guard<mutex> lg(child.node_lock);
+            approx_convex_hull |= child.ball_list.get_approximate_convex_hull();
+        }
+        return approx_convex_hull;
     }
 }
 

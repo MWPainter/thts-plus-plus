@@ -22,7 +22,7 @@ namespace thts {
     
     void CztCNode::visit(MoThtsContext& ctx) 
     {
-        BlThtsCNode::visit_itfc(ctx);
+        BlThtsCNode::visit(ctx);
         // num_visits += 1;
     }  
 
@@ -44,6 +44,7 @@ namespace thts {
         const Eigen::ArrayXd trial_cumulative_return,
         MoThtsContext& ctx) 
     {  
+        increment_and_update_backup_count();
         // Backup handled in decision nodes
     }
 

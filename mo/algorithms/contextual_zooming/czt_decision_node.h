@@ -53,6 +53,9 @@ namespace thts {
                 std::unordered_map<std::shared_ptr<const Action>,double>& cz_values, 
                 std::unordered_map<std::shared_ptr<const Action>,std::shared_ptr<CzBall>>& cz_balls, 
                 MoThtsContext& ctx);
+
+        public:
+            virtual ConvexHull get_convex_hull() const override;
         
 
 

@@ -1,61 +1,51 @@
 #pragma once
 
-#include "mo/algorithms/chmcts/ch_thts_decision_node.h"
+#include "mo/algorithms/prior/ch_pareto_uct_decision_node.h"
 
-#include "mo/data_structures/convex_hull.h"
-#include "mo/algorithms/chmcts/ch_thts_manager.h"
-#include "mo/mo_thts_chance_node.h"
-
-#include <Eigen/Dense>
+#include "mo/algorithms/prior/ch_pareto_uct_manager.h"
+#include "mo/algorithms/chmcts/ch_uct_chance_node.h"
 
 
 
 
 namespace thts {
     // forward declare 
-    class ChThtsDNode;
+    class ChParetoUctDNode;
     class MoThtsContext;
 
     /**
-     * Base class for decision nodes that use ConvexHull objects for their state
+     *  CHMCTS chance node
+     * 
+     * This code is quite messy, but don't plan to support it long term, sorry if you're reading this
     */
-    class ChThtsCNode : public MoThtsCNode {
-        friend ChThtsDNode;
+    class ChParetoUctCNode : public ChUctCNode {
+        friend ChParetoUctDNode;
 
         protected:
-            int num_backups;
-            ConvexHull convex_hull;
-            Eigen::ArrayXd local_reward;
 
         public:
-            ChThtsCNode(
-                std::shared_ptr<ChThtsManager> thts_manager,
+            ChParetoUctCNode(
+                std::shared_ptr<ChParetoUctManager> thts_manager,
                 std::shared_ptr<const State> state,
                 std::shared_ptr<const Action> action,
                 int decision_depth,
                 int decision_timestep,
-                std::shared_ptr<const ChThtsDNode> parent=nullptr); 
+                std::shared_ptr<const ChParetoUctDNode> parent=nullptr); 
 
-            virtual ~ChThtsCNode() = default;
+            virtual ~ChParetoUctCNode() = default;
             
-            virtual void visit(MoThtsContext& ctx);
-            virtual std::shared_ptr<const State> sample_observation(MoThtsContext& ctx) = 0;
-            virtual void backup(
-                const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 
-                const std::vector<Eigen::ArrayXd>& trial_rewards_after_node, 
-                const Eigen::ArrayXd trial_cumulative_return_after_node, 
-                const Eigen::ArrayXd trial_cumulative_return,
-                MoThtsContext& ctx);
-
-            std::string get_convex_hull_pretty_print_string() const;
+            // virtual void visit(MoThtsContext& ctx);
+            // virtual std::shared_ptr<const State> sample_observation(MoThtsContext& ctx);
+            // virtual void backup(
+            //     const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 
+            //     const std::vector<Eigen::ArrayXd>& trial_rewards_after_node, 
+            //     const Eigen::ArrayXd trial_cumulative_return_after_node, 
+            //     const Eigen::ArrayXd trial_cumulative_return,
+            //     MoThtsContext& ctx);
 
         protected:
-            virtual std::shared_ptr<ChThtsDNode> create_child_node_helper(
-                std::shared_ptr<const State> state) const = 0;
-            virtual std::string get_pretty_print_val() const override = 0;
+            virtual std::string get_pretty_print_val() const override;
         
-
-            double get_contextual_q_value(const MoThtsContext& ctx);
 
 
         /**
@@ -67,8 +57,10 @@ namespace thts {
          * Boilerplate implementations provided in thts_decision_node_template.h
          */
         public:
-            std::shared_ptr<ChThtsDNode> create_child_node(std::shared_ptr<const State> next_state);
-            std::shared_ptr<ChThtsDNode> get_child_node(std::shared_ptr<const State> next_state) const;
+            // std::shared_ptr<ChParetoUctDNode> create_child_node(std::shared_ptr<const State> next_state);
+            virtual std::shared_ptr<ChThtsDNode> create_child_node_helper(
+                std::shared_ptr<const State> next_state) const override;
+            // std::shared_ptr<ChParetoUctDNode> get_child_node(std::shared_ptr<const State> next_state) const;
 
 
 

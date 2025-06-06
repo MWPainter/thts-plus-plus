@@ -68,6 +68,8 @@ namespace thts {
             Vec(Vec&& other);
             Vec(int dim, float val=0.0);
 
+            int size() const;
+            int dim() const;
             double norm() const;
             Vec normalised() const;
             double dot(const Vec& other) const;

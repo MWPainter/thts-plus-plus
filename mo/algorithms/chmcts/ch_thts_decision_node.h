@@ -6,6 +6,10 @@
 #include "mo/algorithms/chmcts/ch_thts_manager.h"
 #include "mo/mo_thts_decision_node.h"
 
+#include "mo/mo_thts_types.h"
+
+#include <limits>
+
 
 
 
@@ -51,6 +55,15 @@ namespace thts {
             virtual std::shared_ptr<ChThtsCNode> create_child_node_helper(
                 std::shared_ptr<const Action> action) const = 0;
             virtual std::string get_pretty_print_val() const override = 0;
+
+            double get_contextual_q_value(const MoThtsContext& ctx);
+            virtual void fill_contextual_q_values(
+                std::unordered_map<std::shared_ptr<const Action>,double>& q_values, 
+                MoThtsContext& ctx, 
+                double default_q_value=0) const;
+
+        public:
+            virtual ConvexHull get_convex_hull() const override;
         
 
 

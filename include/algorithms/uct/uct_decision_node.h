@@ -69,7 +69,7 @@ namespace thts {
              * Returns:
              *      The confidence interval term for a ucb value
              */
-            virtual double compute_ucb_term(int num_visits, int child_visits) const;
+            virtual double compute_ucb_confidence_interval_term(int num_visits, int child_visits) const;
 
             /**
              * Helper function for 'select_action_ucb' that computes the ucb values

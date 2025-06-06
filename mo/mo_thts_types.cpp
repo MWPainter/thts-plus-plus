@@ -92,6 +92,10 @@ namespace thts {
 
         // TODO: check if this makes a copy? Is this invalid if the vector is deallocated? what ive the values in the vector are changed?
         vec = Eigen::Map<const Eigen::ArrayXd>(v.data(), v.size());
+        // vec = Eigen::ArrayXd(v.size());
+        // for (size_t i=0; i<v.size(); i++) {
+        //     vec[i] = v[i];
+        // }
     }
 
     Vec::Vec(const Vec& other) : 
@@ -116,6 +120,14 @@ namespace thts {
         // Apparently eigen does some fast stuff and better not to init in initialiser list
         // https://stackoverflow.com/questions/47644021/eigen-copy-constructor-vs-operator-performance
         vec = Eigen::ArrayXd::Constant(dim, val);
+    }
+
+    int Vec::size() const {
+        return vec.size();
+    }
+
+    int Vec::dim() const {
+        return vec.size();
     }
 
     double Vec::norm() const {

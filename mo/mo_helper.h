@@ -61,4 +61,10 @@ namespace thts::helper {
     std::vector<Eigen::ArrayXd> get_well_spaced_points(int num_points, int dim, bool is_simplex=false);
     std::vector<Eigen::ArrayXd> get_well_spaced_hyperphere_points(int num_points, int dim);
     std::vector<Eigen::ArrayXd> get_well_spaced_simplex_points(int num_points, int dim);
+
+    /**
+     * The multi objective rollout heuristic function, that returns an MC estimate of 'state' with a rollout with random policy
+     */
+    Eigen::ArrayXd mo_rollout_heuristic_fn(
+        std::shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth);
 }

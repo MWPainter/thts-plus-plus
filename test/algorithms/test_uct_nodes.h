@@ -148,7 +148,7 @@ namespace thts::test {
         public:
             MockUctDNode_ComputeUcbMock(shared_ptr<UctManager> thts_manager) : SettableUctDNode(thts_manager) {};
 
-            MOCK_METHOD(double, compute_ucb_term, (int,int),  (const, override));
+            MOCK_METHOD(double, compute_ucb_confidence_interval_term, (int,int),  (const, override));
             MOCK_METHOD(bool, is_opponent, (), (const, override));
     };
 

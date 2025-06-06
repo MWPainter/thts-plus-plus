@@ -100,7 +100,7 @@ namespace thts {
         MCEvaluator::run_rollouts(num_rollouts, num_threads);
     }
 
-    Vec MoMCEvaluator::get_mean_mo_return() 
+    Vec MoMCEvaluator::get_mo_return_mean() 
     {
         shared_ptr<MoThtsEnv> thts_env = dynamic_pointer_cast<MoThtsEnv>(manager->thts_env());
         int reward_dim = thts_env->get_reward_dim();
@@ -113,12 +113,12 @@ namespace thts {
 
     }
 
-    double MoMCEvaluator::get_mean_mo_return(Vec context_weights)
+    double MoMCEvaluator::get_mo_return_mean(Vec context_weights)
     {
-        return context_weights.dot(get_mean_mo_return());
+        return context_weights.dot(get_mo_return_mean());
     }
 
-    double MoMCEvaluator::get_mean_mo_ctx_return()
+    double MoMCEvaluator::get_mo_ctx_return_mean()
     {
         double weight = 1.0 / sampled_ctx_returns.size();
         double mean = 0.0;
@@ -128,7 +128,7 @@ namespace thts {
         return mean;
     }
     
-    double MoMCEvaluator::get_mean_mo_normalised_ctx_return()
+    double MoMCEvaluator::get_normalised_mo_ctx_return_mean()
     {
         double weight = 1.0 / sampled_normalised_ctx_returns.size();
         double mean = 0.0;
@@ -138,11 +138,11 @@ namespace thts {
         return mean;
     }
     
-    Vec MoMCEvaluator::get_stddev_mo_return()
+    Vec MoMCEvaluator::get_mo_return_variance()
     {
         shared_ptr<MoThtsEnv> thts_env = dynamic_pointer_cast<MoThtsEnv>(manager->thts_env());
         double reward_dim = thts_env->get_reward_dim();
-        Vec mean = get_mean_mo_return();
+        Vec mean = get_mo_return_mean();
         double weight = 1.0 / mo_sampled_returns.size();
         Vec stddev = Vec(reward_dim, 0.0);
         for (Vec val : mo_sampled_returns) {
@@ -153,14 +153,14 @@ namespace thts {
 
     }
     
-    double MoMCEvaluator::get_stddev_mo_return(Vec context_weights)
+    double MoMCEvaluator::get_mo_return_variance(Vec context_weights)
     {
-        return context_weights.dot(get_stddev_mo_return());
+        return context_weights.dot(get_mo_return_variance());
     }
     
-    double MoMCEvaluator::get_stddev_mean_mo_ctx_return()
+    double MoMCEvaluator::get_mo_ctx_return_variance()
     {
-        double mean = get_mean_mo_ctx_return();
+        double mean = get_mo_ctx_return_mean();
         double weight = 1.0 / (sampled_ctx_returns.size() - 1.0);
         double stddev = 0.0;
         for (double val : sampled_ctx_returns) {
@@ -169,9 +169,9 @@ namespace thts {
         return stddev;
     }
     
-    double MoMCEvaluator::get_stddev_mean_mo_normalised_ctx_return()
+    double MoMCEvaluator::get_normalised_mo_ctx_return_variance()
     {
-        double mean = get_mean_mo_normalised_ctx_return();
+        double mean = get_normalised_mo_ctx_return_mean();
         double weight = 1.0 / (sampled_normalised_ctx_returns.size() - 1.0);
         double stddev = 0.0;
         for (double val : sampled_normalised_ctx_returns) {

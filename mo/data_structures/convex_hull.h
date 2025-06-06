@@ -33,7 +33,12 @@ namespace thts {
      *          The set of TaggedPoints in the Convex Hull          
     */
     class ConvexHull {
-        protected:
+        // making ch_points public to be able to iterate over them in Pareto UCB
+        // long term wouldn't really want that
+        // should write a custom iterator (https://internalpointers.com/post/writing-custom-iterators-modern-cpp)
+        // but dont have time for that right now
+        // protected:
+        public: 
             std::unordered_set<Vec> ch_points;
 
         public:
@@ -75,6 +80,7 @@ namespace thts {
             static std::unordered_set<Vec> prune(const std::unordered_set<Vec>& points);
 
         public:
+            int reward_dim() const;
             std::size_t size() const;
             ConvexHull scale(double scale) const;
             ConvexHull combine(const ConvexHull& other) const;
@@ -107,6 +113,12 @@ namespace thts {
              * Equation (18) in: https://arxiv.org/pdf/2103.09568
              */
             double sparsity_metric() const;
+
+            /**
+             * Get the additive epsilon metric from this convex hull
+             * Equation (19) in: https://arxiv.org/pdf/2103.09568
+             */
+            double additive_eps_metric() const;
 
             /**
              * TODO: want this directly implemented in operator<<

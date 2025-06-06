@@ -1454,20 +1454,20 @@ namespace thts {
     /**
      * Helper function to compute mean and std of vector of evals
      */
-    void compute_mean_and_std_(const vector<double>& evals, double& mean_eval, double& std_eval, double& std_mean_eval)
+    void compute_mean_and_std_(const vector<double>& alg_value_estimates, double& mean_alg_eval, double& mean_alg_eval_std)
     {
         double evals_sum = 0.0;
-        for (double eval : evals) {
+        for (double eval : alg_value_estimates) {
             evals_sum += eval;
         }
-        mean_eval = evals_sum / evals.size();
+        mean_alg_eval = evals_sum / alg_value_estimates.size();
 
         double std_eval_sum = 0.0;
-        for (double eval : evals) {
-            std_eval_sum += (eval - mean_eval) * (eval - mean_eval);
+        for (double eval : alg_value_estimates) {
+            std_eval_sum += (eval - mean_alg_eval) * (eval - mean_alg_eval);
         }
-        std_eval = sqrt(std_eval_sum / (evals.size() - 1));
-        std_mean_eval = std_eval / sqrt(evals.size());
+        double std_eval = sqrt(std_eval_sum / (alg_value_estimates.size() - 1));
+        mean_alg_eval_std = std_eval / sqrt(alg_value_estimates.size());
     }
 
     /**
@@ -1493,42 +1493,48 @@ namespace thts {
         );
 
         int repeats_run = 0;
-        vector<double> evals;
-        double mean_eval = 0.0;
-        double std_eval = 0.0;
-        double std_mean_eval = 0.0;
+        vector<double> alg_value_estimates;
+        vector<double> alg_variance_estimates;
+        double mean_alg_eval = 0.0;
+        double mean_alg_eval_std = 0.0;
 
         // run initial repeats
         while (repeats_run < num_repeats) {
-            double eval = thts::run_expr(run_id, true, repeats_run).at(0);
-            evals.push_back(eval);
+            vector<double> evals = thts::run_expr(run_id, true, repeats_run);
+            double mc_mean = evals[0];
+            double mc_var = evals[1];
+            alg_value_estimates.push_back(mc_mean);
+            alg_value_estimates.push_back(mc_var);
             repeats_run++;
         }
-        compute_mean_and_std_(evals, mean_eval, std_eval, std_mean_eval);
-        cout << "Hp_opt_iter " << hp_opt_iter << ". mean_eval=" << mean_eval << ",std_mean_eval=" << std_mean_eval << " > " << std_mean_eval_threshold << endl;
+        compute_mean_and_std_(alg_value_estimates, mean_alg_eval, mean_alg_eval_std);
+        cout << "Hp_opt_iter " << hp_opt_iter << ". mean_alg_eval=" << mean_alg_eval << ",mean_alg_eval_std=" << mean_alg_eval_std << " > " << std_mean_eval_threshold << endl;
 
         // While below std threshold, keep running repeats
-        while (use_std_mean_eval_threshold && (std_mean_eval > std_mean_eval_threshold)) {
-            double eval = thts::run_expr(run_id, true, repeats_run).at(0);
-            evals.push_back(eval);
+        while (use_std_mean_eval_threshold && (mean_alg_eval_std > std_mean_eval_threshold)) {
+            vector<double> evals = thts::run_expr(run_id, true, repeats_run);
+            double mc_mean = evals[0];
+            double mc_var = evals[1];
+            alg_value_estimates.push_back(mc_mean);
+            alg_value_estimates.push_back(mc_var);
             repeats_run++;
-            compute_mean_and_std_(evals, mean_eval, std_eval, std_mean_eval);
-            cout << "Hp_opt_iter " << hp_opt_iter << ". mean_eval=" << mean_eval << ",std_mean_eval=" << std_mean_eval << " > " << std_mean_eval_threshold << endl;
+            compute_mean_and_std_(alg_value_estimates, mean_alg_eval, mean_alg_eval_std);
+            cout << "Hp_opt_iter " << hp_opt_iter << ". mean_alg_eval=" << mean_alg_eval << ",mean_alg_eval_std=" << mean_alg_eval_std << " > " << std_mean_eval_threshold << endl;
         }
 
         // Keep track if this was best hyperparams, and log all repeats, log mean_eval in respective hp_opt files
-        if (mean_eval > best_eval) {
-            best_eval = mean_eval;
+        if (mean_alg_eval > best_eval) {
+            best_eval = mean_alg_eval;
             best_alg_params = alg_params;
         }
-        write_eval_lines(alg_params, evals);
-        write_summary_line(alg_params, mean_eval);
+        write_eval_lines(alg_params, alg_value_estimates);
+        write_summary_line(alg_params, mean_alg_eval);
 
         // Remember to increment hp_opt_iter
         hp_opt_iter++;
 
         // bayes opt tried to minimise, so return *-1.0 because want to maximise
-        return -1.0 * mean_eval;
+        return -1.0 * mean_alg_eval;
     };
 
     /**

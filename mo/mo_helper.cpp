@@ -11,6 +11,9 @@
 
 #include <stdexcept>
 
+#include "mo/mo_thts_env.h"
+#include "mo/mo_thts_manager.h"
+
 using namespace std;
 namespace py = pybind11;
 
@@ -178,5 +181,28 @@ namespace thts::helper {
 
     vector<Eigen::ArrayXd> get_well_spaced_simplex_points(int num_points, int dim) {
         return get_well_spaced_points(num_points, dim, true);
+    }
+
+    /**
+     * Implementation of the rollout heuristic function.
+     */
+    Eigen::ArrayXd mo_rollout_heuristic_fn(
+        shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth) 
+    {
+        MoThtsEnv& mo_env = dynamic_cast<MoThtsEnv&>(env);
+        MoThtsManager& mo_manager = (MoThtsManager&) manager;
+        ThtsContext& ctx = *manager.get_thts_context();
+        int rollout_steps_left = manager.max_depth - depth;
+        Eigen::ArrayXd rollout_reward = Eigen::ArrayXd::Zero(mo_manager.reward_dim);
+
+        while (rollout_steps_left-- > 0 && !mo_env.is_sink_state_itfc(state, ctx)) {
+            shared_ptr<ActionVector> actions = mo_env.get_valid_actions_itfc(state, ctx);
+            int index = manager.get_rand_int(0, actions->size());
+            shared_ptr<const Action> action = actions->at(index);
+            rollout_reward += mo_env.get_mo_reward_itfc(state, action, ctx);
+            state = env.sample_transition_distribution_itfc(state, action, manager, ctx);
+        }
+        
+        return rollout_reward;
     }
 }

@@ -178,7 +178,7 @@ namespace thts {
             }
         }
 
-        // compute normalisation term
+        // compute (numerical stability) normalisation term
         normalisation_term = numeric_limits<double>::lowest();
         for (pair<shared_ptr<const Action>,double> pair : q_values) {
             double q_value = pair.second;

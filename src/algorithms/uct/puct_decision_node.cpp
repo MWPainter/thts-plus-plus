@@ -21,7 +21,7 @@ namespace thts {
     /**
      * Computes the ucb term used in action selection. I.e. sqrt(log N(s) / N(s,a)).
      */
-    double PuctDNode::compute_ucb_term(int num_visits, int child_visits) const {
+    double PuctDNode::compute_ucb_confidence_interval_term(int num_visits, int child_visits) const {
         shared_ptr<PuctManager> manager = static_pointer_cast<PuctManager>(thts_manager);
         double num_visits_d = (num_visits > 0) ? (double)num_visits : 1.0;
         double child_visits_d = (child_visits > 0) ? (double)child_visits : 1.0;
