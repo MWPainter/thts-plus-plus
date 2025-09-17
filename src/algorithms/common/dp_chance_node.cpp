@@ -25,15 +25,17 @@ namespace thts {
      * yet. Hence it's necessary to include the line "if (child.num_backups == 0) continue;" to avoid a division by 
      * zero causing NaNs.
      */
-    void DPCNode::backup_dp_impl(DPDNodeChildMap& children, double local_reward, bool is_opponent) {
+    void DPCNode::backup_dp_impl(DPDNodeChildMap& children, EmpiricalDistributionMap& empirical_distribution, double local_reward, bool is_opponent) {
         dp_value = 0.0;
-        double sum_child_backups = 0;
+        double sum_child_n_selections = 0;
         for (pair<shared_ptr<const Observation>,shared_ptr<DPDNode>> pr : children) {
+            shared_ptr<const Observation> observation = pr.first;
             DPDNode& child = (DPDNode&) *pr.second;
-            if (child.num_backups == 0) continue;
-            sum_child_backups += child.num_backups;
-            dp_value *= (sum_child_backups - child.num_backups) / sum_child_backups;
-            dp_value += child.num_backups * child.dp_value / sum_child_backups; 
+            double child_n_selections = empirical_distribution[observation];
+            if (child_n_selections == 0) continue;
+            sum_child_n_selections += child_n_selections;
+            dp_value *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+            dp_value += child_n_selections * child.dp_value / sum_child_n_selections;
         }
         dp_value += local_reward; // +R(s,a)
 

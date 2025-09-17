@@ -44,7 +44,6 @@ namespace thts {
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         avg_return = opp_coeff * -numeric_limits<double>::infinity();
 
-        lock_all_children();
         for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pr : children) {
             MaxUctCNode& child = (MaxUctCNode&) *pr.second;
             if (child.num_backups == 0) continue;
@@ -52,7 +51,6 @@ namespace thts {
                 avg_return = child.avg_return;
             }
         }
-        unlock_all_children();
 
         num_backups++;
     }

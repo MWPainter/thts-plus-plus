@@ -2,6 +2,8 @@
 
 #include "helper_templates.h"
 
+#include <iostream>
+
 using namespace std; 
 
 namespace thts {
@@ -72,7 +74,22 @@ namespace thts {
         const double trial_cumulative_return,
         ThtsContext& ctx) 
     {
-        backup_average_return(trial_cumulative_return_after_node);
+        // backup_average_return(trial_cumulative_return_after_node);
+        
+        avg_return = 0.0;
+        double sum_child_n_selections = 0;
+        for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
+            shared_ptr<const Observation> observation = pr.first;
+            UctDNode& child = (UctDNode&) *pr.second;
+            double child_n_selections = empirical_distribution[observation];
+            if (child_n_selections == 0) continue;
+            sum_child_n_selections += child_n_selections;
+            avg_return *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+            avg_return += child_n_selections * child.avg_return / sum_child_n_selections;
+        }
+        avg_return += local_reward; // +R(s,a)
+
+        num_backups++;
     }
 
     /**

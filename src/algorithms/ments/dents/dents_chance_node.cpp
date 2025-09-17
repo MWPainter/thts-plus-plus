@@ -55,13 +55,13 @@ namespace thts {
         MentsCNode::num_backups++;
 
         // entropy backup
-        backup_ent<DentsDNode>(children);
+        backup_ent<DentsDNode>(children, empirical_distribution);
 
         // value backup
         double val_estimate;
         DentsManager& manager = (DentsManager&) *thts_manager;
         if (manager.use_dp_value) {
-            backup_dp<DentsDNode>(children, local_reward, is_opponent());
+            backup_dp<DentsDNode>(children, empirical_distribution, local_reward, is_opponent());
             val_estimate = dp_value;
         } else {
             backup_emp(trial_cumulative_return_after_node);

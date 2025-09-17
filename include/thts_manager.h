@@ -35,7 +35,7 @@ namespace thts {
         // static const PriorFnPtr prior_fn_default = nullptr;
         static const bool mcts_mode_default = true;
         static const bool is_two_player_game_default = false;
-        static const bool use_transposition_table_default = false;
+        static const bool graph_search_default = false;
         static const int seed_default = 0;
         static const int num_threads_default = 1;
         static const int num_envs_default = 1;
@@ -49,7 +49,7 @@ namespace thts {
 
         bool mcts_mode;
         bool is_two_player_game;
-        bool use_transposition_table;
+        bool graph_search;
 
         int seed;
 
@@ -58,11 +58,11 @@ namespace thts {
             num_threads(num_threads_default),
             num_envs(num_envs_default),
             max_depth(max_depth_default),
-            heuristic_fn(helper::zero_heuristic_fn),
+            heuristic_fn(nullptr),//helper::zero_heuristic_fn),
             prior_fn(nullptr),
             mcts_mode(mcts_mode_default),
             is_two_player_game(is_two_player_game_default),
-            use_transposition_table(use_transposition_table_default),
+            graph_search(graph_search_default),
             seed(seed_default) {}
 
         virtual ~ThtsManagerArgs() = default;
@@ -158,8 +158,8 @@ namespace thts {
      * 
      * Primarily a thts manager stores all of the options that thts can be run with (see options section below).
      * 
-     * As part of managing the 'global' space, the manager is responsible for storing the transposition table, 
-     * although interaction with them is defined in thts_decision_node.cpp and thts_chance_node.cpp. Additionally it 
+     * As part of managing the 'global' space, the manager is responsible for storing the transposition table used in 
+     * graph search, although interaction with them is defined in thts_chance_node.cpp. Additionally it 
      * stores the pointers to the heuristic and prior function pointers that can be used by Thts algorithms. 
      * 
      * Additionally, the thts manager is used to wrap any random number generation required, to provide a simple 
@@ -180,12 +180,12 @@ namespace thts {
      *          If true, trials end at the first leaf node added to the search tree. If false, trials alway run until 
      *          the search horizon is reached or a sink state in the environment is reached, and all nodes are added 
      *          to the search tree.
-     *      transposition_table:
+     *      graph_search:
      *          Specifies if a transposition table is to be used. Nodes are stored in a table upon creation, keyed by 
      *          (depth, Observation) tuples. When creating a new node, we first look if it exists in the table 
      *          already, and if it does we return that instead. This requires State and Action objects to have 
      *          std::hash and std::equal_to definitions. NOTE: should only use transposition_table if the 
-     *          (depth,Observation) tuples have a one to one correspondance with decision nodes, otherwise this may 
+     *          Observations  have a one to one correspondance with decision nodes, otherwise this may 
      *          cause bugs.
      *      is_two_player_game:
      *          Specifies if we are planning for a two player game
@@ -209,12 +209,12 @@ namespace thts {
      *          If mcts_mode is true, then only one node is added per trial (and initialised using the heuristic 
      *          function). If mcts_mode is false, then trials are run to completion (until max depth or a sink state is 
      *          reached).
-     *      use_transposition_table:
+     *      graph_search:
      *          Specifies if a transposition table is to be used. Nodes are stored in a table upon creation, keyed by 
      *          (depth, Observation) tuples. When creating a new node, we first look if it exists in the table 
      *          already, and if it does we return that instead. This requires State and Action objects to have 
      *          std::hash and std::equal_to definitions. NOTE: should only use transposition_table if the 
-     *          (depth,Observation) tuples have a one to one correspondance with decision nodes, otherwise this may 
+     *          Observations have a one to one correspondance with decision nodes, otherwise this may 
      *          cause bugs.
      *      is_two_player_game:
      *          If we are planning for a two player game, rather than a reward maximisation environment
@@ -251,7 +251,7 @@ namespace thts {
             PriorFnPtr prior_fn;
 
             bool mcts_mode;
-            bool use_transposition_table;
+            bool graph_search;
             bool is_two_player_game;
 
             std::shared_mutex dmap_lock;

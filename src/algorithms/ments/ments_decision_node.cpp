@@ -218,9 +218,7 @@ namespace thts {
         // compute boltzmann weights
         double sum_weights;
         double _normalisation_term;
-        lock_all_children();
         compute_action_weights(action_distr, sum_weights, _normalisation_term, context);
-        unlock_all_children();
 
         // compute lambda
         MentsManager& manager = (MentsManager&) *thts_manager;
@@ -357,9 +355,7 @@ namespace thts {
         ActionDistr action_weights;
         double sum_weights;
         double normalisation_term;
-        lock_all_children();
         compute_action_weights(action_weights, sum_weights, normalisation_term, ctx);
-        unlock_all_children();
 
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         double temp = get_temp();

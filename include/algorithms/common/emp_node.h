@@ -13,6 +13,8 @@ namespace thts {
     typedef std::unordered_map<std::shared_ptr<const Action>, std::shared_ptr<EmpNode>> EmpNodeChildMap;
 
     /**
+     * v1TODO: should change this to use a full backup, this wont work with graphs / add validation that this isn't used
+     * 
      * An implementation of empircal average return backups for nodes to use. Note that the behaviour at decision and 
      * chance nodes is the same, so we can actually just have one implementation of this. The chance node's using 
      * this can just ignore the action recommendation functions, as they are nonsensical for it anyway.
@@ -130,10 +132,8 @@ namespace thts {
                 bool is_opponent=false) const 
             {
                 std::shared_ptr<EmpNodeChildMap> emp_children = convert_child_map<T>(children);
-                for (auto pr : children) pr.second->lock();
                 std::shared_ptr<const Action> action = recommend_action_best_emp_value_impl(
                     *emp_children, rand_manager, visit_threshold, is_opponent);
-                for (auto pr : children) pr.second->unlock();
                 return action;
             }
     };

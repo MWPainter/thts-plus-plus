@@ -218,8 +218,7 @@ namespace thts {
      * ThtsDNode's have a shared_ptr to the same ThtsManager. The circular dependency leads to reference counting not 
      * working and hence memory leaks when using the transposition table otherwise.
      */
-    typedef std::tuple<int,std::shared_ptr<const Observation>> DNodeIdTuple;
-    typedef std::unordered_map<DNodeIdTuple,std::weak_ptr<ThtsDNode>> DNodeTable;
+    typedef std::unordered_map<std::shared_ptr<const Observation>,std::weak_ptr<ThtsDNode>> DNodeTable;
 }
 
 /**
@@ -350,21 +349,6 @@ namespace std {
     ostream& operator<<(ostream& os, const ObservationDistr& distr);
     ostream& operator<<(ostream& os, const IntPairStateDistr& distr);
     ostream& operator<<(ostream& os, const Int3TupleStateDistr& distr);
-
-    /**
-     * Hash, equality and stream functions for DNodeIdTuple
-     */
-    template <> 
-    struct hash<DNodeIdTuple> {
-        size_t operator()(const DNodeIdTuple&) const;
-    };
-
-    template <> 
-    struct equal_to<DNodeIdTuple> {
-        bool operator()(const DNodeIdTuple&, const DNodeIdTuple&) const;
-    };
-
-    ostream& operator<<(ostream& os, const DNodeIdTuple& tpl);
 
     /**
      * Output streams for transposition tables

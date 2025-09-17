@@ -133,7 +133,7 @@ TEST(ThtsNode_CreateChild, test_normal_usage)
 /**
  * Repeat the 'test_normal_usage' test, but this time testing the transposition table.
  * 
- * This is a copy and paste of the previous  this time we set 'mock_manager.use_transposition_table' to true.
+ * This is a copy and paste of the previous  this time we set 'mock_manager.graph_search' to true.
  */
 TEST(ThtsNode_CreateChild, test_transposition_table)
 {   
@@ -141,7 +141,7 @@ TEST(ThtsNode_CreateChild, test_transposition_table)
     shared_ptr<ThtsEnv> thts_env = static_pointer_cast<ThtsEnv>(make_shared<TestThtsEnv>(2));
     shared_ptr<MockThtsManager> mock_manager_ptr = make_shared<MockThtsManager>(thts_env);
     MockThtsManager& mock_manager = *mock_manager_ptr;
-    mock_manager.use_transposition_table = true;
+    mock_manager.graph_search = true;
     shared_ptr<ThtsManager> manager_ptr = static_pointer_cast<ThtsManager>(mock_manager_ptr);
     EXPECT_CALL(mock_manager, get_rand_int)
         .Times(0);
@@ -363,7 +363,7 @@ TEST(ThtsNode_PrettyPrint, test_transposition_table)
     shared_ptr<ThtsEnv> thts_env = static_pointer_cast<ThtsEnv>(make_shared<TestThtsEnv>(2));
     shared_ptr<MockThtsManager> mock_manager_ptr = make_shared<MockThtsManager>(thts_env);
     MockThtsManager& mock_manager = *mock_manager_ptr;
-    mock_manager.use_transposition_table = true;
+    mock_manager.graph_search = true;
     shared_ptr<ThtsManager> manager_ptr = static_pointer_cast<ThtsManager>(mock_manager_ptr);
     EXPECT_CALL(mock_manager, get_rand_int)
         .Times(0);

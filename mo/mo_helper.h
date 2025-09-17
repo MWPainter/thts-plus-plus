@@ -67,4 +67,14 @@ namespace thts::helper {
      */
     Eigen::ArrayXd mo_rollout_heuristic_fn(
         std::shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth);
+
+
+
+
+
+
+
+    //v1TODO: helper functions
+    string well_spaced_points_filename(int num_points, int dim, bool is_simplex);
+    void ensure_well_spaced_points_generated(int num_points, int dim, bool is_simplex);
 }

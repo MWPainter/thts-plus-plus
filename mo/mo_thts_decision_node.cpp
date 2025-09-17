@@ -87,7 +87,6 @@ namespace thts {
         total_dnode_backups_in_subtree = local_backups;
         for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pair : children) {
             MoThtsCNode& child = (MoThtsCNode&) *pair.second;
-            lock_guard<mutex> lg(child.node_lock);
             total_cnode_backups_in_subtree += child.total_cnode_backups_in_subtree;
             total_dnode_backups_in_subtree += child.total_dnode_backups_in_subtree;
         }

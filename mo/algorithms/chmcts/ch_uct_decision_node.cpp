@@ -31,7 +31,6 @@ namespace thts {
         for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pair : children) {
             shared_ptr<const Action> action = pair.first;
             ChUctCNode& child = (ChUctCNode&) *get_child_node(action);
-            lock_guard<mutex> lg(child.node_lock);
             ucb_q_values[action] = child.get_contextual_q_value(ctx);
         }
     }
@@ -52,8 +51,6 @@ namespace thts {
             bias = ChUctManager::ADAPTIVE_BIAS_MIN_BIAS;
             for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pair : children) {
                 shared_ptr<const Action> action = pair.first;
-                ChUctCNode& child = (ChUctCNode&) *get_child_node(action);
-                lock_guard<mutex> lg(child.node_lock);
                 double child_abs_val = abs(ucb_q_values[action]);
                 double candidate_bias = child_abs_val * adaptive_bias_coef;
                 if (candidate_bias > bias) bias = candidate_bias;
@@ -69,9 +66,7 @@ namespace thts {
                 continue;
             }
             ChUctCNode& child = (ChUctCNode&) *get_child_node(action);
-            child.node_lock.lock();
-            int child_visits = get_child_node(action)->get_num_visits(ctx);
-            child.node_lock.unlock();
+            int child_visits = child.get_num_visits(ctx);
             double action_ucb_value = compute_ucb_confidence_interval(local_visits, child_visits);
             action_ucb_value *= bias;
             // if (has_prior()) {

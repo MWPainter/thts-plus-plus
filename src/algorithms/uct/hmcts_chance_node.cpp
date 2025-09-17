@@ -58,7 +58,6 @@ namespace thts {
                 budget_per_child[state] = ceil(prob * total_budget);
             }
 
-            lock_all_children();
             for (pair<shared_ptr<const State>,double> pr : *next_state_distr) {
                 shared_ptr<const State> state = pr.first;
                 if (has_child_node(state)) {
@@ -66,7 +65,6 @@ namespace thts {
                     child.set_new_total_budget(budget_per_child.at(state));
                 }
             }
-            unlock_all_children();
         }
     }
 

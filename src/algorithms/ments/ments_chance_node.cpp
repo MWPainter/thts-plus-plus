@@ -79,16 +79,16 @@ namespace thts {
         num_backups++;
 
         soft_value = 0.0;
-        double sum_child_backups = 0.0;
-        lock_all_children();
+        double sum_child_n_selections = 0;
         for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
+            shared_ptr<const Observation> observation = pr.first;
             MentsDNode& child = (MentsDNode&) *pr.second;
-            if (child.num_backups == 0) continue;
-            sum_child_backups += child.num_backups;
-            soft_value *= (sum_child_backups - child.num_backups) / sum_child_backups;
-            soft_value += child.num_backups * child.soft_value / sum_child_backups; 
+            double child_n_selections = empirical_distribution[observation];
+            if (child_n_selections == 0) continue;
+            sum_child_n_selections += child_n_selections;
+            soft_value *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+            soft_value += child_n_selections * child.soft_value / sum_child_n_selections;
         }
-        unlock_all_children();
         soft_value += local_reward; // +R(s,a)
     }
 

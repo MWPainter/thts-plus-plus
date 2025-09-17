@@ -57,7 +57,6 @@ namespace thts {
         for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pair : children) {
             shared_ptr<const Action> action = pair.first;
             ChParetoUctCNode& child = (ChParetoUctCNode&) *pair.second;
-            lock_guard<mutex> lg(child.node_lock);
             int child_visits = child.get_num_visits(ctx);
             Eigen::ArrayXd ucb_conf_vec = Eigen::ArrayXd::Ones(manager.reward_dim) * compute_ucb_confidence_interval(local_visits, child_visits);
             ConvexHull shifted_child_ch = child.convex_hull + Vec(ucb_conf_vec);

@@ -2,6 +2,7 @@
 
 #include "thts_decision_node.h"
 #include "thts_manager.h"
+#include "thts_node.h"
 
 #include <memory>
 #include <mutex>
@@ -12,9 +13,11 @@
 namespace thts {
     // forward declare
     class ThtsDNode;
+    class ThtsPool;
 
     // CNodeMap type is lengthy, so typedef
     typedef std::unordered_map<std::shared_ptr<const Observation>,std::shared_ptr<ThtsDNode>> DNodeChildMap;
+    typedef std::unordered_map<std::shared_ptr<const Observation>,int> EmpiricalDistributionMap;
     
     /**
      * An abstract base class for Chance Nodes.
@@ -23,8 +26,6 @@ namespace thts {
      * a transposition table implementation and pretty print functions for debugging.
      * 
      * Member variables:
-     *      node_lock: 
-     *          A mutex that is used to protect this entire node.
      *      thts_manager: 
      *          A ThtsManager object that stores the 'global' information about how the Thts algorithm should operate,
      *          so that an implementation can provide multiple modes of operation. Additionally stores the 
@@ -45,14 +46,15 @@ namespace thts {
      *          A pointer to this nodes parent node. nullptr if this node is the root node
      *      children:
      *          A map from Action objects to child ThtsCNode objects
+     *      empirical_distribution:
+     *          An empirical distribution over observations seen at this node
      */
-    class ThtsCNode : public std::enable_shared_from_this<ThtsCNode> {
+    class ThtsCNode : public ThtsNode {
         // Allow ThtsDNode access to private members
         friend ThtsDNode;
+        friend ThtsPool;
 
         protected:
-            std::mutex node_lock;
-
             std::shared_ptr<ThtsManager> thts_manager;
             std::shared_ptr<const State> state;
             std::shared_ptr<const Action> action;
@@ -62,6 +64,9 @@ namespace thts {
 
             int num_visits;
             DNodeChildMap children;
+            EmpiricalDistributionMap empirical_distribution;
+
+            double local_reward;
 
         public: 
             /**
@@ -81,31 +86,6 @@ namespace thts {
              * Mark destructor as virtual for subclassing.
              */
             virtual ~ThtsCNode() = default;
-
-            /**
-             * Aquires the lock for this node.
-             */
-            void lock();
-
-            /**
-             * Releases the lock for this node.
-             */
-            void unlock();
-
-            /**
-             * Gets a reference to the lock for this node (so can use in a lock_guard for example)
-             */
-            std::mutex& get_lock();
-
-            /**
-             * Helper function to lock all children nodes.
-             */
-            void lock_all_children() const;
-
-            /**
-             * Helper function to unlock all children nodes.
-             */
-            void unlock_all_children() const;
 
             /**
              * Thts visit function.
@@ -129,6 +109,14 @@ namespace thts {
              *      The sampled observation
              */
             virtual std::shared_ptr<const Observation> sample_observation_itfc(ThtsContext& ctx) = 0;
+
+            /**
+             * Updates the empirical distribution map with a given observation.Action
+             * 
+             * Args:
+             *     observation: The observation to update the empirical distribution with
+             */
+            void update_empirical_distribution(std::shared_ptr<const Observation> observation);
 
             /**
              * Thts backup function.
@@ -158,11 +146,11 @@ namespace thts {
              * Creates a child node and inserts it in the unordered_map 'children'.
              * 
              * This virtual final method means that this implementation cannot be overriden. This is to protect the 
-             * logic surrounding the transposition table, which is found in the 'thts_manager' object. It will perform 
-             * the following logic:
-             *      - if not using transposition table:
+             * logic surrounding graph search (with transposition table), which is found in the 'thts_manager' 
+             * object. It will perform the following logic:
+             *      - if not using graph search:
              *          - make child node using 'create_child_node_helper' and insert in children map
-             *      - if using transposition table:
+             *      - if using graph search:
              *          - check transposition table for child node, if it exists, adds to children map and returns
              *          - otherwise creates the child node, and inserts it into the children map and transposition table
              * 

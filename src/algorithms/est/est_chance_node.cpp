@@ -40,7 +40,7 @@ namespace thts {
         // value backup
         DentsManager& manager = (DentsManager&) *thts_manager;
         if (manager.use_dp_value) {
-            backup_dp<EstDNode>(children, local_reward, is_opponent());
+            backup_dp<EstDNode>(children, empirical_distribution, local_reward, is_opponent());
         } else {
             backup_emp(trial_cumulative_return_after_node);
         }

@@ -444,7 +444,7 @@ namespace std {
         return os;
     }
 
-    ostream& operator<<(ostream& os, const StringAction action) {
+    ostream& operator<<(ostream& os, const StringAction& action) {
         os << action.get_pretty_print_string();
         return os;
     }
@@ -495,36 +495,13 @@ namespace std {
  * Implementation of hash, equals_to and output stream functions for transposition table types
  */
 namespace std {
-    /**
-     * Implementation of std::hash<DNodeIdTuple>.
-     */
-    size_t hash<DNodeIdTuple>::operator()(const DNodeIdTuple& tpl) const {
-        size_t hash_val = 0;
-        hash_val = helper::hash_combine(hash_val, get<0>(tpl));
-        hash_val = helper::hash_combine(hash_val, get<1>(tpl));
-        return hash_val;
-    }
-
-    /**
-     * Implementation of std::equal_to<DNodeIdTuple>.
-     */
-    bool equal_to<DNodeIdTuple>::operator()(const DNodeIdTuple& lhs, const DNodeIdTuple& rhs) const {
-        return get<0>(lhs) == get<0>(rhs) && get<1>(lhs) == get<1>(rhs);
-    }
-
-    /**
-     * Override output stream << operator for DNodeIdTuple.
-     */
-    ostream& operator<<(ostream& os, const DNodeIdTuple& tpl) {
-        os << "DNodeId(" << get<0>(tpl) << "," << get<1>(tpl) << ")";
-        return os;
-    }
 
     /**
      * Override output stream << operator for DNodeTable.
+     * Converts weak_ptr to shared_ptr for printing, as helper function needs strong references.
      */
     ostream& operator<<(ostream& os, const DNodeTable& tbl) {
-        unordered_map<DNodeIdTuple,shared_ptr<ThtsDNode>> shared_tbl_for_print;
+        unordered_map<std::shared_ptr<const Observation>,shared_ptr<ThtsDNode>> shared_tbl_for_print;
         for (auto pr : tbl) {
             shared_tbl_for_print.insert_or_assign(pr.first, shared_ptr<ThtsDNode>(pr.second));
         }

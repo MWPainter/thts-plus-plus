@@ -3,7 +3,9 @@
 #include "thts_chance_node.h"
 #include "thts_types.h"
 
+#include <algorithm>
 #include <utility>
+#include <iostream>
 
 using namespace std;
 
@@ -25,6 +27,8 @@ namespace thts {
      * CConstructor for ThtsPool for subclasses to use in their initialisation
      * For example, if override worker_fn to add setup to a thread (e.g. PyThtsPool), then would want to 
      * make threads that call PyThtsPool::worker_fn rather than ThtsPool::worker_fn
+     *
+     * Aditionally, remember to make sure that root_node is in the transposition table if using graph search
      */
     ThtsPool::ThtsPool(
         shared_ptr<ThtsManager> thts_manager, 
@@ -51,6 +55,10 @@ namespace thts {
         if (thts_manager == nullptr || root_node == nullptr) {
             throw runtime_error("Cannot make ThtsPool without a thts manager, or root node");
         }
+        if (thts_manager->graph_search) {
+            unique_lock<shared_mutex> writer_lock(thts_manager->dmap_lock);
+            thts_manager->dmap[root_node->state] = root_node;
+        }
         if (start_threads_in_this_constructor) {
             for (int i=0; i<num_threads; i++) {
                 workers[i] = thread(&ThtsPool::worker_fn, this, i);
@@ -74,6 +82,159 @@ namespace thts {
         work_left_lock.unlock();
         for (int i=0; i<num_threads; i++) {
             workers[i].join();
+        }
+    }
+
+    /**
+     * Locks a list of ThtsNode objects in a strict ordering using their pointers
+     */
+    void ThtsPool::lock_node_list(vector<shared_ptr<ThtsNode>>& nodes_to_lock) 
+    {
+        std::sort(nodes_to_lock.begin(), nodes_to_lock.end());
+        for (shared_ptr<ThtsNode>& node : nodes_to_lock) {
+            node->lock.lock();
+        }
+    }
+
+    /**
+     * Safely locks a dnode and its children. Accounts for being in a graph search. Nodes need to be locked in a  
+     * strict ordering to avoid deadlock.
+     *  
+     * First get the list of nodes to lock (the node and all of its children), node->lock needs to be held for this 
+     * Second locks all nodes, sorted by their pointers 
+     * Third checks that the number of things we locked == number of children + 1 
+     * Fourth if the check fails, then a child was added under our feet (between grabbing the list of children and 
+     *      trying to lock them all). So we should unlock all the nodes we successfully locked and retry.
+     */
+    void ThtsPool::lock_dnode_and_children(shared_ptr<ThtsDNode> node) {
+        // while (true) 
+        // {
+        //     vector<shared_ptr<ThtsNode>> to_lock;
+        //     to_lock.push_back(node);
+        //     node->lock.lock();
+        //     for (auto [_action, child] : node->children)
+        //     {
+        //         to_lock.push_back(child);
+        //     }
+        //     node->lock.unlock();
+
+        //     ThtsPool::lock_node_list(to_lock);
+
+        //     if (node->children.size() + 1 == to_lock.size())
+        //     {
+        //         break;
+        //     }
+            
+        //     for (shared_ptr<ThtsNode>& to_unlock : to_lock) 
+        //     {
+        //         to_unlock->lock.unlock();
+        //     }
+        // }
+
+        while (true) {
+            // Collect children under node->lock
+            vector<shared_ptr<ThtsNode>> to_lock;
+            {
+                lock_guard<mutex> guard(node->lock);   // safely hold while reading children
+                to_lock.push_back(node);
+                for (auto& [action, child] : node->children) {
+                    to_lock.push_back(child);
+                }
+            }
+
+            // Now lock everything in sorted order
+            lock_node_list(to_lock);
+
+            // Verify no new children slipped in
+            size_t expected = 1 + node->children.size();
+            if (expected == to_lock.size()) {
+                return;  // success
+            }
+
+            // Unlock and retry
+            for (auto& n : to_lock) {
+                n->lock.unlock();
+            }
+        }
+    }
+
+    /**
+     * Safely unlocks a dnode and its children. Accounts for being in a graph search. Nodes need to be locked in a  
+     * strict ordering to avoid deadlock. In 2 phase locking, don't need to be so careful about how unlock
+     */
+    void ThtsPool::unlock_dnode_and_children(shared_ptr<ThtsDNode> node) {
+        node->lock.unlock();
+        for (auto [_action, child] : node->children)
+        {
+            child->lock.unlock();
+        }
+    }
+
+    /**
+     * v1TODO: make this and lock_dnode one function
+     */
+    void ThtsPool::lock_cnode_and_children(shared_ptr<ThtsCNode> node) {
+        // while (true) 
+        // {
+        //     vector<shared_ptr<ThtsNode>> to_lock;
+        //     to_lock.push_back(node);
+        //     node->lock.lock();
+        //     for (auto [_obs, child] : node->children)
+        //     {
+        //         to_lock.push_back(child);
+        //     }
+        //     node->lock.unlock();
+
+        //     ThtsPool::lock_node_list(to_lock);
+
+        //     if (node->children.size() + 1 == to_lock.size())
+        //     {
+        //         break;
+        //     }
+            
+        //     for (shared_ptr<ThtsNode>& to_unlock : to_lock) 
+        //     {
+        //         to_unlock->lock.unlock();
+        //     }
+        // }
+
+
+
+        while (true) {
+            // Collect children under node->lock
+            vector<shared_ptr<ThtsNode>> to_lock;
+            {
+                lock_guard<mutex> guard(node->lock);   // safely hold while reading children
+                to_lock.push_back(node);
+                for (auto& [obs, child] : node->children) {
+                    to_lock.push_back(child);
+                }
+            }
+
+            // Now lock everything in sorted order
+            lock_node_list(to_lock);
+
+            // Verify no new children slipped in
+            size_t expected = 1 + node->children.size();
+            if (expected == to_lock.size()) {
+                return;  // success
+            }
+
+            // Unlock and retry
+            for (auto& n : to_lock) {
+                n->lock.unlock();
+            }
+        }
+    }
+
+    /**
+     * v1TODO: make this and unlock_dnode one function
+     */
+    void ThtsPool::unlock_cnode_and_children(shared_ptr<ThtsCNode> node) {
+        node->lock.unlock();
+        for (auto [_obs, child] : node->children)
+        {
+            child->lock.unlock();
         }
     }
 
@@ -139,23 +300,24 @@ namespace thts {
 
         while (should_continue_selection_phase(cur_node, new_decision_node_created_this_trial)) {
             // dnode visit + select action
-            cur_node->lock();
+            lock_dnode_and_children(cur_node);
             cur_node->visit_itfc(context);
             shared_ptr<const Action> action = cur_node->select_action_itfc(context);
             shared_ptr<ThtsCNode> chance_node = cur_node->get_child_node_itfc(action);
-            cur_node->unlock();
+            unlock_dnode_and_children(cur_node);
             
             // cnode visit + sample outcome
-            chance_node->lock();
+            lock_cnode_and_children(chance_node);
             int pre_visit_children = chance_node->get_num_children();
             chance_node->visit_itfc(context);
             shared_ptr<const Observation> observation = chance_node->sample_observation_itfc(context);
+            chance_node->update_empirical_distribution(observation);
             int post_visit_children = chance_node->get_num_children();
             if (post_visit_children > pre_visit_children) {
                 new_decision_node_created_this_trial = true;
             }
             shared_ptr<ThtsDNode> decision_node = chance_node->get_child_node_itfc(observation);
-            chance_node->unlock();
+            unlock_cnode_and_children(chance_node);
 
             // push onto 'nodes_to_backup' and 'rewards'
             shared_ptr<const State> state = cur_node->state;
@@ -167,10 +329,10 @@ namespace thts {
         }
 
         // visit the final node and add heuristic value to list of rewards at end
-        cur_node->lock();
+        lock_dnode_and_children(cur_node);
         cur_node->visit_itfc(context);
         rewards.push_back(cur_node->heuristic_value);
-        cur_node->unlock();
+        unlock_dnode_and_children(cur_node);
     }
 
 
@@ -217,13 +379,13 @@ namespace thts {
             shared_ptr<ThtsCNode> chance_node = pr.second;
             nodes_to_backup.pop_back();
 
-            chance_node->lock();
+            lock_cnode_and_children(chance_node);
             chance_node->backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);
-            chance_node->unlock();
+            unlock_cnode_and_children(chance_node);
 
-            decision_node->lock();
+            lock_dnode_and_children(decision_node);
             decision_node->backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);
-            decision_node->unlock();
+            unlock_dnode_and_children(decision_node);
         }
     }
 
@@ -281,7 +443,7 @@ namespace thts {
             logger->trial_completed();
 
             if (logger->should_log()) {
-                lock_guard<mutex> root_node_lg(root_node->get_lock());
+                lock_guard<mutex> root_node_lg(root_node->lock);
                 logger->log(root_node);
             }
 

@@ -177,7 +177,6 @@ namespace thts {
         ConvexHull approx_convex_hull;
         for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pair : children) {
             CztDNode& child = (CztDNode&) *pair.second;
-            lock_guard<mutex> lg(child.node_lock);
             approx_convex_hull |= child.ball_list.get_approximate_convex_hull();
         }
         return approx_convex_hull;

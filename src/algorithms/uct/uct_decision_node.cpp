@@ -7,6 +7,8 @@
 #include <sstream>
 #include <vector>
 
+#include <iostream>
+
 using namespace std; 
 
 namespace thts {
@@ -33,11 +35,13 @@ namespace thts {
             actions(thts_manager->thts_env()->get_valid_actions_itfc(state,*thts_manager->get_thts_context())),
             policy_prior() 
     {   
-        if (thts_manager->heuristic_fn != nullptr) {
+        if (thts_manager->heuristic_fn != nullptr 
+            && !thts_manager->thts_env()->is_sink_state_itfc(state,*thts_manager->get_thts_context())) 
+        {
             num_visits = thts_manager->heuristic_psuedo_trials;
             num_backups = thts_manager->heuristic_psuedo_trials;
-            avg_return = heuristic_value;
-        }
+            avg_return = heuristic_value; 
+        } 
 
         if (thts_manager->prior_fn != nullptr) {
             policy_prior = thts_manager->prior_fn(state, thts_manager->thts_env());
@@ -95,9 +99,6 @@ namespace thts {
         shared_ptr<UctManager> manager = static_pointer_cast<UctManager>(thts_manager);
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
 
-        // Lock all children
-        lock_all_children();
-
         // Compute adaptive bias if using
         double bias = manager->bias; 
         if (manager->adaptive_bias) {
@@ -127,10 +128,7 @@ namespace thts {
             }
 
             ucb_values[action] = action_ucb_value;
-        }  
-
-        // unlock all children
-        unlock_all_children();      
+        }    
     }
 
     /**
@@ -272,7 +270,27 @@ namespace thts {
         const double trial_cumulative_return,
         ThtsContext& ctx) 
     {
-        backup_average_return(trial_cumulative_return_after_node);
+        UctManager& manager = (UctManager&) *thts_manager;
+
+        avg_return = 0.0;
+        double sum_child_visits = 0;
+
+        if (has_heuristic_value()) {
+            avg_return = heuristic_value;
+            sum_child_visits += manager.heuristic_psuedo_trials;
+        }
+
+        for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pr : children) {
+            shared_ptr<const Action> observation = pr.first;
+            UctCNode& child = (UctCNode&) *pr.second;
+            double child_num_visits = child.num_visits;
+            if (child_num_visits == 0) continue;
+            sum_child_visits += child_num_visits;
+            avg_return *= (sum_child_visits - child_num_visits) / sum_child_visits;
+            avg_return += child_num_visits * child.avg_return / sum_child_visits;
+        }
+
+        num_backups++;
     }
     
     /**

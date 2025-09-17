@@ -176,17 +176,7 @@ namespace thts {
     */
    void TentsDNode::backup_update_map(ThtsContext& ctx) {
         shared_ptr<const Action> selected_action = ctx.get_value_ptr_const<Action>(_selected_action_key);
-        double new_q_value;
-
-        if (has_child_node(selected_action)) {
-            ThtsCNode& child_node = *get_child_node(selected_action);
-            child_node.lock();
-            new_q_value = get_soft_q_value_over_temp(selected_action);
-            child_node.unlock();
-        } else {
-            new_q_value = get_soft_q_value_over_temp(selected_action);
-        }
-
+        double new_q_value = get_soft_q_value_over_temp(selected_action);
         update_maps(selected_action, new_q_value);
    }
 

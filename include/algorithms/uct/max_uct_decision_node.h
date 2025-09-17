@@ -68,9 +68,8 @@ namespace thts {
              * A helper function that makes a child node object on the heap and returns it. 
              * 
              * The 'create_child_node' boilerplate function uses this function to make a new child, add it to the 
-             * children map (or bypass making the node using the transposition table if using). The function is marked 
-             * const to enforce that we don't accidently try to duplicate logic surrounding adding children and 
-             * interacting with the transposition table.
+             * children map. The function is marked 
+             * const to enforce that we don't accidently try to duplicate logic surrounding graph search.
              * 
              * Args:
              *      action: An action to create a child node for
@@ -103,10 +102,8 @@ namespace thts {
              * and handles the casting required to use it.
              * 
              * - If the child already exists in children, it returns a pointer to that child.
-             * - (If using transposition table) If the child already exists in the transposition table, but not in 
-             *      children, it adds the child to children and then returns a pointer to it.
              * - If the child hasn't been created before, it makes the child (using 'create_child_node_helper'), and 
-             *      inserts it appropriately into children (and the transposition table if relevant).
+             *      inserts it appropriately into children.
              * 
              * Args:
              *      action: An action to create a child node for

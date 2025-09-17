@@ -91,6 +91,7 @@ TEST_INCLUDES = -Iexternal/googletest/build/include
 
 # C++ flags
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20 
+CPPFLAGS += -Wpedantic -Wno-vla -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wsign-promo -Wstrict-null-sentinel -Werror -Wno-unused
 CPPFLAGS += -O3
 
 # C++ flags for building pybind11 executable/library

@@ -44,7 +44,6 @@ namespace thts {
     //     for (const pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : children) {
     //         shared_ptr<const Action> action = child_pair.first;
     //         ChThtsCNode& ch_child = (ChThtsCNode&) *child_pair.second;
-    //         lock_guard<mutex> lg(ch_child.get_lock()); 
     //         utilities[action] = ch_child.convex_hull.get_max_linear_utility(ctx.context_weight);
     //     }  
         
@@ -71,7 +70,6 @@ namespace thts {
         convex_hull = ConvexHull();
         for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : children) {
             ChThtsCNode& ch_child = (ChThtsCNode&) *child_pair.second;
-            lock_guard<mutex> lg(ch_child.get_lock()); 
             convex_hull |= ch_child.convex_hull;
         }  
 
@@ -96,7 +94,6 @@ namespace thts {
                 continue;
             }
             ChThtsCNode& child = (ChThtsCNode&) *get_child_node_itfc(action);
-            lock_guard<mutex> lg(child.node_lock);
             q_values[action] = child.get_contextual_q_value(ctx.context_weight);
         }
     }

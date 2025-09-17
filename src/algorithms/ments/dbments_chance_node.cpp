@@ -37,7 +37,7 @@ namespace thts {
         ThtsContext& ctx)
     {   
         backup_soft();
-        backup_dp<DBMentsDNode>(children, local_reward, is_opponent());
+        backup_dp<DBMentsDNode>(children, empirical_distribution, local_reward, is_opponent());
     }
 
     /**

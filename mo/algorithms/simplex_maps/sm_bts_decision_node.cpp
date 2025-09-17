@@ -54,7 +54,6 @@ namespace thts {
         }
 
         SmBtsCNode& child = (SmBtsCNode&) *get_child_node(action);
-        lock_guard<mutex> lg(child.get_lock());
         shared_ptr<TN> simplex = child.simplex_map.get_leaf_tn_node(ctx.context_weight.vec);
         shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight.vec);
         entropy = closest_vertex->entropy;

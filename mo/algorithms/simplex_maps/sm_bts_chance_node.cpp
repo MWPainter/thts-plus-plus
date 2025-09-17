@@ -76,7 +76,6 @@ namespace thts {
             int sum_child_backups = 0;
             for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
                 SmBtsDNode& child = (SmBtsDNode&) *pr.second;
-                lock_guard<mutex> lg(child.get_lock());
                 if (child.num_backups == 0) continue;
 
                 shared_ptr<TN> child_simplex = child.simplex_map.get_leaf_tn_node(ngv->weight);

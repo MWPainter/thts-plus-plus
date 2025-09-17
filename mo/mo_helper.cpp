@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <vector>
 
 #include "helper_templates.h"
 #include "thts_manager.h"
@@ -81,7 +82,7 @@ namespace thts::helper {
     Eigen::ArrayXd sample_uniform_random_simplex_vector(RandManager& manager, int dim)
     {
         Eigen::ArrayXd sampled_weight = Eigen::ArrayXd(dim);
-        double exp_rvs_run_sum[dim];
+        vector<double> exp_rvs_run_sum(dim);
         double exp_rvs_sum = 0.0; 
         for (int i=0; i<dim; i++) {
             double exp_rv = manager.get_rand_exp();

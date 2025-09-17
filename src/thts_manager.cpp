@@ -17,7 +17,7 @@ namespace thts {
         heuristic_fn(args.heuristic_fn),
         prior_fn(args.prior_fn),
         mcts_mode(args.mcts_mode), 
-        use_transposition_table(args.use_transposition_table), 
+        graph_search(args.graph_search), 
         is_two_player_game(args.is_two_player_game),
         dmap_lock(),
         dmap(),

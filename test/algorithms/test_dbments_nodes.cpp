@@ -45,7 +45,8 @@ void run_dbments_integration_test(
     double stay_prob=0.0, 
     int print_tree_depth=0, 
     double temp=1.0, 
-    double use_temp_decay=false) 
+    double use_temp_decay=false,
+    bool graph_search=false) 
 {
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
 
@@ -56,6 +57,7 @@ void run_dbments_integration_test(
     manager_args.mcts_mode = false;
     manager_args.temp = temp;
     manager_args.temp_decay_fn = use_temp_decay ? decayed_temp_inv_sqrt : nullptr;
+    manager_args.graph_search = graph_search;
     shared_ptr<MentsManager> manager = make_shared<MentsManager>(manager_args);
     shared_ptr<DBMentsDNode> root_node = make_shared<DBMentsDNode>(
         manager, grid_env->get_initial_state_itfc(), 0, 0);
@@ -107,6 +109,24 @@ TEST(DBMents_WithTempDecay_IntegrationTest, easy_grid_world_stochastic) {
 
 TEST(DBMents_WithTempDecay_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
     run_dbments_integration_test(2, 4, 10000, 0.1, 1, 0.5, true);
+}
+
+
+
+TEST(DBMents_GraphSearch_IntegrationTest, easy_grid_world) {
+    run_dbments_integration_test(1, 1, 10000, 0.0, 2, 1.0, false, true);
+}
+
+TEST(DBMents_GraphSearch_IntegrationTest, easy_grid_world_multithreaded) {
+    run_dbments_integration_test(2, 4, 10000, 0.0, 1, 0.5, false, true);
+}
+
+TEST(DBMents_GraphSearch_IntegrationTest, easy_grid_world_stochastic) {
+    run_dbments_integration_test(1, 1, 10000, 0.1, 2, 1.0, false, true);
+}
+
+TEST(DBMents_GraphSearch_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
+    run_dbments_integration_test(2, 4, 10000, 0.1, 1, 0.5, false, true);
 }
 
 

@@ -25,54 +25,18 @@ namespace thts {
         int decision_depth,
         int decision_timestep,
         shared_ptr<const ThtsDNode> parent) :
-            node_lock(),
+            ThtsNode(),
             thts_manager(thts_manager),
             state(state),
             action(action),
             decision_depth(decision_depth),
             decision_timestep(decision_timestep),
             parent(parent),
-            num_visits(0)
+            num_visits(0),
+            children(),
+            empirical_distribution(),
+            local_reward(thts_manager->thts_env()->get_reward_itfc(state,action,*thts_manager->get_thts_context()))
     {
-    }
-
-    /**
-     * Aquires the lock for this node.
-     */
-    void ThtsCNode::lock() { 
-        node_lock.lock(); 
-    }
-
-    /**
-     * Releases the lock for this node.
-     */
-    void ThtsCNode::unlock() { 
-        node_lock.unlock(); 
-    }
-
-    /**
-     * Gets a reference to the lock for this node (so can use in a lock_guard for example)
-     */
-    std::mutex& ThtsCNode::get_lock() { 
-        return node_lock; 
-    }
-
-    /**
-     * Helper function to lock all children nodes.
-     */
-    void ThtsCNode::lock_all_children() const {
-        for (auto action_child_pair : children) {
-            action_child_pair.second->lock();
-        }
-    }
-
-    /**
-     * Helper function to unlock all children nodes.
-     */
-    void ThtsCNode::unlock_all_children() const {
-        for (auto action_child_pair : children) {
-            action_child_pair.second->unlock();
-        }
     }
 
     /**
@@ -80,6 +44,16 @@ namespace thts {
      */
     void ThtsCNode::visit_itfc(ThtsContext& ctx) {
         num_visits += 1;
+    }
+
+    /**
+     * Updates the empirical distribution map with a given observation.
+     * 
+     * Args:
+     *     observation: The observation to update the empirical distribution with
+     */
+    void ThtsCNode::update_empirical_distribution(std::shared_ptr<const Observation> observation) {
+        empirical_distribution[observation]++;
     }
 
     /**
@@ -99,30 +73,29 @@ namespace thts {
     {
         if (has_child_node_itfc(observation)) return get_child_node_itfc(observation);
 
-        if (!thts_manager->use_transposition_table) {
+        if (!thts_manager->graph_search) {
             shared_ptr<ThtsDNode> child_node = create_child_node_helper_itfc(observation, next_state);
             children[observation] = child_node;
             return child_node;
         }
 
         DNodeTable& dmap = thts_manager->dmap;
-        DNodeIdTuple dnode_id = make_tuple(decision_timestep, observation);
         
         // reading from dnode table
-        shared_lock<shared_mutex> reader_lock(thts_manager->dmap_lock);
-        auto iter = dmap.find(dnode_id);
-        if (iter != dmap.end()) {
-            shared_ptr<ThtsDNode> child_node = shared_ptr<ThtsDNode>(dmap[dnode_id]);
+        unique_lock<shared_mutex> writer_lock(thts_manager->dmap_lock);
+        // shared_lock<shared_mutex> reader_lock(thts_manager->dmap_lock);
+        if (dmap.contains(observation)) {
+            shared_ptr<ThtsDNode> child_node = shared_ptr<ThtsDNode>(dmap[observation]);
             children[observation] = child_node;
             return child_node;
         }
-        reader_lock.unlock();
+        // reader_lock.unlock();
 
         // writing to dnode table
         shared_ptr<ThtsDNode> child_node = create_child_node_helper_itfc(observation, next_state);
-        unique_lock<shared_mutex> writer_lock(thts_manager->dmap_lock);
+        // unique_lock<shared_mutex> writer_lock(thts_manager->dmap_lock);
         children[observation] = child_node;
-        dmap[dnode_id] = child_node;
+        dmap[observation] = child_node;
         return child_node;
     }
 

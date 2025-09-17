@@ -137,10 +137,8 @@ namespace thts {
                 bool is_opponent=false) const 
             {
                 std::shared_ptr<DPCNodeChildMap> dp_children = convert_child_map<T>(children);
-                for (auto pr : children) pr.second->lock();
                 std::shared_ptr<const Action> action = recommend_action_best_dp_value_impl(
                     *dp_children, rand_manager, visit_threshold, is_opponent);
-                for (auto pr : children) pr.second->unlock();
                 return action;
             }
             
@@ -160,9 +158,7 @@ namespace thts {
             template <typename T>
             void backup_dp(const CNodeChildMap& children, bool is_opponent=false) {
                 std::shared_ptr<DPCNodeChildMap> dp_children = convert_child_map<T>(children);
-                for (auto pr : children) pr.second->lock();
                 backup_dp_impl(*dp_children, is_opponent);
-                for (auto pr : children) pr.second->unlock();
             }
     };
 }

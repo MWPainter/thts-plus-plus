@@ -3,6 +3,7 @@
 #include "thts_chance_node.h"
 #include "thts_env.h"
 #include "thts_manager.h"
+#include "thts_node.h"
 
 #include <memory>
 #include <mutex>
@@ -27,12 +28,9 @@ namespace thts {
      * a transposition table implementation and pretty print functions for debugging.
      * 
      * Member variables:
-     *      node_lock: 
-     *          A mutex that is used to protect this entire node.
      *      thts_manager: 
      *          A ThtsManager object that stores the 'global' information about how the Thts algorithm should operate,
-     *          so that an implementation can provide multiple modes of operation. Additionally stores the 
-     *          transposition tables
+     *          so that an implementation can provide multiple modes of operation. 
      *      state:
      *          The state associated with this node, which we want to make a decision for (what is the best action)
      *      decision_depth:
@@ -50,14 +48,13 @@ namespace thts {
      *      heuristic_value:
      *          The heuristic value of this decision node
      */
-    class ThtsDNode : public std::enable_shared_from_this<ThtsDNode> {
+    class ThtsDNode : public ThtsNode {
         // Allow ThtsCNode, Logger and Pool access to private members
         friend ThtsCNode;
         friend ThtsLogger;
         friend ThtsPool;
 
         protected:
-            std::mutex node_lock;
 
             std::shared_ptr<ThtsManager> thts_manager;
             std::shared_ptr<const State> state;
@@ -70,6 +67,7 @@ namespace thts {
             CNodeChildMap children;
 
         protected:
+            bool has_valid_heuristic_value;
             double heuristic_value;
 
         public: 
@@ -91,29 +89,9 @@ namespace thts {
             virtual ~ThtsDNode() = default;
 
             /**
-             * Aquires the lock for this node.
+             * Helper for if heuristic value is valid.
              */
-            void lock();
-
-            /**
-             * Releases the lock for this node.
-             */
-            void unlock();
-
-            /**
-             * Gets a reference to the lock for this node (so can use in a lock_guard for example)
-             */
-            std::mutex& get_lock();
-
-            /**
-             * Helper function to lock all children nodes.
-             */
-            void lock_all_children() const;
-
-            /**
-             * Helper function to unlock all children nodes.
-             */
-            void unlock_all_children() const;
+            bool has_heuristic_value() const;
 
             /**
              * Thts visit function.
@@ -201,13 +179,9 @@ namespace thts {
              * Creates a child node and inserts it in the unordered_map 'children'.
              * 
              * This virtual final method means that this implementation cannot be overriden. This is to protect the 
-             * logic surrounding the transposition table, which is found in the 'thts_manager' object. It will perform 
-             * the following logic:
-             *      - if not using transposition table:
-             *          - make child node using 'create_child_node_helper' and insert in children map
-             *      - if using transposition table:
-             *          - check transposition table for child node, if it exists, adds to children map and returns
-             *          - otherwise creates the child node, and inserts it into the children map and transposition table
+             * logic surrounding graph search. It is worth noting that if a transposition table is used over DNodes, 
+             * then each DNode's children will be unique. In some sense, each DNode's children map is a "transposition
+             * table" for CNodes.
              * 
              * Args:
              *      action: The action to create a child node for 

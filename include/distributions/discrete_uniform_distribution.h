@@ -27,7 +27,7 @@ namespace thts {
             /**
              * Samples a random T uniformly randomly
             */
-            virtual T sample(RandManager& rand_manager);;
+            virtual T sample(RandManager& rand_manager);
     };
 }
 

@@ -64,4 +64,18 @@ namespace thts::python::helper {
      * Destroy shared memory associated with 'shmid'
     */
     void destroy_shared_mem(int shmid);
+
+
+
+
+
+
+
+
+
+
+
+
+    // v1TODO: want -Wmissing-declarations, but how to define helpers that don't want to export??
+    void update_sem(int semid, int sem_num, int delta);
 }

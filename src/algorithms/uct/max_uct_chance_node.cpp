@@ -21,33 +21,34 @@ namespace thts {
                 action,
                 decision_depth,
                 decision_timestep,
-                static_pointer_cast<const UctDNode>(parent)),
-            local_reward(thts_manager->thts_env()->get_reward_itfc(state,action,*thts_manager->get_thts_context()))
+                static_pointer_cast<const UctDNode>(parent))
     {  
     }
 
-    void MaxUctCNode::backup(
-        const vector<double>& trial_rewards_before_node, 
-        const vector<double>& trial_rewards_after_node, 
-        const double trial_cumulative_return_after_node, 
-        const double trial_cumulative_return,
-        ThtsContext& ctx) 
-    {
-        avg_return = 0.0;
-        double sum_child_backups = 0;
-        lock_all_children();
-        for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
-            MaxUctDNode& child = (MaxUctDNode&) *pr.second;
-            if (child.num_backups == 0) continue;
-            sum_child_backups += child.num_backups;
-            avg_return *= (sum_child_backups - child.num_backups) / sum_child_backups;
-            avg_return += child.num_backups * child.avg_return / sum_child_backups; 
-        }
-        unlock_all_children();
-        avg_return += local_reward; // +R(s,a)
+    // void MaxUctCNode::backup(
+    //     const vector<double>& trial_rewards_before_node, 
+    //     const vector<double>& trial_rewards_after_node, 
+    //     const double trial_cumulative_return_after_node, 
+    //     const double trial_cumulative_return,
+    //     ThtsContext& ctx) 
+    // {
+    //     avg_return = 0.0;
+    //     double sum_child_n_selections = 0;
+    //     lock_all_children();
+    //     for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
+    //         shared_ptr<const Observation> observation = pr.first;
+    //         MaxUctDNode& child = (MaxUctDNode&) *pr.second;
+    //         double child_n_selections = empirical_distribution[observation];
+    //         if (child_n_selections == 0) continue;
+    //         sum_child_n_selections += child_n_selections   ;
+    //         avg_return *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+    //         avg_return += child_n_selections * child.avg_return / sum_child_n_selections;
+    //     }
+    //     unlock_all_children();
+    //     avg_return += local_reward; // +R(s,a)
 
-        num_backups++;
-    }
+    //     num_backups++;
+    // }
 
     shared_ptr<MaxUctDNode> MaxUctCNode::create_child_node_helper(shared_ptr<const State> observation) const
     {
@@ -89,21 +90,21 @@ namespace thts {
  */
 namespace thts {
 
-    void MaxUctCNode::backup_itfc(
-        const vector<double>& trial_rewards_before_node, 
-        const vector<double>& trial_rewards_after_node, 
-        const double trial_cumulative_return_after_node, 
-        const double trial_cumulative_return,
-        ThtsContext& ctx) 
-    {
-        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
-        backup(
-            trial_rewards_before_node, 
-            trial_rewards_after_node, 
-            trial_cumulative_return_after_node, 
-            trial_cumulative_return, 
-            ctx_itfc);
-    }
+    // void MaxUctCNode::backup_itfc(
+    //     const vector<double>& trial_rewards_before_node, 
+    //     const vector<double>& trial_rewards_after_node, 
+    //     const double trial_cumulative_return_after_node, 
+    //     const double trial_cumulative_return,
+    //     ThtsContext& ctx) 
+    // {
+    //     ThtsContext& ctx_itfc = (ThtsContext&) ctx;
+    //     backup(
+    //         trial_rewards_before_node, 
+    //         trial_rewards_after_node, 
+    //         trial_cumulative_return_after_node, 
+    //         trial_cumulative_return, 
+    //         ctx_itfc);
+    // }
 
     shared_ptr<ThtsDNode> MaxUctCNode::create_child_node_helper_itfc(
         shared_ptr<const Observation> observation, shared_ptr<const State> next_state) const 

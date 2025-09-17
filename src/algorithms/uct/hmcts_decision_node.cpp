@@ -94,7 +94,6 @@ namespace thts {
             return;
         }
 
-        lock_all_children();
         while (seq_halving_actions.size() > 1) {
             // check for outstanding budget
             bool child_has_outstanding_budget = false;
@@ -133,7 +132,6 @@ namespace thts {
         for (shared_ptr<const Action> act : seq_halving_actions) {
             get_child_node(act)->set_new_total_budget(seq_halving_round_budget_per_child);
         }
-        unlock_all_children();
     }
 
     /**

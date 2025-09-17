@@ -90,7 +90,7 @@ provides additional utility functions. Most of these should be fairly straightfo
 
 One nuance is the create child functions. The `create_child_node_itfc` is the interface that should be used to create 
 a child node. as it handles the logic to maintain the map of `children` nodes, and handles any logic with respect to 
-transposition tables. The `create_child_node_helper_itfc` function should just construct a child node and return a 
+transposition tables/graphs. The `create_child_node_helper_itfc` function should just construct a child node and return a 
 smart pointer to that node.
 
 In the templated subclass in `templates/thts_decision_node_template.h` there are four functions related to creating 
@@ -103,7 +103,7 @@ The purpose of each function are as follows:
     - Use: creates a child node, returning the specific type of the class.
     - Implementation: boilerplate code that calls `create_child_node_itfc`
 - `create_child_node_itfc`
-    - Use: creates a child node, handles any transposition table logic, returns a pointer to the next `ThtsDNode` or `ThtsCNode`
+    - Use: creates a child node, handles any graph logic, returns a pointer to the next `ThtsDNode` or `ThtsCNode`
     - Implementation: marked final in the `ThtsDNode` and `ThtsCNode` classes
 - `create_child_node_helper_itfc`
     - Use: helper function for `create_child_node_itfc` to call to call the (appropriate) constructor for a node 

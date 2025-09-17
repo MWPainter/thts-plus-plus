@@ -53,7 +53,7 @@ namespace thts {
              *      local_reward: A value for the reward at this node (i.e. R(s,a))
              *      is_opponent: True if this node is acting as an opponent in a two player game
              */
-            void backup_dp_impl(DPDNodeChildMap& children, double local_reward, bool is_opponent);
+            void backup_dp_impl(DPDNodeChildMap& children, EmpiricalDistributionMap& empirical_distribution, double local_reward, bool is_opponent);
 
 
             /**
@@ -95,11 +95,9 @@ namespace thts {
              *      is_opponent: True if this node is acting as an opponent in a two player game.
              */
             template <typename T>
-            void backup_dp(DNodeChildMap& children, double local_reward, bool is_opponent=false) {
+            void backup_dp(DNodeChildMap& children, EmpiricalDistributionMap& empirical_distribution, double local_reward, bool is_opponent=false) {
                 std::shared_ptr<DPDNodeChildMap> dp_children = convert_child_map<T>(children);
-                for (auto pr : children) pr.second->lock();
-                backup_dp_impl(*dp_children, local_reward, is_opponent);
-                for (auto pr : children) pr.second->unlock();
+                backup_dp_impl(*dp_children, empirical_distribution, local_reward, is_opponent);
             }
     };
 }

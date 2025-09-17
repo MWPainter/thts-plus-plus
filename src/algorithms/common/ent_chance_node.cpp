@@ -14,18 +14,19 @@ namespace thts {
      * 
      * Adapted from DPDNode DPBackup function
     */
-    void EntCNode::backup_ent_impl(EntDNodeChildMap& children) {
+    void EntCNode::backup_ent_impl(EntDNodeChildMap& children, EmpiricalDistributionMap& empirical_distribution) {
         num_backups++;
 
         subtree_entropy = 0.0;
-        double sum_child_backups = 0;
+        double sum_child_n_selections = 0;
         for (pair<shared_ptr<const Observation>,shared_ptr<EntDNode>> pr : children) {
+            shared_ptr<const Observation> observation = pr.first;
             EntDNode& child = (EntDNode&) *pr.second;
-            int child_backups = child.num_backups;
-            if (child_backups == 0) continue;
-            sum_child_backups += child_backups;
-            subtree_entropy *= (sum_child_backups - child_backups) / sum_child_backups;
-            subtree_entropy += child_backups * child.subtree_entropy / sum_child_backups; 
+            double child_n_selections = empirical_distribution[observation];
+            if (child_n_selections == 0) continue;
+            sum_child_n_selections += child_n_selections;
+            subtree_entropy *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+            subtree_entropy += child_n_selections * child.subtree_entropy / sum_child_n_selections;
         }
     }
 }

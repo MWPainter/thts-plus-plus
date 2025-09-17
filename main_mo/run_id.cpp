@@ -210,7 +210,7 @@ namespace thts {
             }
             manager_args.temp_decay_fn_x_scale = bts_search_temp_decay_fn_scale;
 
-            // manager_args.use_transposition_table = true;
+            // manager_args.graph_search = true;
             return make_shared<SmBtsManager>(manager_args);
         }
 
@@ -249,7 +249,7 @@ namespace thts {
             manager_args.entropy_temp_decay_fn_x_scale = dents_entropy_temp_decay_fn_scale;
 
 
-            // manager_args.use_transposition_table = true;
+            // manager_args.graph_search = true;
             return make_shared<SmDentsManager>(manager_args);
         }
 

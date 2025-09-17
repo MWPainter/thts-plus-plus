@@ -50,7 +50,7 @@ namespace thts {
              *      children: The children map for this node
              *      is_opponent: True if this node is acting as an opponent in a two player game
              */
-            void backup_ent_impl(EntDNodeChildMap& children);
+            void backup_ent_impl(EntDNodeChildMap& children, EmpiricalDistributionMap& empirical_distribution);
 
 
             /**
@@ -88,15 +88,12 @@ namespace thts {
              * 
              * Args:
              *      children: The children map for a ThtsDNode (that are ultimately of type T)
-             *      local_reward: A value for the reward at this node (i.e. R(s,a))
-             *      is_opponent: True if this node is acting as an opponent in a two player game.
+             *     empirical_distribution: The empirical distribution map for this node
              */
             template <typename T>
-            void backup_ent(DNodeChildMap& children) {
+            void backup_ent(DNodeChildMap& children, EmpiricalDistributionMap& empirical_distribution) {
                 std::shared_ptr<EntDNodeChildMap> ent_children = convert_child_map<T>(children);
-                for (auto pr : children) pr.second->lock();
-                backup_ent_impl(*ent_children);
-                for (auto pr : children) pr.second->unlock();
+                backup_ent_impl(*ent_children, empirical_distribution);
             }
     };
 }

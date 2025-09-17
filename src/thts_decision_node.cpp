@@ -23,62 +23,30 @@ namespace thts {
         int decision_depth,
         int decision_timestep,
         shared_ptr<const ThtsCNode> parent) :
-            node_lock(),
+            ThtsNode(),
             thts_manager(thts_manager),
             state(state),
             decision_depth(decision_depth),
             decision_timestep(decision_timestep),
             parent(parent),
             num_visits(0),
+            children(),
+            has_valid_heuristic_value(false),
             heuristic_value(0.0)
     {
         if (thts_manager->heuristic_fn != nullptr 
             && !thts_manager->thts_env()->is_sink_state_itfc(state,*thts_manager->get_thts_context())) 
         {
             heuristic_value = thts_manager->heuristic_fn(state, *thts_manager->thts_env(), *thts_manager, decision_depth);
+            has_valid_heuristic_value = true;
         }
     }
 
     /**
-     * Aquires the lock for this node.
+     * Helper function to check if heuristic value is valid.
      */
-    void ThtsDNode::lock() 
-    { 
-        node_lock.lock(); 
-    }
-
-    /**
-     * Releases the lock for this node.
-     */
-    void ThtsDNode::unlock() 
-    { 
-        node_lock.unlock(); 
-    }
-
-    /**
-     * Gets a reference to the lock for this node (so can use in a lock_guard for example)
-     */
-    std::mutex& ThtsDNode::get_lock() 
-    { 
-        return node_lock; 
-    }
-
-    /**
-     * Helper function to lock all children nodes.
-     */
-    void ThtsDNode::lock_all_children() const {
-        for (auto action_child_pair : children) {
-            action_child_pair.second->lock();
-        }
-    }
-
-    /**
-     * Helper function to unlock all children nodes.
-     */
-    void ThtsDNode::unlock_all_children() const {
-        for (auto action_child_pair : children) {
-            action_child_pair.second->unlock();
-        }
+    bool ThtsDNode::has_heuristic_value() const {
+        return has_valid_heuristic_value;
     }
 
     /**
@@ -103,11 +71,9 @@ namespace thts {
     }
 
     /**
-     * Wrapper around 'create_child_node_helper' that include logic for using a transposition table.
+     * Wrapper around 'create_child_node_helper' that include logic for graph search.
      * 
      * If child already exists then just return it.
-     * 
-     * If not using a transposition table, we call the helper and put the child in our children map. 
      * 
      * As transposition table is implemented for decision nodes, we don't need to use one for chance nodes. If two 
      * chance nodes would be transpositions, then their parent (decision) nodes would be transpositions!

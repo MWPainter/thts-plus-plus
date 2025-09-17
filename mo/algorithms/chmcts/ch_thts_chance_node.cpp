@@ -46,7 +46,6 @@ namespace thts {
         int total_child_backups = 0;
         for (pair<const shared_ptr<const Observation>,shared_ptr<ThtsDNode>>& child_pair : children) {
             ChThtsDNode& ch_child = (ChThtsDNode&) *child_pair.second;
-            lock_guard<mutex> lg(ch_child.get_lock());
             total_child_backups += ch_child.num_backups; 
         }
         
@@ -56,7 +55,6 @@ namespace thts {
         if (total_child_backups > 0) {
             for (pair<const shared_ptr<const Observation>,shared_ptr<ThtsDNode>>& child_pair : children) {
                 ChThtsDNode& ch_child = (ChThtsDNode&) *child_pair.second;
-                lock_guard<mutex> lg(ch_child.get_lock());
                 convex_hull += ch_child.convex_hull * (ch_child.num_backups / total_child_backups);
             }
         } else {

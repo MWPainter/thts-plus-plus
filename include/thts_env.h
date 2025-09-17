@@ -20,8 +20,8 @@ namespace thts {
      * Defines a set of functions that should be general enough to handle a range of environments for planning, like 
      * MDPs and POMDPs. 
      * 
-     * Additionally, any subclasses that wish to plan using a transposition table should implement the std::hash and 
-     * std::equal_to functions. 
+     * Additionally, any subclasses that wish to plan using a transposition table/graph search should implement the 
+     * std::hash and std::equal_to functions for the observations/states/action objects used. 
      * 
      * Uses the State, Action and Observation objects from thts_types.h, as base types for the following:
      *      State: Objects representing the current state of the world
@@ -30,6 +30,12 @@ namespace thts {
      *          Objects representing the outcomes that can occur from taking actions in the environment. For something 
      *          like an MDP, we would probably want Observation's to be the successor states (which would require 
      *          Observation == State subtypes)
+     * 
+     * A note on graph search and stationary policies:
+     *      If using graph search, then each unique state will have at most one DNode associated with it. Hence, if 
+     *      running graph search, the policy that is being computed is stationary (does not depend on time). If a 
+     *      non-stationary policy is desired, then either graph search should not be used, or the state representation
+     *      should be modified to include the timestep.
      * 
      * Member variables:
      *      _is_fully_observable: 

@@ -109,9 +109,7 @@ namespace thts {
             template <typename T>
             void backup_ent(const CNodeChildMap& children, ActionDistr& policy, bool is_opponent=false) {
                 std::shared_ptr<EntCNodeChildMap> ent_children = convert_child_map<T>(children);
-                for (auto pr : children) pr.second->lock();
                 backup_ent_impl(*ent_children, policy, is_opponent);
-                for (auto pr : children) pr.second->unlock();
             }
     };
 }
