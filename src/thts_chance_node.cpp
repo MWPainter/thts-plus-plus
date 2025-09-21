@@ -164,13 +164,24 @@ namespace thts {
         // Print out this nodes info
         ss << "C(vl=" << get_pretty_print_val() << ",#v=" << num_visits << ")[";
 
+        // Sort children by visit count (so more visit higher/first to see)
+        using ObservationNodePair = std::pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>>;
+        vector<ObservationNodePair> children_to_print(children.begin(), children.end());
+        std::sort(
+            children_to_print.begin(), 
+            children_to_print.end(),
+            [this](const auto& u, const auto& v) {
+                return empirical_distribution.at(u.first) > empirical_distribution.at(v.first);
+            }
+        );
+        
         // print out child trees recursively
-        for (const pair<const shared_ptr<const Observation>,shared_ptr<ThtsDNode>>& key_val_pair : children) {
-            const Observation& observation = *(key_val_pair.first);
+        for (ObservationNodePair& key_val_pair : children_to_print) {
+            shared_ptr<const Observation> observation = key_val_pair.first;
             ThtsDNode& child_node = *(key_val_pair.second);
             ss << "\n";
             for (int i=0; i<num_tabs+1; i++) ss << "|\t";
-            ss << "{" << observation << "}->";
+            ss << "({" << *observation << "}," << empirical_distribution.at(observation) << ")->";
             child_node.get_pretty_print_string_helper(ss, depth-1, num_tabs+1);
         }
 

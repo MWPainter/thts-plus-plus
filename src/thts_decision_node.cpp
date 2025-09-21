@@ -3,6 +3,7 @@
 #include "helper_templates.h"
 #include "thts_manager.h"
 
+#include <map>
 #include <stdexcept>
 #include <tuple>
 #include <utility>
@@ -174,8 +175,19 @@ namespace thts {
             return;
         }
 
+        // Sort children by visit count (so more visit higher/first to see)
+        using ActionNodePair = std::pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>>;
+        vector<ActionNodePair> children_to_print(children.begin(), children.end());
+        std::sort(
+            children_to_print.begin(), 
+            children_to_print.end(),
+            [](const auto& u, const auto& v) {
+                return u.second->num_visits > v.second->num_visits;
+            }
+        );
+
         // print out child trees recursively
-        for (const pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& key_val_pair : children) {
+        for (ActionNodePair& key_val_pair : children_to_print) {
             const Action& action = *(key_val_pair.first);
             ThtsCNode& child_node = *(key_val_pair.second);
             ss << "\n";
