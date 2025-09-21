@@ -647,6 +647,7 @@ void run_uct_integration_test(
     manager_args.max_depth = env_size * 4;
     manager_args.mcts_mode = false;
     manager_args.graph_search = graph_search;
+    manager_args.first_visit = false;
     shared_ptr<UctManager> manager = make_shared<UctManager>(manager_args);
     shared_ptr<UctDNode> root_node = make_shared<UctDNode>(manager, grid_env->get_initial_state_itfc(), 0, 0);
     ThtsPool thts_pool(manager, root_node, num_threads);
@@ -670,7 +671,7 @@ void run_uct_integration_test(
 TEST(Uct_IntegrationTest, easy_grid_world) {
     run_uct_integration_test(1,1,10000,0.0,2);
 }
-
+ 
 TEST(Uct_IntegrationTest, easy_grid_world_multithreaded) {
     run_uct_integration_test(2,4,10000,0.0,1);
 }
@@ -681,7 +682,7 @@ TEST(Uct_IntegrationTest, easy_grid_world_stochastic) {
 
 TEST(Uct_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
     run_uct_integration_test(2,4,10000,0.1,1);
-}
+} 
 
 
 
@@ -788,6 +789,7 @@ void run_max_uct_integration_test(
     manager_args.max_depth = env_size * 4;
     manager_args.mcts_mode = false;
     manager_args.graph_search = graph_search;
+    manager_args.first_visit = true;
     shared_ptr<UctManager> manager = make_shared<UctManager>(manager_args);
     shared_ptr<MaxUctDNode> root_node = make_shared<MaxUctDNode>(manager, grid_env->get_initial_state_itfc(), 0, 0);
     ThtsPool thts_pool(manager, root_node, num_threads);

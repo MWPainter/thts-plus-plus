@@ -35,10 +35,11 @@ namespace thts {
         ThtsContext& context,
         int tid)
     {
+        unordered_set<shared_ptr<ThtsNode>> visited;
         bool new_decision_node_created_this_trial = false;
         shared_ptr<ThtsDNode> cur_node = root_node;
 
-        while (should_continue_selection_phase(cur_node, new_decision_node_created_this_trial)) {
+        while (should_continue_selection_phase(cur_node, new_decision_node_created_this_trial, nodes_to_backup.size())) {
             shared_ptr<ThtsCNode> chance_node;
             shared_ptr<ThtsDNode> decision_node;
             shared_ptr<const State> state;
@@ -47,7 +48,11 @@ namespace thts {
             // dnode visit + select action
             {
                 ThtsNodeLockGuard lg(cur_node);
-                cur_node->visit_itfc(context);
+                if (!thts_manager->first_visit || !visited.contains(cur_node))
+                {
+                    cur_node->visit_itfc(context);
+                    visited.insert(cur_node);
+                }
                 state = cur_node->state;
                 action = cur_node->select_action_itfc(context);
                 chance_node = cur_node->get_child_node_itfc(action);
@@ -57,7 +62,11 @@ namespace thts {
             {
                 ThtsNodeLockGuard lg(chance_node);
                 int pre_visit_children = chance_node->get_num_children();
-                chance_node->visit_itfc(context);
+                if (!thts_manager->first_visit || !visited.contains(chance_node))
+                {
+                    chance_node->visit_itfc(context);
+                    visited.insert(chance_node);
+                }
                 shared_ptr<const Observation> observation = chance_node->sample_observation_itfc(context);
                 int post_visit_children = chance_node->get_num_children();
                 if (post_visit_children > pre_visit_children) {
@@ -78,7 +87,11 @@ namespace thts {
         // visit the final node and add heuristic value to list of rewards at end
         {
             ThtsNodeLockGuard lg(cur_node);
-            cur_node->visit_itfc(context);
+            if (!thts_manager->first_visit || !visited.contains(cur_node))
+            {
+                cur_node->visit_itfc(context);
+                // visited.insert(cur_node); - not necessary to keep visited up to date, function end
+            }
             MoThtsDNode& mo_cur_node = (MoThtsDNode&) *cur_node;
             rewards.push_back(mo_cur_node.mo_heuristic_value.vec);
         }
@@ -112,16 +125,42 @@ namespace thts {
 
         Eigen::ArrayXd total_return_after = heuristic_val_at_end;
 
-        while (nodes_to_backup.size() > 0) {
+        vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>> filtered_nodes_to_backup(nodes_to_backup.size());
+        if (!thts_manager->first_visit) 
+        {
+            filtered_nodes_to_backup = nodes_to_backup;
+        }
+        else
+        {
+            unordered_set<shared_ptr<ThtsNode>> visited;
+            for (auto [dnode,cnode] : nodes_to_backup) 
+            {
+                shared_ptr<ThtsDNode> d = nullptr;
+                shared_ptr<ThtsCNode> c = nullptr;
+                if (!visited.contains(dnode))
+                {
+                    d = dnode;
+                    visited.insert(dnode);
+                }
+                if (!visited.contains(cnode)) 
+                {
+                    c = cnode;
+                    visited.insert(cnode);
+                }
+                filtered_nodes_to_backup.push_back(std::make_pair(d,c));
+            }
+        }
+
+        while (filtered_nodes_to_backup.size() > 0) {
             Eigen::ArrayXd reward = rewards_before.back();
             rewards_before.pop_back();
             rewards_after.push_back(reward);
             total_return_after += reward;
 
-            pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>> pr = nodes_to_backup.back();
+            pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>> pr = filtered_nodes_to_backup.back();
             shared_ptr<MoThtsDNode> decision_node = static_pointer_cast<MoThtsDNode>(pr.first);
             shared_ptr<MoThtsCNode> chance_node = static_pointer_cast<MoThtsCNode>(pr.second);
-            nodes_to_backup.pop_back();
+            filtered_nodes_to_backup.pop_back();
 
             {
                 ThtsNodeLockGuard lg(chance_node);

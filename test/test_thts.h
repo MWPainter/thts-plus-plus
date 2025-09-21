@@ -84,13 +84,21 @@ namespace thts::test {
                 shared_ptr<ThtsManager> thts_manager=nullptr, 
                 shared_ptr<ThtsDNode> root_node=nullptr, 
                 int num_threads=1) :
-                    ThtsPool(thts_manager, root_node, num_threads) {};
-            virtual ~PublicThtsPool() = default;
-            virtual bool work_left() override { return ThtsPool::work_left(); };
-            virtual bool should_continue_selection_phase(
-                shared_ptr<ThtsDNode> cur_node, bool new_decision_node_created_this_trial) override
+                    ThtsPool(thts_manager, root_node, num_threads) 
             {
-                return ThtsPool::should_continue_selection_phase(cur_node, new_decision_node_created_this_trial);
+            };
+            virtual ~PublicThtsPool() = default;
+            virtual bool work_left() override 
+            { 
+                return ThtsPool::work_left(); 
+            };
+            virtual bool should_continue_selection_phase(
+                shared_ptr<ThtsDNode> cur_node, 
+                bool new_decision_node_created_this_trial, 
+                int current_path_length) override
+            {
+                return ThtsPool::should_continue_selection_phase(
+                    cur_node, new_decision_node_created_this_trial, current_path_length);
             }
             void run_selection_phase(
                 vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>>& nodes_to_backup, 
@@ -205,7 +213,7 @@ namespace thts::test {
                 int num_threads=1) :
                     PublicThtsPool(thts_manager, root_node, num_threads) {};
 
-            MOCK_METHOD(bool, should_continue_selection_phase, (shared_ptr<ThtsDNode>,bool), (override));
+            MOCK_METHOD(bool, should_continue_selection_phase, (shared_ptr<ThtsDNode>,bool,int), (override));
     };
 }
 

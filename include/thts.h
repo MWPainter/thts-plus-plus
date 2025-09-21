@@ -144,12 +144,15 @@ namespace thts {
              * Args:
              *      cur_node: The most recent node reached in the selection phase
              *      new_decision_node_created_this_trial: If a new decision node has been created this trial
+             *      current_path_length: Length of the current path selected (wrt decision nodes)
              * 
              * Returns:
              *      If the selection phase should be ended.
              */
             virtual bool should_continue_selection_phase(
-                std::shared_ptr<ThtsDNode> cur_node, bool new_decision_node_created_this_trial);
+                std::shared_ptr<ThtsDNode> cur_node, 
+                bool new_decision_node_created_this_trial, 
+                int current_path_length);
 
             /**
              * Runs the selection phase of a trial, called by worker threads.

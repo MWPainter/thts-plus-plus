@@ -209,28 +209,28 @@ TEST(ThtsPool_TestRunTrial, test_should_continue_selection_phase) {
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(true));
-    EXPECT_FALSE(thts_pool.should_continue_selection_phase(mock_search_node, false));
+    EXPECT_FALSE(thts_pool.should_continue_selection_phase(mock_search_node, false, 0));
 
     // mcts mode, max decision depth
     mock_search_node = make_shared<MockThtsDNode>(dummy_manager,dummy_init_state,dummy_max_depth,0);
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(false));
-    EXPECT_FALSE(thts_pool.should_continue_selection_phase(mock_search_node, false));
+    EXPECT_FALSE(thts_pool.should_continue_selection_phase(mock_search_node, false, 0));
 
     // mcts mode, new node made
     mock_search_node = make_shared<MockThtsDNode>(dummy_manager,dummy_init_state,dummy_max_depth-10,0);
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(false));
-    EXPECT_FALSE(thts_pool.should_continue_selection_phase(mock_search_node, true));
+    EXPECT_FALSE(thts_pool.should_continue_selection_phase(mock_search_node, true, 0));
 
     // mcts mode, new node made
     mock_search_node = make_shared<MockThtsDNode>(dummy_manager,dummy_init_state,dummy_max_depth-10,0);
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(false));
-    EXPECT_TRUE(thts_pool.should_continue_selection_phase(mock_search_node, false));
+    EXPECT_TRUE(thts_pool.should_continue_selection_phase(mock_search_node, false, 0));
 
     // uct mode, is leaf
     dummy_manager->mcts_mode = false;
@@ -238,28 +238,28 @@ TEST(ThtsPool_TestRunTrial, test_should_continue_selection_phase) {
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(true));
-    EXPECT_FALSE(thts_pool.should_continue_selection_phase(mock_search_node, false));
+    EXPECT_FALSE(thts_pool.should_continue_selection_phase(mock_search_node, false, 0));
 
     // uct mode, max decision depth
     mock_search_node = make_shared<MockThtsDNode>(dummy_manager,dummy_init_state,dummy_max_depth,0);
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(false));
-    EXPECT_FALSE(thts_pool.should_continue_selection_phase(mock_search_node, false));
+    EXPECT_FALSE(thts_pool.should_continue_selection_phase(mock_search_node, false, 0));
 
     // uct mode, new node made
     mock_search_node = make_shared<MockThtsDNode>(dummy_manager,dummy_init_state,dummy_max_depth-10,0);
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(false));
-    EXPECT_TRUE(thts_pool.should_continue_selection_phase(mock_search_node, true));
+    EXPECT_TRUE(thts_pool.should_continue_selection_phase(mock_search_node, true, 0));
 
     // uct mode, new node made
     mock_search_node = make_shared<MockThtsDNode>(dummy_manager,dummy_init_state,dummy_max_depth-10,0);
     EXPECT_CALL(*mock_search_node, is_sink)
         .Times(1)
         .WillOnce(Return(false));
-    EXPECT_TRUE(thts_pool.should_continue_selection_phase(mock_search_node, false));
+    EXPECT_TRUE(thts_pool.should_continue_selection_phase(mock_search_node, false, 0));
 }
 
 /**

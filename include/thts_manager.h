@@ -30,15 +30,18 @@ namespace thts {
      *      <for others see ThtsManager class definition>
      */
     struct ThtsManagerArgs {
+        static const int num_threads_default = 1;
+        static const int num_envs_default = 1;
         static const int max_depth_default = std::numeric_limits<int>::max();
         // static const HeuristicFnPtr heuristic_fn_default = helper::zero_heuristic_fn;
         // static const PriorFnPtr prior_fn_default = nullptr;
+
         static const bool mcts_mode_default = true;
         static const bool is_two_player_game_default = false;
         static const bool graph_search_default = false;
+        static const bool first_visit_default = true;
+
         static const int seed_default = 0;
-        static const int num_threads_default = 1;
-        static const int num_envs_default = 1;
         
         std::shared_ptr<ThtsEnv> thts_env;
         int num_threads;
@@ -50,6 +53,7 @@ namespace thts {
         bool mcts_mode;
         bool is_two_player_game;
         bool graph_search;
+        bool first_visit;
 
         int seed;
 
@@ -63,6 +67,7 @@ namespace thts {
             mcts_mode(mcts_mode_default),
             is_two_player_game(is_two_player_game_default),
             graph_search(graph_search_default),
+            first_visit(first_visit_default),
             seed(seed_default) {}
 
         virtual ~ThtsManagerArgs() = default;
@@ -252,6 +257,7 @@ namespace thts {
 
             bool mcts_mode;
             bool graph_search;
+            bool first_visit;
             bool is_two_player_game;
 
             std::shared_mutex dmap_lock;

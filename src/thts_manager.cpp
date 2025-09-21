@@ -18,6 +18,7 @@ namespace thts {
         prior_fn(args.prior_fn),
         mcts_mode(args.mcts_mode), 
         graph_search(args.graph_search), 
+        first_visit(args.first_visit),
         is_two_player_game(args.is_two_player_game),
         dmap_lock(),
         dmap(),

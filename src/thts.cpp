@@ -6,6 +6,7 @@
 #include "thts_types.h"
 
 #include <algorithm>
+#include <unordered_set>
 #include <utility>
 #include <iostream>
 
@@ -108,14 +109,20 @@ namespace thts {
      * at the maximum depth).
      * 
      * Additionally when running in mcts mode, we want to end a trial once a new node has been made.
+     * 
+     * Uses current_path_length-1 to compute the "depth" into the graph as if we were in a tree. I.e. we want 
+     * max_depth=0 to represent a tree with just the root node, and max_depth=1 to expand only 1 level of children. 
      */
     bool ThtsPool::should_continue_selection_phase(
-        shared_ptr<ThtsDNode> cur_node, bool new_decision_node_created_this_trial) 
+        shared_ptr<ThtsDNode> cur_node, 
+        bool new_decision_node_created_this_trial,
+        int current_path_length) 
     {
         lock_guard<recursive_mutex> lg(cur_node->lock);
         if (cur_node->is_leaf()) return false;
         // if (cur_node->is_sink()) return false;
         // if (cur_node->decision_depth >= thts_manager->max_depth) return false;
+        if (current_path_length-1 >= thts_manager->max_depth) return false;
         if (thts_manager->mcts_mode && new_decision_node_created_this_trial) return false;
         return true;
     }
@@ -148,10 +155,11 @@ namespace thts {
         ThtsContext& context,
         int tid)
     {
+        unordered_set<shared_ptr<ThtsNode>> visited;
         bool new_decision_node_created_this_trial = false;
         shared_ptr<ThtsDNode> cur_node = root_node;
 
-        while (should_continue_selection_phase(cur_node, new_decision_node_created_this_trial)) {
+        while (should_continue_selection_phase(cur_node, new_decision_node_created_this_trial, nodes_to_backup.size())) {
             shared_ptr<ThtsCNode> chance_node;
             shared_ptr<ThtsDNode> decision_node;
             shared_ptr<const State> state;    
@@ -160,7 +168,11 @@ namespace thts {
             // dnode visit + select action
             {
                 ThtsNodeLockGuard lg(cur_node);
-                cur_node->visit_itfc(context);
+                if (!thts_manager->first_visit || !visited.contains(cur_node))
+                {
+                    cur_node->visit_itfc(context);
+                    visited.insert(cur_node);
+                }
                 state = cur_node->state;    
                 action = cur_node->select_action_itfc(context);
                 chance_node = cur_node->get_child_node_itfc(action);
@@ -170,7 +182,11 @@ namespace thts {
             {
                 ThtsNodeLockGuard lg(chance_node);
                 int pre_visit_children = chance_node->get_num_children();
-                chance_node->visit_itfc(context);
+                if (!thts_manager->first_visit || !visited.contains(chance_node))
+                {
+                    chance_node->visit_itfc(context);
+                    visited.insert(chance_node);
+                }
                 shared_ptr<const Observation> observation = chance_node->sample_observation_itfc(context);
                 chance_node->update_empirical_distribution(observation);
                 int post_visit_children = chance_node->get_num_children();
@@ -191,7 +207,12 @@ namespace thts {
         // visit the final node and add heuristic value to list of rewards at end
         {
             ThtsNodeLockGuard lg(cur_node);
-            cur_node->visit_itfc(context);
+
+            if (!thts_manager->first_visit || !visited.contains(cur_node))
+            {
+                cur_node->visit_itfc(context);
+                // visited.insert(cur_node); - not necessary to keep visited up to date, function end
+            }
             rewards.push_back(cur_node->heuristic_value);
         }
     }
@@ -218,7 +239,10 @@ namespace thts {
         ThtsContext& context)
     {
         double total_return = 0.0;
-        for (double& reward : rewards) total_return += reward;
+        for (double& reward : rewards) 
+        {
+            total_return += reward;
+        }
 
         vector<double> rewards_after;
         vector<double> rewards_before(rewards);
@@ -229,22 +253,51 @@ namespace thts {
 
         double total_return_after = heuristic_val_at_end;
 
-        while (nodes_to_backup.size() > 0) {
+        vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>> filtered_nodes_to_backup(nodes_to_backup.size());
+        if (!thts_manager->first_visit) 
+        {
+            filtered_nodes_to_backup = nodes_to_backup;
+        }
+        else
+        {
+            unordered_set<shared_ptr<ThtsNode>> visited;
+            for (auto [dnode,cnode] : nodes_to_backup) 
+            {
+                shared_ptr<ThtsDNode> d = nullptr;
+                shared_ptr<ThtsCNode> c = nullptr;
+                if (!visited.contains(dnode))
+                {
+                    d = dnode;
+                    visited.insert(dnode);
+                }
+                if (!visited.contains(cnode)) 
+                {
+                    c = cnode;
+                    visited.insert(cnode);
+                }
+                filtered_nodes_to_backup.push_back(std::make_pair(d,c));
+            }
+        }
+
+        while (filtered_nodes_to_backup.size() > 0) 
+        {
             double reward = rewards_before.back();
             rewards_before.pop_back();
             rewards_after.push_back(reward);
             total_return_after += reward;
 
-            pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>> pr = nodes_to_backup.back();
+            pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>> pr = filtered_nodes_to_backup.back();
             shared_ptr<ThtsDNode> decision_node = pr.first;
             shared_ptr<ThtsCNode> chance_node = pr.second;
-            nodes_to_backup.pop_back();
-
+            filtered_nodes_to_backup.pop_back();
+            
+            if (chance_node != nullptr)
             {
                 ThtsNodeLockGuard lg(chance_node);
                 chance_node->backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);
             }
 
+            if (decision_node != nullptr)
             {
                 ThtsNodeLockGuard lg(decision_node);
                 decision_node->backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);
