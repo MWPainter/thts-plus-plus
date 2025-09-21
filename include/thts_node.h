@@ -10,6 +10,7 @@
 namespace thts {
     // forward declare
     class ThtsPool;
+    class ThtsNodeLockGuard;
 
 
     /**
@@ -24,9 +25,10 @@ namespace thts {
     class ThtsNode : public std::enable_shared_from_this<ThtsNode> {
         // Allow ThtsCNode, Logger and Pool access to private members
         friend ThtsPool;
+        friend ThtsNodeLockGuard;
 
         protected:
-            std::mutex lock;
+            std::recursive_mutex lock;
         
         public:
 

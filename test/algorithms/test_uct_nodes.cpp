@@ -738,3 +738,90 @@ TEST(Uct_IntegrationTest, two_player_game_env) {
 TEST(Uct_IntegrationTest, two_player_game_env_starting_as_opponent) {
     run_uct_game_integration_test(3, 10000, 4, 1);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// v1TODO: move to seperate file
+#include "algorithms/uct/max_uct_decision_node.h"
+
+
+void run_max_uct_integration_test(
+    int env_size, 
+    int num_threads, 
+    int num_trials, 
+    double stay_prob=0.0, 
+    int print_tree_depth=0,
+    bool graph_search=false) 
+{
+    chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
+
+    shared_ptr<ThtsEnv> grid_env = make_shared<TestThtsEnv>(env_size, stay_prob);
+    UctManagerArgs manager_args(grid_env);
+    manager_args.seed = 60415;
+    manager_args.max_depth = env_size * 4;
+    manager_args.mcts_mode = false;
+    manager_args.graph_search = graph_search;
+    shared_ptr<UctManager> manager = make_shared<UctManager>(manager_args);
+    shared_ptr<MaxUctDNode> root_node = make_shared<MaxUctDNode>(manager, grid_env->get_initial_state_itfc(), 0, 0);
+    ThtsPool thts_pool(manager, root_node, num_threads);
+    thts_pool.run_trials(num_trials);
+
+    if (stay_prob == 0.0) {
+        // TODO add asserts
+    }
+
+    std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
+
+    cout << "MaxUCT with " << num_threads << " threads (took " << dur.count() << ")";
+    if (print_tree_depth > 0){
+        cout << " and looks like:\n";
+        cout << root_node->get_pretty_print_string(print_tree_depth) << endl;
+    } else {
+        cout << endl;
+    }
+}
+
+
+
+TEST(MaxUct_GraphSearch_IntegrationTest, easy_grid_world) {
+    run_max_uct_integration_test(1, 1, 10000, 0.0, 2, true);
+}
+
+TEST(MaxUct_GraphSearch_IntegrationTest, easy_grid_world_multithreaded) {
+    run_max_uct_integration_test(2, 4, 10000, 0.0, 1, true);
+}
+
+TEST(MaxUct_GraphSearch_IntegrationTest, easy_grid_world_stochastic) {
+    run_max_uct_integration_test(1, 1, 10000, 0.1, 2, true);
+}
+
+TEST(MaxUct_GraphSearch_IntegrationTest, easy_grid_world_stochastic_multithreaded) {
+    run_max_uct_integration_test(2, 4, 10000, 0.1, 1, true);
+}

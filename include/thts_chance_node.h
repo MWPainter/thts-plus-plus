@@ -14,6 +14,7 @@ namespace thts {
     // forward declare
     class ThtsDNode;
     class ThtsPool;
+    class ThtsNodeLockGuard;
 
     // CNodeMap type is lengthy, so typedef
     typedef std::unordered_map<std::shared_ptr<const Observation>,std::shared_ptr<ThtsDNode>> DNodeChildMap;
@@ -53,6 +54,7 @@ namespace thts {
         // Allow ThtsDNode access to private members
         friend ThtsDNode;
         friend ThtsPool;
+        friend ThtsNodeLockGuard;
 
         protected:
             std::shared_ptr<ThtsManager> thts_manager;

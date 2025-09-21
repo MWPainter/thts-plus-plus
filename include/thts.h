@@ -117,18 +117,6 @@ namespace thts {
              * Destructor. Required to allow the thread pool to exit gracefully.
              */
             virtual ~ThtsPool();
-        
-        protected:
-            /**
-             * v1TODO: proper docstrings
-             * 
-             * Helper functions to handling locking (possibly over a graph) without causing dealock
-             */
-            void lock_node_list(std::vector<std::shared_ptr<ThtsNode>>& nodes_to_lock);
-            void lock_dnode_and_children(std::shared_ptr<ThtsDNode> node);
-            void unlock_dnode_and_children(std::shared_ptr<ThtsDNode> node);
-            void lock_cnode_and_children(std::shared_ptr<ThtsCNode> node);
-            void unlock_cnode_and_children(std::shared_ptr<ThtsCNode> node);
 
         public:
             /**

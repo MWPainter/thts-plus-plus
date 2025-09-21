@@ -1,6 +1,7 @@
 #include "mo/mo_thts.h"
 
 #include "thts_types.h"
+#include "thts_node_lock_guard.h"
 #include "mo/mo_thts_chance_node.h"
 
 #include <utility>
@@ -38,28 +39,34 @@ namespace thts {
         shared_ptr<ThtsDNode> cur_node = root_node;
 
         while (should_continue_selection_phase(cur_node, new_decision_node_created_this_trial)) {
+            shared_ptr<ThtsCNode> chance_node;
+            shared_ptr<ThtsDNode> decision_node;
+            shared_ptr<const State> state;
+            shared_ptr<const Action> action;
+
             // dnode visit + select action
-            lock_dnode_and_children(cur_node);
-            cur_node->visit_itfc(context);
-            shared_ptr<const Action> action = cur_node->select_action_itfc(context);
-            shared_ptr<ThtsCNode> chance_node = cur_node->get_child_node_itfc(action);
-            unlock_dnode_and_children(cur_node);
+            {
+                ThtsNodeLockGuard lg(cur_node);
+                cur_node->visit_itfc(context);
+                state = cur_node->state;
+                action = cur_node->select_action_itfc(context);
+                chance_node = cur_node->get_child_node_itfc(action);
+            }
             
             // cnode visit + sample outcome
-            lock_cnode_and_children(chance_node);
-            int pre_visit_children = chance_node->get_num_children();
-            chance_node->visit_itfc(context);
-            shared_ptr<const Observation> observation = chance_node->sample_observation_itfc(context);
-            int post_visit_children = chance_node->get_num_children();
-            if (post_visit_children > pre_visit_children) {
-                new_decision_node_created_this_trial = true;
+            {
+                ThtsNodeLockGuard lg(chance_node);
+                int pre_visit_children = chance_node->get_num_children();
+                chance_node->visit_itfc(context);
+                shared_ptr<const Observation> observation = chance_node->sample_observation_itfc(context);
+                int post_visit_children = chance_node->get_num_children();
+                if (post_visit_children > pre_visit_children) {
+                    new_decision_node_created_this_trial = true;
+                }
+                decision_node = chance_node->get_child_node_itfc(observation);
             }
-            shared_ptr<ThtsDNode> decision_node = chance_node->get_child_node_itfc(observation);
-            unlock_cnode_and_children(chance_node);
 
             // push onto 'nodes_to_backup' and 'rewards'
-            MoThtsDNode& mo_cur_node = (MoThtsDNode&) *cur_node;
-            shared_ptr<const State> state = mo_cur_node.state;
             MoThtsEnv& mo_thts_env = *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());
             Eigen::ArrayXd reward = mo_thts_env.get_mo_reward_itfc(state, action, context);
             nodes_to_backup.push_back(make_pair(cur_node, chance_node));
@@ -69,11 +76,12 @@ namespace thts {
         }
 
         // visit the final node and add heuristic value to list of rewards at end
-        lock_dnode_and_children(cur_node);
-        cur_node->visit_itfc(context);
-        MoThtsDNode& mo_cur_node = (MoThtsDNode&) *cur_node;
-        rewards.push_back(mo_cur_node.mo_heuristic_value.vec);
-        unlock_dnode_and_children(cur_node);
+        {
+            ThtsNodeLockGuard lg(cur_node);
+            cur_node->visit_itfc(context);
+            MoThtsDNode& mo_cur_node = (MoThtsDNode&) *cur_node;
+            rewards.push_back(mo_cur_node.mo_heuristic_value.vec);
+        }
     }
 
 
@@ -115,13 +123,15 @@ namespace thts {
             shared_ptr<MoThtsCNode> chance_node = static_pointer_cast<MoThtsCNode>(pr.second);
             nodes_to_backup.pop_back();
 
-            lock_cnode_and_children(chance_node);
-            chance_node->backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);
-            unlock_cnode_and_children(chance_node);
+            {
+                ThtsNodeLockGuard lg(chance_node);
+                chance_node->backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);
+            }
 
-            lock_dnode_and_children(decision_node);
-            decision_node->backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);
-            unlock_dnode_and_children(decision_node);
+            {
+                ThtsNodeLockGuard lg(decision_node);
+                decision_node->backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);
+            }
         }
     }
 

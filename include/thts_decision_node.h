@@ -17,6 +17,7 @@ namespace thts {
     class ThtsCNode;
     class ThtsLogger;
     class ThtsPool;
+    class ThtsNodeLockGuard;
 
     // CNodeMap type is lengthy, so typedef
     typedef std::unordered_map<std::shared_ptr<const Action>,std::shared_ptr<ThtsCNode>> CNodeChildMap;
@@ -26,6 +27,8 @@ namespace thts {
      * 
      * This class provides some base implementations that can be useful across different Thts algorithms. Including 
      * a transposition table implementation and pretty print functions for debugging.
+     * 
+     * v1TODO: children shouldn't be public, let access through functions, and overload operator[].
      * 
      * Member variables:
      *      thts_manager: 
@@ -53,11 +56,14 @@ namespace thts {
         friend ThtsCNode;
         friend ThtsLogger;
         friend ThtsPool;
+        friend ThtsNodeLockGuard;
 
         protected:
 
             std::shared_ptr<ThtsManager> thts_manager;
+        public: // v1TODO: made public so MoThtsPool can access and dont have to import a MO class into not MO stuff, want tihs protected with a get_state fn
             std::shared_ptr<const State> state;
+        protected:
             int decision_depth;
             int decision_timestep;
             std::weak_ptr<const ThtsCNode> parent;
