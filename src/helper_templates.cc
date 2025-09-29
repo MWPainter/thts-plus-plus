@@ -130,6 +130,44 @@ namespace thts::helper {
 
 
     /**
+     * Linear normalisation. Only corner case to avoid is division by zero, in which case values are mapped to zero.
+     * First computes min and max values, and then modifies values in place
+     * Handles the divide by zero case
+     * Finally normalizes in place
+     */
+    template <typename T>
+    void linearly_normalise_values(unordered_map<T,double>& values)
+    {
+        if (values.size() == 0)
+        {
+            return;
+        }
+
+        double min = std::numeric_limits<double>::max();
+        double max = std::numeric_limits<double>::min();
+        for (auto& [key, value] : values) 
+        {
+            if (value < min) min = value;
+            if (value > max) max = value;
+        }
+
+        if (min == max) 
+        {
+            for (auto it = values.begin(); it != values.end(); it++)
+            {
+                it->second = 0.0;
+            }
+            return;
+        }
+
+        for (auto it = values.begin(); it != values.end(); it++)
+        {
+            it->second = (it->second - min) / (max - min);
+        }
+    }
+
+
+    /**
      * Printing vectors
      */
     template <typename T>

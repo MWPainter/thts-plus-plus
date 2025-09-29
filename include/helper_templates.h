@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include "thts_manager.h"
@@ -60,6 +61,19 @@ namespace thts::helper {
     template <typename T>
     T sample_from_distribution(
         std::unordered_map<T,double>& distribution, RandManager& rand_manager, bool normalised=true);
+
+    /**
+     * Helper function to linearly normalise (Q) values, in place. 
+     * 
+     * V_norm[k] = (V[k] - min_l V[l]) / (max_l V[l] - min_l V[l]).
+     * 
+     * If max_l V[l] == min_l V[l], then all values are mapped to zero
+     * 
+     * Args:
+     *      values: A mapping to values
+     */
+    template <typename T>
+    void linearly_normalise_values(std::unordered_map<T,double>& values);
 
     /**
      * Helper function for printing vector types to strings. Assumes that the type T can be fed into an ostream.

@@ -112,6 +112,15 @@ namespace thts {
             }
         }
 
+        // Compute Q values to use
+        unordered_map<shared_ptr<const Action>,double> q_values;
+        for (shared_ptr<const Action> action : *actions) {
+            q_values[action] = get_child_node(action)->avg_return;
+        }
+        if (manager->normalize_Q_values_in_selection) {
+            thts::helper::linearly_normalise_values<shared_ptr<const Action>>(q_values);
+        }
+
         // Compute usb values
         for (shared_ptr<const Action> action : *actions) {
             double action_ucb_value = 0.0;
@@ -124,7 +133,7 @@ namespace thts {
             }
             
             if (has_child_node(action)) {
-                action_ucb_value += opp_coeff * get_child_node(action)->avg_return;
+                action_ucb_value += opp_coeff * q_values[action];
             }
 
             ucb_values[action] = action_ucb_value;

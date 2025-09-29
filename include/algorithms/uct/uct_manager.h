@@ -10,12 +10,14 @@ namespace thts {
         static constexpr double ADAPTIVE_BIAS_MIN_BIAS = 0.001;
 
         static const bool adaptive_bias_default=true;
+        static const bool normalize_Q_values_in_selection_default=true;
         static constexpr double bias_default=1.0;
         static const int heuristic_psuedo_trials_default=0;
         static const bool recommend_most_visited_default=true;
         static constexpr double epsilon_exploration_default=0.0;
 
         bool adaptive_bias;
+        bool normalize_Q_values_in_selection;
         double bias;
         int heuristic_psuedo_trials;
         bool recommend_most_visited;
@@ -23,6 +25,8 @@ namespace thts {
 
         UctManagerArgs(std::shared_ptr<ThtsEnv> thts_env) :
             ThtsManagerArgs(thts_env),
+            adaptive_bias(adaptive_bias_default),
+            normalize_Q_values_in_selection(normalize_Q_values_in_selection_default),
             bias(bias_default),
             heuristic_psuedo_trials(heuristic_psuedo_trials_default),
             recommend_most_visited(recommend_most_visited_default),
@@ -54,6 +58,7 @@ namespace thts {
         public:
             static constexpr double ADAPTIVE_BIAS_MIN_BIAS = UctManagerArgs::ADAPTIVE_BIAS_MIN_BIAS;
 
+            bool normalize_Q_values_in_selection;
             bool adaptive_bias;
             double bias;
             int heuristic_psuedo_trials;
@@ -62,6 +67,7 @@ namespace thts {
 
             UctManager(const UctManagerArgs& args) :
                 ThtsManager(args),
+                normalize_Q_values_in_selection(args.normalize_Q_values_in_selection),
                 adaptive_bias(args.adaptive_bias),
                 bias(args.bias),
                 heuristic_psuedo_trials(args.heuristic_psuedo_trials),
