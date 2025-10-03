@@ -4,36 +4,104 @@
 
 namespace thts {
     /**
-     * Typedef for temperature decay function
-     * 
-     * A valid temp decay function, f, should satisfy:
-     * 1. f(0) = 1.0
-     * 2. f(m) -> 0.0, as m -> infty
+     * DecayFn interface.
     */
-    double _DummyTempDecayFn(double scaled_visits);
-    typedef decltype(&_DummyTempDecayFn) TempDecayFnPtr;
+    class DecayFn {
 
-    /**
-     * Compute the decayed temperature
-    */
-    double compute_decayed_temp(
-        TempDecayFnPtr f, double init_temp, double min_temp, int num_visits, double visits_scale);
+        public:
+            DecayFn() = default;
+            virtual ~DecayFn() = default;
+
+        protected:
+            virtual double compute_decayed_temp(int num_visits) const = 0;
+
+        public:
+            double operator()(int num_visits) 
+            {
+                return compute_decayed_temp(num_visits);
+            }
+    };
 
     /**
      * Inverse square root temp decay function
      * f(m) = 1/sqrt(1+m)
     */
-    double decayed_temp_inv_sqrt(double scaled_visits);
+    class SqrtDecayFn : public DecayFn {
+
+        private:
+            double temp_at_zero_visits;
+
+        public:
+            SqrtDecayFn(double temp_at_zero_visits) :
+                DecayFn(),
+                temp_at_zero_visits(temp_at_zero_visits)
+            {
+            }
+
+        protected:
+            virtual double compute_decayed_temp(int num_visits) const override
+            {
+                return temp_at_zero_visits / sqrt(1.0 + num_visits);
+            }
+    };
 
     /**
      * Inverse log temp decay function
-     * f(m) = 1/log(e + m)
+     * f(m) = 1/log(1+m)
     */
-    double decayed_temp_inv_log(double scaled_visits);
+    class LogDecayFn : public DecayFn {
+
+        private:
+            double temp_at_zero_visits;
+
+        public:
+            LogDecayFn(double temp_at_zero_visits) :
+                DecayFn(),
+                temp_at_zero_visits(temp_at_zero_visits)
+            {
+            }
+
+        protected:
+            virtual double compute_decayed_temp(int num_visits) const override
+            {
+                return temp_at_zero_visits / log(exp(1.0) + num_visits);
+            }
+    };
 
     /**
-        * Sigmoid temp decay function
-        * f(m) = (1+exp(-5)) / (1+exp(m-5))
+     * Linear temp decay function
+     * f(x) = max(0, mx + c)
+     * 
+     * Can be initialised by the x_axis and y_axis intercepts for interprebility
+     * - the y intercept is the initial temperature (temp_at_zero_visits)
+     * - the x intercept is how many trials we have a temp > 0
+     * 
+     * c = temp_at_zero_visits
+     * As m * zero_temp_at + temp_at_zero_visits = 0, gives m = -temp_at_zero_visits/zero_temp_at
     */
-    double decayed_temp_sigmoid(double scaled_visits);
+    class LinearDecayFn : public DecayFn {
+
+        private:
+            double y_intercept;
+            double grad;
+
+        public:
+            LinearDecayFn(double temp_at_zero_visits, double zero_temp_at) :
+                DecayFn(),
+                y_intercept(temp_at_zero_visits),
+                grad(-temp_at_zero_visits/zero_temp_at)
+            {
+            }
+
+        protected:
+            virtual double compute_decayed_temp(int num_visits) const override
+            {
+                double linear_temp = grad * num_visits + y_intercept;
+                if (linear_temp < 0)
+                {
+                    return 0.0;
+                }
+                return linear_temp;
+            }
+    };
 }
