@@ -15,10 +15,6 @@ namespace thts {
         static constexpr double root_node_epsilon_default=-1.0;
         static constexpr double max_explore_prob_default=1.0;
 
-        static constexpr TempDecayFnPtr temp_decay_fn_default=nullptr;
-        static constexpr double temp_decay_fn_min_temp_default=1.0e-6;
-        static constexpr double temp_decay_fn_x_scale_default=1.0;
-
         static constexpr double default_q_value_default=0.0;
         static const bool shift_pseudo_q_values_default=false;
         static constexpr double psuedo_q_value_offset_default=0.0;
@@ -27,15 +23,11 @@ namespace thts {
         static const bool recommend_most_visited_default=false;
 
         bool normalise_q_values;
-        double temp;
+        std::shared_ptr<Schedule> temp_schedule_ptr;
         double prior_policy_search_weight;
         double epsilon;
         double root_node_epsilon;
         double max_explore_prob;
-
-        TempDecayFnPtr temp_decay_fn;
-        double temp_decay_fn_min_temp;
-        double temp_decay_fn_x_scale;
 
         double default_q_value;
         bool shift_pseudo_q_values;
@@ -47,14 +39,11 @@ namespace thts {
         MentsManagerArgs(std::shared_ptr<ThtsEnv> thts_env) :
             ThtsManagerArgs(thts_env),
             normalise_q_values(normalise_q_values_default),
-            temp(temp_default),
+            temp_schedule_ptr(std::make_shared<ConstSchedule>(temp_default)),
             prior_policy_search_weight(prior_policy_search_weight_default),
             epsilon(epsilon_default),
             root_node_epsilon(root_node_epsilon_default),
             max_explore_prob(max_explore_prob_default),
-            temp_decay_fn(temp_decay_fn_default),
-            temp_decay_fn_min_temp(temp_decay_fn_min_temp_default),
-            temp_decay_fn_x_scale(temp_decay_fn_x_scale_default),
             default_q_value(default_q_value_default),
             shift_pseudo_q_values(shift_pseudo_q_values_default),
             psuedo_q_value_offset(psuedo_q_value_offset_default),
@@ -127,15 +116,11 @@ namespace thts {
     class MentsManager : public ThtsManager {
         public:
             bool normalise_q_values;
-            double temp;
+            std::shared_ptr<Schedule> temp_schedule_ptr;
             double prior_policy_search_weight;
             double epsilon;
             double root_node_epsilon;
             double max_explore_prob;
-
-            TempDecayFnPtr temp_decay_fn;
-            double temp_decay_fn_min_temp;
-            double temp_decay_fn_x_scale;
 
             double default_q_value;
             bool shift_pseudo_q_values;
@@ -147,14 +132,11 @@ namespace thts {
             MentsManager(const MentsManagerArgs& args) :
                 ThtsManager(args),
                 normalise_q_values(args.normalise_q_values),
-                temp(args.temp),
+                temp_schedule_ptr(args.temp_schedule_ptr),
                 prior_policy_search_weight(args.prior_policy_search_weight),
                 epsilon(args.epsilon),
                 root_node_epsilon(args.root_node_epsilon),
                 max_explore_prob(args.max_explore_prob),
-                temp_decay_fn(args.temp_decay_fn),
-                temp_decay_fn_min_temp(args.temp_decay_fn_min_temp),
-                temp_decay_fn_x_scale(args.temp_decay_fn_x_scale),
                 default_q_value(args.default_q_value),
                 shift_pseudo_q_values(args.shift_pseudo_q_values),
                 psuedo_q_value_offset(args.psuedo_q_value_offset),

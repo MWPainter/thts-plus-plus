@@ -4,104 +4,105 @@
 
 namespace thts {
     /**
-     * DecayFn interface.
+     * Schedule interface.
     */
-    class DecayFn {
+    class Schedule {
 
         public:
-            DecayFn() = default;
-            virtual ~DecayFn() = default;
+            Schedule() = default;
+            virtual ~Schedule() = default;
 
         protected:
-            virtual double compute_decayed_temp(int num_visits) const = 0;
+            /**
+             * Implementation of the schedule function/operator() for subclasses to override and implement.
+             */
+            virtual double compute_schedule_value(double num_visits) const = 0;
 
         public:
-            double operator()(int num_visits) 
-            {
-                return compute_decayed_temp(num_visits);
-            }
+            /**
+             * Call this schedule function, returns a "scheduleed coefficient" >= 0 with respect to the inputs.
+             * Inputs is num_visits nominally to indicate that it will usually be the number of visits to a node.
+             * But input is double to be more general.
+             */
+            double operator()(double num_visits);
     };
 
     /**
-     * Inverse square root temp decay function
-     * f(m) = 1/sqrt(1+m)
+     * A defualt schedule function that returns a constant value. 
+     */
+    class ConstSchedule : public Schedule {
+
+        private:
+            double const_val;
+
+        public:
+            ConstSchedule(double const_val);
+            virtual ~ConstSchedule() = default;
+
+        protected:
+            virtual double compute_schedule_value(double num_visits) const override;
+
+    };
+
+    /**
+     * Inverse square root temp schedule function
+     * f(x) = c/sqrt(1+x),
+     * where c == temp_at_zero_visits
     */
-    class SqrtDecayFn : public DecayFn {
+    class SqrtSchedule : public Schedule {
 
         private:
             double temp_at_zero_visits;
 
         public:
-            SqrtDecayFn(double temp_at_zero_visits) :
-                DecayFn(),
-                temp_at_zero_visits(temp_at_zero_visits)
-            {
-            }
+            SqrtSchedule(double temp_at_zero_visits);
+            virtual ~SqrtSchedule() = default;
 
         protected:
-            virtual double compute_decayed_temp(int num_visits) const override
-            {
-                return temp_at_zero_visits / sqrt(1.0 + num_visits);
-            }
+            virtual double compute_schedule_value(double num_visits) const override;
     };
 
     /**
-     * Inverse log temp decay function
-     * f(m) = 1/log(1+m)
+     * Inverse log temp schedule function
+     * f(x) = c/log(1+x),
+     * where c == temp_at_zero_visits
     */
-    class LogDecayFn : public DecayFn {
+    class LogSchedule : public Schedule {
 
         private:
             double temp_at_zero_visits;
 
         public:
-            LogDecayFn(double temp_at_zero_visits) :
-                DecayFn(),
-                temp_at_zero_visits(temp_at_zero_visits)
-            {
-            }
+            LogSchedule(double temp_at_zero_visits);
+            virtual ~LogSchedule() = default;
 
         protected:
-            virtual double compute_decayed_temp(int num_visits) const override
-            {
-                return temp_at_zero_visits / log(exp(1.0) + num_visits);
-            }
+            virtual double compute_schedule_value(double num_visits) const override;
     };
 
     /**
-     * Linear temp decay function
+     * Linear temp schedule function
      * f(x) = max(0, mx + c)
      * 
      * Can be initialised by the x_axis and y_axis intercepts for interprebility
-     * - the y intercept is the initial temperature (temp_at_zero_visits)
-     * - the x intercept is how many trials we have a temp > 0
+     * - the y intercept (temp_at_zero_visits) is the initial temperature (temp_at_zero_visits)
+     * - the x intercept (zero_temp_at) is how many trials or which we have a temp > 0
      * 
-     * c = temp_at_zero_visits
-     * As m * zero_temp_at + temp_at_zero_visits = 0, gives m = -temp_at_zero_visits/zero_temp_at
-    */
-    class LinearDecayFn : public DecayFn {
+     * Computing y intercept (c) and gradient (m) from this: 
+     *      m * 0 + c = temp_at_zero_visits, gives c = temp_at_zero_visits
+     *      m * zero_temp_at + c = 0, gives m = -temp_at_zero_visits/zero_temp_at
+     */
+    class LinearSchedule : public Schedule {
 
         private:
             double y_intercept;
             double grad;
 
         public:
-            LinearDecayFn(double temp_at_zero_visits, double zero_temp_at) :
-                DecayFn(),
-                y_intercept(temp_at_zero_visits),
-                grad(-temp_at_zero_visits/zero_temp_at)
-            {
-            }
+            LinearSchedule(double temp_at_zero_visits, double zero_temp_at);
+            virtual ~LinearSchedule() = default;
 
         protected:
-            virtual double compute_decayed_temp(int num_visits) const override
-            {
-                double linear_temp = grad * num_visits + y_intercept;
-                if (linear_temp < 0)
-                {
-                    return 0.0;
-                }
-                return linear_temp;
-            }
+            virtual double compute_schedule_value(double num_visits) const override;
     };
 }

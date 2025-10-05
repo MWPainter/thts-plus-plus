@@ -25,17 +25,10 @@ namespace thts {
     /**
      * Get decayed temp
      */
-    double DentsDNode::get_value_temp() const {
+    double DentsDNode::get_entropy_coeff() const {
         DentsManager& manager = (DentsManager&) *thts_manager;
-        if (manager.entropy_temp_decay_fn == nullptr) return manager.entropy_temp;
-
-        double visits_scale = manager.entropy_temp_decay_fn_x_scale;
-        return compute_decayed_temp(
-            manager.entropy_temp_decay_fn, 
-            manager.entropy_temp, 
-            manager.entropy_temp_decay_fn_min_temp, 
-            num_visits, 
-            visits_scale);
+        Schedule& entropy_coeff_schedule = *manager.entropy_coeff_schedule_ptr;
+        return entropy_coeff_schedule(num_visits);
     }
 
     /**
@@ -55,7 +48,7 @@ namespace thts {
         DentsCNode& child = (DentsCNode&) *get_child_node(action);
         double val_estimate = child.dp_value;
         if (!manager.use_dp_value) val_estimate = child.avg_return;
-        return opp_coeff * (val_estimate + get_value_temp() * child.subtree_entropy);
+        return opp_coeff * (val_estimate + get_entropy_coeff() * child.subtree_entropy);
     }
 
     /**
@@ -117,7 +110,7 @@ namespace thts {
         }
     
         // update local soft_value so that value is sensible / for pretty printing
-        soft_value = val_estimate + get_value_temp() * subtree_entropy;
+        soft_value = val_estimate + get_entropy_coeff() * subtree_entropy;
     }
 
     /**
@@ -141,7 +134,7 @@ namespace thts {
         double val_estimate = manager.use_dp_value ? dp_value : avg_return; 
 
         stringstream ss;
-        ss << val_estimate << "(temp:" << get_temp() << ",entrpy:" << subtree_entropy << ",val_temp:" << get_value_temp() 
+        ss << val_estimate << "(temp:" << get_temp() << ",entrpy:" << subtree_entropy << ",val_temp:" << get_entropy_coeff() 
             << ",soft_val:" << soft_value << ")";
         return ss.str();
     }

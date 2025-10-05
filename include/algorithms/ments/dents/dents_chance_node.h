@@ -49,7 +49,7 @@ namespace thts {
              * Helper to get the temperature that should be used for computing the soft value to use in ments functions.
              * I.e. The 'value_temp' refers to the temperature coefficient of entropy when computing (soft) values
              */
-            virtual double get_value_temp() const;   
+            virtual double get_entropy_coeff() const;   
 
             /**
              * Calls both the entropy backup and dp backup from DPCNode

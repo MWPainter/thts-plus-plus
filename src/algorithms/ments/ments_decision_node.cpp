@@ -74,12 +74,8 @@ namespace thts {
      */
     double MentsDNode::get_temp() const {
         MentsManager& manager = (MentsManager&) *thts_manager;
-        if (manager.temp_decay_fn == nullptr) return manager.temp;
-
-        double visits_scale = manager.temp_decay_fn_x_scale;
-        return compute_decayed_temp(
-            manager.temp_decay_fn, manager.temp, manager.temp_decay_fn_min_temp, num_visits, visits_scale);
-
+        Schedule& temp_schedule = *manager.temp_schedule_ptr;
+        return temp_schedule(num_visits);
     }
     
     /**
