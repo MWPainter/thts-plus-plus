@@ -85,7 +85,7 @@ namespace thts {
         manager_args.seed = 60415;
         manager_args.max_depth = env_size * 4;
         manager_args.mcts_mode = false;
-        manager_args.temp = 1.0;
+        // manager_args.temp = 1.0;
         shared_ptr<DentsManager> manager = make_shared<DentsManager>(manager_args);
         shared_ptr<EstDNode> root_node = make_shared<EstDNode>(manager, grid_env->get_initial_state_itfc(), 0, 0);
         ThtsPool thts_pool(manager, root_node, num_threads);
@@ -344,7 +344,7 @@ namespace thts {
         args.seed = 60415;
         args.max_depth = env_size * 4;
         args.mcts_mode = false;
-        args.temp = 1.0;
+        // args.temp = 1.0;
         args.num_threads = num_threads;
         args.num_envs = num_threads;
         shared_ptr<DentsManager> manager = make_shared<DentsManager>(args);

@@ -55,7 +55,7 @@ void run_dents_integration_test(
     manager_args.seed = 60415;
     manager_args.max_depth = env_size * 4;
     manager_args.mcts_mode = false;
-    manager_args.temp = temp;
+    manager_args.temp_schedule_ptr = make_shared<ConstSchedule>(temp);
     manager_args.use_dp_value = !use_avg_returns;
     shared_ptr<DentsManager> manager = make_shared<DentsManager>(manager_args);
     shared_ptr<DentsDNode> root_node = make_shared<DentsDNode>(
@@ -124,7 +124,7 @@ void run_dents_game_integration_test(
     manager_args.max_depth = env_size * 4;
     manager_args.mcts_mode = false;
     manager_args.is_two_player_game = true;
-    manager_args.temp = 1.0;
+    manager_args.temp_schedule_ptr = make_shared<ConstSchedule>(1.0);
     manager_args.use_dp_value = !use_avg_returns;
     shared_ptr<DentsManager> manager = make_shared<DentsManager>(manager_args);
     shared_ptr<DentsDNode> root_node = make_shared<DentsDNode>(
@@ -174,7 +174,7 @@ TEST(Dents_IntegrationTest, dents_env) {
     DentsManagerArgs manager_args(dents_env);
     manager_args.seed = 60415;
     manager_args.mcts_mode = false;
-    manager_args.temp = 5.0;
+    manager_args.temp_schedule_ptr = make_shared<ConstSchedule>(5.0);
     shared_ptr<DentsManager> manager = make_shared<DentsManager>(manager_args);
     shared_ptr<DentsDNode> root_node = make_shared<DentsDNode>(
         manager, dents_env->get_initial_state_itfc(), 0, 0);

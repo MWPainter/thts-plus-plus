@@ -18,28 +18,17 @@ namespace thts {
         static constexpr double root_node_epsilon_default=0.5;
         static constexpr double max_explore_prob_default=1.0;
 
-        static constexpr TempDecayFnPtr temp_decay_fn_default=nullptr;
-        static constexpr double temp_decay_fn_min_temp_default=1.0e-6;
-        static constexpr double temp_decay_fn_x_scale_default=1.0;
-
-        double temp; 
+        std::shared_ptr<Schedule> temp_schedule_ptr;
         double epsilon;
         double root_node_epsilon;
         double max_explore_prob;
 
-        TempDecayFnPtr temp_decay_fn;
-        double temp_decay_fn_min_temp;
-        double temp_decay_fn_x_scale;
-
         SmBtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env, Eigen::ArrayXd default_q_value) :
             SmThtsManagerArgs(thts_env, default_q_value),
-            temp(temp_default),
+            temp_schedule_ptr(std::make_shared<ConstSchedule>(temp_default)),
             epsilon(epsilon_default),
             root_node_epsilon(root_node_epsilon_default),
-            max_explore_prob(max_explore_prob_default),
-            temp_decay_fn(temp_decay_fn_default),
-            temp_decay_fn_min_temp(temp_decay_fn_min_temp_default),
-            temp_decay_fn_x_scale(temp_decay_fn_x_scale_default)
+            max_explore_prob(max_explore_prob_default)
         {
         }
 
@@ -55,27 +44,20 @@ namespace thts {
      */
     class SmBtsManager : public SmThtsManager {
         public:
-            double temp; 
+            std::shared_ptr<Schedule> temp_schedule_ptr;
             double epsilon;
             double root_node_epsilon;
             double max_explore_prob;
-
-            TempDecayFnPtr temp_decay_fn;
-            double temp_decay_fn_min_temp;
-            double temp_decay_fn_x_scale;
 
             /**
              * Constructor.
              */    
             SmBtsManager(const SmBtsManagerArgs& args) : 
                 SmThtsManager(args),
-                temp(args.temp),
+                temp_schedule_ptr(args.temp_schedule_ptr),
                 epsilon(args.epsilon),
                 root_node_epsilon(args.root_node_epsilon),
-                max_explore_prob(args.max_explore_prob),
-                temp_decay_fn(args.temp_decay_fn),
-                temp_decay_fn_min_temp(args.temp_decay_fn_min_temp),
-                temp_decay_fn_x_scale(args.temp_decay_fn_x_scale)
+                max_explore_prob(args.max_explore_prob)
             {
             }
 

@@ -122,7 +122,8 @@ namespace thts {
                 ActionDistr& action_weights, 
                 double& sum_action_weights, 
                 double& normalisation_term, 
-                ThtsContext& context) const;
+                ThtsContext& context,
+                bool for_backup) const;
 
             /**
              * Computes the action distribution for each action. (Including probability mass from epsilon exploration).

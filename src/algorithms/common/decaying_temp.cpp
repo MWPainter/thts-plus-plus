@@ -30,9 +30,10 @@ namespace thts {
     /**
      * SqrtSchedule initialiser
      */
-    SqrtSchedule::SqrtSchedule(double temp_at_zero_visits) :
+    SqrtSchedule::SqrtSchedule(double temp_at_zero_visits, double decay_rate_coeff) :
         Schedule(),
-        temp_at_zero_visits(temp_at_zero_visits)
+        temp_at_zero_visits(temp_at_zero_visits),
+        decay_rate_coeff(decay_rate_coeff)
     {
     }
 
@@ -43,15 +44,16 @@ namespace thts {
      */
     double SqrtSchedule::compute_schedule_value(double num_visits) const
     {
-        return temp_at_zero_visits / sqrt(1.0 + num_visits);
+        return temp_at_zero_visits / sqrt(1.0 + decay_rate_coeff * num_visits);
     }
 
     /**
      * LogSchedule initialiser
      */
-    LogSchedule::LogSchedule(double temp_at_zero_visits) :
+    LogSchedule::LogSchedule(double temp_at_zero_visits, double decay_rate_coeff) :
         Schedule(),
-        temp_at_zero_visits(temp_at_zero_visits)
+        temp_at_zero_visits(temp_at_zero_visits),
+        decay_rate_coeff(decay_rate_coeff)
     {
     }
 
@@ -62,7 +64,7 @@ namespace thts {
      */
     double LogSchedule::compute_schedule_value(double num_visits) const
     {
-        return temp_at_zero_visits / log(exp(1.0) + num_visits);
+        return temp_at_zero_visits / log(exp(1.0) + decay_rate_coeff * num_visits);
     }
 
     /**

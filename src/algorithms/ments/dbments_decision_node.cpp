@@ -65,7 +65,7 @@ namespace thts {
         ThtsContext& ctx) 
     {
         backup_soft(ctx);
-        backup_dp<DBMentsCNode>(children, is_opponent());
+        backup_dp<DBMentsCNode>(children, is_opponent()); 
     }
 
     /**

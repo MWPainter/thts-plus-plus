@@ -26,14 +26,11 @@ namespace thts {
     /**
      * Copies from ments
      */
-    double ChBtsDNode::get_temp() const
+    double ChBtsDNode::get_temp(MoThtsContext& context) const
     {
         ChBtsManager& manager = (ChBtsManager&) *thts_manager;
-        if (manager.temp_decay_fn == nullptr) return manager.temp;
-
-        double visits_scale = manager.temp_decay_fn_x_scale;
-        return compute_decayed_temp(
-            manager.temp_decay_fn, manager.temp, manager.temp_decay_fn_min_temp, num_visits, visits_scale);
+        Schedule& temp_schedule = *manager.temp_schedule_ptr;
+        return temp_schedule(get_num_visits(context));
 
     }
 
@@ -47,7 +44,7 @@ namespace thts {
         ChBtsManager& manager = (ChBtsManager&) *thts_manager;
         ActionDistr q_values;
         fill_contextual_q_values(q_values, context, manager.default_q_value);
-        double temp = get_temp();
+        double temp = get_temp(context);
 
         // Optionally normalise Q values
         if (manager.normalise_q_values) {

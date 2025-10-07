@@ -143,7 +143,8 @@ namespace thts {
         ActionDistr& action_weights, 
         double& sum_action_weights, 
         double& normalisation_term, 
-        ThtsContext& context) const
+        ThtsContext& context,
+        bool for_backup) const
     {
         // get temp
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
@@ -155,9 +156,9 @@ namespace thts {
             q_values[action] = get_soft_q_value(action,opp_coeff);
         }
 
-        // optionally normalise q values
+        // optionally normalise q values (for action selection)
         MentsManager& manager = (MentsManager&) *thts_manager;
-        if (manager.normalise_q_values) {
+        if (!for_backup && manager.normalise_q_values) {
             double min_q_value = numeric_limits<double>::max();
             double max_q_value = numeric_limits<double>::lowest();
 
@@ -214,7 +215,7 @@ namespace thts {
         // compute boltzmann weights
         double sum_weights;
         double _normalisation_term;
-        compute_action_weights(action_distr, sum_weights, _normalisation_term, context);
+        compute_action_weights(action_distr, sum_weights, _normalisation_term, context, false);
 
         // compute lambda
         MentsManager& manager = (MentsManager&) *thts_manager;
@@ -351,7 +352,7 @@ namespace thts {
         ActionDistr action_weights;
         double sum_weights;
         double normalisation_term;
-        compute_action_weights(action_weights, sum_weights, normalisation_term, ctx);
+        compute_action_weights(action_weights, sum_weights, normalisation_term, ctx, true);
 
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         double temp = get_temp();

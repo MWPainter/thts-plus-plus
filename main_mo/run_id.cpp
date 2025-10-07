@@ -89,12 +89,10 @@ namespace thts {
             sm_max_depth(SmThtsManagerArgs::simplex_node_max_depth_default),
             sm_split_visit_thresh(SmThtsManagerArgs::simplex_node_split_visit_thresh_default),
             bts_epsilon(SmBtsManagerArgs::epsilon_default),
-            bts_search_temp(SmBtsManagerArgs::temp_default),
-            bts_search_temp_decay_fn(DECAY_FN_CONST),
-            bts_search_temp_decay_fn_scale(1.0),
-            dents_entropy_temp(SmDentsManagerArgs::entropy_temp_default),
-            dents_entropy_temp_decay_fn(DECAY_FN_CONST),
-            dents_entropy_temp_decay_fn_scale(1.0),
+            bts_temp_init(SmBtsManagerArgs::temp_default),
+            bts_temp_decay_rate(SmBtsManagerArgs::temp_default),
+            dents_init_entropy_coeff(SmDentsManagerArgs::default_init_entropy_coeff),
+            dents_entropy_coeff_zero_at(SmDentsManagerArgs::default_entropy_coeff_decay_rate),
             search_runtime(search_runtime),
             max_trial_length(max_trial_length),
             eval_delta(eval_delta),
@@ -120,18 +118,14 @@ namespace thts {
                 sm_split_visit_thresh = (int) param_val;
             } else if (param_id == BTS_EPSILON_PARAM_ID) {
                 bts_epsilon = param_val;
-            } else if (param_id == BTS_SEARCH_TEMP_PARAM_ID) {
-                bts_search_temp = param_val;
-            } else if (param_id == BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID) {
-                bts_search_temp_decay_fn = (int) param_val;
-            } else if (param_id == BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID) {
-                bts_search_temp_decay_fn_scale = param_val;
-            } else if (param_id == DENTS_ENTROPY_TEMP_PARAM_ID) {
-                dents_entropy_temp = param_val;
-            } else if (param_id == DENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID) {
-                dents_entropy_temp_decay_fn = (int) param_val;
-            } else if (param_id == DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID) {
-                dents_entropy_temp_decay_fn_scale = param_val;
+            } else if (param_id == BTS_TEMP_INIT_PARAM_ID) {
+                bts_temp_init = param_val;
+            } else if (param_id == BTS_TEMP_DECAY_RATE_PARAM_ID) {
+                bts_temp_decay_rate = (int) param_val;
+            } else if (param_id == DENTS_ENTROPY_COEFF_INIT_PARAM_ID) {
+                dents_init_entropy_coeff = param_val;
+            } else if (param_id == DENTS_ENTROPY_COEFF_ZERO_AT_PARAM_ID) {
+                dents_entropy_coeff_zero_at = param_val;
             } else {
                 throw runtime_error("RunID::RunID: Unknown param id: " + param_id);
             }
@@ -201,14 +195,7 @@ namespace thts {
             manager_args.epsilon = bts_epsilon;
             
             // alpha
-            manager_args.temp = bts_search_temp;
-            manager_args.temp_decay_fn = nullptr; 
-            if (bts_search_temp_decay_fn == DECAY_FN_INV_SQRT) {
-                manager_args.temp_decay_fn = decayed_temp_inv_sqrt;
-            } else if (bts_search_temp_decay_fn == DECAY_FN_INV_LOG) {
-                manager_args.temp_decay_fn = decayed_temp_inv_log;
-            }
-            manager_args.temp_decay_fn_x_scale = bts_search_temp_decay_fn_scale;
+            manager_args.temp_schedule_ptr = make_shared<SqrtSchedule>(bts_temp_init,bts_temp_decay_rate);
 
             // manager_args.graph_search = true;
             return make_shared<SmBtsManager>(manager_args);
@@ -228,26 +215,9 @@ namespace thts {
             
             manager_args.epsilon = bts_epsilon;
             
-            // alpha
-            manager_args.temp = bts_search_temp;
-            manager_args.temp_decay_fn = nullptr; 
-            if (bts_search_temp_decay_fn == DECAY_FN_INV_SQRT) {
-                manager_args.temp_decay_fn = decayed_temp_inv_sqrt;
-            } else if (bts_search_temp_decay_fn == DECAY_FN_INV_LOG) {
-                manager_args.temp_decay_fn = decayed_temp_inv_log;
-            }
-            manager_args.temp_decay_fn_x_scale = bts_search_temp_decay_fn_scale;
-
-            // beta
-            manager_args.entropy_temp = dents_entropy_temp;
-            manager_args.entropy_temp_decay_fn = nullptr;
-            if (dents_entropy_temp_decay_fn == DECAY_FN_INV_SQRT) {
-                manager_args.entropy_temp_decay_fn = decayed_temp_inv_sqrt;
-            } else if (dents_entropy_temp_decay_fn == DECAY_FN_INV_LOG) {
-                manager_args.entropy_temp_decay_fn = decayed_temp_inv_log;
-            }
-            manager_args.entropy_temp_decay_fn_x_scale = dents_entropy_temp_decay_fn_scale;
-
+            // alpha+beta
+            manager_args.temp_schedule_ptr = make_shared<SqrtSchedule>(bts_temp_init,bts_temp_decay_rate);
+            manager_args.entropy_coeff_schedule_ptr = make_shared<LinearSchedule>(dents_init_entropy_coeff,dents_entropy_coeff_zero_at);
 
             // manager_args.graph_search = true;
             return make_shared<SmDentsManager>(manager_args);
@@ -341,13 +311,11 @@ namespace thts {
                 // {SM_MAX_DEPTH, 10.0},
                 // {SM_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_PARAM_ID, 100.0},
                 {BTS_EPSILON_PARAM_ID, 0.1},
-                // {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 0.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 1.0},
-                {DENTS_ENTROPY_TEMP_PARAM_ID, 0.5},
-                {DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 1.0},
+                {BTS_TEMP_INIT_PARAM_ID, 100.0},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, 1.0},
+                {DENTS_ENTROPY_COEFF_INIT_PARAM_ID, 1.0},
+                {DENTS_ENTROPY_COEFF_ZERO_AT_PARAM_ID, 100.0},
             };
 
             vector<string> alg_ids = 
@@ -410,13 +378,11 @@ namespace thts {
                 // {SM_MAX_DEPTH, 10.0},
                 // {SM_SPLIT_VISIT_THRESH_PARAM_ID, 10.0},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_PARAM_ID, 1.0},
                 {BTS_EPSILON_PARAM_ID, 0.1},
-                // {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 0.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 1.0},
-                {DENTS_ENTROPY_TEMP_PARAM_ID, 0.1},
-                {DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 1.0},
+                {BTS_TEMP_INIT_PARAM_ID, 1.0},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, 1.0},
+                {DENTS_ENTROPY_COEFF_INIT_PARAM_ID, 0.1},
+                {DENTS_ENTROPY_COEFF_ZERO_AT_PARAM_ID, 100.0},
             };
 
             vector<string> alg_ids = 
@@ -467,14 +433,11 @@ namespace thts {
                 {SM_L_INF_THRESH_PARAM_ID, 0.05},
                 // {SM_MAX_DEPTH, 10.0},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                // {BTS_SEARCH_TEMP_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_PARAM_ID, 100.0},
                 {BTS_EPSILON_PARAM_ID, 0.5},
-                // {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 0.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 1.0},
-                {DENTS_ENTROPY_TEMP_PARAM_ID, 100.0},
-                {DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 1.0},
+                {BTS_TEMP_INIT_PARAM_ID, 100.0},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, 1.0},
+                {DENTS_ENTROPY_COEFF_INIT_PARAM_ID, 100.0},
+                {DENTS_ENTROPY_COEFF_ZERO_AT_PARAM_ID, 100.0},
             };
 
             vector<string> alg_ids = 
@@ -525,14 +488,11 @@ namespace thts {
                 {SM_L_INF_THRESH_PARAM_ID, 0.05},
                 // {SM_MAX_DEPTH, 10.0},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                // {BTS_SEARCH_TEMP_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_PARAM_ID, 100.0},
                 {BTS_EPSILON_PARAM_ID, 0.5},
-                // {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 0.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 1.0},
-                {DENTS_ENTROPY_TEMP_PARAM_ID, 100.0},
-                {DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 1.0},
+                {BTS_TEMP_INIT_PARAM_ID, 100.0},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, 1.0},
+                {DENTS_ENTROPY_COEFF_INIT_PARAM_ID, 100.0},
+                {DENTS_ENTROPY_COEFF_ZERO_AT_PARAM_ID, 100.0},
             };
 
             vector<string> alg_ids = 
@@ -621,10 +581,9 @@ namespace thts {
                 {
                     {SM_L_INF_THRESH_PARAM_ID, 0.375},
                     {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                    {BTS_SEARCH_TEMP_PARAM_ID, 50.0},
                     {BTS_EPSILON_PARAM_ID, 0.25},
-                    {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                    {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 1.0},
+                    {BTS_TEMP_INIT_PARAM_ID, 50.0},
+                    {BTS_TEMP_DECAY_RATE_PARAM_ID, 1.0},
                 };
                 run_ids->push_back(RunID(
                     env_id,
@@ -646,12 +605,11 @@ namespace thts {
                 {
                     {SM_L_INF_THRESH_PARAM_ID, 0.375},
                     {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                    {BTS_SEARCH_TEMP_PARAM_ID, 50.0},
                     {BTS_EPSILON_PARAM_ID, 0.25},
-                    {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                    {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 1.0},
-                    {DENTS_ENTROPY_TEMP_PARAM_ID, 100.0},
-                    {DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 1.0},
+                    {BTS_TEMP_INIT_PARAM_ID, 50.0},
+                    {BTS_TEMP_DECAY_RATE_PARAM_ID, 1.0},
+                    {DENTS_ENTROPY_COEFF_INIT_PARAM_ID, 100.0},
+                    {DENTS_ENTROPY_COEFF_ZERO_AT_PARAM_ID, 100.0},
                 };
                 run_ids->push_back(RunID(
                     env_id,
@@ -730,10 +688,9 @@ namespace thts {
                 {
                     {SM_L_INF_THRESH_PARAM_ID, 0.375},
                     {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                    {BTS_SEARCH_TEMP_PARAM_ID, 50.0},
                     {BTS_EPSILON_PARAM_ID, 0.25},
-                    {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                    {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 1.0},
+                    {BTS_TEMP_INIT_PARAM_ID, 50.0},
+                    {BTS_TEMP_DECAY_RATE_PARAM_ID, 1.0},
                 };
                 run_ids->push_back(RunID(
                     env_id,
@@ -755,12 +712,11 @@ namespace thts {
                 {
                     {SM_L_INF_THRESH_PARAM_ID, 0.375},
                     {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                    {BTS_SEARCH_TEMP_PARAM_ID, 50.0},
                     {BTS_EPSILON_PARAM_ID, 0.25},
-                    {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                    {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 0.1},
-                    {DENTS_ENTROPY_TEMP_PARAM_ID, 100.0},
-                    {DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 1.0},
+                    {BTS_TEMP_INIT_PARAM_ID, 50.0},
+                    {BTS_TEMP_DECAY_RATE_PARAM_ID, 1.0},
+                    {DENTS_ENTROPY_COEFF_INIT_PARAM_ID, 100.0},
+                    {DENTS_ENTROPY_COEFF_ZERO_AT_PARAM_ID, 100.0},
                 };
                 run_ids->push_back(RunID(
                     env_id,
@@ -841,10 +797,9 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.000144821},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_PARAM_ID, 58.5697},
                 {BTS_EPSILON_PARAM_ID, 0.414515},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 99.9972},
+                {BTS_TEMP_INIT_PARAM_ID, 58.5697},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, 99.9972},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -866,12 +821,11 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.000145879},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_PARAM_ID, 64.4872},
+                {BTS_TEMP_INIT_PARAM_ID, 64.4872},
                 {BTS_EPSILON_PARAM_ID, 0.409571},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 99.9981},
-                {DENTS_ENTROPY_TEMP_PARAM_ID, 99.998},
-                {DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 0.0196627},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, 99.9981},
+                {DENTS_ENTROPY_COEFF_INIT_PARAM_ID, 99.998},
+                {DENTS_ENTROPY_COEFF_ZERO_AT_PARAM_ID, 100.0},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -952,10 +906,9 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.05},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_PARAM_ID, 58.5697},
+                {BTS_TEMP_INIT_PARAM_ID, 58.5697},
                 {BTS_EPSILON_PARAM_ID, 0.414515},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 99.9972},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, 99.9972},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -977,12 +930,11 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.05},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_PARAM_ID, 64.4872},
+                {BTS_TEMP_INIT_PARAM_ID, 64.4872},
                 {BTS_EPSILON_PARAM_ID, 0.409571},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 99.9981},
-                {DENTS_ENTROPY_TEMP_PARAM_ID, 99.998},
-                {DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 0.0196627},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, 99.9981},
+                {DENTS_ENTROPY_COEFF_INIT_PARAM_ID, 99.998},
+                {DENTS_ENTROPY_COEFF_ZERO_AT_PARAM_ID, 0.0196627},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -1063,10 +1015,9 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.358604}, 
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_PARAM_ID, 84.9397},
+                {BTS_TEMP_INIT_PARAM_ID, 84.9397},
                 {BTS_EPSILON_PARAM_ID, 0.5},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 0.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 99.1271},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, 0.1271},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -1088,12 +1039,11 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.499995}, 
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_PARAM_ID, 100.0},
+                {BTS_TEMP_INIT_PARAM_ID, 100.0},
                 {BTS_EPSILON_PARAM_ID, 0.5},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 0.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 61.3259},
-                {DENTS_ENTROPY_TEMP_PARAM_ID, 48.2209},
-                {DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 70.5693},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, 0.3259},
+                {DENTS_ENTROPY_COEFF_INIT_PARAM_ID, 48.2209},
+                {DENTS_ENTROPY_COEFF_ZERO_AT_PARAM_ID, 70.5693},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -1174,10 +1124,9 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.21801}, 
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_PARAM_ID, 57.7995},
+                {BTS_TEMP_INIT_PARAM_ID, 57.7995},
                 {BTS_EPSILON_PARAM_ID, 0.0772343},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 99.9983},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, 99.9983},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -1199,12 +1148,11 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.326269},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_PARAM_ID, 79.0565},
+                {BTS_TEMP_INIT_PARAM_ID, 79.0565},
                 {BTS_EPSILON_PARAM_ID, 0.103549},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 99.9784},
-                {DENTS_ENTROPY_TEMP_PARAM_ID, 66.5046},
-                {DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 0.0234992},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, 99.9784},
+                {DENTS_ENTROPY_COEFF_INIT_PARAM_ID, 66.5046},
+                {DENTS_ENTROPY_COEFF_ZERO_AT_PARAM_ID, 100.0},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -1285,10 +1233,9 @@ namespace thts {
             {
                 {SM_L_INF_THRESH_PARAM_ID, 0.499993}, 
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_PARAM_ID, 63.4425},
+                {BTS_TEMP_INIT_PARAM_ID, 63.4425},
                 {BTS_EPSILON_PARAM_ID, 0.404392},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 0.0201612},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, 0.0201612},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -1311,12 +1258,11 @@ namespace thts {
                 {SM_L_INF_THRESH_PARAM_ID, 0.499991}, 
                 {SM_L_INF_THRESH_PARAM_ID, 0.145879},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_PARAM_ID, 74.9865},
+                {BTS_TEMP_INIT_PARAM_ID, 74.9865},
                 {BTS_EPSILON_PARAM_ID, 0.499985},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, 1.0},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 10.4606},
-                {DENTS_ENTROPY_TEMP_PARAM_ID, 100.0},
-                {DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID, 99.9976},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, 10.4606},
+                {DENTS_ENTROPY_COEFF_INIT_PARAM_ID, 100.0},
+                {DENTS_ENTROPY_COEFF_ZERO_AT_PARAM_ID, 100.0},
             };
             run_ids->push_back(RunID(
                 env_id,
@@ -1702,9 +1648,8 @@ namespace thts {
                 {SM_L_INF_THRESH_PARAM_ID, make_pair(0.0001, 0.5)},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
                 {BTS_EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
-                {BTS_SEARCH_TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, make_pair(0.0,3.0)},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
+                {BTS_TEMP_INIT_PARAM_ID, make_pair(0.001, 1000.0)},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, make_pair(0.01, 100.0)},
             };
         }
         // SMDENTS
@@ -1715,12 +1660,10 @@ namespace thts {
                 {SM_L_INF_THRESH_PARAM_ID, make_pair(0.0001, 0.5)},
                 {SM_SPLIT_VISIT_THRESH_PARAM_ID, make_pair(1.0, 100.0)},
                 {BTS_EPSILON_PARAM_ID, make_pair(0.000001, 1.0)},
-                {BTS_SEARCH_TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
-                {BTS_SEARCH_TEMP_DECAY_FN_PARAM_ID, make_pair(0.0,3.0)},
-                {BTS_SEARCH_TEMP_DECAY_FN_X_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
-                {DENTS_ENTROPY_TEMP_DECAY_FN_PARAM_ID, make_pair(0.0,3.0)},
-                {DENTS_ENTROPY_TEMP_PARAM_ID, make_pair(0.001, 1000.0)},
-                {DENTS_ENTROPY_TEMP_DECAY_FN_X_SCALE_PARAM_ID, make_pair(0.01, 100.0)},
+                {BTS_TEMP_INIT_PARAM_ID, make_pair(0.001, 1000.0)},
+                {BTS_TEMP_DECAY_RATE_PARAM_ID, make_pair(0.01, 100.0)},
+                {DENTS_ENTROPY_COEFF_INIT_PARAM_ID, make_pair(0.001, 1000.0)},
+                {DENTS_ENTROPY_COEFF_ZERO_AT_PARAM_ID, make_pair(1.0, 10000.0)},
             };
         }
         // Default, haven't set up hp opt experiments for this env
@@ -1866,7 +1809,7 @@ namespace thts {
             bool is_vamplew = (env_id == VAMPLEW_DST_ENV_ID || env_id == VAMPLEW_STOCH_DST_ENV_ID);
             py::dict kw_args;
             kw_args["swept_by_current_prob"] = to_string(is_stoch ? 0.01 : 0.0);
-            kw_args["is_vamplew"] = to_string(is_vamplew);
+            kw_args["is_vamplew"] = is_vamplew ? "True" : "False";
 
             shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
             return make_shared<MoPyMultiprocessingThtsEnv>(
@@ -1894,7 +1837,7 @@ namespace thts {
             py::dict kw_args;
             kw_args["walk_len"] = to_string(walk_len); 
             kw_args["wrong_dir_prob"] = to_string(wrong_dir_prob);
-            kw_args["add_extra_rewards"] = to_string(add_extra_rewards);
+            kw_args["add_extra_rewards"] = add_extra_rewards ? "True" : "False"; 
 
             shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
             return make_shared<MoPyMultiprocessingThtsEnv>( 

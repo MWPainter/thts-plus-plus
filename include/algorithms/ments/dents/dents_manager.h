@@ -8,6 +8,7 @@ namespace thts {
      */
     struct DentsManagerArgs : public MentsManagerArgs {
         static constexpr double default_init_entropy_coeff=1.0;
+        static constexpr double default_entropy_coeff_decay_rate=1.0;
         static const bool use_dp_value_default=true;
 
         std::shared_ptr<Schedule> entropy_coeff_schedule_ptr;
@@ -15,7 +16,7 @@ namespace thts {
 
         DentsManagerArgs(std::shared_ptr<ThtsEnv> thts_env) :
             MentsManagerArgs(thts_env),
-            entropy_coeff_schedule_ptr(std::make_shared<SqrtSchedule>(default_init_entropy_coeff)),
+            entropy_coeff_schedule_ptr(std::make_shared<SqrtSchedule>(default_init_entropy_coeff,default_entropy_coeff_decay_rate)),
             use_dp_value(use_dp_value_default) {}
 
         virtual ~DentsManagerArgs() = default;

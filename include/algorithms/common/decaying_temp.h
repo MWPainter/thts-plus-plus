@@ -46,16 +46,18 @@ namespace thts {
 
     /**
      * Inverse square root temp schedule function
-     * f(x) = c/sqrt(1+x),
+     * f(x) = c/sqrt(1+dx),
      * where c == temp_at_zero_visits
+     * and d == decay_rate_coeff
     */
     class SqrtSchedule : public Schedule {
 
         private:
             double temp_at_zero_visits;
+            double decay_rate_coeff;
 
         public:
-            SqrtSchedule(double temp_at_zero_visits);
+            SqrtSchedule(double temp_at_zero_visits, double decay_rate_coeff);
             virtual ~SqrtSchedule() = default;
 
         protected:
@@ -64,16 +66,18 @@ namespace thts {
 
     /**
      * Inverse log temp schedule function
-     * f(x) = c/log(1+x),
+     * f(x) = c/log(1+dx),
      * where c == temp_at_zero_visits
+     * and d == decay_rate_coeff
     */
     class LogSchedule : public Schedule {
 
         private:
             double temp_at_zero_visits;
+            double decay_rate_coeff;
 
         public:
-            LogSchedule(double temp_at_zero_visits);
+            LogSchedule(double temp_at_zero_visits, double decay_rate_coeff);
             virtual ~LogSchedule() = default;
 
         protected:

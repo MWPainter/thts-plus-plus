@@ -50,7 +50,7 @@ namespace thts {
             /**
              * Copied from ments decision node
              */
-            virtual double get_temp() const;
+            virtual double get_temp(MoThtsContext& context) const;
             virtual void compute_action_weights(
                 ActionDistr& action_weights, 
                 double& sum_action_weights, 

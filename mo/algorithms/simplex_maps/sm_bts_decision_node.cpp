@@ -30,15 +30,8 @@ namespace thts {
 
     double SmBtsDNode::get_temp(MoThtsContext& ctx) const {
         SmBtsManager& manager = (SmBtsManager&) *thts_manager;
-        if (manager.temp_decay_fn == nullptr) {
-            return manager.temp;
-        }
-        return compute_decayed_temp(
-            manager.temp_decay_fn, 
-            manager.temp, 
-            manager.temp_decay_fn_min_temp, 
-            get_num_visits(ctx), 
-            manager.temp_decay_fn_x_scale);
+        Schedule& temp_schedule = *manager.temp_schedule_ptr;
+        return temp_schedule(get_num_visits(ctx));
     }
     
     Eigen::ArrayXd SmBtsDNode::get_q_value(

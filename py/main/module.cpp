@@ -386,7 +386,7 @@ void py_thts_env_test(double alpha, bool use_python_env) {
         args.seed = 60415;
         args.max_depth = env_size * 4;
         args.mcts_mode = false;
-        args.temp = alpha;
+        args.temp_schedule_ptr = make_shared<ConstSchedule>(alpha);
         args.num_threads = num_threads;
         args.num_envs = num_threads;
         manager = make_shared<DentsManager>(args);
@@ -654,7 +654,7 @@ void gym_env_test() {
     args.seed = 60415;
     args.max_depth = 25;
     args.mcts_mode = false;
-    args.temp = alpha;
+    args.temp_schedule_ptr = make_shared<ConstSchedule>(alpha);
     args.num_threads = num_threads;
     args.num_envs = num_threads;
     shared_ptr<DentsManager> manager = make_shared<DentsManager>(args);
@@ -1811,7 +1811,7 @@ void ch_bts_test() {
     args->seed = 60415;
     args->max_depth = walk_len * 4;
     args->mcts_mode = false;
-    args->temp = temp;
+    args->temp_schedule_ptr = make_shared<ConstSchedule>(temp);
     args->num_threads = num_threads;
     args->num_envs = num_threads; 
     shared_ptr<ChBtsManager> manager = make_shared<ChBtsManager>(*args);

@@ -48,7 +48,7 @@ void run_tents_integration_test(
     manager_args.seed = 60415;
     manager_args.max_depth = env_size * 4;
     manager_args.mcts_mode = false;
-    manager_args.temp = temp;
+    manager_args.temp_schedule_ptr = make_shared<ConstSchedule>(temp);
     shared_ptr<MentsManager> manager = make_shared<MentsManager>(manager_args);
     shared_ptr<TentsDNode> root_node = make_shared<TentsDNode>(
         manager, grid_env->get_initial_state_itfc(), 0, 0);
@@ -98,7 +98,7 @@ void run_tents_game_integration_test(int env_size, int num_trials, int print_tre
     manager_args.max_depth = env_size * 4;
     manager_args.mcts_mode = false;
     manager_args.is_two_player_game = true;
-    manager_args.temp = 1.0;
+    manager_args.temp_schedule_ptr = make_shared<ConstSchedule>(1.0);
     shared_ptr<MentsManager> manager = make_shared<MentsManager>(manager_args);
     shared_ptr<TentsDNode> root_node = make_shared<TentsDNode>(
         manager, game_env->get_initial_state_itfc(), 0, decision_timestep);

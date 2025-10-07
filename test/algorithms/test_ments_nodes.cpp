@@ -54,8 +54,11 @@ void run_ments_integration_test(
     manager_args.seed = 60415;
     manager_args.max_depth = env_size * 4;
     manager_args.mcts_mode = false;
-    manager_args.temp = temp;
-    manager_args.temp_decay_fn = use_temp_decay ? decayed_temp_inv_sqrt : nullptr;
+    if (use_temp_decay) {
+        manager_args.temp_schedule_ptr = make_shared<SqrtSchedule>(temp,1.0);
+    } else {
+        manager_args.temp_schedule_ptr = make_shared<ConstSchedule>(temp);
+    }
     shared_ptr<MentsManager> manager = make_shared<MentsManager>(manager_args);
     shared_ptr<MentsDNode> root_node = make_shared<MentsDNode>(
         manager, grid_env->get_initial_state_itfc(), 0, 0);
@@ -125,8 +128,11 @@ void run_ments_game_integration_test(
     manager_args.max_depth = env_size * 4;
     manager_args.mcts_mode = false;
     manager_args.is_two_player_game = true;
-    manager_args.temp = 1.0;
-    manager_args.temp_decay_fn = use_temp_decay ? decayed_temp_inv_sqrt : nullptr;
+    if (use_temp_decay) {
+        manager_args.temp_schedule_ptr = make_shared<SqrtSchedule>(1.0,1.0);
+    } else {
+        manager_args.temp_schedule_ptr = make_shared<ConstSchedule>(1.0);
+    }
     shared_ptr<MentsManager> manager = make_shared<MentsManager>(manager_args);
     shared_ptr<MentsDNode> root_node = make_shared<MentsDNode>(
         manager, game_env->get_initial_state_itfc(), 0, decision_timestep);

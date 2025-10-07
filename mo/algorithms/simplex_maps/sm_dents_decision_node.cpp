@@ -25,14 +25,10 @@ namespace thts {
     {
     }
 
-    double SmDentsDNode::get_value_temp(MoThtsContext& ctx) const {
+    double SmDentsDNode::get_entropy_coeff(MoThtsContext& ctx) const {
         SmDentsManager& manager = (SmDentsManager&) *thts_manager;
-        return compute_decayed_temp(
-            manager.entropy_temp_decay_fn, 
-            manager.entropy_temp, 
-            manager.entropy_temp_decay_fn_min_temp, 
-            get_num_visits(ctx), 
-            manager.entropy_temp_decay_fn_x_scale);
+        Schedule& entropy_coeff_schedule = *manager.entropy_coeff_schedule_ptr;
+        return entropy_coeff_schedule(get_num_visits(ctx));
     }
 
     void SmDentsDNode::compute_action_weights(
@@ -53,13 +49,13 @@ namespace thts {
 
         // get temp
         double temp = get_temp(context);
-        double val_temp = get_value_temp(context);
+        double entropy_coeff = get_entropy_coeff(context);
 
         // compute normalisation term (ctx_val already includes opp coeff)
         normalisation_term = numeric_limits<double>::lowest();
         for (shared_ptr<const Action> action : actions) {
             double ctx_val = thts::helper::dot(context.context_weight.vec, q_val_map[action]);
-            ctx_val += opp_coeff * val_temp * entropy_map[action];
+            ctx_val += opp_coeff * entropy_coeff * entropy_map[action];
             double ctx_val_over_temp = ctx_val / temp;
             if (normalisation_term < ctx_val_over_temp) {
                 normalisation_term = ctx_val_over_temp;
@@ -70,7 +66,7 @@ namespace thts {
         sum_action_weights = 0.0;
         for (shared_ptr<const Action> action : actions) {
             double ctx_q_value = thts::helper::dot(context.context_weight.vec, q_val_map[action]);
-            ctx_q_value += opp_coeff * val_temp * entropy_map[action];
+            ctx_q_value += opp_coeff * entropy_coeff * entropy_map[action];
             double action_weight = exp((ctx_q_value/temp) - normalisation_term);
             action_weights[action] = action_weight;
             sum_action_weights += action_weight;
