@@ -1,5 +1,5 @@
-#include "main_aux/run_id.h"
-#include "main_aux/run_expr.h"
+#include "main_aux/run_xpr.h"
+#include "main_aux/run_hp_opt.h"
 
 #include <memory>
 #include <stdexcept>
@@ -9,19 +9,18 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
-//     if (argc != 3) {
-//         throw runtime_error("Expecting exactly two arguments: [eval|opt] [expr_id], specifying if we want to run an "
-//                             "eval experiment, or perform hyperparamter optimisation.");
-//     }
+    if (argc != 3) {
+        throw runtime_error("Expecting exactly two arguments: [eval|opt] [expr_id], specifying if we want to run an "
+                            "eval experiment, or perform hyperparamter optimisation.");
+    }
 
-//     if (string(argv[1]) == "eval") {
-//         shared_ptr<vector<RunID>> run_ids = thts::get_run_ids_from_expr_id_prefix(argv[2]);
-//         thts::run_exprs(run_ids);
-//     } else if (string(argv[1]) == "opt") {  
-//         thts::run_hp_opt(argv[2]);
-//     } else {
-//         cout << "Unknown command: " << argv[1] << endl;
-//     }
+    if (string(argv[1]) == "eval") {
+        thts::main_xpr(argv[2]);
+    } else if (string(argv[1]) == "opt") {  
+        thts::main_hp_opt(argv[2]);
+    } else {
+        cout << "Unknown command: " << argv[1] << endl;
+    }
 
     return 0;
 }
