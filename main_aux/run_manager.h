@@ -12,9 +12,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "bayesopt/bayesopt.hpp"
-#include "bayesopt/parameters.hpp"
-
 #include "main_aux/configs/xpr_config.h"
 
 
@@ -33,8 +30,15 @@ namespace thts {
              * Initialised constructor
              * - performs validation on the config to check for user error in the config
             */
-            RunID(std::time_t xpr_timestamp, ConfigMap xpr_config, ConfigMap alg_config);
+            RunManager(std::time_t xpr_timestamp, ConfigMap xpr_config, ConfigMap alg_config);
 
+        private:
+            /**
+             * Checks for enevitable human error in writing the configs
+             */
+            void validate_config_or_raise_exception();
+
+        public:
             /**
              * Lookup config vector from an xpr_id prefix
              */
@@ -45,18 +49,41 @@ namespace thts {
              * - expects the first ConfigMap to specify the xpr level params
              * - each following ConfigMap specifies and algorithm and corresponding params to run
              */
-            static std::shared_ptr<std::vector<RunID>> get_run_ids_from_config_vector(
+            static std::shared_ptr<std::vector<RunManager>> get_run_managers_from_config_vector(
                 std::vector<ConfigMap>& config_vector);
 
             /**
-             * Get the algorithm id 
+             * Getters - xpr level config
+             */
+            std::string get_xpr_name();
+            std::string get_env_id();
+            bool get_mcts_mode();
+            int get_max_trial_length();
+            bool xpr_is_runtime_bounded();
+            double get_termination_bound();
+            int get_repeated_runs_per_alg();
+            int get_num_search_threads();
+            double get_eval_delta();
+            int get_num_eval_rollouts();
+            int get_num_eval_threads();
+
+            /**
+             * Getters - alg level config
              */
             std::string get_alg_id();
+            double get_bias();
+            int get_uct_budget();
+            double get_init_temp();
+            double get_temp_decay_rate();
+            double get_init_entropy_coeff();
+            double get_entropy_zero_at();
+            double get_epsilon();
+            double get_default_q_value();
 
             /**
              * A unique results directory for each RunID
              */
-            std::string get_results_dir();
+            std::string get_eval_logs_dir();
 
             /**
              * Returns if the env we are using is a python env

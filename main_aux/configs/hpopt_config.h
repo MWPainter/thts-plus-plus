@@ -6,14 +6,14 @@
 // Experiment configs
 // ---------------------------------------------------------------------------------------------------------------------
 
-#include "main_aux/configs/xpr_config_000_debug.h"
+#include "main_aux/configs/hpopt_config_000_debug.h"
 
 
 // ---------------------------------------------------------------------------------------------------------------------
 // List of all configs
 // ---------------------------------------------------------------------------------------------------------------------
 
-static const std::unordered_set<std::vector<ConfigMap>> ALL_CONFIGS =
+static const std::unordered_set<std::vector<HpoptConfigMap>> all_hpopt_configs =
 {
-    CONFIG_000,
+    HPOPT_CONFIG_000,
 };
