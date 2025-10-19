@@ -19,6 +19,7 @@ namespace thts {
 
     /**
      * Struct to cleanly wrap interaction with configs for running one algorithm as part of an experiment
+     * And the IO/logging associated with running an experiment
     */
     struct RunManager {
         public:
@@ -58,6 +59,7 @@ namespace thts {
             std::string get_xpr_name();
             std::string get_env_id();
             bool get_mcts_mode();
+            bool get_graph_search();
             int get_max_trial_length();
             bool xpr_is_runtime_bounded();
             double get_termination_bound();
@@ -81,11 +83,6 @@ namespace thts {
             double get_default_q_value();
 
             /**
-             * A unique results directory for each RunID
-             */
-            std::string get_eval_logs_dir();
-
-            /**
              * Returns if the env we are using is a python env
             */
             bool is_python_env();
@@ -105,5 +102,10 @@ namespace thts {
             */
             std::shared_ptr<ThtsDNode> get_root_search_node(
                 std::shared_ptr<ThtsEnv> env, std::shared_ptr<ThtsManager> manager);
+
+            /**
+             * A unique results directory for each RunID
+             */
+            std::string get_eval_logs_dir();
     };
 }

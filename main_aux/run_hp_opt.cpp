@@ -1,3 +1,40 @@
+
+
+//         // Bayesopt params
+//         bayesopt::Parameters bo_params;
+//         bo_params.surr_name = "sGaussianProcessML";
+//         bo_params.noise = std_mean_eval_threshold*std_mean_eval_threshold; //1.0; 
+//         bo_params.n_iterations = 190;
+//         bo_params.n_init_samples = 10;
+//         bo_params.n_iter_relearn = 10;
+//         bo_params.verbose_level = 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // #include "main_aux/run_xpr.h"
 
 // #include "helper_templates.h"

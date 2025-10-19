@@ -4,22 +4,25 @@
 #include "main_aux/configs/constants_experiments.h"
 #include "main_aux/configs/constants_hpopt.h"
 
-static const std::vector<HpoptConfigMap> HPOPT_CONFIG_000 =
+static const std::vector<HpoptConfigMap> HPOPT_CONFIG_001 =
 {
     // xpr params
     {
-        {XPR_OR_ALG_ID_TAG,                     XPR_PARAMS_ID_TAG},
-        {XPR_PARAM_ID_NAME,                     "001_debug_hpopt"},
-        {XPR_PARAM_ID_ENV,                      ENV_ID_D_CHAIN_10},
-        {XPR_PARAM_ID_MCTS_MODE,                true},
-        {XPR_PARAM_ID_MAX_TRIAL_LENGTH,         10000},
-        {XPR_PARAM_ID_RUNTIME_BOUNDED,          false},
-        {XPR_PARAM_ID_TERMINATION_BOUND,        100},
-        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    2},
-        {XPR_PARAM_ID_SEARCH_THREADS,           2},
-        {XPR_PARAM_ID_EVAL_DELTA,               25},
-        {XPR_PARAM_ID_EVAL_ROLLOUTS,            25},
-        {XPR_PARAM_ID_EVAL_THREADS,             2},
+        {XPR_OR_ALG_ID_TAG,                             HPOPT_PARAMS_ID_TAG},
+        {XPR_PARAM_ID_NAME,                             "001_debug_hpopt"},
+        {XPR_PARAM_ID_ENV,                              ENV_ID_D_CHAIN_10},
+        {XPR_PARAM_ID_MCTS_MODE,                        true},
+        {XPR_PARAM_ID_GRAPH_SEARCH,                     false},
+        {XPR_PARAM_ID_MAX_TRIAL_LENGTH,                 10000},
+        {XPR_PARAM_ID_RUNTIME_BOUNDED,                  false},
+        {XPR_PARAM_ID_TERMINATION_BOUND,                100},
+        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            2},
+        {XPR_PARAM_ID_SEARCH_THREADS,                   2},
+        {XPR_PARAM_ID_EVAL_DELTA,                       25},
+        {XPR_PARAM_ID_EVAL_ROLLOUTS,                    25},
+        {XPR_PARAM_ID_EVAL_THREADS,                     2},
+        {HPOPT_PARAM_ID_MIN_REPEATS,                    5},
+        {HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD,  1.0},
     },
     // uct params
     {

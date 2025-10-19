@@ -2,6 +2,7 @@
 #include "main_aux/run_hp_opt.h"
 
 #include <memory>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <vector>

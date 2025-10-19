@@ -11,6 +11,33 @@
  * - HPOPT_PARAM_ID = id's for running hyperparameter optimization
  */
 
+// ---------------------------------------------------------------------------------------------------------------------
+// Tags to indicate what a config dictionary contains to indicate hpopt/experiment level params in configs
+// ---------------------------------------------------------------------------------------------------------------------
+
+static const std::string HPOPT_PARAMS_ID_TAG = "hptopt_params";                 // Special value to indicate dictionary is specifying xpr level params
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Constants used in the hyperparameter optimisation, but might vary on a per environment basis
+// ---------------------------------------------------------------------------------------------------------------------
+
+static const std::string HPOPT_PARAM_ID_MIN_REPEATS = "min_repeats";                    // minimum number of times to run alg with params before returning estimate for the sampled params
+static const std::string HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD = "conf_thresh";  // minimum threshold for std of evals before returning estimate for sampled params (keep running algorithm until empirical std of evals is below threshold)
+
+// ---------------------------------------------------------------------------------------------------------------------
+// For hyperparam optimisation: set of parameters to search over a log scaling
+// ---------------------------------------------------------------------------------------------------------------------
+
+static const std::unordered_set<std::string> HPOPT_LOG_SCALE_ALG_PARAM_IDS =
+{
+    ALG_PARAM_ID_BIAS,
+    ALG_PARAM_ID_UCT_BUDGET,
+    ALG_PARAM_ID_INIT_TEMP,
+    ALG_PARAM_ID_TEMP_DECAY_RATE,
+    ALG_PARAM_ID_INIT_ENTROPY_COEFF,
+    ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,
+    ALG_PARAM_ID_EPSILON,
+};
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Configs for hpopt will be a vector of ConfigMap types. Typedefs + helper functions for actual configs:
@@ -33,28 +60,3 @@ T get_config_value(const HpoptConfigMap& config, const std::string& key)
     // If wrong type, std::get will throw std::bad_variant_access
     return std::get<T>(config.at(key));
 }
-
-
-// ---------------------------------------------------------------------------------------------------------------------
-// For hyperparam optimisation: set of integer parameters
-// ---------------------------------------------------------------------------------------------------------------------
-
-static const std::unordered_set<std::string> HPOPT_INTEGER_ALG_PARAM_IDS =
-{
-    ALG_PARAM_ID_UCT_BUDGET,
-};
-
-// ---------------------------------------------------------------------------------------------------------------------
-// For hyperparam optimisation: set of parameters to search over a log scaling
-// ---------------------------------------------------------------------------------------------------------------------
-
-static const std::unordered_set<std::string> HPOPT_LOG_SCALE_ALG_PARAM_IDS =
-{
-    ALG_PARAM_ID_BIAS,
-    ALG_PARAM_ID_UCT_BUDGET,
-    ALG_PARAM_ID_INIT_TEMP,
-    ALG_PARAM_ID_TEMP_DECAY_RATE,
-    ALG_PARAM_ID_INIT_ENTROPY_COEFF,
-    ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,
-    ALG_PARAM_ID_EPSILON,
-};

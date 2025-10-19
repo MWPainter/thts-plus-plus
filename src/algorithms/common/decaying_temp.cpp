@@ -38,6 +38,12 @@ namespace thts {
     }
 
     /**
+     * SqrtSchedule getters
+     */
+    double SqrtSchedule::get_temp_at_zero_visits() const    { return temp_at_zero_visits; }
+    double SqrtSchedule::get_decay_rate_coeff() const       { return decay_rate_coeff; }
+
+    /**
      * SqrtSchedule implementation
      * f(x) = c/sqrt(1+x),
      * where c == temp_at_zero_visits
@@ -74,10 +80,18 @@ namespace thts {
      */
     LinearSchedule::LinearSchedule(double temp_at_zero_visits, double zero_temp_at) :
         Schedule(),
+        temp_at_zero_visits(temp_at_zero_visits),
+        zero_temp_at(zero_temp_at),
         y_intercept(temp_at_zero_visits),
         grad(-temp_at_zero_visits/zero_temp_at)
     {
     }
+
+    /**
+     * SqrtSchedule getters
+     */
+    double LinearSchedule::get_temp_at_zero_visits() const    { return temp_at_zero_visits; }
+    double LinearSchedule::get_zero_temp_at() const           { return zero_temp_at; }
 
     /**
      * Linear temp schedule function implementation

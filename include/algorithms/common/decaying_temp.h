@@ -60,6 +60,9 @@ namespace thts {
             SqrtSchedule(double temp_at_zero_visits, double decay_rate_coeff);
             virtual ~SqrtSchedule() = default;
 
+            double get_temp_at_zero_visits() const;
+            double get_decay_rate_coeff() const;
+
         protected:
             virtual double compute_schedule_value(double num_visits) const override;
     };
@@ -99,12 +102,17 @@ namespace thts {
     class LinearSchedule : public Schedule {
 
         private:
+            double temp_at_zero_visits;
+            double zero_temp_at;
             double y_intercept;
             double grad;
 
         public:
             LinearSchedule(double temp_at_zero_visits, double zero_temp_at);
             virtual ~LinearSchedule() = default;
+
+            double get_temp_at_zero_visits() const;
+            double get_zero_temp_at() const;
 
         protected:
             virtual double compute_schedule_value(double num_visits) const override;

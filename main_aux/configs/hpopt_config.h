@@ -6,7 +6,7 @@
 // Experiment configs
 // ---------------------------------------------------------------------------------------------------------------------
 
-#include "main_aux/configs/hpopt_config_000_debug.h"
+#include "main_aux/configs/hpopt_config_001_debug.h"
 
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -15,5 +15,5 @@
 
 static const std::unordered_set<std::vector<HpoptConfigMap>> all_hpopt_configs =
 {
-    HPOPT_CONFIG_000,
+    HPOPT_CONFIG_001,
 };

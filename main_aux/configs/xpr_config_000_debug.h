@@ -11,6 +11,7 @@ static const std::vector<ConfigMap> CONFIG_000 =
         {XPR_PARAM_ID_NAME,                     "000_debug"},
         {XPR_PARAM_ID_ENV,                      ENV_ID_D_CHAIN_10},
         {XPR_PARAM_ID_MCTS_MODE,                true},
+        {XPR_PARAM_ID_GRAPH_SEARCH,             false},
         {XPR_PARAM_ID_MAX_TRIAL_LENGTH,         10000},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,          false},
         {XPR_PARAM_ID_TERMINATION_BOUND,        100},

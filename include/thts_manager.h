@@ -62,7 +62,7 @@ namespace thts {
             num_threads(num_threads_default),
             num_envs(num_envs_default),
             max_depth(max_depth_default),
-            heuristic_fn(nullptr),//helper::zero_heuristic_fn),
+            heuristic_fn(helper::zero_heuristic_fn),
             prior_fn(nullptr),
             mcts_mode(mcts_mode_default),
             is_two_player_game(is_two_player_game_default),
