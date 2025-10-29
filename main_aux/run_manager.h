@@ -107,5 +107,20 @@ namespace thts {
              * A unique results directory for each RunID
              */
             std::string get_eval_logs_dir();
+            std::filesystem::path get_eval_log_filename();
+            std::ofstream get_eval_log_filestream();
+
+            /**
+             * Functions for writing to logs files
+             */
+            void write_eval_log_header(std::ofstream& fs);
+            void write_eval_log_line(std::ofstream& fs, int run_idx, double eval, double eval_std, int num_trials, double runtime, int num_eval_samples);
+
+            /**
+             * Filestream to dump tree print outs too
+             */
+            std::filesystem::path get_tree_log_filename(int run_idx);
+            std::ofstream get_tree_log_filestream(int run_idx);
+            void dump_tree_log(std::shared_ptr<ThtsDNode> root_node, int run_idx);
     };
 }

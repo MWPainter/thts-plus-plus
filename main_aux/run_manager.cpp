@@ -26,6 +26,7 @@
 #include "main_aux/envs/frozen_lake.h"
 #include "main_aux/envs/sailing.h"
 
+#include <iomanip>
 #include <vector>
 #include <stdexcept>
 #include <sstream>
@@ -401,4 +402,135 @@ namespace thts {
         return ss.str();
     }
 
+    /**
+     * Int to string with prepended zeros
+    */
+    string _int_to_string_padded(int num, int pad_size=3) {
+        stringstream ss;
+        ss << std::setfill('0') << std::setw(pad_size) << num;
+        return ss.str();
+    }
+
+    std::filesystem::path RunManager::get_eval_log_filename()
+    {
+        std::filesystem::path dir = get_eval_logs_dir();
+        std::filesystem::path filename = dir / "eval_log.txt";
+
+        return filename;
+    }
+    
+    ofstream RunManager::get_eval_log_filestream()
+    {
+        std::filesystem::path filename = get_eval_log_filename(manager);
+
+        if (!std::filesystem::exists(dir)) {
+            fs::create_directories(dir);
+        }
+
+        // Open the file (will create it if it doesn’t exist)
+        ofstream file(filename, ios::out | ios::trunc);
+        if (!file.is_open()) 
+        {
+            throw runtime_error("Failed to open file: " + filename);
+        }
+
+        return file;
+    }
+
+    /**
+     * Functions for writing to logs files
+     */
+    void RunManager::write_eval_log_header(std::ofstream& fs)
+    {
+        // Xpr level params
+        fs << "Xpr level params:" << endl << endl;;
+        fs << XPR_PARAM_ID_NAME << ","
+            << XPR_PARAM_ID_ENV << ","
+            << XPR_PARAM_ID_MCTS_MODE << ","
+            << XPR_PARAM_ID_GRAPH_SEARCH << ","
+            << XPR_PARAM_ID_MAX_TRIAL_LENGTH << ","
+            << XPR_PARAM_ID_RUNTIME_BOUNDED << ","
+            << XPR_PARAM_ID_TERMINATION_BOUND << ","
+            << XPR_PARAM_ID_REPEATED_RUNS_PER_ALG << ","
+            << XPR_PARAM_ID_SEARCH_THREADS << ","
+            << XPR_PARAM_ID_EVAL_DELTA << ","
+            << XPR_PARAM_ID_EVAL_ROLLOUTS << ","
+            << XPR_PARAM_ID_EVAL_THREADS << endl;
+        fs << get_xpr_name() << ","
+            << get_env_id() << ","
+            << get_mcts_mode() << ","
+            << get_graph_search() << ","
+            << get_max_trial_length() << ","
+            << xpr_is_runtime_bounded() << ","
+            << get_termination_bound() << ","
+            << get_repeated_runs_per_alg() << ","
+            << get_num_search_threads() << ","
+            << get_eval_delta() << ","
+            << get_num_eval_rollouts() << ","
+            << get_num_eval_threads() << endl;
+
+        // Alg level params
+        string alg_id = get_alg_id();
+        fs << endl << alg_id << " params: " << endl << endl;
+        bool first_iter = true;
+        for (string alg_param_id : ALG_ID_TO_ALG_PARAM_IDS[alg_id])
+        {
+            if (!first_iter)
+            {
+                fs << ",";
+            }
+            first_iter = false;
+            fs << alg_param_id;
+        }
+        fs << endl;
+
+        // Header for main body
+        fs << endl << "Evals: " << endl << endl;
+        results_evals_fs << "run_idx,eval,eval_std,num_trials,runtime,num_eval_samples" << endl;
+    }
+
+    void RunManager::write_eval_line(
+        ofstream& fs, int run_idx, double eval, double eval_std, int num_trials, double runtime, int num_eval_samples)
+    {
+        fs << run_idx << "," << eval << "," << eval_std << "," << num_trials << "," << runtime << "," << num_eval_samples << endl;
+    }
+
+
+    std::filesystem::path RunManager::get_tree_log_filename(int run_idx)
+    {
+
+        stringstream filename_ss;
+        filename_ss << "tree_log_run_"  <<_int_to_padded_string(run_idx) << ".txt";
+
+        std::filesystem::path dir = get_eval_logs_dir();
+        std::filesystem::path filename = dir / filename_ss.str();
+
+        return filename;
+    }
+
+    std::ofstream RunManager::get_tree_log_filestream(int run_idx)
+    {
+
+        std::filesystem::path filename = get_eval_log_filename(manager, run_idx);
+
+        if (!std::filesystem::exists(dir)) {
+            fs::create_directories(dir);
+        }
+
+        // Open the file (will create it if it doesn’t exist)
+        ofstream file(filename, ios::out | ios::trunc);
+        if (!file.is_open()) 
+        {
+            throw runtime_error("Failed to open file: " + filename);
+        }
+
+        return file;
+    }
+
+    void RunManager::dump_tree_log(shared_ptr<ThtsDNode> root_node, int run_idx)
+    {
+        ofstream tree_log_fs = get_tree_log_filestream(run_idx);
+        tree_log_fs << root_node->get_pretty_print_string(3) << endl;
+        tree_log_fs.close()
+    }
 }

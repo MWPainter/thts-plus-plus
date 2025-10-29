@@ -1,484 +1,193 @@
-// #include "main_aux/run_xpr.h"
+#include "main_aux/run_xpr.h"
 
-// #include "helper_templates.h"
+#include "helper_templates.h"
 
-// #include "mc_eval.h"
+#include "mc_eval.h"
 
-// #include "thts.h"
-// #include "py/py_thts.h"
-// #include "py/py_multiprocessing_thts_env.h"
+#include "thts.h"
+#include "py/py_thts.h"
+#include "py/py_multiprocessing_thts_env.h"
 
-// #include "py/py_helper.h"
-// #include <Python.h>
+#include "py/py_helper.h"
+#include <Python.h>
 
-// #include <filesystem>
-// #include <fstream>
-// #include <iomanip>
-// #include <iostream>
-// #include <sstream>
-// #include <string>
+#include <algorithm>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <string>
 
-// #include <pybind11/pybind11.h>
-// #include <pybind11/embed.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/embed.h>
 
-// using namespace std;
-// namespace py = pybind11;
-// using namespace thts;
-// using namespace thts::python;
+using namespace std;
+namespace py = pybind11;
+using namespace thts;
+using namespace thts::python;
 
-// static const string HP_OPT_RESULTS_DIR = "hp_opt_aux/";
+namespace thts {
 
-// namespace thts {
+    /**
+     * Entry point, xpr_id_prefix from command line
+     * Checks if any run's need python
+     * If so, makes an interpreter and releases gil
+     */
+    void main_xpr(string xpr_id_prefix)
+    {
+        // Read in config
+        vector<ConfigMap> xpr_configs = RunManager::lookup_config_vector_from_xpr_prefix(xpr_id_prefix);
+        vector<RunManager> run_managers = RunManager::get_run_managers_from_config_vector(xpr_configs);
 
-//     /**
-//      * Returns the results directory to use for this run, making sure that it exists, and creating it if it doesnt
-//     */
-//     string create_results_dir(RunID& run_id) {
-//         string results_dir = get_results_dir(run_id);
-//         if (!filesystem::exists(results_dir)) {
-//             filesystem::create_directories(results_dir);
-//         }
-//         return results_dir;
-//     }
+        // Check if any run ids need python
+        bool need_python = false;
+        for (RunManager& run_manager : run_managers) {
+            if (run_manager.is_python_env()) {
+                need_python = true;
+                break;
+            }
+        }
 
-//     /**
-//      * Returns the filename for the mc eval results file
-//     */ 
-//     string get_mc_eval_results_filename(RunID& run_id) {
-//         stringstream ss;
-//         ss << get_results_dir(run_id)
-//             << "eval"
-//             // << "_"
-//             // << get_params_string_helper(run_id)
-//             << ".txt";
-//         return ss.str();
-//     }
+        // If running python, make interpreter and release gil
+        shared_ptr<py::scoped_interpreter> py_interpreter;
+        shared_ptr<py::gil_scoped_release> release;
+        if (need_python) {
+            py_interpreter = make_shared<py::scoped_interpreter>();
+            release = make_shared<py::gil_scoped_release>();
+        }   
 
-//     /**
-//      * Int to string with prepended zeros
-//     */
-//     string int_to_string_padded(int num, int pad_size=3) {
-//         stringstream ss;
-//         ss << setfill('0') << setw(pad_size) << num;
-//         return ss.str();
-//     }
+        // Actually run experiments
+        for (RunManager& run_manager : run_managers) {
+            _run_expr(run_id);
+        }
+    }
 
-//     /**
-//      * Returns the filename for the logger results file
-//     */
-//     string get_logger_results_filename(RunID& run_id, int replicate) {
-//         stringstream ss;
-//         ss << get_results_dir(run_id)
-//             << "log_"
-//             // << get_params_string_helper(run_id) << "_"
-//             << int_to_string_padded(replicate)
-//             << ".csv";
-//         return ss.str();
-//     }
+    /**
+     * Performs all of the (replicated) runs corresponding to 'run_id'
+    */
+    vector<double> _run_expr(RunManager& run_manager, int run_idx, bool log_evals=true, bool log_trees=true)
+    {
+        // Open eval log
+        ofstream eval_log_fs;
+        if (log_evals)
+        {
+            eval_log_fs = run_manager.get_eval_log_filestream();
+            run_manager.write_eval_log_header(eval_log_fs);
+        }
+        
+        // Run the perscribed number of repeats
+        for (int run_idx=0; run_idx < run_manager.get_repeated_runs_per_alg(); run_idx++)
+        {
+            // cout so know we're doing something
+            cout << "Starting run on " << run_id.env_id << " with alg " << run_id.alg_id << " and params " 
+                << helper::unordered_map_pretty_print_string(run_id.alg_params) << ", run_idx = " << run_idx;
 
-//     /**
-//      * Returns the filename for a tree printout
-//     */
-//     string get_tree_filename(RunID& run_id, int replicate) {
-//         stringstream ss;
-//         ss << get_results_dir(run_id)
-//             << "tree"
-//             // << "tree_"
-//             // << get_params_string_helper(run_id)
-//             << ".txt";
-//         return ss.str();
-//     }
+            // get env and manager
+            shared_ptr<ThtsEnv> env = run_manager.get_env();
+            shared_ptr<ThtsManager> thts_manager = run_manager.get_thts_manager(env);
 
-//     /**
-//      * Writes the param header to a file
-//     */
-//     void write_param_header_to_file(RunID& run_id, ofstream& out_file) {
-//         stringstream ss_names;
-//         stringstream ss_values;
-//         for (pair<string,double> param_val_entry : run_id.alg_params) {
-//             ss_names << param_val_entry.first << ",";
-//             ss_values << param_val_entry.second << ",";
-//         }
+            // (If python env) start up multiprocessing servers
+            if (run_manager.is_python_env())
+            {
+                int num_search_threads = run_manager.get_num_search_threads();
+                int num_eval_threads = run_manager.get_num_eval_threads();
+                int num_envs_required = std::max(num_eval_threads, num_search_threads)
 
-//         ss_names << "alg";
-//         ss_values << run_id.alg_id;
+                for (size_t i=0; i < num_envs_required; i++) 
+                {
+                    PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(
+                        thts_manager->thts_env(i));
+                    py_mp_env.start_python_server(i);
+                }
+            }
 
-//         out_file << ss_names.str() << "\n"
-//             << ss_values.str() << "\n"
-//             << endl;
-//     }
+            // Setup search
+            shared_ptr<ThtsDNode> root_node = run_manager.get_root_search_node(env, thts_manager);
+            shared_ptr<ThtsPool> thts_pool = make_shared<ThtsPool>(thts_manager, root_node, run_manager.get_num_search_threads());
 
-//     /**
-//      * Write the eval header to the eval file
-//     */
-//     void write_eval_header(ofstream& eval_out_file) {
-//         eval_out_file << "replicate,"
-//             << "search_time" << ","
-//             << "num_trials" << ","
-//             << "mc_eval_mean" << ","
-//             << "mc_eval_std" << endl;
-//     }
+            // Eval at 0 trials
+            double eval_mean, eval_std;
+            pair<double,double> eval = _mc_eval(env, root_node, thts_manager, run_manager);
+            eval_mean = eval.first;
+            eval_std = eval.second;
+            if (log_evals)
+            {
+                run_manager.write_eval_log_line(eval_log_fs, run_idx, eval_mean, eval_std, 0.0, 0.0, run_manager.get_num_eval_rollouts());
+            }
 
-//     /**
-//      * Write the results from an evaluation to the eval file
-//     */
-//     void write_eval_line(
-//         ofstream& eval_out_file, 
-//         int replicate, 
-//         double search_time, 
-//         int num_trials, 
-//         double mc_eval_mean, 
-//         double mc_eval_std) 
-//     {
-//         eval_out_file 
-//             << replicate << ","
-//             << search_time << ","
-//             << num_trials << ","
-//             << mc_eval_mean << ","
-//             << mc_eval_std << endl;
-//     }
+            // run trials, evaluating every eval delta
+            double search_budget_consumed = 0.0;
+            while (search_budget_consumed < run_manager.get_termination_bound())
+            {
+                // get budget to consume now
+                int max_trials = numeric_limits<int>::max();
+                double max_runtime = numeric_limits<double>::max();
+                if (run_manager.xpr_is_runtime_bounded()) {
+                    max_runtime = run_manager.get_eval_delta();
+                } else {
+                    max_trials = run_manager.get_eval_delta();
+                }
 
-//     /**
-//      * Perform an mc eval
-//      * Returns the mean and std via the double& values
-//     */
-//     void run_mc_eval(
-//         double& mean, 
-//         double& std_dev, 
-//         shared_ptr<ThtsEnv> env, 
-//         shared_ptr<ThtsDNode> root_node, 
-//         shared_ptr<ThtsManager> thts_manager,
-//         RunID& run_id) 
-//     {   
-//         shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(root_node, env, thts_manager);
-//         MCEvaluator evaluator(eval_policy, run_id.max_trial_length, thts_manager);
-//         evaluator.run_rollouts(run_id.rollouts_per_mc_eval, run_id.eval_threads);
-//         mean = evaluator.get_mean_return();
-//         std_dev = evaluator.get_stddev_return();
-//     }
+                // run some trials
+                thts_pool->run_trials(max_trials, max_runtime);
+                search_budget_consumed += run_id.eval_delta;
 
-//     /**
-//      * Returns the filename for a debug info printout
-//     */
-//     string get_debug_filename(RunID& run_id, int replicate) {
-//         stringstream ss;
-//         ss << get_results_dir(run_id)
-//             << "debug_info"
-//             // << "tree_"
-//             // << get_params_string_helper(run_id)
-//             << ".txt";
-//         return ss.str();
-//     }
+                // eval
+                eval = _mc_eval(env, root_node, thts_manager, run_manager);
+                eval_mean = eval.first;
+                eval_std = eval.second;
+                if (log_evals)
+                {
+                    throw runtime_error("should actually get num trials from thts pool and actually get correct runtime consumed?");
+                    run_manager.write_eval_log_line(eval_log_fs, run_idx, eval_mean, eval_std, root_node->get_num_visits(), 0.0, run_manager.get_num_eval_rollouts());
+                }
+            }
 
-//     /**
-//      * Writes debug info
-//     */
-//     void write_debug_info_to_file(shared_ptr<ThtsDNode> root_node, ofstream& out_file) {
-//         out_file << "Haven't implemented any debug file stuff yet for aux experiments" << endl;
-//     }
+            // Log debug info if wanted
+            if (log_trees)
+            {
+                throw runtime_error("fix tree logs to used the correct run_manager functions");
+                string tree_filename = get_tree_filename(run_id, replicate);
+                ofstream tree_file;
+                tree_file.open(tree_filename, ios::out);
+                tree_file << root_node->get_pretty_print_string(1) << endl;
+                tree_file.close();
+            }
 
-//     /**
-//      * Performs all of the (replicated) runs corresponding to 'run_id'
-//     */
-//     vector<double> run_expr(RunID& run_id, bool hp_opt, int hp_opt_replicate) {
-//         // create results dir + eval file
-//         if (!hp_opt) {
-//             create_results_dir(run_id);
-//         }
-//         string eval_filename = get_mc_eval_results_filename(run_id);
-//         ofstream eval_file;
-//         if (!hp_opt) {
-//             eval_file.open(eval_filename, ios::out);// | ios::app);
-//             write_param_header_to_file(run_id, eval_file);
-//             write_eval_header(eval_file);
-//         }
-
-//         // Run experiment 'replicate' many times
-//         vector<double> value_estimates = vector<double>(run_id.num_repeats);
-//         for (int replicate=0; replicate<run_id.num_repeats; replicate++) {
-
-//             // print
-//             cout << "Starting run on " << run_id.env_id << " with alg " << run_id.alg_id << " and params " 
-//                 << helper::unordered_map_pretty_print_string(run_id.alg_params) << ", replicate ";
-//             if (!hp_opt) {
-//                 cout << replicate << endl;
-//             } else {
-//                 cout << hp_opt_replicate << endl;
-//             }
-                
-//             // setup env
-//             shared_ptr<ThtsEnv> env = run_id.get_env();
-//             shared_ptr<ThtsManager> thts_manager = run_id.get_thts_manager(env);
-//             if (run_id.is_python_env()) {
-//                 for (int i=0; i<run_id.num_envs; i++) {
-//                     PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(
-//                         thts_manager->thts_env(i));
-//                     py_mp_env.start_python_server(i);
-//                 }
-//             }
-//             shared_ptr<ThtsDNode> root_node = run_id.get_root_search_node(env, thts_manager);
-//             shared_ptr<ThtsPool> thts_pool = make_shared<ThtsPool>(thts_manager, root_node, run_id.num_threads);
-
-//             // eval at 0 trials
-//             double mean, stddev;
-//             if (!hp_opt) {
-//                 run_mc_eval(
-//                     mean, 
-//                     stddev, 
-//                     env, 
-//                     root_node, 
-//                     thts_manager, 
-//                     run_id);
-//                 write_eval_line(eval_file, replicate, 0.0, 0, mean, stddev);
-//             }
-
-//             // run trials, evaluating every eval delta
-//             double search_time_elapsed = 0.0;
-//             while (search_time_elapsed < run_id.search_runtime) {
-//                 int max_trials = numeric_limits<int>::max();
-//                 double max_runtime = numeric_limits<double>::max();
-//                 if (run_id.eval_wrt_time) {
-//                     max_runtime = run_id.eval_delta;
-//                 } else {
-//                     max_trials = run_id.eval_delta;
-//                 }
-//                 thts_pool->run_trials(max_trials, max_runtime);
-//                 search_time_elapsed += run_id.eval_delta;
-//                 run_mc_eval(
-//                     mean, 
-//                     stddev, 
-//                     env, 
-//                     root_node, 
-//                     thts_manager, 
-//                     run_id);
-//                 if (!hp_opt) {
-//                     write_eval_line(
-//                         eval_file, 
-//                         replicate, 
-//                         search_time_elapsed, 
-//                         root_node->get_num_visits(), 
-//                         mean, 
-//                         stddev);
-//                 }
-//             }
-
-//             if (!hp_opt) {
-//                 // Write tree to file
-//                 if (replicate == 0) {
-//                     string tree_filename = get_tree_filename(run_id, replicate);
-//                     ofstream tree_file;
-//                     tree_file.open(tree_filename, ios::out);
-//                     tree_file << root_node->get_pretty_print_string(1) << endl;
-//                     tree_file.close();
-//                 }
-
-//                 // Write debug info
-//                 if (replicate == 0) {
-//                     string debug_filename = get_debug_filename(run_id, replicate);
-//                     ofstream debug_file;
-//                     debug_file.open(debug_filename, ios::out);
-//                     write_debug_info_to_file(root_node, debug_file);
-//                     debug_file.close();
-//                 }
-
-//                 // Flush
-//                 eval_file.flush();
-//             }
-
-//             // Update results
-//             value_estimates[replicate] = mean;
+            // Flush
+            eval_file.flush();
             
-//             env.reset();
-//             thts_manager.reset();
-//             root_node.reset();
-//             thts_pool.reset();
-//         }   
+            // Release resources in reverse order
+            // (iirc, not doing this can cause python resources to be released without holding gil and segfaults)
+            env.reset();
+            thts_manager.reset();
+            root_node.reset();
+            thts_pool.reset();
+        }   
 
-//         // close eval file
-//         if (!hp_opt) {
-//             eval_file.close();
-//         }
+        // close eval file
+        if (log_evals) 
+        {
+            eval_log_fs.close();
+        }
+    }
 
-//         // Return avg mean utility over replicates
-//         return value_estimates;
-//     }
+    /**
+     * Perform an mc eval (of policy from tree node)
+    */
+    pair<double,double> _mc_eval(
+        shared_ptr<ThtsEnv> env, 
+        shared_ptr<ThtsDNode> root_node, 
+        shared_ptr<ThtsManager> thts_manager,
+        RunManager& run_manager) 
+    {   
+        shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(root_node, env, thts_manager);
+        MCEvaluator evaluator(eval_policy, run_manager.get_max_trial_length(), thts_manager);
+        evaluator.run_rollouts(run_manager.get_num_eval_rollouts(), run_manager.get_num_eval_threads());
+        double mean = evaluator.get_mean_return();
+        double std_dev = evaluator.get_stddev_return();
+        return make_pair(mean,std_dev);
+    }
 
-//     /**
-//      * Runs all experiments in 'run_ids'
-//      * This was in main, until needed to start hacking in the sill subinterpreter bug mitigation
-//      * 
-//      * (Entry point for 'eval' experiments)
-//     */
-//     void run_exprs(shared_ptr<vector<RunID>> run_ids) 
-//     {
-//         // Check if any run ids need python
-//         bool need_python = false;
-//         for (RunID& run_id : *run_ids) {
-//             if (run_id.is_python_env()) {
-//                 need_python = true;
-//                 break;
-//             }
-//         }
-
-//         // If running python, make interpreter and release gil
-//         shared_ptr<py::scoped_interpreter> py_interpreter;
-//         shared_ptr<py::gil_scoped_release> release;
-//         if (need_python) {
-//             py_interpreter = make_shared<py::scoped_interpreter>();
-//             release = make_shared<py::gil_scoped_release>();
-//         }   
-
-//         // Actually run experiments
-//         for (RunID& run_id : *run_ids) {
-//             thts::run_expr(run_id);
-//         }
-//     }
-
-//     /**
-//      * Returns the results directory to use for this run, making sure that it exists, and creating it if it doesnt
-//     */
-//     void create_hp_opt_results_dir() {
-//         if (!filesystem::exists(HP_OPT_RESULTS_DIR)) {
-//             filesystem::create_directories(HP_OPT_RESULTS_DIR);
-//         }
-//     }
-
-//     /**
-//      * Returns the filename for the mc eval results file (summary of hp opt)
-//     */ 
-//     string get_hp_opt_summary_filename(string expr_id, time_t timestamp) {
-//         stringstream ss;
-//         ss << HP_OPT_RESULTS_DIR << expr_id << "_summary_" << timestamp << ".txt";
-//         return ss.str();
-//     }
-
-//     /**
-//      * Returns the filename for the mc eval results file (all evaluations of each params)
-//     */ 
-//     string get_hp_opt_evals_filename(string expr_id, time_t timestamp) {
-//         stringstream ss;
-//         ss << HP_OPT_RESULTS_DIR << expr_id << "_evals_" << timestamp << ".txt";
-//         return ss.str();
-//     }
-
-
-//     /**
-//      * Runs hyperparameter opt for 'expr_id'
-//      */
-//     void run_hp_opt(string expr_id_prefix) {
-//         // Lookup expr_id
-//         string expr_id = lookup_expr_id_from_prefix(expr_id_prefix);
-
-//         // timestamp, so can rerun with same params and keep both results
-//         time_t expr_timestamp = std::time(nullptr);
-        
-//         // Create output filestreams
-//         create_hp_opt_results_dir();
-
-//         string hp_opt_summary_filename = get_hp_opt_summary_filename(expr_id, expr_timestamp);
-//         ofstream hp_opt_summary_file;
-//         hp_opt_summary_file.open(hp_opt_summary_filename, ios::out);// | ios::app);
-
-//         string hp_opt_evals_filename = get_hp_opt_evals_filename(expr_id, expr_timestamp);
-//         ofstream hp_opt_evals_file;
-//         hp_opt_evals_file.open(hp_opt_evals_filename, ios::out);// | ios::app);
-
-//         // Get the hp_opt
-//         shared_ptr<HyperparamOptimiser> hp_opt = get_hyperparam_optimiser_from_expr_id(
-//             expr_id, expr_timestamp, hp_opt_summary_file, hp_opt_evals_file);
-
-//         // If running python, make interpreter and release gil
-//         shared_ptr<py::scoped_interpreter> py_interpreter;
-//         shared_ptr<py::gil_scoped_release> release;
-//         if (hp_opt->is_python_env()) {
-//             py_interpreter = make_shared<py::scoped_interpreter>();
-//             release = make_shared<py::gil_scoped_release>();
-//         }
-
-//         // Write header
-//         hp_opt->write_header();
-
-//         // Run bayesopt (we do own logging, so results vector unecessary)
-//         bayesopt::vectord _results(hp_opt->num_hyperparams);
-//         hp_opt->optimize(_results);
-
-//         // Write best eval to file at end
-//         hp_opt->write_best_eval();
-
-//         // Close files
-//         hp_opt_summary_file.close();
-//         hp_opt_evals_file.close();
-//     }
-
-//     // /**
-//     //  * Compute noise estimate
-//     //  */
-//     // void estimate_noise_for_hp_opt(std::string env_id)
-//     // {
-//     //     // Params that we're hardcoding because this bit is a bit hacky anyway
-//     //     unordered_map<string,int> rollouts_per_mc_eval = 
-//     //     {
-//     //         {DST_ENV_ID, 500},
-//     //     };
-//     //     unordered_map<string,int> max_trial_length = 
-//     //     {
-//     //         {DST_ENV_ID, 50},
-//     //     };
-        
-//     //     unordered_map<string,int> eval_threads = 
-//     //     {
-//     //         {DST_ENV_ID, 10},
-//     //     };
-        
-//     //     // Error check
-//     //     if (!rollouts_per_mc_eval.contains(env_id)) {
-//     //         throw runtime_error("Invalide env_id, maybe havent added params for this env?");
-//     //     }
-
-//     //     // If running python, make interpreter and release gil
-//     //     shared_ptr<py::scoped_interpreter> py_interpreter;
-//     //     shared_ptr<py::gil_scoped_release> release;
-//     //     if (is_python_env(env_id)) {
-//     //         py_interpreter = make_shared<py::scoped_interpreter>();
-//     //         release = make_shared<py::gil_scoped_release>();
-//     //     }
-
-//     //     // Create env
-//     //     unordered_map<string,double> psuedo_alg_params;
-//     //     RunID psuedo_run_id(env_id,"psuedo_expr_id",0,"psuedo_alg_id",psuedo_alg_params,1.0,10,0.1,10,1,1,1);
-//     //     shared_ptr<ThtsEnv> env = get_env(psuedo_run_id);
-//     //     ThtsManagerArgs dummy_manager_args(env);
-//     //     dummy_manager_args.num_envs = eval_threads[env_id];
-//     //     dummy_manager_args.seed = 60415;
-//     //     shared_ptr<ThtsManager> dummy_manager = make_shared<ThtsManager>(dummy_manager_args);
-        
-//     //     // Start python servers
-//     //     if (is_python_env(env_id)) {
-//     //         for (int i=0; i<eval_threads[env_id]; i++) {
-//     //             PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(
-//     //                 dummy_manager->thts_env(i));
-//     //             py_mp_env.start_python_server(i);
-//     //         }
-//     //     }
-
-//     //     // Run evaluator
-//     //     shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(nullptr, env, dummy_manager);  
-//     //     MCEvaluator evaluator(
-//     //         eval_policy, 
-//     //         max_trial_length[env_id], 
-//     //         dummy_manager, 
-//     //         get_env_min_value(env_id, max_trial_length[env_id]), 
-//     //         get_env_max_value(env_id, max_trial_length[env_id]));
-//     //     evaluator.run_rollouts(rollouts_per_mc_eval[env_id], eval_threads[env_id]);
-//     //     double mean = evaluator.get_mo_ctx_return_mean();
-//     //     double std_dev = evaluator.get_mo_ctx_return_variance();
-//     //     double normalised_mean = evaluator.get_normalised_mo_ctx_return_mean();
-//     //     double normalised_std_dev = evaluator.get_normalised_mo_ctx_return_variance();
-
-//     //     // Print info
-//     //     cout << "Mean: " << mean << endl   
-//     //         << "StdDev: " << std_dev << endl;
-//     //     cout << "Normalised Mean: " << normalised_mean << endl   
-//     //         << "Normalised StdDev: " << normalised_std_dev << endl;
-//     // }
-// }
+}

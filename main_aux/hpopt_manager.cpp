@@ -29,6 +29,7 @@
 #include "main_aux/envs/sailing.h"
 
 #include <cmath>
+#include <iomanip>
 #include <limits>
 #include <vector>
 #include <stdexcept>
@@ -838,15 +839,25 @@ namespace thts {
         return ss.str();
     }
 
-    std::filesystem::path HpoptManager::get_eval_log_filename(std::shared_ptr<ThtsManager> manager, int run_idx)
+    /**
+     * Int to string with prepended zeros
+    */
+    string _int_to_string_padded(int num, int pad_size=3) {
+        stringstream ss;
+        ss << std::setfill('0') << std::setw(pad_size) << num;
+        return ss.str();
+    }
+
+    std::filesystem::path HpoptManager::get_eval_log_filename(shared_ptr<ThtsManager> manager, int run_idx)
     {
         stringstream filename_ss;
-        filename_ss << "eval_log_run_idx_" << run_idx << ".txt";
+        filename_ss << "eval_log_run_"  <<_int_to_padded_string(run_idx) << ".txt";
 
         std::filesystem::path dir = get_eval_logs_dir();
         std::filesystem::path filename = dir / filename_ss.str();
 
         return filename;
+    }
     
     ofstream HpoptManager::get_eval_log_filestream(std::shared_ptr<ThtsManager> manager, int run_idx)
     {
@@ -919,12 +930,12 @@ namespace thts {
 
         // Header for main body
         fs << endl << "Evals: " << endl << endl;
-        results_evals_fs << "run_idx,eval,num_trials,runtime,num_eval_samples" << endl;
+        results_evals_fs << "run_idx,eval,eval_std,num_trials,runtime,num_eval_samples" << endl;
     }
 
-    void HpoptManager::write_eval_log(
-        ofstream& fs, int run_idx, double eval, int num_trials, double runtime, int num_eval_samples)
+    void HpoptManager::write_eval_line(
+        ofstream& fs, int run_idx, double eval, double eval_std, int num_trials, double runtime, int num_eval_samples)
     {
-        fs << run_idx << "," << eval << "," << num_trials << "," << runtime << "," << num_eval_samples << endl;
+        fs << run_idx << "," << eval << "," << eval_std << "," << num_trials << "," << runtime << "," << num_eval_samples << endl;
     }
 }

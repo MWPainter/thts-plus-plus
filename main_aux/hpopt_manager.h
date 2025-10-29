@@ -207,7 +207,7 @@ namespace thts {
              * Functions for writing to logs files
              */
             void write_eval_log_header(std::ofstream& fs, std::shared_ptr<ThtsManager> manager);
-            void write_eval_log(std::ofstream& fs, int run_idx, double eval, int num_trials, double runtime, int num_eval_samples);
+            void write_eval_line(std::ofstream& fs, int run_idx, double eval, double eval_std, int num_trials, double runtime, int num_eval_samples);
 
         private:
     };
