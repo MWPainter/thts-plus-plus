@@ -12,6 +12,7 @@
 #include <Python.h>
 
 #include <algorithm>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -59,14 +60,14 @@ namespace thts {
 
         // Actually run experiments
         for (RunManager& run_manager : run_managers) {
-            _run_expr(run_id);
+            run_searches(run_manager);
         }
     }
 
     /**
-     * Performs all of the (replicated) runs corresponding to 'run_id'
+     * Performs all of the (replicated) searches corresponding to 'run_id'
     */
-    vector<double> _run_expr(RunManager& run_manager, int run_idx, bool log_evals=true, bool log_trees=true)
+    double run_searches(RunManager& run_manager, bool hpopt, bool log_trees)
     {
         // Open eval log
         ofstream eval_log_fs;
@@ -75,13 +76,24 @@ namespace thts {
             eval_log_fs = run_manager.get_eval_log_filestream();
             run_manager.write_eval_log_header(eval_log_fs);
         }
+
+        // final eval to return
+        double final_eval_mean; 
         
         // Run the perscribed number of repeats
         for (int run_idx=0; run_idx < run_manager.get_repeated_runs_per_alg(); run_idx++)
         {
             // cout so know we're doing something
-            cout << "Starting run on " << run_id.env_id << " with alg " << run_id.alg_id << " and params " 
-                << helper::unordered_map_pretty_print_string(run_id.alg_params) << ", run_idx = " << run_idx;
+            if (!hpopt)
+            {
+                cout << "Starting run on " << run_id.env_id << " with alg " << run_id.alg_id << " and params " 
+                    << helper::unordered_map_pretty_print_string(run_id.alg_params) << ", run_idx = " << run_idx;
+            }
+
+            // Variables for "runtime"
+            int total_trials_run = 0;
+            double total_runtime = 0.0;
+            double search_budget_consumed = 0.0;
 
             // get env and manager
             shared_ptr<ThtsEnv> env = run_manager.get_env();
@@ -107,17 +119,17 @@ namespace thts {
             shared_ptr<ThtsPool> thts_pool = make_shared<ThtsPool>(thts_manager, root_node, run_manager.get_num_search_threads());
 
             // Eval at 0 trials
-            double eval_mean, eval_std;
-            pair<double,double> eval = _mc_eval(env, root_node, thts_manager, run_manager);
-            eval_mean = eval.first;
-            eval_std = eval.second;
-            if (log_evals)
+            if (!hpopt)
             {
-                run_manager.write_eval_log_line(eval_log_fs, run_idx, eval_mean, eval_std, 0.0, 0.0, run_manager.get_num_eval_rollouts());
+                double eval_mean, eval_std;
+                pair<double,double> eval = mc_eval(env, root_node, thts_manager, run_manager);
+                eval_mean = eval.first;
+                eval_std = eval.second;
+                run_manager.write_eval_log_line(
+                    eval_log_fs, run_idx, eval_mean, eval_std, 0.0, 0.0, 0.0, run_manager.get_num_eval_rollouts());
             }
 
             // run trials, evaluating every eval delta
-            double search_budget_consumed = 0.0;
             while (search_budget_consumed < run_manager.get_termination_bound())
             {
                 // get budget to consume now
@@ -130,29 +142,41 @@ namespace thts {
                 }
 
                 // run some trials
+                auto start_timestamp = std::chrono::steady_clock::now();
                 thts_pool->run_trials(max_trials, max_runtime);
+                auto end_timestamp = std::chrono::steady_clock::now();
+
+                // Update runtimes
+                total_trials_run = thts_pool->get_total_trials_run();
+                total_runtime += (end_timestamp - start_timestamp).count();
                 search_budget_consumed += run_id.eval_delta;
 
-                // eval
-                eval = _mc_eval(env, root_node, thts_manager, run_manager);
-                eval_mean = eval.first;
-                eval_std = eval.second;
-                if (log_evals)
+                // eval (always run final eval, but only log if 'run_evals')
+                if (!hpopt || search_budget_consumed >= run_manager.get_termination_bound())
                 {
-                    throw runtime_error("should actually get num trials from thts pool and actually get correct runtime consumed?");
-                    run_manager.write_eval_log_line(eval_log_fs, run_idx, eval_mean, eval_std, root_node->get_num_visits(), 0.0, run_manager.get_num_eval_rollouts());
+                    eval = mc_eval(env, root_node, thts_manager, run_manager);
+                    eval_mean = eval.first;
+                    final_eval_mean = eval_mean;
+                    eval_std = eval.second;
+                    if (!hpopt)
+                    {
+                        run_manager.write_eval_log_line(
+                            eval_log_fs, 
+                            run_idx, 
+                            eval_mean, 
+                            eval_std, 
+                            total_trials_run, 
+                            total_runtime, 
+                            search_budget_consumed, 
+                            run_manager.get_num_eval_rollouts());
+                    } 
                 }
             }
 
             // Log debug info if wanted
             if (log_trees)
             {
-                throw runtime_error("fix tree logs to used the correct run_manager functions");
-                string tree_filename = get_tree_filename(run_id, replicate);
-                ofstream tree_file;
-                tree_file.open(tree_filename, ios::out);
-                tree_file << root_node->get_pretty_print_string(1) << endl;
-                tree_file.close();
+                run_manager.dump_tree_log(root_node, run_idx);
             }
 
             // Flush
@@ -164,6 +188,8 @@ namespace thts {
             thts_manager.reset();
             root_node.reset();
             thts_pool.reset();
+
+            return final_eval_mean;
         }   
 
         // close eval file
@@ -176,7 +202,7 @@ namespace thts {
     /**
      * Perform an mc eval (of policy from tree node)
     */
-    pair<double,double> _mc_eval(
+    pair<double,double> mc_eval(
         shared_ptr<ThtsEnv> env, 
         shared_ptr<ThtsDNode> root_node, 
         shared_ptr<ThtsManager> thts_manager,

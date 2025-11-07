@@ -208,7 +208,6 @@ namespace thts {
     bool RunManager::is_python_env()
     {
         return (PY_ENVS.contains(get_env_id()) || GYM_ENVS.contains(get_env_id()));
-
     }
 
     /**
@@ -486,13 +485,26 @@ namespace thts {
 
         // Header for main body
         fs << endl << "Evals: " << endl << endl;
-        results_evals_fs << "run_idx,eval,eval_std,num_trials,runtime,num_eval_samples" << endl;
+        results_evals_fs << "run_idx,eval,eval_std,num_trials,runtime,search_budget_consumed,num_eval_samples" << endl;
     }
 
     void RunManager::write_eval_line(
-        ofstream& fs, int run_idx, double eval, double eval_std, int num_trials, double runtime, int num_eval_samples)
+        ofstream& fs, 
+        int run_idx, 
+        double eval, 
+        double eval_std, 
+        int num_trials, 
+        double runtime, 
+        double search_budget_consumed, 
+        int num_eval_samples)
     {
-        fs << run_idx << "," << eval << "," << eval_std << "," << num_trials << "," << runtime << "," << num_eval_samples << endl;
+        fs << run_idx << "," 
+            << eval << "," 
+            << eval_std << "," 
+            << num_trials << "," 
+            << runtime << "," 
+            << search_budget_consumed << "," 
+            << num_eval_samples << endl;
     }
 
 
@@ -530,7 +542,7 @@ namespace thts {
     void RunManager::dump_tree_log(shared_ptr<ThtsDNode> root_node, int run_idx)
     {
         ofstream tree_log_fs = get_tree_log_filestream(run_idx);
-        tree_log_fs << root_node->get_pretty_print_string(3) << endl;
+        tree_log_fs << root_node->get_pretty_print_string(2) << endl;
         tree_log_fs.close()
     }
 }

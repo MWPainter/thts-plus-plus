@@ -114,7 +114,15 @@ namespace thts {
              * Functions for writing to logs files
              */
             void write_eval_log_header(std::ofstream& fs);
-            void write_eval_log_line(std::ofstream& fs, int run_idx, double eval, double eval_std, int num_trials, double runtime, int num_eval_samples);
+            void write_eval_log_line(
+                std::ofstream& fs, 
+                int run_idx, 
+                double eval, 
+                double eval_std, 
+                int num_trials, 
+                double runtime, 
+                double search_budget_consumed, 
+                int num_eval_samples);
 
             /**
              * Filestream to dump tree print outs too

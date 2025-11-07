@@ -16,13 +16,16 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_001 =
         {XPR_PARAM_ID_MAX_TRIAL_LENGTH,                 10000},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,                  false},
         {XPR_PARAM_ID_TERMINATION_BOUND,                100},
-        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            2},
+        // {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            2},
         {XPR_PARAM_ID_SEARCH_THREADS,                   2},
         {XPR_PARAM_ID_EVAL_DELTA,                       25},
         {XPR_PARAM_ID_EVAL_ROLLOUTS,                    25},
         {XPR_PARAM_ID_EVAL_THREADS,                     2},
         {HPOPT_PARAM_ID_MIN_REPEATS,                    5},
         {HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD,  1.0},
+        {HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES,         200},
+        {HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES,     10},
+        {HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ,          10},
     },
     // uct params
     {

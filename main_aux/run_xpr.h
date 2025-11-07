@@ -13,4 +13,20 @@ namespace thts {
     */
     void main_xpr(std::string xpr_id_prefix);
 
+    /**
+     * Runs the searches corresponding to a RunManager
+     * Returns the final eval_mean of the final search (which is only used in hp opt)
+     * Flag to change some parts of the loop when running hpopts
+     */
+    double run_searches(RunManager& run_manager, bool hpopt=false, bool log_trees=true)
+
+
+    /**
+     * Perform an mc eval (of policy from tree node)
+    */
+    std::pair<double,double> mc_eval(
+        std::shared_ptr<ThtsEnv> env, 
+        std::shared_ptr<ThtsDNode> root_node, 
+        std::shared_ptr<ThtsManager> thts_manager,
+        RunManager& run_manager) 
 }

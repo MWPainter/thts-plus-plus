@@ -13,7 +13,7 @@
 // List of all configs
 // ---------------------------------------------------------------------------------------------------------------------
 
-static const std::unordered_set<std::vector<HpoptConfigMap>> all_hpopt_configs =
+static const std::unordered_set<std::vector<HpoptConfigMap>> ALL_HPOPT_CONFIGS =
 {
     HPOPT_CONFIG_001,
 };

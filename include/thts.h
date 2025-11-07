@@ -239,6 +239,14 @@ namespace thts {
             virtual void run_trials(
                 int max_trials=std::numeric_limits<int>::max(), 
                 double max_time=std::numeric_limits<double>::max(), 
-                bool blocking=true);            
+                bool blocking=true);          
+            
+            /**
+             * Getter for how many trials run in total
+             * 
+             * Typically this will == the number of visits at the root node in a tree search
+             * In a graph search with loops this might not be the case however, so this is useful
+             */
+            int get_total_trials_run();
     };
 }

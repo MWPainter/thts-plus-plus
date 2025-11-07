@@ -466,4 +466,12 @@ namespace thts {
         work_left_cv.notify_all();
         if (blocking) join();
     }
+
+    /**
+     * Getter for number of trials run
+     */
+    int ThtsPool::get_total_trials_run()
+    {
+        return trials_completed;
+    }
 }
