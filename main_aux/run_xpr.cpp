@@ -39,7 +39,8 @@ namespace thts {
     {
         // Read in config
         vector<ConfigMap> xpr_configs = RunManager::lookup_config_vector_from_xpr_prefix(xpr_id_prefix);
-        vector<RunManager> run_managers = RunManager::get_run_managers_from_config_vector(xpr_configs);
+        shared_ptr<vector<RunManager>> run_managers_ptr = RunManager::get_run_managers_from_config_vector(xpr_configs);
+        vector<RunManager>& run_managers = *run_managers_ptr;
 
         // Check if any run ids need python
         bool need_python = false;
@@ -66,19 +67,20 @@ namespace thts {
 
     /**
      * Performs all of the (replicated) searches corresponding to 'run_id'
+     * If hpopt is true, then dont run any logging, and only return the final mc eval
     */
     double run_searches(RunManager& run_manager, bool hpopt, bool log_trees)
     {
         // Open eval log
         ofstream eval_log_fs;
-        if (log_evals)
+        if (!hpopt)
         {
             eval_log_fs = run_manager.get_eval_log_filestream();
             run_manager.write_eval_log_header(eval_log_fs);
         }
 
         // final eval to return
-        double final_eval_mean; 
+        double final_eval_mean = 0.0; 
         
         // Run the perscribed number of repeats
         for (int run_idx=0; run_idx < run_manager.get_repeated_runs_per_alg(); run_idx++)
@@ -86,8 +88,8 @@ namespace thts {
             // cout so know we're doing something
             if (!hpopt)
             {
-                cout << "Starting run on " << run_id.env_id << " with alg " << run_id.alg_id << " and params " 
-                    << helper::unordered_map_pretty_print_string(run_id.alg_params) << ", run_idx = " << run_idx;
+                cout << "Starting run on " << run_manager.get_env_id() << " with alg " << run_manager.get_alg_id() << " and params " 
+                    << run_manager.get_params_string_helper() << ", run_idx = " << run_idx << endl;
             }
 
             // Variables for "runtime"
@@ -104,9 +106,9 @@ namespace thts {
             {
                 int num_search_threads = run_manager.get_num_search_threads();
                 int num_eval_threads = run_manager.get_num_eval_threads();
-                int num_envs_required = std::max(num_eval_threads, num_search_threads)
+                int num_envs_required = std::max(num_eval_threads, num_search_threads);
 
-                for (size_t i=0; i < num_envs_required; i++) 
+                for (int i=0; i < num_envs_required; i++) 
                 {
                     PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(
                         thts_manager->thts_env(i));
@@ -119,9 +121,9 @@ namespace thts {
             shared_ptr<ThtsPool> thts_pool = make_shared<ThtsPool>(thts_manager, root_node, run_manager.get_num_search_threads());
 
             // Eval at 0 trials
+            double eval_mean = 0.0, eval_std = 0.0;
             if (!hpopt)
             {
-                double eval_mean, eval_std;
                 pair<double,double> eval = mc_eval(env, root_node, thts_manager, run_manager);
                 eval_mean = eval.first;
                 eval_std = eval.second;
@@ -148,13 +150,13 @@ namespace thts {
 
                 // Update runtimes
                 total_trials_run = thts_pool->get_total_trials_run();
-                total_runtime += (end_timestamp - start_timestamp).count();
-                search_budget_consumed += run_id.eval_delta;
+                total_runtime += std::chrono::duration<double>(end_timestamp - start_timestamp).count();
+                search_budget_consumed += run_manager.get_eval_delta();
 
                 // eval (always run final eval, but only log if 'run_evals')
                 if (!hpopt || search_budget_consumed >= run_manager.get_termination_bound())
                 {
-                    eval = mc_eval(env, root_node, thts_manager, run_manager);
+                    pair<double,double> eval = mc_eval(env, root_node, thts_manager, run_manager);
                     eval_mean = eval.first;
                     final_eval_mean = eval_mean;
                     eval_std = eval.second;
@@ -180,7 +182,10 @@ namespace thts {
             }
 
             // Flush
-            eval_file.flush();
+            if (!hpopt)
+            {
+                eval_log_fs.flush();
+            }
             
             // Release resources in reverse order
             // (iirc, not doing this can cause python resources to be released without holding gil and segfaults)
@@ -188,15 +193,15 @@ namespace thts {
             thts_manager.reset();
             root_node.reset();
             thts_pool.reset();
-
-            return final_eval_mean;
         }   
 
         // close eval file
-        if (log_evals) 
+        if (!hpopt) 
         {
             eval_log_fs.close();
         }
+        
+        return final_eval_mean;
     }
 
     /**

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <unordered_set>
+#include <vector>
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Experiment configs
@@ -13,7 +13,7 @@
 // List of all configs
 // ---------------------------------------------------------------------------------------------------------------------
 
-static const std::unordered_set<std::vector<HpoptConfigMap>> ALL_HPOPT_CONFIGS =
+static const std::vector<std::vector<HpoptConfigMap>> ALL_HPOPT_CONFIGS =
 {
     HPOPT_CONFIG_001,
 };

@@ -1,4 +1,4 @@
-#include "main_aux/run_xpr.h"
+#include "main_aux/run_hpopt.h"
 
 #include "helper_templates.h"
 
@@ -63,7 +63,8 @@ namespace thts {
         vector<HpoptConfigMap> hpopt_configs = HpoptManager::lookup_config_vector_from_xpr_prefix(hpopt_xpr_id_prefix);
         _validate_bayesopt_params_provided(hpopt_configs[0]);
         bayesopt::Parameters bo_params = HpoptManager::get_bayesopt_params_from_xpr_config(hpopt_configs[0]);
-        vector<HpoptManager> hpopt_managers = HpoptManager::get_hpopt_managers_from_config_vector(hpopt_configs);
+        shared_ptr<vector<HpoptManager>> hpopt_managers_ptr = HpoptManager::get_hpopt_managers_from_config_vector(hpopt_configs);
+        vector<HpoptManager>& hpopt_managers = *hpopt_managers_ptr;
 
         // Check if any run ids need python
         bool need_python = false;
@@ -87,25 +88,12 @@ namespace thts {
             hpopt_manager.open_hpopt_summary_filestream();
             hpopt_manager.write_hpopt_summary_header();
 
-            bayesopt::vectord _results(hpopt_manager->num_hyperparams);
-            hpopt_manager->optimize(_results);
+            bayesopt::vectord _results(hpopt_manager.num_hyperparams);
+            hpopt_manager.optimize(_results);
 
             hpopt_manager.write_hpopt_summary_footer();
             hpopt_manager.close_hpopt_summary_filestream();
         }
-    }
-
-
-
-    HpoptManager::get_bayesopt_params()
-    {
-        bayesopt::Parameters bo_params;
-        bo_params.surr_name = "sGaussianProcessML";
-        bo_params.noise = std_mean_eval_threshold*std_mean_eval_threshold; //1.0; 
-        bo_params.n_iterations = 190;
-        bo_params.n_init_samples = 10;
-        bo_params.n_iter_relearn = 10;
-        bo_params.verbose_level = 0;
     }
 
 }

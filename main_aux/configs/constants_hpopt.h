@@ -56,7 +56,7 @@ static const std::unordered_set<std::string> HPOPT_INT_ALG_PARAM_IDS =
 // ---------------------------------------------------------------------------------------------------------------------
 
 // Type aliases
-using ConfigValueRange = std::variant<std::string, std::pair<double,double>>;
+using ConfigValueRange = std::variant<std::string, bool, int, double, std::pair<double,double>>;
 using HpoptConfigMap   = std::unordered_map<std::string, ConfigValueRange>;
 
 // Templated Helper to read value from config map

@@ -39,16 +39,28 @@ namespace thts {
             HpoptConfigMap xpr_config;
             HpoptConfigMap alg_config;
             int num_hyperparams;
-            shared_ptr<RunManager> best_run_manager;
+            ConfigMap best_config_map;
             double best_mean_eval;
             double best_std_mean_eval;
             std::ofstream hpopt_summary_fs;
+            int hp_opt_iter;
+            bayesopt::Parameters bo_params;
 
             /**
              * Initialised constructor
              * - performs validation on the config to check for user error in the config
             */
-            HpoptManager(std::time_t xpr_timestamp, ConfigMap xpr_config, ConfigMap alg_config, bayesopt::Parameters params);
+            HpoptManager(std::time_t xpr_timestamp, HpoptConfigMap xpr_config, HpoptConfigMap alg_config, bayesopt::Parameters params);
+
+            /**
+             * Copy constructor
+             */
+            HpoptManager(const HpoptManager& other);
+
+            /**
+             * Destructor
+             */
+            ~HpoptManager();
 
         private:
             /**
@@ -132,7 +144,7 @@ namespace thts {
              * Assumes bayesopt sample is from range (log_scaling) ? [log(min),log(max)] : [min,max]
              * Rand returns the sample (log_scaling) ? exp(sample) : sample.
              */
-            double get_cts_val_from_bayesopt_sample(double sample_val, int min, int max, bool log_scaling)
+            double get_cts_val_from_bayesopt_sample(double sample_val, int min, int max, bool log_scaling);
 
             /**
              * Helper to cast a continuous sampled value to an integer
@@ -140,7 +152,7 @@ namespace thts {
              * Sampled by scaling rand to range [min,max] and taking integer portion
              * Cant just cast to int because of the ",max)" edge case
              */
-            int get_int_val_from_cts_sample(double sample_val, int min, int max);
+            int get_int_val_from_cts_val(double sample_val, int min, int max);
 
             /**
              * Returns if the env we are using is a python env
@@ -161,7 +173,7 @@ namespace thts {
              */
             void write_hpopt_summary_header();
             void write_hpopt_summary_sample_eval_line(
-                std::shared_ptr<ThtsManager> manager, double mean_eval, double std_mean_eval);
+                std::shared_ptr<RunManager> run_manager, double mean_eval, double std_mean_eval);
             void write_hpopt_summary_footer();
     };
 }

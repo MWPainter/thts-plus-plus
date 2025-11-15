@@ -5,6 +5,7 @@
 #include "thts_decision_node.h"
 
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -102,6 +103,11 @@ namespace thts {
             */
             std::shared_ptr<ThtsDNode> get_root_search_node(
                 std::shared_ptr<ThtsEnv> env, std::shared_ptr<ThtsManager> manager);
+            
+            /**
+             * Helper to make a string of of all alg level params
+             */
+            std::string get_params_string_helper();
 
             /**
              * A unique results directory for each RunID

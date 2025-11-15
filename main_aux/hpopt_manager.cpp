@@ -28,9 +28,12 @@
 #include "main_aux/envs/frozen_lake.h"
 #include "main_aux/envs/sailing.h"
 
+#include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <iomanip>
 #include <limits>
+#include <set>
 #include <vector>
 #include <stdexcept>
 #include <sstream>
@@ -52,26 +55,57 @@ namespace thts {
         xpr_timestamp(xpr_timestamp), 
         xpr_config(xpr_config), 
         alg_config(alg_config), 
-        num_hyperparameters(alg_config.size()-1),
-        best_run_manager(nullptr),
+        num_hyperparams(alg_config.size()-1),
+        best_config_map(),
         best_mean_eval(std::numeric_limits<double>::lowest()),
         best_std_mean_eval(std::numeric_limits<double>::lowest()),
-        hpopt_summary_fs()
+        hpopt_summary_fs(),
+        hp_opt_iter(0),
+        bo_params(params)
     {
         validate_config_or_raise_exception();
         set_bayesopt_bounding_box();
     }
+
+    /**
+     * Copy constructor
+     */
+    HpoptManager::HpoptManager(const HpoptManager& other) :
+        bayesopt::ContinuousModel(other.num_hyperparams, other.bo_params),
+        xpr_timestamp(other.xpr_timestamp),
+        xpr_config(other.xpr_config),
+        alg_config(other.alg_config),
+        num_hyperparams(other.alg_config.size()-1),
+        best_config_map(other.best_config_map),
+        best_mean_eval(other.best_mean_eval),
+        best_std_mean_eval(other.best_std_mean_eval),
+        hpopt_summary_fs(),
+        hp_opt_iter(other.hp_opt_iter),
+        bo_params(other.bo_params)
+    {
+        validate_config_or_raise_exception();
+        set_bayesopt_bounding_box();
+    }
+
+    /**
+     * Destructor
+     */
+    HpoptManager::~HpoptManager()
+    {
+        hpopt_summary_fs.close();
+    }
+
     /**
      *  Checks all expected params are present, and that no additional params
      */  
-    HpoptManager::validate_config_or_raise_exception()
+    void HpoptManager::validate_config_or_raise_exception()
     {
         if (xpr_config.size() != 16)
         {
             throw runtime_error("Expecting 16 entries in the xpr level config.");
         }
 
-        if (get_config_value(xpr_config, XPR_OR_ALG_ID_TAG) != HPOPT_PARAMS_ID_TAG)
+        if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != HPOPT_PARAMS_ID_TAG)
         {
             throw runtime_error("In hpopt manager expecting config entry: {XPR_OR_ALG_ID_TAG,HPOPT_PARAMS_ID_TAG}");
         }
@@ -106,9 +140,9 @@ namespace thts {
             }
         }
 
-        string alg_id = get_config_value(alg_config, XPR_OR_ALG_ID_TAG);
+        string alg_id = get_config_value<std::string>(alg_config, XPR_OR_ALG_ID_TAG);
 
-        vector<string> alg_ids =
+        set<string> alg_ids =
         {
             ALG_ID_UCT, 
             ALG_ID_MAX_UCT, 
@@ -127,7 +161,7 @@ namespace thts {
             throw runtime_error(ss.str());
         }
 
-        vector<string> param_ids_expecting = ALG_ID_TO_ALG_PARAM_IDS[alg_id];
+        vector<string> param_ids_expecting = ALG_ID_TO_ALG_PARAM_IDS.at(alg_id);
         for (string& param_id : param_ids_expecting) 
         {
             if (!alg_config.contains(param_id)) 
@@ -145,11 +179,11 @@ namespace thts {
      * Sets it to a uniform hypercube, we'll do the work getting it into ranges we want ourselves, as want custom log 
      * sampling stuff
      */
-    void set_bayesopt_bounding_box()
+    void HpoptManager::set_bayesopt_bounding_box()
     {
         bayesopt::vectord min_vec(num_hyperparams);
         bayesopt::vectord max_vec(num_hyperparams);
-        for (size_t i=0; i<num_hyperparams; i++) 
+        for (int i=0; i<num_hyperparams; i++) 
         {
             min_vec[i] = 0.0;
             max_vec[i] = 1.0;
@@ -163,10 +197,10 @@ namespace thts {
     vector<HpoptConfigMap> HpoptManager::lookup_config_vector_from_xpr_prefix(string xpr_id_prefix)
     {
         // Validate that all configs have the first HpoptConfigMap with xpr level config, including an xpr_id
-        for (vector<HpoptConfigMap>& config : ALL_HPOPT_CONFIGS)
+        for (const vector<HpoptConfigMap>& config : ALL_HPOPT_CONFIGS)
         {
-            HpoptConfigMap& xpr_config = config[0];
-            if (get_config_value(xpr_config, XPR_OR_ALG_ID_TAG) != XPR_PARAMS_ID_TAG)
+            const HpoptConfigMap& xpr_config = config[0];
+            if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != XPR_PARAMS_ID_TAG)
             {
                 throw runtime_error("Expecting first map in each config (vector) to specify xpr level config with correct tagging.");
             }
@@ -177,12 +211,12 @@ namespace thts {
         }
 
         // Lookup
-        for (vector<HpoptConfigMap>& config : ALL_HPOPT_CONFIGS)
+        for (const vector<HpoptConfigMap>& config : ALL_HPOPT_CONFIGS)
         {
-            string& xpr_name = get_config_value(config[0], XPR_PARAM_ID_NAME);
+            const string& xpr_name = get_config_value<std::string>(config[0], XPR_PARAM_ID_NAME);
             if (xpr_name.starts_with(xpr_id_prefix))
             {
-                return config;
+                return vector<HpoptConfigMap>(config);
             }
         }
 
@@ -194,7 +228,7 @@ namespace thts {
     /**
      * Config -> BayesOpt params
      */
-    bayesopt::Parameters get_bayesopt_params_from_xpr_config(HpoptConfigMap& xpr_config)
+    bayesopt::Parameters HpoptManager::get_bayesopt_params_from_xpr_config(HpoptConfigMap& xpr_config)
     {
         double target_std_per_bayesopt_sample = get_config_value<double>(xpr_config, HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD);
         int bayesopt_total_samples = get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES);
@@ -216,14 +250,15 @@ namespace thts {
      * Config -> HpoptManagers
      */
     shared_ptr<vector<HpoptManager>> HpoptManager::get_hpopt_managers_from_config_vector(
-        vector<HpoptConfigMap>& config_vector, bayesopt::Parameters bo_params)
+        vector<HpoptConfigMap>& config_vector)
     {
-        throw runtime_error("need to pass bayesopt_params");
         time_t xpr_timestamp = std::time(nullptr);
+        bayesopt::Parameters bo_params = get_bayesopt_params_from_xpr_config(config_vector[0]);
         shared_ptr<vector<HpoptManager>> hpopt_managers = std::make_shared<vector<HpoptManager>>();
         for (size_t i=1; i<config_vector.size(); i++)
         {  
-            hpopt_managers->push_back(HpoptManager(xpr_timestamp, config_vector[0], config_vector[i], bo_params));
+            // Use emplace_back to construct in-place, avoiding move/copy
+            hpopt_managers->emplace_back(xpr_timestamp, config_vector[0], config_vector[i], bo_params);
         }
         return hpopt_managers;
     }
@@ -231,32 +266,32 @@ namespace thts {
     /**
      * Getters - xpr level config
      */
-    string RunManager::get_xpr_name()           { return get_config_value(xpr_config, XPR_PARAM_ID_NAME); }
-    string RunManager::get_env_id()             { return get_config_value(xpr_config, XPR_PARAM_ID_ENV); }
-    bool RunManager::get_mcts_mode()            { return get_config_value(xpr_config, XPR_PARAM_ID_MCTS_MODE); }
-    bool RunManager::get_graph_search()         { return get_config_value(xpr_config, XPR_PARAM_ID_GRAPH_SEARCH); }
-    int RunManager::get_max_trial_length()      { return get_config_value(xpr_config, XPR_PARAM_ID_MAX_TRIAL_LENGTH); }
-    bool RunManager::xpr_is_runtime_bounded()   { return get_config_value(xpr_config, XPR_PARAM_ID_RUNTIME_BOUNDED); }
-    double RunManager::get_termination_bound()  { return get_config_value(xpr_config, XPR_PARAM_ID_TERMINATION_BOUND); }
-    int RunManager::get_repeated_runs_per_alg() { return get_config_value(xpr_config, XPR_PARAM_ID_REPEATED_RUNS_PER_ALG); }
-    int RunManager::get_num_search_threads()    { return get_config_value(xpr_config, XPR_PARAM_ID_SEARCH_THREADS); }
-    double RunManager::get_eval_delta()         { return get_config_value(xpr_config, XPR_PARAM_ID_EVAL_DELTA); }
-    int RunManager::get_num_eval_rollouts()     { return get_config_value(xpr_config, XPR_PARAM_ID_EVAL_ROLLOUTS); }
-    int RunManager::get_num_eval_threads()      { return get_config_value(xpr_config, XPR_PARAM_ID_EVAL_THREADS); }
+    string HpoptManager::get_xpr_name()           { return get_config_value<std::string>(xpr_config, XPR_PARAM_ID_NAME); }
+    string HpoptManager::get_env_id()             { return get_config_value<std::string>(xpr_config, XPR_PARAM_ID_ENV); }
+    bool HpoptManager::get_mcts_mode()            { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_MCTS_MODE); }
+    bool HpoptManager::get_graph_search()         { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_GRAPH_SEARCH); }
+    int HpoptManager::get_max_trial_length()      { return get_config_value<int>(xpr_config, XPR_PARAM_ID_MAX_TRIAL_LENGTH); }
+    bool HpoptManager::xpr_is_runtime_bounded()   { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_RUNTIME_BOUNDED); }
+    double HpoptManager::get_termination_bound()  { return get_config_value<double>(xpr_config, XPR_PARAM_ID_TERMINATION_BOUND); }
+    int HpoptManager::get_repeated_runs_per_alg() { return get_config_value<int>(xpr_config, XPR_PARAM_ID_REPEATED_RUNS_PER_ALG); }
+    int HpoptManager::get_num_search_threads()    { return get_config_value<int>(xpr_config, XPR_PARAM_ID_SEARCH_THREADS); }
+    double HpoptManager::get_eval_delta()         { return get_config_value<double>(xpr_config, XPR_PARAM_ID_EVAL_DELTA); }
+    int HpoptManager::get_num_eval_rollouts()     { return get_config_value<int>(xpr_config, XPR_PARAM_ID_EVAL_ROLLOUTS); }
+    int HpoptManager::get_num_eval_threads()      { return get_config_value<int>(xpr_config, XPR_PARAM_ID_EVAL_THREADS); }
 
     /**
      * Getters - alg level config
      */
-    string RunManager::get_alg_id()             { return get_config_value(alg_config, XPR_OR_ALG_ID_TAG); }
+    string HpoptManager::get_alg_id()             { return get_config_value<std::string>(alg_config, XPR_OR_ALG_ID_TAG); }
 
     /**
      * Getters - hpopt (xpr) level config
      */
-    int HpoptManager::get_hpopt_min_repeats()                       { return get_config_value(xpr_config, HPOPT_PARAM_ID_MIN_REPEATS); }
-    double HpoptManager::get_hpopt_estimate_confidence_threshold()  { return get_config_value(xpr_config, HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD); }
-    int HpoptManager::get_hpopt_total_samples()                     { return get_config_value(xpr_config, HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES); }
-    int HpoptManager::get_hpopt_init_random_samples()               { return get_config_value(xpr_config, HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES); }
-    int HpoptManager::get_hpopt_relearn_freq()                      { return get_config_value(xpr_config, HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ); }
+    int HpoptManager::get_hpopt_min_repeats()                       { return get_config_value<int>(xpr_config, HPOPT_PARAM_ID_MIN_REPEATS); }
+    double HpoptManager::get_hpopt_estimate_confidence_threshold()  { return get_config_value<double>(xpr_config, HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD); }
+    int HpoptManager::get_hpopt_total_samples()                     { return get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES); }
+    int HpoptManager::get_hpopt_init_random_samples()               { return get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES); }
+    int HpoptManager::get_hpopt_relearn_freq()                      { return get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ); }
 
     /**
      * Helper function to compute mean and std of vector of evals
@@ -317,7 +352,7 @@ namespace thts {
      * Returns:
      *  :evaluation_score: a score to be MINIMISED by bayesopt
      */
-    double evaluateSample(const bayesopt::vectord& query) override
+    double HpoptManager::evaluateSample(const bayesopt::vectord& query)
     {
         int repeats_run = 0;
         vector<double> evals;
@@ -326,7 +361,7 @@ namespace thts {
         double std_mean_eval = 0.0;
 
         int min_repeats = get_hpopt_min_repeats();
-        double estimate_confidence_threshold == get_hpopt_estimate_confidence_threshold();
+        double estimate_confidence_threshold = get_hpopt_estimate_confidence_threshold();
 
         // get run manager with params corresponding to this query
         shared_ptr<RunManager> sampled_run_manager = get_run_manager_for_query(query);
@@ -342,21 +377,19 @@ namespace thts {
 
             cout << "Hp_opt_iter " << hp_opt_iter 
                 << ". mean_eval=" << mean_eval 
-                << ",std_mean_eval=" << std_mean_eval << " >? " << std_mean_eval_threshold << endl;
+                << ",std_mean_eval=" << std_mean_eval << " >? " << estimate_confidence_threshold << endl;
         }
 
         // Update if best eval so far
-        // Makes a fresh thts_manager in case it has some link to the tree
-        if (mean_eval > best_thts_manager_eval)
+        if (mean_eval > best_mean_eval)
         {
-            // TODO
-            best_thts_manager = get_thts_manager(get_env(), query);
-            best_thts_manager_mean_eval = mean_eval;
-            best_thts_manager_std_mean_eval = std_mean_eval;
+            this->best_config_map = sampled_run_manager->alg_config;
+            this->best_mean_eval = mean_eval;
+            this->best_std_mean_eval = std_mean_eval;
         }
         
         // Write to logs
-        write_hpopt_summary_sample_eval_line(manager, mean_eval, std_mean_eval);
+        this->write_hpopt_summary_sample_eval_line(sampled_run_manager, mean_eval, std_mean_eval);
 
         // Return sample eval
         hp_opt_iter++;
@@ -381,19 +414,19 @@ namespace thts {
     {
         return {
             {XPR_OR_ALG_ID_TAG,                     XPR_PARAMS_ID_TAG},
-            {XPR_PARAM_ID_NAME,                     get_config_value(xpr_config, XPR_PARAM_ID_NAME)},
-            {XPR_PARAM_ID_ENV,                      get_config_value(xpr_config, XPR_PARAM_ID_ENV)},
-            {XPR_PARAM_ID_MCTS_MODE,                get_config_value(xpr_config, XPR_PARAM_ID_MCTS_MODE)},
-            {XPR_PARAM_ID_GRAPH_SEARCH,             get_config_value(xpr_config, XPR_PARAM_ID_GRAPH_SEARCH)},
-            {XPR_PARAM_ID_MAX_TRIAL_LENGTH,         get_config_value(xpr_config, XPR_PARAM_ID_MAX_TRIAL_LENGTH)},
-            {XPR_PARAM_ID_RUNTIME_BOUNDED,          get_config_value(xpr_config, XPR_PARAM_ID_RUNTIME_BOUNDED)},
-            {XPR_PARAM_ID_TERMINATION_BOUND,        get_config_value(xpr_config, XPR_PARAM_ID_TERMINATION_BOUND)},
+            {XPR_PARAM_ID_NAME,                     get_config_value<std::string>(xpr_config, XPR_PARAM_ID_NAME)},
+            {XPR_PARAM_ID_ENV,                      get_config_value<std::string>(xpr_config, XPR_PARAM_ID_ENV)},
+            {XPR_PARAM_ID_MCTS_MODE,                get_config_value<bool>(xpr_config, XPR_PARAM_ID_MCTS_MODE)},
+            {XPR_PARAM_ID_GRAPH_SEARCH,             get_config_value<bool>(xpr_config, XPR_PARAM_ID_GRAPH_SEARCH)},
+            {XPR_PARAM_ID_MAX_TRIAL_LENGTH,         get_config_value<int>(xpr_config, XPR_PARAM_ID_MAX_TRIAL_LENGTH)},
+            {XPR_PARAM_ID_RUNTIME_BOUNDED,          get_config_value<bool>(xpr_config, XPR_PARAM_ID_RUNTIME_BOUNDED)},
+            {XPR_PARAM_ID_TERMINATION_BOUND,        get_config_value<double>(xpr_config, XPR_PARAM_ID_TERMINATION_BOUND)},
             {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    1},
-            {XPR_PARAM_ID_SEARCH_THREADS,           get_config_value(xpr_config, XPR_PARAM_ID_SEARCH_THREADS)},
-            {XPR_PARAM_ID_EVAL_DELTA,               get_config_value(xpr_config, XPR_PARAM_ID_EVAL_DELTA)},
-            {XPR_PARAM_ID_EVAL_ROLLOUTS,            get_config_value(xpr_config, XPR_PARAM_ID_EVAL_ROLLOUTS)},
-            {XPR_PARAM_ID_EVAL_THREADS,             get_config_value(xpr_config, XPR_PARAM_ID_EVAL_THREADS)},
-        }
+            {XPR_PARAM_ID_SEARCH_THREADS,           get_config_value<int>(xpr_config, XPR_PARAM_ID_SEARCH_THREADS)},
+            {XPR_PARAM_ID_EVAL_DELTA,               get_config_value<double>(xpr_config, XPR_PARAM_ID_EVAL_DELTA)},
+            {XPR_PARAM_ID_EVAL_ROLLOUTS,            get_config_value<int>(xpr_config, XPR_PARAM_ID_EVAL_ROLLOUTS)},
+            {XPR_PARAM_ID_EVAL_THREADS,             get_config_value<int>(xpr_config, XPR_PARAM_ID_EVAL_THREADS)},
+        };
     }
 
     /**
@@ -402,7 +435,7 @@ namespace thts {
     ConfigMap HpoptManager::get_run_manager_alg_config_for_query(const bayesopt::vectord& query)
     {
         ConfigMap query_alg_config;
-        query_alg_config[XPR_OR_ALG_ID_TAG] = get_config_value(xpr_config, XPR_OR_ALG_ID_TAG);
+        query_alg_config[XPR_OR_ALG_ID_TAG] = get_config_value<std::string>(alg_config, XPR_OR_ALG_ID_TAG);
 
         int i = 0;
 
@@ -429,7 +462,7 @@ namespace thts {
             }
             else
             {
-                query_alg_config[config_key] = get_int_val_from_cts_sample(sampled_param, min, max);
+                query_alg_config[config_key] = get_int_val_from_cts_val(sampled_param, min, max);
             }
         }
 
@@ -459,14 +492,14 @@ namespace thts {
     }
 
     /**
-     * Helper to sample integer value using a continuous [0,1] random variable from bayesopt
+     * Helper to sample integer value in range [min,max) using a continuous random variable in [min,max]
      */
-    int HpoptManager::get_int_val_from_cts_sample(double cts_sample, int min, int max)
+    int HpoptManager::get_int_val_from_cts_val(double cts_sample, int min, int max)
     {
-        if (sample_val == max) {
+        if (cts_sample >= max) {
             return max-1;            
         }
-        return (int)sample_val;
+        return (int)cts_sample;
     }
 
     /**
@@ -495,17 +528,17 @@ namespace thts {
     ofstream HpoptManager::get_hpopt_summary_filestream()
     {
         std::filesystem::path filepath = get_hpopt_summary_filename();
-        std::filesystem::path dir = file_path.parent_path();
+        std::filesystem::path dir = filepath.parent_path();
 
         if (!std::filesystem::exists(dir)) {
-            fs::create_directories(dir);
+            std::filesystem::create_directories(dir);
         }
 
-        // Open the file (will create it if it doesn’t exist)
-        ofstream file(filename, ios::out | ios::trunc);
+        // Open the file (will create it if it doesn't exist)
+        ofstream file(filepath, ios::out | ios::trunc);
         if (!file.is_open()) 
         {
-            throw runtime_error("Failed to open file: " + filename);
+            throw runtime_error("Failed to open file: " + filepath.string());
         }
 
         return file;
@@ -524,7 +557,7 @@ namespace thts {
     /**
      * Functions to write the header, saying the params and ranges being searched over
      */
-    void HpoptManager::write_hpopt_summary_header(ofstream& fs)
+    void HpoptManager::write_hpopt_summary_header()
     {
         // Xpr level params
         hpopt_summary_fs << "Hpopt Xpr level params:" << endl << endl;;
@@ -560,18 +593,18 @@ namespace thts {
         // Alg level params
         string alg_id = get_alg_id();
         hpopt_summary_fs << endl << alg_id << " params mins/maxs: " << endl << endl;;
-        for (string alg_param_id : ALG_ID_TO_ALG_PARAM_IDS[alg_id])
+        for (const string& alg_param_id : ALG_ID_TO_ALG_PARAM_IDS.at(alg_id))
         {
+            pair<double,double> min_max = get_config_value<std::pair<double, double>>(alg_config, alg_param_id);
             hpopt_summary_fs << alg_param_id << " - (min,max,log_scale) = (";
-            hpopt_summary_fs << get_config_value(alg_config, alg_param_id).first << ","
-                << get_config_value(alg_config, alg_param_id).second << ","
-                << (HPOPT_LOG_SCALE_ALG_PARAM_IDS.contains(alg_param_id)) << ")" << endl;
+            hpopt_summary_fs << min_max.first << "," << min_max.second << ","
+                << HPOPT_LOG_SCALE_ALG_PARAM_IDS.contains(alg_param_id) << ")" << endl;
         }
         
         // csv header for eval lines
         hpopt_summary_fs << endl << "Evaluations:" << endl << endl;
-        hpopt_summary_fs << "hp_opt_iter,mean_eval,std_mean_eval,best_eval_so_far"
-        for (string alg_param_id : ALG_ID_TO_ALG_PARAM_IDS[alg_id])
+        hpopt_summary_fs << "hp_opt_iter,mean_eval,std_mean_eval,best_eval_so_far";
+        for (const string& alg_param_id : ALG_ID_TO_ALG_PARAM_IDS.at(alg_id))
         {
             hpopt_summary_fs << "," << alg_param_id;
         }
@@ -579,31 +612,45 @@ namespace thts {
     }
 
     void HpoptManager::write_hpopt_summary_sample_eval_line(
-        shared_ptr<ThtsManager> manager, double mean_eval, double std_mean_eval)
+        shared_ptr<RunManager> run_manager, double mean_eval, double std_mean_eval)
     {
         string alg_id = get_alg_id();
-        ConfigMap alg_params = config_map_from_thts_manager(manager);
+        // Use the alg_config from the run_manager directly
+        const ConfigMap& alg_params = run_manager->alg_config;
 
-        hpopt_summary_fs << hp_opt_iter << "," << mean_eval << "," << std_mean_eval << "," << best_thts_manager_eval;
-        for (string& alg_param_id : ALG_ID_TO_ALG_PARAM_IDS[alg_id])
+        hpopt_summary_fs << hp_opt_iter << "," << mean_eval << "," << std_mean_eval << "," << this->best_mean_eval;
+        for (const string& alg_param_id : ALG_ID_TO_ALG_PARAM_IDS.at(alg_id))
         {
-            hpopt_summary_fs << "," << alg_params[alg_param_id];
+            // Extract value from variant and print it
+            if (alg_params.contains(alg_param_id)) 
+            {
+                const auto& variant_val = alg_params.at(alg_param_id);
+                std::visit([&](auto&& val) {
+                    hpopt_summary_fs << "," << val;
+                }, variant_val);
+            }
         }
         hpopt_summary_fs << endl;
     }
     
     void HpoptManager::write_hpopt_summary_footer()
     {   
-        hpopt_summary_fs << endl  << "Best Params: " << endl << endl;
+        hpopt_summary_fs << endl << "Best Params: " << endl << endl;
         hpopt_summary_fs << "mean_eval - " << best_mean_eval << endl;
         hpopt_summary_fs << "std_mean_eval - " << best_std_mean_eval << endl;
         
         string alg_id = get_alg_id();
 
-        hpopt_summary_fs << hp_opt_iter << "," << mean_eval << "," << std_mean_eval << "," << best_thts_manager_eval;
-        for (string& alg_param_id : ALG_ID_TO_ALG_PARAM_IDS[alg_id])
+        for (const string& alg_param_id : ALG_ID_TO_ALG_PARAM_IDS.at(alg_id))
         {
-            hpopt_summary_fs << alg_param_id << " - " << best_run_manager->alg_config[alg_param_id] << endl;
+            // Extract value from variant and print it
+            if (best_config_map.contains(alg_param_id)) 
+            {
+                const auto& variant_val = this->best_config_map.at(alg_param_id);
+                std::visit([&](auto&& val) {
+                    hpopt_summary_fs << alg_param_id << " - " << val << endl;
+                }, variant_val);
+            }
         }
         hpopt_summary_fs << endl;
     }

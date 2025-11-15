@@ -30,12 +30,12 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_001 =
     // uct params
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
-        {ALG_PARAM_ID_BIAS, std::make_pair(0.001,   1000)},
+        {ALG_PARAM_ID_BIAS, std::make_pair(0.001,   1000.0)},
     },
     // max uct params
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_BIAS, std::make_pair(0.001,   1000)},
+        {ALG_PARAM_ID_BIAS, std::make_pair(0.001,   1000.0)},
     },
     // hmcts params
     {

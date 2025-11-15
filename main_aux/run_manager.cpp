@@ -27,6 +27,7 @@
 #include "main_aux/envs/sailing.h"
 
 #include <iomanip>
+#include <set>
 #include <vector>
 #include <stdexcept>
 #include <sstream>
@@ -52,14 +53,14 @@ namespace thts {
     /**
      *  Checks all expected params are present, and that no additional params
      */  
-    RunManager::validate_config_or_raise_exception()
+    void RunManager::validate_config_or_raise_exception()
     {
         if (xpr_config.size() != 12)
         {
             throw runtime_error("Expecting 12 entries in the xpr level config.");
         }
 
-        if (get_config_value(xpr_config, XPR_OR_ALG_ID_TAG) != XPR_PARAMS_ID_TAG)
+        if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != XPR_PARAMS_ID_TAG)
         {
             throw runtime_error("In run manager expecting config entry: {XPR_OR_ALG_ID_TAG,XPR_PARAMS_ID_TAG}");
         }
@@ -89,9 +90,9 @@ namespace thts {
             }
         }
 
-        string alg_id = get_config_value(alg_config, XPR_OR_ALG_ID_TAG);
+        string alg_id = get_config_value<std::string>(alg_config, XPR_OR_ALG_ID_TAG);
 
-        vector<string> alg_ids =
+        set<string> alg_ids =
         {
             ALG_ID_UCT, 
             ALG_ID_MAX_UCT, 
@@ -110,7 +111,7 @@ namespace thts {
             throw runtime_error(ss.str());
         }
 
-        vector<string> param_ids_expecting = ALG_ID_TO_ALG_PARAM_IDS[alg_id];
+        vector<string> param_ids_expecting = ALG_ID_TO_ALG_PARAM_IDS.at(alg_id);
         for (string& param_id : param_ids_expecting) 
         {
             if (!alg_config.contains(param_id)) 
@@ -129,10 +130,10 @@ namespace thts {
     vector<ConfigMap> RunManager::lookup_config_vector_from_xpr_prefix(string xpr_id_prefix)
     {
         // Validate that all configs have the first ConfigMap with xpr level config, including an xpr_id
-        for (vector<ConfigMap>& config : ALL_CONFIGS)
+        for (const vector<ConfigMap>& config : ALL_CONFIGS)
         {
-            ConfigMap& xpr_config = config[0];
-            if (get_config_value(xpr_config, XPR_OR_ALG_ID_TAG) != XPR_PARAMS_ID_TAG)
+            const ConfigMap& xpr_config = config[0];
+            if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != XPR_PARAMS_ID_TAG)
             {
                 throw runtime_error("Expecting first map in each config (vector) to specify xpr level config with correct tagging.");
             }
@@ -143,9 +144,9 @@ namespace thts {
         }
 
         // Lookup
-        for (vector<ConfigMap>& config : ALL_CONFIGS)
+        for (const vector<ConfigMap>& config : ALL_CONFIGS)
         {
-            string& xpr_name = get_config_value(config[0], XPR_PARAM_ID_NAME);
+            string xpr_name = get_config_value<std::string>(config[0], XPR_PARAM_ID_NAME);
             if (xpr_name.starts_with(xpr_id_prefix))
             {
                 return config;
@@ -175,31 +176,31 @@ namespace thts {
     /**
      * Getters - xpr level config
      */
-    string RunManager::get_xpr_name()           { return get_config_value(xpr_config, XPR_PARAM_ID_NAME); }
-    string RunManager::get_env_id()             { return get_config_value(xpr_config, XPR_PARAM_ID_ENV); }
-    bool RunManager::get_mcts_mode()            { return get_config_value(xpr_config, XPR_PARAM_ID_MCTS_MODE); }
-    bool RunManager::get_graph_search()         { return get_config_value(xpr_config, XPR_PARAM_ID_GRAPH_SEARCH); }
-    int RunManager::get_max_trial_length()      { return get_config_value(xpr_config, XPR_PARAM_ID_MAX_TRIAL_LENGTH); }
-    bool RunManager::xpr_is_runtime_bounded()   { return get_config_value(xpr_config, XPR_PARAM_ID_RUNTIME_BOUNDED); }
-    double RunManager::get_termination_bound()  { return get_config_value(xpr_config, XPR_PARAM_ID_TERMINATION_BOUND); }
-    int RunManager::get_repeated_runs_per_alg() { return get_config_value(xpr_config, XPR_PARAM_ID_REPEATED_RUNS_PER_ALG); }
-    int RunManager::get_num_search_threads()    { return get_config_value(xpr_config, XPR_PARAM_ID_SEARCH_THREADS); }
-    double RunManager::get_eval_delta()         { return get_config_value(xpr_config, XPR_PARAM_ID_EVAL_DELTA); }
-    int RunManager::get_num_eval_rollouts()     { return get_config_value(xpr_config, XPR_PARAM_ID_EVAL_ROLLOUTS); }
-    int RunManager::get_num_eval_threads()      { return get_config_value(xpr_config, XPR_PARAM_ID_EVAL_THREADS); }
+    string RunManager::get_xpr_name()           { return get_config_value<std::string>(xpr_config, XPR_PARAM_ID_NAME); }
+    string RunManager::get_env_id()             { return get_config_value<std::string>(xpr_config, XPR_PARAM_ID_ENV); }
+    bool RunManager::get_mcts_mode()            { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_MCTS_MODE); }
+    bool RunManager::get_graph_search()         { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_GRAPH_SEARCH); }
+    int RunManager::get_max_trial_length()      { return get_config_value<int>(xpr_config, XPR_PARAM_ID_MAX_TRIAL_LENGTH); }
+    bool RunManager::xpr_is_runtime_bounded()   { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_RUNTIME_BOUNDED); }
+    double RunManager::get_termination_bound()  { return get_config_value<double>(xpr_config, XPR_PARAM_ID_TERMINATION_BOUND); }
+    int RunManager::get_repeated_runs_per_alg() { return get_config_value<int>(xpr_config, XPR_PARAM_ID_REPEATED_RUNS_PER_ALG); }
+    int RunManager::get_num_search_threads()    { return get_config_value<int>(xpr_config, XPR_PARAM_ID_SEARCH_THREADS); }
+    double RunManager::get_eval_delta()         { return get_config_value<double>(xpr_config, XPR_PARAM_ID_EVAL_DELTA); }
+    int RunManager::get_num_eval_rollouts()     { return get_config_value<int>(xpr_config, XPR_PARAM_ID_EVAL_ROLLOUTS); }
+    int RunManager::get_num_eval_threads()      { return get_config_value<int>(xpr_config, XPR_PARAM_ID_EVAL_THREADS); }
 
     /**
      * Getters - alg level config
      */
-    string RunManager::get_alg_id()             { return get_config_value(alg_config, XPR_OR_ALG_ID_TAG); }
-    double RunManager::get_bias()               { return get_config_value(alg_config, ALG_PARAM_ID_BIAS); }
-    int RunManager::get_uct_budget()            { return get_config_value(alg_config, ALG_PARAM_ID_UCT_BUDGET); }
-    double RunManager::get_init_temp()          { return get_config_value(alg_config, ALG_PARAM_ID_INIT_TEMP); }
-    double RunManager::get_temp_decay_rate()    { return get_config_value(alg_config, ALG_PARAM_ID_TEMP_DECAY_RATE); }
-    double RunManager::get_init_entropy_coeff() { return get_config_value(alg_config, ALG_PARAM_ID_INIT_ENTROPY_COEFF); }
-    double RunManager::get_entropy_zero_at()    { return get_config_value(alg_config, ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT); }
-    double RunManager::get_epsilon()            { return get_config_value(alg_config, ALG_PARAM_ID_EPSILON); }
-    double RunManager::get_default_q_value()    { return get_config_value(alg_config, ALG_PARAM_ID_DEFAULT_Q_VALUE); }
+    string RunManager::get_alg_id()             { return get_config_value<std::string>(alg_config, XPR_OR_ALG_ID_TAG); }
+    double RunManager::get_bias()               { return get_config_value<double>(alg_config, ALG_PARAM_ID_BIAS); }
+    int RunManager::get_uct_budget()            { return get_config_value<int>(alg_config, ALG_PARAM_ID_UCT_BUDGET); }
+    double RunManager::get_init_temp()          { return get_config_value<double>(alg_config, ALG_PARAM_ID_INIT_TEMP); }
+    double RunManager::get_temp_decay_rate()    { return get_config_value<double>(alg_config, ALG_PARAM_ID_TEMP_DECAY_RATE); }
+    double RunManager::get_init_entropy_coeff() { return get_config_value<double>(alg_config, ALG_PARAM_ID_INIT_ENTROPY_COEFF); }
+    double RunManager::get_entropy_zero_at()    { return get_config_value<double>(alg_config, ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT); }
+    double RunManager::get_epsilon()            { return get_config_value<double>(alg_config, ALG_PARAM_ID_EPSILON); }
+    double RunManager::get_default_q_value()    { return get_config_value<double>(alg_config, ALG_PARAM_ID_DEFAULT_Q_VALUE); }
 
 
     /**
@@ -215,7 +216,7 @@ namespace thts {
     */
     shared_ptr<ThtsEnv> RunManager::get_env()
     {
-        string thts_unique_filename = get_results_dir(run_id);
+        string thts_unique_filename = get_eval_logs_dir();
         string env_id = get_env_id();
 
         if (GYM_ENVS.contains(env_id)) {
@@ -223,8 +224,8 @@ namespace thts {
             return make_shared<GymMultiprocessingThtsEnv>(pickle_wrapper, thts_unique_filename, env_id);
         }
         
-        if (env_id == ENV_ID_D_CHAIN_10)        return make_shared<DCHainEnv>(10,1.0);
-        if (env_id == ENV_ID_MOD_D_CHAIN_10)    return make_shared<DCHainEnv>(10,0.5);
+        if (env_id == ENV_ID_D_CHAIN_10)        return make_shared<DChainEnv>(10,1.0);
+        if (env_id == ENV_ID_MOD_D_CHAIN_10)    return make_shared<DChainEnv>(10,0.5);
         if (env_id == ENV_ID_ENTROPY_TRAP_10)   return make_shared<EntropyTrapEnv>(10,10,1.0);
         if (env_id == ENV_ID_ENTROPY_TRAP_15)   return make_shared<EntropyTrapEnv>(15,15,1.0);
 
@@ -328,8 +329,9 @@ namespace thts {
     /**
      * Returns a root node to use for search given these params
     */
-    shared_ptr<ThtsDNode> get_root_search_node(shared_ptr<ThtsEnv> env, shared_ptr<ThtsManager> manager)
+    shared_ptr<ThtsDNode> RunManager::get_root_search_node(shared_ptr<ThtsEnv> env, shared_ptr<ThtsManager> manager)
     {
+        string alg_id = get_alg_id();
         if (alg_id == ALG_ID_UCT) {
             shared_ptr<UctManager> uct_manager = static_pointer_cast<UctManager>(manager);
             return make_shared<UctDNode>(uct_manager, env->get_initial_state_itfc(), 0, 0);
@@ -376,13 +378,13 @@ namespace thts {
      * "param1=val1,param2=val2,...,paramN=valN",
      * but lead to filenames that were too long
     */
-    string get_params_string_helper(RunManager& run_manager) 
+    string RunManager::get_params_string_helper() 
     {
         stringstream ss;
         const vector<string>& relevant_alg_param_ids = ALG_ID_TO_ALG_PARAM_IDS.at(get_alg_id());
         for (const string& alg_param_id : relevant_alg_param_ids)
         {
-            ss << alg_param_id << "=" << get_config_value<double>(run_manager.alg_config, alg_param_id) << "/";
+            ss << alg_param_id << "=" << get_config_value<double>(alg_config, alg_param_id) << "/";
         }
         return ss.str();
     }
@@ -397,7 +399,7 @@ namespace thts {
             << get_xpr_name() << "_" << xpr_timestamp << "/"
             << get_env_id() << "/"
             << get_alg_id() << "/"
-            << get_params_string_helper(*this);
+            << get_params_string_helper();
         return ss.str();
     }
 
@@ -420,17 +422,18 @@ namespace thts {
     
     ofstream RunManager::get_eval_log_filestream()
     {
-        std::filesystem::path filename = get_eval_log_filename(manager);
+        std::filesystem::path filename = get_eval_log_filename();
+        std::filesystem::path dir = filename.parent_path();
 
         if (!std::filesystem::exists(dir)) {
-            fs::create_directories(dir);
+            std::filesystem::create_directories(dir);
         }
 
-        // Open the file (will create it if it doesn’t exist)
+        // Open the file (will create it if it doesn't exist)
         ofstream file(filename, ios::out | ios::trunc);
         if (!file.is_open()) 
         {
-            throw runtime_error("Failed to open file: " + filename);
+            throw runtime_error("Failed to open file: " + filename.string());
         }
 
         return file;
@@ -472,7 +475,7 @@ namespace thts {
         string alg_id = get_alg_id();
         fs << endl << alg_id << " params: " << endl << endl;
         bool first_iter = true;
-        for (string alg_param_id : ALG_ID_TO_ALG_PARAM_IDS[alg_id])
+        for (string alg_param_id : ALG_ID_TO_ALG_PARAM_IDS.at(alg_id))
         {
             if (!first_iter)
             {
@@ -485,10 +488,10 @@ namespace thts {
 
         // Header for main body
         fs << endl << "Evals: " << endl << endl;
-        results_evals_fs << "run_idx,eval,eval_std,num_trials,runtime,search_budget_consumed,num_eval_samples" << endl;
+        fs << "run_idx,eval,eval_std,num_trials,runtime,search_budget_consumed,num_eval_samples" << endl;
     }
 
-    void RunManager::write_eval_line(
+    void RunManager::write_eval_log_line(
         ofstream& fs, 
         int run_idx, 
         double eval, 
@@ -512,7 +515,7 @@ namespace thts {
     {
 
         stringstream filename_ss;
-        filename_ss << "tree_log_run_"  <<_int_to_padded_string(run_idx) << ".txt";
+        filename_ss << "tree_log_run_" << _int_to_string_padded(run_idx, 4) << ".txt";
 
         std::filesystem::path dir = get_eval_logs_dir();
         std::filesystem::path filename = dir / filename_ss.str();
@@ -523,17 +526,18 @@ namespace thts {
     std::ofstream RunManager::get_tree_log_filestream(int run_idx)
     {
 
-        std::filesystem::path filename = get_eval_log_filename(manager, run_idx);
+        std::filesystem::path filename = get_tree_log_filename(run_idx);
+        std::filesystem::path dir = filename.parent_path();
 
         if (!std::filesystem::exists(dir)) {
-            fs::create_directories(dir);
+            std::filesystem::create_directories(dir);
         }
 
-        // Open the file (will create it if it doesn’t exist)
+        // Open the file (will create it if it doesn't exist)
         ofstream file(filename, ios::out | ios::trunc);
         if (!file.is_open()) 
         {
-            throw runtime_error("Failed to open file: " + filename);
+            throw runtime_error("Failed to open file: " + filename.string());
         }
 
         return file;
@@ -543,6 +547,6 @@ namespace thts {
     {
         ofstream tree_log_fs = get_tree_log_filestream(run_idx);
         tree_log_fs << root_node->get_pretty_print_string(2) << endl;
-        tree_log_fs.close()
+        tree_log_fs.close();
     }
 }

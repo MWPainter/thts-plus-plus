@@ -11,7 +11,7 @@ namespace thts::helper {
      * Implementation of the default zero heuristic function.
      */
     double zero_heuristic_fn(
-        shared_ptr<const State> state, ThtsManager& manager, int depth) 
+        shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth) 
     {
         return 0.0;
     }
@@ -20,9 +20,8 @@ namespace thts::helper {
      * Implementation of the rollout heuristic function.
      */
     double rollout_heuristic_fn(
-        shared_ptr<const State> state, ThtsManager& manager, int depth) 
+        shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth) 
     {
-        ThtsEnv& env = *manager.thts_env();
         ThtsContext& ctx = *manager.get_thts_context();
         int rollout_steps_left = manager.max_depth - depth;
         double rollout_reward = 0.0;
