@@ -35,6 +35,7 @@ TEST(Uct_Ucb, compute_ucb_values_no_prior) {
         .WillOnce(Return(make_shared<ThtsContext>()));
     shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
     uct_manager->bias = 2.0;
+    uct_manager->normalize_Q_values_in_selection = false;
     shared_ptr<ThtsContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
     
     // Actions
@@ -106,6 +107,7 @@ TEST(Uct_Ucb, compute_ucb_values_with_prior) {
         .WillOnce(Return(make_shared<ThtsContext>()));
     shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
     uct_manager->bias = 2.0;
+    uct_manager->normalize_Q_values_in_selection = false;
     shared_ptr<ThtsContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
     
     // Actions
@@ -172,6 +174,7 @@ TEST(Uct_Ucb, compute_ucb_values_opponent) {
         .WillOnce(Return(make_shared<ThtsContext>()));
     shared_ptr<MockUctManager> uct_manager = make_shared<MockUctManager>(mock_env);
     uct_manager->bias = 2.0;
+    uct_manager->normalize_Q_values_in_selection = false;
     shared_ptr<ThtsContext> dummy_context = mock_env->sample_context_itfc(0,*uct_manager);
     
     // Actions

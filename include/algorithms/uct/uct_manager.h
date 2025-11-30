@@ -9,7 +9,7 @@ namespace thts {
     struct UctManagerArgs : public ThtsManagerArgs {
         static constexpr double ADAPTIVE_BIAS_MIN_BIAS = 0.001;
 
-        static const bool adaptive_bias_default=true;
+        static const bool adaptive_bias_default=false;
         static const bool normalize_Q_values_in_selection_default=true;
         static constexpr double bias_default=1.0;
         static const int heuristic_psuedo_trials_default=0;
