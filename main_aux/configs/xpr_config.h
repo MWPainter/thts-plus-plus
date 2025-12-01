@@ -1,6 +1,7 @@
 #pragma once
 
-#include <vector>
+#include "main_aux/configs/config_map.h"
+
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Experiment configs

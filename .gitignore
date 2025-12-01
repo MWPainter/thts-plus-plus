@@ -1,3 +1,7 @@
+# Logs output
+aux_eval_logs/*
+aux_hpopt_summaries/*
+
 # Cached values dont want to add to repo
 util/cached*
 

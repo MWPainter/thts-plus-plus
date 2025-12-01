@@ -1,5 +1,7 @@
 #pragma once
 
+#include "main_aux/configs/config_map.h"
+
 #include "main_aux/configs/constants_algorithms.h"
 #include "main_aux/configs/constants_experiments.h"
 
@@ -14,7 +16,7 @@ static const std::vector<ConfigMap> CONFIG_000 =
         {XPR_PARAM_ID_GRAPH_SEARCH,             false},
         {XPR_PARAM_ID_MAX_TRIAL_LENGTH,         10000},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,          false},
-        {XPR_PARAM_ID_TERMINATION_BOUND,        100},
+        {XPR_PARAM_ID_TERMINATION_BOUND,        100.0},
         {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    2},
         {XPR_PARAM_ID_SEARCH_THREADS,           2},
         {XPR_PARAM_ID_EVAL_DELTA,               25},
@@ -35,7 +37,7 @@ static const std::vector<ConfigMap> CONFIG_000 =
     {
         {XPR_OR_ALG_ID_TAG,         ALG_ID_HMCTS},
         {ALG_PARAM_ID_BIAS,         4.0},
-        {ALG_PARAM_ID_UCT_BUDGET,   10.0},
+        {ALG_PARAM_ID_UCT_BUDGET,   10},
     },
     // ments params
     {

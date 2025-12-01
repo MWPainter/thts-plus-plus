@@ -100,9 +100,9 @@ namespace thts {
      */  
     void HpoptManager::validate_config_or_raise_exception()
     {
-        if (xpr_config.size() != 16)
+        if (xpr_config.size() != 17)
         {
-            throw runtime_error("Expecting 16 entries in the xpr level config.");
+            throw runtime_error("Expecting 17 entries in the xpr level config.");
         }
 
         if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != HPOPT_PARAMS_ID_TAG)
@@ -115,6 +115,7 @@ namespace thts {
             XPR_PARAM_ID_NAME, 
             XPR_PARAM_ID_ENV, 
             XPR_PARAM_ID_MCTS_MODE, 
+            XPR_PARAM_ID_GRAPH_SEARCH,
             XPR_PARAM_ID_MAX_TRIAL_LENGTH,
             XPR_PARAM_ID_RUNTIME_BOUNDED, 
             XPR_PARAM_ID_TERMINATION_BOUND, 
@@ -200,7 +201,7 @@ namespace thts {
         for (const vector<HpoptConfigMap>& config : ALL_HPOPT_CONFIGS)
         {
             const HpoptConfigMap& xpr_config = config[0];
-            if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != XPR_PARAMS_ID_TAG)
+            if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != HPOPT_PARAMS_ID_TAG)
             {
                 throw runtime_error("Expecting first map in each config (vector) to specify xpr level config with correct tagging.");
             }
@@ -236,7 +237,8 @@ namespace thts {
         int bayesopt_relearn_freq = get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ);
 
         bayesopt::Parameters bo_params;
-        bo_params.surr_name = "sGaussianProcessML";
+        // bo_params.surr_name = "sGaussianProcessML";
+        bo_params.surr_name = "sGaussianProcessNormal";
         bo_params.noise = target_std_per_bayesopt_sample*target_std_per_bayesopt_sample;
         bo_params.n_iterations = bayesopt_total_samples - bayesopt_init_rand_samples;
         bo_params.n_init_samples = bayesopt_init_rand_samples;
@@ -307,9 +309,10 @@ namespace thts {
     {
         if (evals.size() < 2)
         {
-            mean_eval = 0.0;
+            mean_eval = (evals.size() == 1) ? evals[0] : 0.0;
             std_eval = std::numeric_limits<double>::max();
             std_mean_eval = std::numeric_limits<double>::max();
+            return;
         }
 
         double evals_sum = 0.0;
@@ -366,6 +369,9 @@ namespace thts {
         // get run manager with params corresponding to this query
         shared_ptr<RunManager> sampled_run_manager = get_run_manager_for_query(query);
 
+        cout << "hp_opt_iter:" << hp_opt_iter << ", query_vector:" << query << endl;
+        cout << "sampled_params:" << sampled_run_manager->get_params_string_helper() << endl;
+
         // run evals
         while (repeats_run < min_repeats || std_mean_eval > estimate_confidence_threshold)
         {
@@ -375,9 +381,9 @@ namespace thts {
             _update_statistics_(evals, mean_eval, std_eval, std_mean_eval);
             repeats_run++;
 
-            cout << "Hp_opt_iter " << hp_opt_iter 
-                << ". mean_eval=" << mean_eval 
-                << ",std_mean_eval=" << std_mean_eval << " >? " << estimate_confidence_threshold << endl;
+            cout << "Run#=" << repeats_run 
+                << ", mean_eval=" << mean_eval 
+                << ", std_mean_eval=" << std_mean_eval << " >? " << estimate_confidence_threshold << endl;
         }
 
         // Update if best eval so far
@@ -473,7 +479,7 @@ namespace thts {
      * Helper to sample double value using a continuous [0,1] random variable from bayesopt
      * (N.B. we may want to apply log scaling)
      */
-    double HpoptManager::get_cts_val_from_bayesopt_sample(double sample_val, int min, int max, bool log_scaling)
+    double HpoptManager::get_cts_val_from_bayesopt_sample(double sample_val, double min, double max, bool log_scaling)
     {
         if (log_scaling)
         {
@@ -568,13 +574,16 @@ namespace thts {
             << XPR_PARAM_ID_MAX_TRIAL_LENGTH << ","
             << XPR_PARAM_ID_RUNTIME_BOUNDED << ","
             << XPR_PARAM_ID_TERMINATION_BOUND << ","
-            << XPR_PARAM_ID_REPEATED_RUNS_PER_ALG << ","
+            // << XPR_PARAM_ID_REPEATED_RUNS_PER_ALG << ","
             << XPR_PARAM_ID_SEARCH_THREADS << ","
             << XPR_PARAM_ID_EVAL_DELTA << ","
             << XPR_PARAM_ID_EVAL_ROLLOUTS << ","
             << XPR_PARAM_ID_EVAL_THREADS << ","
             << HPOPT_PARAM_ID_MIN_REPEATS << ","
-            << HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD << endl;
+            << HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD << ","
+            << HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES << ","
+            << HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES << ","
+            << HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ << endl;
         hpopt_summary_fs << get_xpr_name() << ","
             << get_env_id() << ","
             << get_mcts_mode() << ","
@@ -582,13 +591,16 @@ namespace thts {
             << get_max_trial_length() << ","
             << xpr_is_runtime_bounded() << ","
             << get_termination_bound() << ","
-            << get_repeated_runs_per_alg() << ","
+            // << get_repeated_runs_per_alg() << ","
             << get_num_search_threads() << ","
             << get_eval_delta() << ","
             << get_num_eval_rollouts() << ","
             << get_num_eval_threads() << ","
             << get_hpopt_min_repeats() << "," 
-            << get_hpopt_estimate_confidence_threshold() << endl;
+            << get_hpopt_estimate_confidence_threshold() << ","
+            << get_hpopt_total_samples() << ","
+            << get_hpopt_init_random_samples() << ","
+            << get_hpopt_relearn_freq() << endl;
 
         // Alg level params
         string alg_id = get_alg_id();

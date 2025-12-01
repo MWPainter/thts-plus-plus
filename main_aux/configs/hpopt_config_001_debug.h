@@ -1,5 +1,7 @@
 #pragma once
 
+#include "main_aux/configs/hpopt_config_map.h"
+
 #include "main_aux/configs/constants_algorithms.h"
 #include "main_aux/configs/constants_experiments.h"
 #include "main_aux/configs/constants_hpopt.h"
@@ -25,7 +27,7 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_001 =
         {HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD,  1.0},
         {HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES,         200},
         {HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES,     10},
-        {HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ,          10},
+        {HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ,          20},
     },
     // uct params
     {

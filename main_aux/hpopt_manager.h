@@ -144,7 +144,7 @@ namespace thts {
              * Assumes bayesopt sample is from range (log_scaling) ? [log(min),log(max)] : [min,max]
              * Rand returns the sample (log_scaling) ? exp(sample) : sample.
              */
-            double get_cts_val_from_bayesopt_sample(double sample_val, int min, int max, bool log_scaling);
+            double get_cts_val_from_bayesopt_sample(double sample_val, double min, double max, bool log_scaling);
 
             /**
              * Helper to cast a continuous sampled value to an integer

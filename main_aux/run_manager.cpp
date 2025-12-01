@@ -27,6 +27,7 @@
 #include "main_aux/envs/sailing.h"
 
 #include <iomanip>
+#include <iostream>
 #include <set>
 #include <vector>
 #include <stdexcept>
@@ -55,9 +56,9 @@ namespace thts {
      */  
     void RunManager::validate_config_or_raise_exception()
     {
-        if (xpr_config.size() != 12)
+        if (xpr_config.size() != 13)
         {
-            throw runtime_error("Expecting 12 entries in the xpr level config.");
+            throw runtime_error("Expecting 13 entries in the xpr level config.");
         }
 
         if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != XPR_PARAMS_ID_TAG)
@@ -71,6 +72,7 @@ namespace thts {
             XPR_PARAM_ID_ENV, 
             XPR_PARAM_ID_MCTS_MODE, 
             XPR_PARAM_ID_MAX_TRIAL_LENGTH,
+            XPR_PARAM_ID_GRAPH_SEARCH,
             XPR_PARAM_ID_RUNTIME_BOUNDED, 
             XPR_PARAM_ID_TERMINATION_BOUND, 
             XPR_PARAM_ID_REPEATED_RUNS_PER_ALG, 
@@ -260,6 +262,20 @@ namespace thts {
     }
 
     /**
+     * Helper to add params to a manager args object for ThtsManager level params
+     */
+    void RunManager::_add_thts_manager_params_to_args(ThtsManagerArgs& manager_args)
+    {
+        manager_args.num_threads = get_num_search_threads();
+        manager_args.num_envs = std::max(get_num_search_threads(), get_num_eval_threads());
+        manager_args.max_depth = get_max_trial_length();
+        manager_args.heuristic_fn = (get_mcts_mode()) ? helper::rollout_heuristic_fn : helper::zero_heuristic_fn;
+        manager_args.mcts_mode = get_mcts_mode();
+        manager_args.graph_search = get_graph_search();
+        manager_args.first_visit = true;
+    }
+    
+    /**
      * Returns and instance of ThtsManager to use for this run
      * Creates the manager and sets algorithm level parameters
      * Then adds the experiment level parameters and returns
@@ -273,15 +289,22 @@ namespace thts {
         {
             UctManagerArgs manager_args(env);
             manager_args.bias = get_bias();
-            thts_manager = make_shared<UctManager>(manager_args);
+            _add_thts_manager_params_to_args(manager_args);
+            return make_shared<UctManager>(manager_args);
         }
 
         else if (alg_id == ALG_ID_HMCTS)
         {
+            if (xpr_is_runtime_bounded())
+            {
+                throw runtime_error("HMCTS requires a total budget (num trials) to be specified ahead of time, so HMCTS cannot be used for runtime bounded experiments.");
+            }
             HmctsManagerArgs manager_args(env);
             manager_args.bias = get_bias();
+            manager_args.total_budget = get_termination_bound();
             manager_args.uct_budget_threshold = get_uct_budget();
-            thts_manager = make_shared<HmctsManager>(manager_args);
+            _add_thts_manager_params_to_args(manager_args);
+            return make_shared<HmctsManager>(manager_args);
         }
 
         else if (alg_id == ALG_ID_MENTS || alg_id == ALG_ID_RENTS || alg_id == ALG_ID_TENTS)
@@ -290,7 +313,8 @@ namespace thts {
             manager_args.temp_schedule_ptr = make_shared<SqrtSchedule>(get_init_temp(), get_temp_decay_rate());
             manager_args.epsilon = get_epsilon();
             manager_args.default_q_value = get_default_q_value();
-            thts_manager = make_shared<MentsManager>(manager_args);
+            _add_thts_manager_params_to_args(manager_args);
+            return make_shared<MentsManager>(manager_args);
         }
 
         else if (alg_id == ALG_ID_BTS || alg_id == ALG_ID_DENTS)
@@ -305,25 +329,14 @@ namespace thts {
                 manager_args.entropy_coeff_schedule_ptr = make_shared<LinearSchedule>(get_init_entropy_coeff(), get_entropy_zero_at());
             }
 
-            thts_manager = make_shared<DentsManager>(manager_args);
+            _add_thts_manager_params_to_args(manager_args);
+
+            return make_shared<DentsManager>(manager_args);
         }
         
-        if (thts_manager == nullptr)
-        {
-            stringstream ss;
-            ss << "Error in RunManager get_thts_manager for alg_id = " << alg_id;
-            throw runtime_error(ss.str());
-        }
-
-        thts_manager->num_threads = get_num_search_threads();
-        thts_manager->num_envs = std::max(get_num_search_threads(), get_num_eval_threads());
-        thts_manager->max_depth = get_max_trial_length();
-        thts_manager->heuristic_fn = (get_mcts_mode()) ? helper::rollout_heuristic_fn : helper::zero_heuristic_fn;
-        thts_manager->mcts_mode = get_mcts_mode();
-        thts_manager->graph_search = get_graph_search();
-        thts_manager->first_visit = true;
-
-        return thts_manager;
+        stringstream ss;
+        ss << "Error in RunManager get_thts_manager for alg_id = " << alg_id;
+        throw runtime_error(ss.str());
     }
 
     /**
@@ -382,9 +395,15 @@ namespace thts {
     {
         stringstream ss;
         const vector<string>& relevant_alg_param_ids = ALG_ID_TO_ALG_PARAM_IDS.at(get_alg_id());
+        bool first_iter = true;
         for (const string& alg_param_id : relevant_alg_param_ids)
         {
-            ss << alg_param_id << "=" << get_config_value<double>(alg_config, alg_param_id) << "/";
+            if (!first_iter)
+            {
+                ss << "/";
+            }
+            first_iter = false;
+            ss << alg_param_id << "=" << get_config_value<double>(alg_config, alg_param_id);
         }
         return ss.str();
     }
@@ -395,7 +414,7 @@ namespace thts {
     string RunManager::get_eval_logs_dir() 
     {
         stringstream ss;
-        ss << "eval_logs_aux/" 
+        ss << "aux_eval_logs/" 
             << get_xpr_name() << "_" << xpr_timestamp << "/"
             << get_env_id() << "/"
             << get_alg_id() << "/"

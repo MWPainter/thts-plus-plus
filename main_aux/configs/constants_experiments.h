@@ -39,24 +39,3 @@ static const std::string XPR_PARAM_ID_EVAL_DELTA = "eval_delta";                
 static const std::string XPR_PARAM_ID_EVAL_ROLLOUTS = "eval_rollouts";          // numbber of rollouts for each MC eval
 static const std::string XPR_PARAM_ID_EVAL_THREADS = "eval_threads";            // number of threads to use in evaluation
 
-// ---------------------------------------------------------------------------------------------------------------------
-// Configs will be a vector of ConfigMap types. Typedefs + helper functions for actual configs:
-// ---------------------------------------------------------------------------------------------------------------------
-
-// Type aliases
-using ConfigValue = std::variant<std::string, bool, int, double>;
-using ConfigMap   = std::unordered_map<std::string, ConfigValue>;
-
-// Templated Helper to read value from config map
-template<typename T>
-T get_config_value(const ConfigMap& config, const std::string& key)
-{
-    if (!config.contains(key)) {
-        std::stringstream err_msg;
-        err_msg << "Expecting to find key (" << key << ") in ConfigMap, but couldn't.";
-        throw std::runtime_error(err_msg.str());
-    }
-
-    // If wrong type, std::get will throw std::bad_variant_access
-    return std::get<T>(config.at(key));
-}

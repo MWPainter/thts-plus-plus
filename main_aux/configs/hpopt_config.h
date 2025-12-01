@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include "main_aux/configs/hpopt_config_map.h"
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Experiment configs
