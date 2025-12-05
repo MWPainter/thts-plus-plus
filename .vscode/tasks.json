@@ -1,0 +1,62 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-auxexpr-debug",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source ~/anaconda3/etc/profile.d/conda.sh && conda activate thts++mo && source export_local_paths_desktop.sh && make auxexpr-debug"
+            ],
+            "group": "build",
+            "problemMatcher": ["$gcc"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "build-pyex-debug",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source ~/anaconda3/etc/profile.d/conda.sh && conda activate thts++mo && source export_local_paths_desktop.sh && make pyex-debug"
+            ],
+            "group": "build",
+            "problemMatcher": ["$gcc"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "build-thts-test-debug",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source ~/anaconda3/etc/profile.d/conda.sh && conda activate thts++mo && source export_local_paths_desktop.sh && make thts-test-debug"
+            ],
+            "group": "build",
+            "problemMatcher": ["$gcc"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "build-moexpr-debug",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source ~/anaconda3/etc/profile.d/conda.sh && conda activate thts++mo && source export_local_paths_desktop.sh && make moexpr-debug"
+            ],
+            "group": "build",
+            "problemMatcher": ["$gcc"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        }
+    ]
+}
+
