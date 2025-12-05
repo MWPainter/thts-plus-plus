@@ -6,6 +6,7 @@ using namespace std;
 namespace thts {
     /**
      * Constructor mostly uses initialisation list. 
+     * Uses SkipLocalRewardInit tag to avoid calling get_reward_itfc which is deleted for MO envs.
      */
     MoThtsCNode::MoThtsCNode(
         shared_ptr<MoThtsManager> thts_manager,
@@ -14,7 +15,7 @@ namespace thts {
         int decision_depth,
         int decision_timestep,
         shared_ptr<const MoThtsDNode> parent) :
-            ThtsCNode(thts_manager, state, action, decision_depth, decision_timestep, parent),
+            ThtsCNode(SkipLocalRewardInit{}, thts_manager, state, action, decision_depth, decision_timestep, parent),
             vector_visit_count(thts_manager->reward_dim),
             local_backups(0),
             total_cnode_backups_in_subtree(0),

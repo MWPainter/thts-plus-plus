@@ -70,6 +70,12 @@ namespace thts {
 
             double local_reward;
 
+            /**
+             * Tag type for constructor that skips local_reward initialization.
+             * Used by multi-objective subclasses where get_reward_itfc is not available.
+             */
+            struct SkipLocalRewardInit {};
+
         public: 
             /**
              * Default constructor.
@@ -83,6 +89,22 @@ namespace thts {
                 int decision_depth,
                 int decision_timestep,
                 std::shared_ptr<const ThtsDNode> parent=nullptr);
+
+        protected:
+            /**
+             * Constructor that skips local_reward initialization.
+             * Used by multi-objective subclasses where get_reward_itfc is deleted.
+             */
+            ThtsCNode(
+                SkipLocalRewardInit,
+                std::shared_ptr<ThtsManager> thts_manager,
+                std::shared_ptr<const State> state,
+                std::shared_ptr<const Action> action,
+                int decision_depth,
+                int decision_timestep,
+                std::shared_ptr<const ThtsDNode> parent=nullptr);
+
+        public:
 
             /**
              * Mark destructor as virtual for subclassing.

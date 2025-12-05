@@ -40,6 +40,32 @@ namespace thts {
     }
 
     /**
+     * Constructor that skips local_reward initialization.
+     * Used by multi-objective subclasses where get_reward_itfc is deleted.
+     */
+    ThtsCNode::ThtsCNode(
+        SkipLocalRewardInit,
+        shared_ptr<ThtsManager> thts_manager,
+        shared_ptr<const State> state,
+        shared_ptr<const Action> action,
+        int decision_depth,
+        int decision_timestep,
+        shared_ptr<const ThtsDNode> parent) :
+            ThtsNode(),
+            thts_manager(thts_manager),
+            state(state),
+            action(action),
+            decision_depth(decision_depth),
+            decision_timestep(decision_timestep),
+            parent(parent),
+            num_visits(0),
+            children(),
+            empirical_distribution(),
+            local_reward(0.0)
+    {
+    }
+
+    /**
      * Default implementation of visit just increments the number of times visited counter.
      */
     void ThtsCNode::visit_itfc(ThtsContext& ctx) {
