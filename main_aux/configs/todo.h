@@ -10,6 +10,9 @@
 // Deterministic envs
 // ---------------------------------------------------------------------------------------------------------------------
 
+// BOOKMARK: deterministic envs
+
+
 // static const std::unordered_set<std::string> DET_ENVS = 
 // {
 //     ENV_ID_D_CHAIN_10,
@@ -55,6 +58,9 @@
 
 
 
+// BOOKMARK: max trial lengths
+
+
 // // env ids - max trial length
 // static const std::unordered_map<std::string,int> ENV_ID_MAX_TRIAL_LEN = 
 // {
@@ -97,18 +103,14 @@
 // xpr ids
 // ---------------------------------------------------------------------------------------------------------------------
 
+// BOOKMARK: xpr ids
+
 
 
 // // expr ids - debug
 // static const std::string DEBUG_EXPR_ID = "000_debug";
 
 // // expr ids - supp experiments (1xx + 2xx + 3xx)
-// // supp experiments = showing how performance varies with parameters etc
-// static const std::string SUPP_100_DCHAIN_10_TEMP_EXPR_ID = "100_supp_dchain_temp_vary";
-// static const std::string SUPP_101_MOD_DCHAIN_10_TEMP_EXPR_ID = "101_supp_mod_dchain_temp_vary";
-// static const std::string SUPP_102_ENTROPY_TRAP_10_TEMP_EXPR_ID = "102_supp_entropy_temp_10_vary";
-// static const std::string SUPP_103_ENTROPY_TRAP_15_TEMP_EXPR_ID = "103_supp_entropy_temp_15_vary";
-// // TODO: what about the exploration param - make an expr or two for this.
 // static const std::string SUPP_110_UCT_ON_FL_DENSE = "110_uct_on_fl_dense";
 // static const std::string SUPP_111_UCT_ON_FL_SPARSE_LEN = "111_uct_on_fl_sparse_len";
 // static const std::string SUPP_112_UCT_ON_FL_SPARSE_DISCOUNTED = "112_uct_on_fl_sparse_discounted";
@@ -210,6 +212,8 @@
 // ---------------------------------------------------------------------------------------------------------------------
 // xpr id -> env id
 // ---------------------------------------------------------------------------------------------------------------------
+
+// BOOKMARK: xpr id -> env id
 
 
 // // env id lookup - helper dict to lookup env ids from hp opt experiment ids
@@ -336,7 +340,7 @@
 // old hpopt config written in a function :)
 // ---------------------------------------------------------------------------------------------------------------------
 
-
+// BOOKMARK: old hpopt config 
 
 
 
@@ -592,6 +596,11 @@
 // old config written in a function :)
 // ---------------------------------------------------------------------------------------------------------------------
 
+// BOOKMARK: old xpr config 
+
+
+
+
 
 
 //     /**
@@ -602,194 +611,9 @@
 //         string expr_id = lookup_expr_id_from_prefix(expr_id_prefix);
 //         shared_ptr<vector<RunID>> run_ids = make_shared<vector<RunID>>();
 
-//         // TODO: define RunId's for experiments
 
-//         // expr_id: 000_debug 
-//         // debug expr id for debugging
-//         if (expr_id == DEBUG_EXPR_ID) {
-//             string env_id = D_CHAIN_10_ENV_ID;
-//             int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(D_CHAIN_10_ENV_ID);
-//             time_t expr_timestamp = std::time(nullptr);
-//             bool eval_wrt_time = false;
-//             double search_runtime = 100;
-//             double eval_delta = 25;
-//             int rollouts_per_mc_eval = 5;
-//             int num_repeats = 2;
-//             int num_threads = 1;
-//             int eval_threads = 1;
 
-//             unordered_map<string,double> alg_params =
-//             {
-//                 {BIAS_PARAM_ID, 4.0},
-//                 {TEMP_PARAM_ID, 1.0},
-//                 {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
-//                 {DECAY_FN_SCALE_PARAM_ID, 1.0},
-//                 {ENTROPY_COEFF_PARAM_ID, 1.0},
-//                 {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_CONST},
-//                 {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 1.0},
-//                 {EPSILON_PARAM_ID, 0.1},
-//             };
 
-//             vector<string> alg_ids = 
-//             {
-//                 UCT_ALG_ID,
-//                 MENTS_ALG_ID,
-//                 BTS_ALG_ID,
-//                 DENTS_ALG_ID,
-//             };
-
-//             for (string alg_id : alg_ids) {
-//                 run_ids->push_back(RunID(
-//                     env_id,
-//                     expr_id,
-//                     expr_timestamp,
-//                     alg_id,
-//                     alg_params,
-//                     eval_wrt_time,
-//                     search_runtime,
-//                     eval_delta,
-//                     rollouts_per_mc_eval,
-//                     max_trial_length,
-//                     num_repeats,
-//                     num_threads,
-//                     eval_threads
-//                 ));
-//             }
-
-//             return run_ids;
-//         }
-
-//         // ----
-//         // expr_id: 100_supp_dchain_temp_vary 
-//         // 10-chain vs temp param
-//         // ----
-//         // expr_id: 101_supp_mod_dchain_temp_vary 
-//         // modified 10-chain vs temp param
-//         // ----
-//         // expr_id: 102_supp_entropy_temp_vary 
-//         // entropy trap 10 vs temp param
-//         // ----
-//         // expr_id: 103_supp_entropy_temp_15_vary 
-//         // entropy trap 15 vs temp param
-//         // ----
-//         if (expr_id == SUPP_100_DCHAIN_10_TEMP_EXPR_ID
-//             || expr_id == SUPP_101_MOD_DCHAIN_10_TEMP_EXPR_ID
-//             || expr_id == SUPP_102_ENTROPY_TRAP_10_TEMP_EXPR_ID
-//             || expr_id == SUPP_103_ENTROPY_TRAP_15_TEMP_EXPR_ID) 
-//         {
-//             string env_id = D_CHAIN_10_ENV_ID;
-//             if (expr_id == SUPP_101_MOD_DCHAIN_10_TEMP_EXPR_ID) {
-//                 env_id = MOD_D_CHAIN_10_ENV_ID;
-//             } else if (expr_id == SUPP_102_ENTROPY_TRAP_10_TEMP_EXPR_ID) {
-//                 env_id = ENTROPY_TRAP_10_ENV_ID;
-//             } else if (expr_id == SUPP_103_ENTROPY_TRAP_15_TEMP_EXPR_ID) {
-//                 env_id = ENTROPY_TRAP_15_ENV_ID;
-//             }
-//             int max_trial_length = ENV_ID_MAX_TRIAL_LEN.at(env_id);
-//             time_t expr_timestamp = std::time(nullptr);
-//             bool eval_wrt_time = false;
-//             double search_runtime = (expr_id == SUPP_103_ENTROPY_TRAP_15_TEMP_EXPR_ID) ? 100000 : 5000;
-//             double eval_delta = 50;
-//             int rollouts_per_mc_eval = 1; // det env
-//             int num_repeats = 25;
-//             int num_threads = 8;
-//             int eval_threads = 1; // det env
-
-//             // UCT run ids 
-//             vector<double> biases_to_try = {
-//                 0.001,
-//                 0.01,
-//                 0.1,
-//                 1.0,
-//                 10.0,
-//                 100.0,
-//             };
-
-//             for (double bias : biases_to_try) {
-//                 unordered_map<string,double> alg_params =
-//                 {
-//                     {BIAS_PARAM_ID, bias},
-//                 };
-//                 run_ids->push_back(RunID(
-//                     env_id,
-//                     expr_id,
-//                     expr_timestamp,
-//                     UCT_ALG_ID,
-//                     alg_params,
-//                     eval_wrt_time,
-//                     search_runtime,
-//                     eval_delta,
-//                     rollouts_per_mc_eval,
-//                     max_trial_length,
-//                     num_repeats,
-//                     num_threads,
-//                     eval_threads
-//                 ));
-//             }
-            
-//             // MENTS/DENTS/BTS run ids
-//             vector<double> temps_to_try = {
-//                 0.001,
-//                 0.0018,
-//                 0.0032,
-//                 0.0058,
-//                 0.01,
-//                 0.018,
-//                 0.032,
-//                 0.058,
-//                 0.1,
-//                 0.18,
-//                 0.32,
-//                 0.58,
-//                 1.0,
-//                 1.8,
-//                 3.2,
-//                 5.8,
-//                 10.0,
-//                 18.0,
-//                 32.0,
-//                 58.0,
-//                 100.0,
-//             };
-//             vector<string> alg_ids = 
-//             {
-//                 MENTS_ALG_ID,
-//                 BTS_ALG_ID,
-//                 DENTS_ALG_ID,
-//             };
-
-//             for (double temp : temps_to_try) {
-//                 unordered_map<string,double> alg_params =
-//                 {
-//                     {TEMP_PARAM_ID, temp},
-//                     {DECAY_FN_PARAM_ID, DECAY_FN_CONST},
-//                     {DECAY_FN_SCALE_PARAM_ID, 1.0},
-//                     {ENTROPY_COEFF_PARAM_ID, temp},
-//                     {ENTROPY_DECAY_FN_PARAM_ID, DECAY_FN_CONST},
-//                     {ENTROPY_DECAY_FN_SCALE_PARAM_ID, 1.0},
-//                     {EPSILON_PARAM_ID, 0.01},
-//                 };
-//                 for (string alg_id : alg_ids) {
-//                     run_ids->push_back(RunID(
-//                         env_id,
-//                         expr_id,
-//                         expr_timestamp,
-//                         alg_id,
-//                         alg_params,
-//                         eval_wrt_time,
-//                         search_runtime,
-//                         eval_delta,
-//                         rollouts_per_mc_eval,
-//                         max_trial_length,
-//                         num_repeats,
-//                         num_threads,
-//                         eval_threads
-//                     ));
-//                 }
-//             }
-            
-//             return run_ids;
-//         }
 
 //         // ----
 //         // expr_id: 110_uct_on_fl_dense / 111_uct_on_fl_sparse_len / 112_uct_on_fl_sparse_discounted 
