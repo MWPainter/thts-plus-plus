@@ -1,0 +1,17 @@
+#! /usr/bin/bash
+set -euo pipefail
+
+if [ "$#" -lt 2 ]; then
+  echo "Usage: $0 <MemoryLimit> <image> <command> [args...]"
+  exit 1
+fi
+
+MEMORY_LIMIT="$1"
+IMAGE="$2"
+shift 2
+
+exec docker run --rm \
+  --memory="$MEMORY_LIMIT" \
+  --memory-swap="$MEMORY_LIMIT" \
+  "$IMAGE" \
+  "$@"

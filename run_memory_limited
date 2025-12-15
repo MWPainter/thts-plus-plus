@@ -1,0 +1,18 @@
+#! /usr/bin/bash
+set -euo pipefail
+
+if [ "$#" -lt 2 ]; then
+  echo "Usage: $0 <MemoryLimit> <program> [args...]"
+  exit 1
+fi
+
+MEMORY_LIMIT="$1"
+shift
+
+exec systemd-inhibit \
+  --why="Experiment running" \
+  --mode=block \ 
+  systemd-run --user --scope \
+  -p "MemoryMax=${MEMORY_LIMIT}" \
+  -p "MemorySwapMax=0" \
+  "$@"
