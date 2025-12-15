@@ -9,10 +9,10 @@ fi
 MEMORY_LIMIT="$1"
 shift
 
-exec systemd-inhibit \
-  --why="Experiment running" \
-  --mode=block \ 
-  systemd-run --user --scope \
+#exec systemd-inhibit \
+#  --why="Experiment running" \
+#  --mode=block \ 
+exec systemd-run --user --scope \
   -p "MemoryMax=${MEMORY_LIMIT}" \
   -p "MemorySwapMax=0" \
   "$@"
