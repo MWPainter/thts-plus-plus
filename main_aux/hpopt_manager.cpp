@@ -237,8 +237,8 @@ namespace thts {
         int bayesopt_relearn_freq = get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ);
 
         bayesopt::Parameters bo_params;
-        // bo_params.surr_name = "sGaussianProcessML";
-        bo_params.surr_name = "sGaussianProcessNormal";
+        bo_params.surr_name = "sGaussianProcessML";
+        // bo_params.surr_name = "sGaussianProcessNormal";
         bo_params.noise = target_std_per_bayesopt_sample*target_std_per_bayesopt_sample;
         bo_params.n_iterations = bayesopt_total_samples - bayesopt_init_rand_samples;
         bo_params.n_init_samples = bayesopt_init_rand_samples;
