@@ -28,17 +28,11 @@ static const std::string FL_6x6_NO_HOLE_MAP[] =
 
 // copied from gymnasium
 static const std::string FL_4x4_MAP[] =
-// {
-//     "SFFF", 
-//     "FHFH", 
-//     "FFFH", 
-//     "HFFG"
-// };
 {
     "SFFF", 
-    "FFFF", 
-    "FFFF", 
-    "FFFG"
+    "FHFH", 
+    "FFFH", 
+    "HFFG"
 };
 
 // copied from gymnasium
@@ -125,82 +119,6 @@ static const std::string FL_GEN_16x16_MAP[] =
     "FFHFFFFHFFFFFFFH",
     "FFFFFFFFFFHFHFFF",
     "FFHFHFHHFFHFFFFG",
-};
-
-
-
-
-
-
-// old
-// python generate_random_frozen_lake_env.py 8 8 0.8
-static const std::string FL_RAND_8X8_MAP[] = 
-{
-    "SFFFFFHF",
-    "FFFFFFFF",
-    "FHFHFFFF",
-    "FFFFFFHH",
-    "FFFHFFFF",
-    "FHHHFFFF",
-    "FFFFFHFF",
-    "FFFFFFFG",
-
-};
-
-// old
-// python generate_random_frozen_lake_env.py 8 8 0.8
-static const std::string FL_RAND_8X8_TEST_MAP[] = 
-{
-    "SFFHHFFF",
-    "HFFFHFFF",
-    "HFFFFFFF",
-    "HFFFFFFF",
-    "FFFFHFFH",
-    "FFFHFHHH",
-    "FFFFFFHF",
-    "FHFHFFFG",
-};
-
-// old
-// python generate_random_frozen_lake_env.py 8 12 0.8
-static const std::string FL_RAND_8X12_MAP[] = 
-{
-    "SFHFFFHFFFFF",
-    "FFFFFFFHFFFF",
-    "HFFFFFHFFFFF",
-    "FHFFHFFFFFFF",
-    "HHFFFFFFFFFF",
-    "FHFFFFHFFFFF",
-    "FHFFFHHFHFFF",
-    "FFFFFFFFFHHG",
-};
-
-// old
-// python generate_random_frozen_lake_env.py 8 12 0.8
-static const std::string FL_RAND_8X12_TEST_MAP[] = 
-{
-    "SFHFFFFFFFHF",
-    "FFFFFFFFFFFF",
-    "FHFFFFHFFFFF",
-    "FFFHFFFFFFHF",
-    "FFFFFFFFFFFF",
-    "FFFFHFFFHFFF",
-    "FFHFFFFFFFFH",
-    "FFFFFFFFFFFG",
-};
-
-// old
-// python generate_random_frozen_lake_env.py 8 16 0.8
-static const std::string FL_RAND_8X16_TEST_MAP[] = 
-{
-    "SFFFFHHFFFHHFHHF",
-    "FFHFFFFFFFHFHHHF",
-    "FFFFFFFHFFFFFFHF",
-    "FFFFFHHFHFFHFFFF",
-    "FHFFFFFFFFFFHHFF",
-    "FFFHFFFFFFHFFFHF",
-    "HFHFFFFFFFFFFFFF",
-    "FFFFFFHFHFFHFFFG",
 };
 
 

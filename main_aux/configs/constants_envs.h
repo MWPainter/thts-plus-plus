@@ -41,6 +41,10 @@ static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_D_5x5 = "slippy_frozen_lake_(
 static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_S_5x5 = "slippy_frozen_lake_(map=5x5,sparse)";
 static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_D_6x6 = "slippy_frozen_lake_(map=6x6,dense)";
 static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_S_6x6 = "slippy_frozen_lake_(map=6x6,sparse)";
+static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_D_4x8 = "slippy_frozen_lake_(map=4x8,dense)";
+static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_S_4x8 = "slippy_frozen_lake_(map=4x8,sparse)";
+static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_D_4x12 = "slippy_frozen_lake_(map=4x12,dense)";
+static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_S_4x12 = "slippy_frozen_lake_(map=4x12,sparse)";
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Environment id's - sailing

@@ -248,6 +248,10 @@ namespace thts {
         if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_5x5) return make_shared<FrozenLakeEnv>(5,5,FL_GEN_5x5_MAP,true,FL_SPARSE_DISCOUNTED_REWARD,1.0);
         if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_6x6) return make_shared<FrozenLakeEnv>(6,6,FL_GEN_6x6_MAP,true,FL_DENSE_REWARD);
         if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_6x6) return make_shared<FrozenLakeEnv>(6,6,FL_GEN_6x6_MAP,true,FL_SPARSE_DISCOUNTED_REWARD,1.0);
+        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_4x8) return make_shared<FrozenLakeEnv>(4,8,FL_GEN_4x8_MAP,true,FL_DENSE_REWARD);
+        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_4x8) return make_shared<FrozenLakeEnv>(4,8,FL_GEN_4x8_MAP,true,FL_SPARSE_DISCOUNTED_REWARD,1.0);
+        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_4x12) return make_shared<FrozenLakeEnv>(4,12,FL_GEN_4x12_MAP,true,FL_DENSE_REWARD);
+        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_4x12) return make_shared<FrozenLakeEnv>(4,12,FL_GEN_4x12_MAP,true,FL_SPARSE_DISCOUNTED_REWARD,1.0);
 
         if (env_id == ENV_ID_SAILING_NORTH_ID)             return make_shared<SailingEnv>(8,8,NN);
         if (env_id == ENV_ID_SAILING_SOUTH_EAST_ID)        return make_shared<SailingEnv>(8,8,SE);

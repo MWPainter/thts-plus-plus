@@ -89,7 +89,7 @@ namespace thts {
             cached_actions(make_shared<IntActionVector>()),
             reward_type(reward_type),
             reward_discount_factor(reward_discount_factor),
-            max_steps(max_steps == -1 ? 3*(width+height) : max_steps),
+            max_steps(max_steps == -1 ? 10*(width+height) : max_steps),
             is_slippery(is_slippery)
     {
         cached_actions->push_back(make_shared<const IntAction>(FL_RIGHT));
