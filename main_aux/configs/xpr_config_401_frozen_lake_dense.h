@@ -12,7 +12,7 @@ static const std::vector<ConfigMap> CONFIG_401 =
         {XPR_OR_ALG_ID_TAG,                     XPR_PARAMS_ID_TAG},
         {XPR_PARAM_ID_NAME,                     "401_eval_frozen_lake_dense_8x16"},
         {XPR_PARAM_ID_ENV,                      ENV_ID_FROZEN_LAKE_D_8x16},
-        {XPR_PARAM_ID_MCTS_MODE,                false},
+        {XPR_PARAM_ID_MCTS_MODE,                true},
         {XPR_PARAM_ID_GRAPH_SEARCH,             false},
         {XPR_PARAM_ID_MAX_TRIAL_LENGTH,         100},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,          false},
