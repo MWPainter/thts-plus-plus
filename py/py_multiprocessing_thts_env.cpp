@@ -89,10 +89,6 @@ namespace thts::python {
         return make_shared<PyMultiprocessingThtsEnv>(*this);
     }
 
-    void PyMultiprocessingThtsEnv::clear_unix_sem_and_shm() {
-        shared_mem_wrapper.reset();
-    }
-
     PyMultiprocessingThtsEnv::~PyMultiprocessingThtsEnv() {
         if (!is_server_process) {
             shared_mem_wrapper->rpc_id = RPC_kill_server;

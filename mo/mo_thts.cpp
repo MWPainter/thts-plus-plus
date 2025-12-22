@@ -125,13 +125,14 @@ namespace thts {
 
         Eigen::ArrayXd total_return_after = heuristic_val_at_end;
 
-        vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>> filtered_nodes_to_backup(nodes_to_backup.size());
+        vector<pair<shared_ptr<ThtsDNode>,shared_ptr<ThtsCNode>>> filtered_nodes_to_backup;
         if (!thts_manager->first_visit) 
         {
             filtered_nodes_to_backup = nodes_to_backup;
         }
         else
         {
+            filtered_nodes_to_backup.reserve(nodes_to_backup.size());
             unordered_set<shared_ptr<ThtsNode>> visited;
             for (auto [dnode,cnode] : nodes_to_backup) 
             {

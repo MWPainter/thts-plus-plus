@@ -204,6 +204,7 @@ namespace thts {
         // print out child trees recursively
         for (ObservationNodePair& key_val_pair : children_to_print) {
             shared_ptr<const Observation> observation = key_val_pair.first;
+            if (!empirical_distribution.contains(observation)) continue;
             ThtsDNode& child_node = *(key_val_pair.second);
             ss << "\n";
             for (int i=0; i<num_tabs+1; i++) ss << "|\t";

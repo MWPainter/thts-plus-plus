@@ -133,11 +133,6 @@ namespace thts::python {
             virtual std::shared_ptr<ThtsEnv> clone() override;
 
             /**
-             * Give ability to force clean unix shared memory and semaphores
-            */
-            void clear_unix_sem_and_shm();
-
-            /**
              * Mark destructor as virtual for subclassing.
              */
             virtual ~PyMultiprocessingThtsEnv();

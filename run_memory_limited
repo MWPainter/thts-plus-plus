@@ -9,6 +9,9 @@ fi
 MEMORY_LIMIT="$1"
 shift
 
+# Clear any leftover semaphores and shared memory
+"$(dirname "$0")/clear_sem_and_shm.sh"
+
 #exec systemd-inhibit \
 #  --why="Experiment running" \
 #  --mode=block \ 

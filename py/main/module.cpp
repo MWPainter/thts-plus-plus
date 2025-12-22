@@ -52,6 +52,7 @@
 #include <thread>
 
 #include <sys/sem.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <stdlib.h>
 
@@ -239,30 +240,39 @@ void shared_mem_test() {
 }
 
 void shared_mem_wrapper_test() {
-    throw runtime_error("shared mem wrapper tests need upstring for changes made in refactor");
-    // SharedMemWrapper smw(0,8*1024);
-    // pid_t pid = fork();
-    // if (pid == 0) {
-    //     smw.server_wait_for_rpc_call();
-    //     int rpc_id = smw.rpc_id;
-    //     int num_args = smw.num_args;
-    //     string arg1 = smw.args[0];
-    //     string arg2 = smw.args[1];
-    //     cout << "Recieved rpc call:" << endl << rpc_id << endl << num_args << endl << arg1 << endl << arg2 << endl;
-    //     smw.rpc_id = 0;
-    //     smw.num_args = 1;
-    //     smw.args[0] = "RPCRESULT";
-    //     smw.server_send_rpc_call_result();
-    //     exit(0);
-    // }
+    string thts_unique_filename = "/";
+    SharedMemWrapper smw(thts_unique_filename, 0, 8*1024);
+    pid_t pid = fork();
+    if (pid == 0) {
+        SharedMemWrapper smw_server(thts_unique_filename, 0, 8*1024, true);
+        smw_server.server_wait_for_rpc_call();
+        int rpc_id = smw_server.rpc_id;
+        size_t num_args = smw_server.strings->size();
+        string arg1 = smw_server.strings->at(0);
+        string arg2 = smw_server.strings->at(1);
+        cout << "Recieved rpc call:" << endl << rpc_id << endl << num_args << endl << arg1 << endl << arg2 << endl;
+        smw_server.rpc_id = 0;
+        smw_server.value_type = SMT_strings;
+        smw_server.strings = make_shared<vector<string>>();
+        smw_server.strings->push_back("RPCRESULT");
+        smw_server.server_send_rpc_call_result();
+        // Use _exit to avoid calling destructors - child has a copy of parent's smw
+        // which would incorrectly destroy the semaphore if exit() was used
+        _exit(0);
+    }
 
-    // smw.rpc_id = 3;
-    // smw.num_args = 2;
-    // smw.args[0] = "RPCARG1";
-    // smw.args[1] = "RPCARG2";
-    // smw.make_rpc_call();
+    smw.rpc_id = 3;
+    smw.value_type = SMT_strings;
+    smw.strings = make_shared<vector<string>>();
+    smw.strings->push_back("RPCARG1");
+    smw.strings->push_back("RPCARG2");
+    smw.make_rpc_call();
 
-    // cout << "Recieved rpc result:" << endl << smw.rpc_id << endl << smw.num_args << endl << smw.args[0] << endl;
+    cout << "Recieved rpc result:" << endl << smw.rpc_id << endl << smw.strings->size() << endl << smw.strings->at(0) << endl;
+
+    // Wait for child to finish
+    int status;
+    waitpid(pid, &status, 0);
 }
 
 void shared_mem_destroy_test() {
@@ -353,17 +363,6 @@ void py_thts_env_test(double alpha, bool use_python_env) {
         shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
         string thts_unique_filename = "/";
 
-        // py::module_ py_thts_env_module = py::module_::import("test_env"); 
-        // py::object py_thts_env = py_thts_env_module.attr("PyTestThtsEnv")(env_size, stay_prob);
-        // thts_env = make_shared<PyMultiprocessingThtsEnv>(pickle_wrapper, make_shared<py::object>(py_thts_env));
-
-        // py::module_ py_thts_env_module = py::module_::import("test_env"); 
-        // py::dict kw_args;
-        // kw_args["grid_size"] = to_string(env_size);
-        // kw_args["stay_prob"] = to_string(stay_prob);
-        // py::object py_thts_env = py_thts_env_module.attr("PyTestThtsEnv")(**kw_args);
-        // thts_env = make_shared<PyMultiprocessingThtsEnv>(pickle_wrapper, make_shared<py::object>(py_thts_env));
-
         py::dict kw_args;
         kw_args["grid_size"] = to_string(env_size);
         kw_args["stay_prob"] = to_string(stay_prob);
@@ -374,14 +373,11 @@ void py_thts_env_test(double alpha, bool use_python_env) {
     }
 
     // Make thts manager with the py env (same as c++ (use unit tests))
-    // But protect with GIL for any python ops in creating things
     shared_ptr<DentsManagerArgs> manager_args;
     shared_ptr<DentsManager> manager;
     shared_ptr<EstDNode> root_node;
     shared_ptr<ThtsPool> bts_pool;
     {
-        // py::gil_scoped_acquire acq;
-
         DentsManagerArgs args(thts_env);
         args.seed = 60415;
         args.max_depth = env_size * 4;
@@ -404,14 +400,11 @@ void py_thts_env_test(double alpha, bool use_python_env) {
     }
 
     // Run thts trials (same as c++)
-    // Needs to not have the gil, so threads can grab it any make interpreters
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
     bts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree (same as c++)
-    // Make sure have gil, because getting pretty print string using python objects
-    // py::gil_scoped_acquire acq;
     cout << "EST with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -419,27 +412,13 @@ void py_thts_env_test(double alpha, bool use_python_env) {
     } else {
         cout << endl;
     }
-    
-    // Keep on crashing after here
-    // TODO: sort out for python lib release, because need to not crash at least until Py_Finalize to use in Python code
-    // Annoying to run ipcrm -v -a all the time, so make sure thats not necessary by the time it crashes
 
-    // if (use_python_env) {
-    //     for (int i=0; i<num_threads; i++) {
-    //         PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(manager->thts_env(i));
-    //         py_mp_env.clear_unix_sem_and_shm();
-    //     }
-    // }
-
-    // Force tree destructors to be called (to clean up python objects with the gil)
-    // resetting smart pointers should refcount to zero and call destructor
-    // A bit annoying having to make everything a smart pointer to call destructors with gil, but mech
-    // py::gil_scoped_acquire acq;
-    // manager.reset();
-    // manager_args.reset();
-    // thts_env.reset();
-    // bts_pool.reset();
-    // root_node.reset();
+    // Force tree destructors to be called (to clean up python objects)
+    manager.reset();
+    manager_args.reset();
+    thts_env.reset();
+    bts_pool.reset();
+    root_node.reset();
 }
 
 void czt_test() {
@@ -468,27 +447,16 @@ void czt_test() {
     args->num_threads = num_threads;
     args->num_envs = num_threads; 
     shared_ptr<CztManager> manager = make_shared<CztManager>(*args);
- 
-    // // Setup python servers
-    // for (int i=0; i<args.num_envs; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
-    //     py_mp_env.start_python_server(i);
-    // }
 
-    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
-    // subinterpreters
+    // Run search and time
     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
     shared_ptr<CztDNode> root_node = make_shared<CztDNode>(manager, init_state, 0, 0);
-    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
     shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    // py::gil_scoped_release rel;
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree
-    // Make sure have gil again if using python objects
-    // py::gil_scoped_acquire acq;
     cout << "CZT with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -514,7 +482,6 @@ void czt_test() {
         manager,
         Vec(Eigen::ArrayXd::Zero(2)-walk_len),
         Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len));
-    // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
     cout << "CZT evaluations from MoMCEval." << endl;
@@ -524,17 +491,6 @@ void czt_test() {
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
     cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
-
-    // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
-    // for (int i=0; i<num_threads; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
-    //     py_mp_env.clear_unix_sem_and_shm();
-    // }
-    // manager.reset();
-    // manager_args.reset();
-    // thts_env.reset();
-    // thts_pool.reset();
-    // root_node.reset();
 }
 
 void czt_4d_test() {
@@ -563,27 +519,16 @@ void czt_4d_test() {
     args->num_threads = num_threads;
     args->num_envs = num_threads; 
     shared_ptr<CztManager> manager = make_shared<CztManager>(*args);
- 
-    // // Setup python servers
-    // for (int i=0; i<args.num_envs; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
-    //     py_mp_env.start_python_server(i);
-    // }
 
-    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
-    // subinterpreters
+    // Run search and time
     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
     shared_ptr<CztDNode> root_node = make_shared<CztDNode>(manager, init_state, 0, 0);
-    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
     shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    // py::gil_scoped_release rel;
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree
-    // Make sure have gil again if using python objects
-    // py::gil_scoped_acquire acq;
     cout << "CZT with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -609,7 +554,6 @@ void czt_4d_test() {
         manager,
         Vec(Eigen::ArrayXd::Zero(4)-walk_len),
         Vec(Eigen::ArrayXd::Ones(4)/(1.0-thts_env->get_gamma())));
-    // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
     cout << "CZT evaluations from MoMCEval." << endl;
@@ -619,17 +563,6 @@ void czt_4d_test() {
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
     cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
-
-    // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
-    // for (int i=0; i<num_threads; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
-    //     py_mp_env.clear_unix_sem_and_shm();
-    // }
-    // manager.reset();
-    // manager_args.reset();
-    // thts_env.reset();
-    // thts_pool.reset();
-    // root_node.reset();
 }
 
 void gym_env_test() {
@@ -649,7 +582,6 @@ void gym_env_test() {
         pickle_wrapper, thts_unique_filename, gym_env_id);
 
     // Make thts manager with the py env (same as c++ (use unit tests))
-    // But protect with GIL for any python ops in creating things
     DentsManagerArgs args(thts_env);
     args.seed = 60415;
     args.max_depth = 25;
@@ -669,13 +601,11 @@ void gym_env_test() {
     shared_ptr<ThtsPool> thts_pool = make_shared<ThtsPool>(manager, root_node, num_threads);
 
     // Run thts trials (same as c++)
-    // Needs to not have the gil, so threads can grab it any make interpreters
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree (same as c++)
-    // Make sure have gil, because getting pretty print string using python objects
     cout << "EST with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -684,21 +614,13 @@ void gym_env_test() {
         cout << endl;
     }
 
-    // Keep on crashing after here
-    // TODO: sort out for python lib release, because need to not crash at least until Py_Finalize to use in Python code
-    // Annoying to run ipcrm -v -a all the time, so make sure thats not necessary by the time it crashes
-    // for (int i=0; i<num_threads; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(manager->thts_env(i));
-    //     py_mp_env.clear_unix_sem_and_shm();
-    // }
-
     // Force tree destructors to be called (to clean up python objects with the gil)
     // resetting smart pointers should refcount to zero and call destructor
     // A bit annoying having to make everything a smart pointer to call destructors with gil, but mech
-    // manager.reset();
-    // thts_env.reset();
-    // thts_pool.reset();
-    // root_node.reset();
+    manager.reset();
+    thts_env.reset();
+    thts_pool.reset();
+    root_node.reset();
 }
 
 void mo_gym_env_test(string thts_unique_filename="/") {
@@ -735,8 +657,7 @@ void mo_gym_env_test(string thts_unique_filename="/") {
         py_mp_env.start_python_server(i);
     }
 
-    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
-    // subinterpreters
+    // Run search and time
     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
     shared_ptr<CztDNode> root_node = make_shared<CztDNode>(manager, init_state, 0, 0);
     shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
@@ -746,7 +667,6 @@ void mo_gym_env_test(string thts_unique_filename="/") {
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree
-    // Make sure have gil again if using python objects
     cout << "CZT with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -788,16 +708,12 @@ void mo_gym_env_test(string thts_unique_filename="/") {
     cout << "Mean MO normalised ctx return." << endl;
     cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
 
-    // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
-    // for (int i=0; i<num_threads; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(manager->thts_env(i));
-    //     py_mp_env.clear_unix_sem_and_shm();
-    // }
-    // manager.reset();
-    // args.reset();
-    // thts_env.reset();
-    // thts_pool.reset();
-    // root_node.reset();
+    // Trying to make python embedding exit gracefully 
+    manager.reset();
+    args.reset();
+    thts_env.reset();
+    thts_pool.reset();
+    root_node.reset();
 }
 
 void eigen_svd_test() {
@@ -857,28 +773,17 @@ void sm_bts_test() {
     args->num_threads = num_threads;
     args->num_envs = num_threads; 
     args->simplex_map_splitting_option = SPLIT_triangulation;
-    shared_ptr<SmBtsManager> manager = make_shared<SmBtsManager>(*args);
- 
-    // // Setup python servers
-    // for (int i=0; i<args.num_envs; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
-    //     py_mp_env.start_python_server(i);
-    // }
+    shared_ptr<SmBtsManager> manager = make_shared<SmBtsManager>(*args);    
 
-    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
-    // subinterpreters
+    // Run search and time
     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
     shared_ptr<SmBtsDNode> root_node = make_shared<SmBtsDNode>(manager, init_state, 0, 0);
-    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
     shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    // py::gil_scoped_release rel;
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree
-    // Make sure have gil again if using python objects
-    // py::gil_scoped_acquire acq;
     cout << "SM-BTS with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -905,7 +810,6 @@ void sm_bts_test() {
         manager,
         Vec(Eigen::ArrayXd::Zero(2)-walk_len),
         Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len));
-    // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
     cout << "SM-BTS evaluations from MoMCEval." << endl;
@@ -915,17 +819,6 @@ void sm_bts_test() {
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
     cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
-
-    // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
-    // for (int i=0; i<num_threads; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
-    //     py_mp_env.clear_unix_sem_and_shm();
-    // }
-    // manager.reset();
-    // manager_args.reset();
-    // thts_env.reset();
-    // thts_pool.reset();
-    // root_node.reset();
 }
 
 void sm_bts_4d_test() {
@@ -952,27 +845,16 @@ void sm_bts_4d_test() {
     args->simplex_node_max_depth = 3;
     args->simplex_map_splitting_option = SPLIT_triangulation;
     shared_ptr<SmBtsManager> manager = make_shared<SmBtsManager>(*args);
- 
-    // // Setup python servers
-    // for (int i=0; i<args.num_envs; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
-    //     py_mp_env.start_python_server(i);
-    // }
 
-    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
-    // subinterpreters
+    // Run search and time
     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
     shared_ptr<SmBtsDNode> root_node = make_shared<SmBtsDNode>(manager, init_state, 0, 0);
-    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
     shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    // py::gil_scoped_release rel;
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree
-    // Make sure have gil again if using python objects
-    // py::gil_scoped_acquire acq;
     cout << "SM-BTS with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -983,12 +865,6 @@ void sm_bts_4d_test() {
     // Pretty ball lists
     cout << "Printing SM-BTS simplex map at root node ball lists for first decision." << endl;
     cout << root_node->get_simplex_map_pretty_print_string() << endl << endl;
-    // ThtsContext ctx;
-    // shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
-    // for (shared_ptr<const Action> action : *actions) {
-    //     cout << "Simplex map ball list for action " << *action << ":" << endl;
-    //     cout << root_node->get_child_node(action)->get_simplex_map_pretty_print_string() << endl << endl;
-    // }
     
     // Test out Mo MC Eval
     int num_eval_rollouts = 250;
@@ -1009,17 +885,6 @@ void sm_bts_4d_test() {
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
     cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
-
-    // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
-    // for (int i=0; i<num_threads; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
-    //     py_mp_env.clear_unix_sem_and_shm();
-    // }
-    // manager.reset();
-    // manager_args.reset();
-    // thts_env.reset();
-    // thts_pool.reset();
-    // root_node.reset();
 }
 
 void sm_dents_test() {
@@ -1044,27 +909,16 @@ void sm_dents_test() {
     args->num_threads = num_threads;
     args->num_envs = num_threads; 
     shared_ptr<SmDentsManager> manager = make_shared<SmDentsManager>(*args);
- 
-    // // Setup python servers
-    // for (int i=0; i<args.num_envs; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
-    //     py_mp_env.start_python_server(i);
-    // }
 
-    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
-    // subinterpreters
+    // Run search and time
     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
     shared_ptr<SmDentsDNode> root_node = make_shared<SmDentsDNode>(manager, init_state, 0, 0);
-    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
     shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    // py::gil_scoped_release rel;
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree
-    // Make sure have gil again if using python objects
-    // py::gil_scoped_acquire acq;
     cout << "SM-DENTS with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -1101,17 +955,6 @@ void sm_dents_test() {
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
     cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
-
-    // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
-    // for (int i=0; i<num_threads; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
-    //     py_mp_env.clear_unix_sem_and_shm();
-    // }
-    // manager.reset();
-    // manager_args.reset();
-    // thts_env.reset();
-    // thts_pool.reset();
-    // root_node.reset();
 }
 
 void sm_bts_bin_tree_test() {
@@ -1136,27 +979,16 @@ void sm_bts_bin_tree_test() {
     args->num_threads = num_threads;
     args->num_envs = num_threads; 
     shared_ptr<SmBtsManager> manager = make_shared<SmBtsManager>(*args);
- 
-    // // Setup python servers
-    // for (int i=0; i<args.num_envs; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
-    //     py_mp_env.start_python_server(i);
-    // }
 
-    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
-    // subinterpreters
+    // Run search and time
     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
     shared_ptr<SmBtsDNode> root_node = make_shared<SmBtsDNode>(manager, init_state, 0, 0);
-    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
     shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    // py::gil_scoped_release rel;
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree
-    // Make sure have gil again if using python objects
-    // py::gil_scoped_acquire acq;
     cout << "SM-BTS with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -1193,17 +1025,6 @@ void sm_bts_bin_tree_test() {
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
     cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
-
-    // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
-    // for (int i=0; i<num_threads; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
-    //     py_mp_env.clear_unix_sem_and_shm();
-    // }
-    // manager.reset();
-    // manager_args.reset();
-    // thts_env.reset();
-    // thts_pool.reset();
-    // root_node.reset();
 }
 
 void sm_bts_bin_tree_4d_test() {
@@ -1229,43 +1050,22 @@ void sm_bts_bin_tree_4d_test() {
     args->num_envs = num_threads; 
     args->simplex_node_max_depth = 40;
     shared_ptr<SmBtsManager> manager = make_shared<SmBtsManager>(*args);
- 
-    // // Setup python servers
-    // for (int i=0; i<args.num_envs; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
-    //     py_mp_env.start_python_server(i);
-    // }
 
-    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
-    // subinterpreters
+    // Run search and time
     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
     shared_ptr<SmBtsDNode> root_node = make_shared<SmBtsDNode>(manager, init_state, 0, 0);
-    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
     shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    // py::gil_scoped_release rel;
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree
-    // Make sure have gil again if using python objects
-    // py::gil_scoped_acquire acq;
     cout << "SM-BTS with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
         cout << root_node->get_pretty_print_string(print_tree_depth);
     } 
     cout << endl << endl; 
-
-    // // Pretty ball lists
-    // cout << "Printing SM-BTS simplex map at root node ball lists for first decision." << endl;
-    // cout << root_node->get_simplex_map_pretty_print_string() << endl << endl;
-    // ThtsContext ctx;
-    // shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
-    // for (shared_ptr<const Action> action : *actions) {
-    //     cout << "Simplex map ball list for action " << *action << ":" << endl;
-    //     cout << root_node->get_child_node(action)->get_simplex_map_pretty_print_string() << endl << endl;
-    // }
     
     // Test out Mo MC Eval
     int num_eval_rollouts = 250;
@@ -1286,17 +1086,6 @@ void sm_bts_bin_tree_4d_test() {
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
     cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
-
-    // // Trying to make python embedding exit gracefully stuff (see py_thts_env_test to understand)
-    // for (int i=0; i<num_threads; i++) {
-    //     PyMultiprocessingThtsEnv& py_mp_env = (PyMultiprocessingThtsEnv&) *manager->thts_env(i);
-    //     py_mp_env.clear_unix_sem_and_shm();
-    // }
-    // manager.reset();
-    // manager_args.reset();
-    // thts_env.reset();
-    // thts_pool.reset();
-    // root_node.reset();
 }
 
 void chmcts_test() {
@@ -1326,20 +1115,15 @@ void chmcts_test() {
     args->num_envs = num_threads; 
     shared_ptr<ChCztManager> manager = make_shared<ChCztManager>(*args);
 
-    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
-    // subinterpreters
+    // Run search and time
     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
     shared_ptr<ChCztDNode> root_node = make_shared<ChCztDNode>(manager, init_state, 0, 0);
-    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
     shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    // py::gil_scoped_release rel;
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree
-    // Make sure have gil again if using python objects
-    // py::gil_scoped_acquire acq;
     cout << "CHMCTS with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -1368,7 +1152,6 @@ void chmcts_test() {
         manager,
         Vec(Eigen::ArrayXd::Zero(2)-walk_len),
         Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len));
-    // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
     cout << "CHMCTS evaluations from MoMCEval." << endl;
@@ -1407,20 +1190,15 @@ void chmcts_4d_test() {
     args->num_envs = num_threads; 
     shared_ptr<ChCztManager> manager = make_shared<ChCztManager>(*args);
 
-    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
-    // subinterpreters
+    // Run search and time
     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
     shared_ptr<ChCztDNode> root_node = make_shared<ChCztDNode>(manager, init_state, 0, 0);
-    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
     shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    // py::gil_scoped_release rel;
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree
-    // Make sure have gil again if using python objects
-    // py::gil_scoped_acquire acq;
     cout << "CHMCTS with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -1449,7 +1227,6 @@ void chmcts_4d_test() {
         manager,
         Vec(Eigen::ArrayXd::Zero(4)-walk_len),
         Vec(Eigen::ArrayXd::Ones(4)/(1.0-thts_env->get_gamma())));
-    // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
     cout << "CHMCTS evaluations from MoMCEval." << endl;
@@ -1816,20 +1593,15 @@ void ch_bts_test() {
     args->num_envs = num_threads; 
     shared_ptr<ChBtsManager> manager = make_shared<ChBtsManager>(*args);
 
-    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
-    // subinterpreters
+    // Run search and time
     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
     shared_ptr<ChBtsDNode> root_node = make_shared<ChBtsDNode>(manager, init_state, 0, 0);
-    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
     shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    // py::gil_scoped_release rel;
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree
-    // Make sure have gil again if using python objects
-    // py::gil_scoped_acquire acq;
     cout << "CH-BTS with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -1899,16 +1671,12 @@ void ch_uct_test() {
     // subinterpreters
     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
     shared_ptr<ChUctDNode> root_node = make_shared<ChUctDNode>(manager, init_state, 0, 0);
-    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
     shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    // py::gil_scoped_release rel;
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree
-    // Make sure have gil again if using python objects
-    // py::gil_scoped_acquire acq;
     cout << "CH-UCT with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -1975,20 +1743,15 @@ void ch_hvuct_test() {
     args->num_envs = num_threads; 
     shared_ptr<ChHvUctManager> manager = make_shared<ChHvUctManager>(*args);
 
-    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
-    // subinterpreters
+    // Run search and time
     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
     shared_ptr<ChHvUctDNode> root_node = make_shared<ChHvUctDNode>(manager, init_state, 0, 0);
-    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
     shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    // py::gil_scoped_release rel;
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree
-    // Make sure have gil again if using python objects
-    // py::gil_scoped_acquire acq;
     cout << "CH-HvUCT with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -2017,7 +1780,6 @@ void ch_hvuct_test() {
         manager,
         Vec(Eigen::ArrayXd::Zero(2)-walk_len),
         Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len));
-    // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
     cout << "CH-HvUCT evaluations from MoMCEval." << endl;
@@ -2039,7 +1801,7 @@ void ch_pareto_uct_test() {
 
     int num_trials = 10000;
     int print_tree_depth = 2;
-    int num_threads = 1;
+    int num_threads = 4;
 
     // Setup env 
     shared_ptr<thts::test::TestMoThtsEnv> thts_env = make_shared<thts::test::TestMoThtsEnv>(walk_len, stay_prob);
@@ -2054,20 +1816,15 @@ void ch_pareto_uct_test() {
     args->num_envs = num_threads; 
     shared_ptr<ChParetoUctManager> manager = make_shared<ChParetoUctManager>(*args);
 
-    // Run search and time, remembering to unlock the python gil if we have one, so subthreads can grab GIL to make 
-    // subinterpreters
+    // Run search and time
     shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
     shared_ptr<ChParetoUctDNode> root_node = make_shared<ChParetoUctDNode>(manager, init_state, 0, 0);
-    // shared_ptr<ThtsPool> thts_pool = make_shared<PyThtsPool>(manager, root_node, num_threads);
     shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
     chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    // py::gil_scoped_release rel;
     thts_pool->run_trials(num_trials);
     std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
 
     // Print out a tree
-    // Make sure have gil again if using python objects
-    // py::gil_scoped_acquire acq;
     cout << "CH-ParetoUCT with " << num_threads << " threads (took " << dur.count() << ")";
     if (print_tree_depth > 0) {
         cout << " and looks like:\n";
@@ -2096,7 +1853,6 @@ void ch_pareto_uct_test() {
         manager,
         Vec(Eigen::ArrayXd::Zero(2)-walk_len),
         Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len));
-    // py::gil_scoped_release rel2;
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
     cout << "CH-ParetoUCT evaluations from MoMCEval." << endl;
@@ -2118,7 +1874,7 @@ int main(int argc, char *argv[]) {
     // pickle_test();
     // sem_test();
     // pickle_multiproc_test();
-    // pickle_subinterpret_test(); // commented out now
+    // // pickle_subinterpret_test(); // old
     // shared_mem_test();
     // shared_mem_wrapper_test();
     // shared_mem_destroy_test();
@@ -2127,32 +1883,32 @@ int main(int argc, char *argv[]) {
     /**
      * Testing py thts env
     */
-    // bool bts_alpha = 1.0;
-    // bool use_python_env = true;
-    // py_thts_env_test(bts_alpha, use_python_env); 
+    bool bts_alpha = 1.0;
+    bool use_python_env = true;
+    py_thts_env_test(bts_alpha, use_python_env); 
 
     /**
      * Testing czt
     */
-    // czt_test();
-    // czt_4d_test();
+    czt_test();
+    czt_4d_test();
 
     /**
      * Testing python gym envs 
      * TODO: this currently fails, because gym envs requires algorithms to run in a model free mode, but we only have 
      *      single objective algorithms implemented in a planning mode
     */
-    // gym_env_test();
+    gym_env_test();
 
     /**
      * Testing python mo gym envs
     */
-    // mo_gym_env_test();
+    mo_gym_env_test();
 
     /**
      * Testing Eigen SVD
     */
-    // eigen_svd_test();
+    eigen_svd_test();
 
     /**
      * Test simplex map
@@ -2167,7 +1923,7 @@ int main(int argc, char *argv[]) {
      * Testing chmcts
     */
     chmcts_test();
-    // chmcts_4d_test();
+    chmcts_4d_test();
 
     /**
      * Debugging Convex hull linear programs
@@ -2181,7 +1937,7 @@ int main(int argc, char *argv[]) {
      * I tried running with ./pyex /usr and ./pyex /bin simultaneously
      * And tested trying to run a second ./pyex /usr gets a runtime error
     */
-    // mo_gym_env_test(argv[1]);
+    mo_gym_env_test();
 
     /**
      * Debugging simplex maps on fruit tree
