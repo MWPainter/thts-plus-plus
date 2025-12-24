@@ -1,6 +1,3 @@
-# Tmp txt file
-tmp.txt
-
 # Logs output
 aux_eval_logs/*
 aux_hpopt_summaries/*
