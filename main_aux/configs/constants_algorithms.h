@@ -63,7 +63,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_
     {ALG_ID_MENTS,
         {
             ALG_PARAM_ID_INIT_TEMP,
-            ALG_PARAM_ID_TEMP_DECAY_RATE,
+            // ALG_PARAM_ID_TEMP_DECAY_RATE,
             ALG_PARAM_ID_EPSILON,
             ALG_PARAM_ID_DEFAULT_Q_VALUE,
         },
@@ -71,7 +71,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_
     {ALG_ID_RENTS,
         {
             ALG_PARAM_ID_INIT_TEMP,
-            ALG_PARAM_ID_TEMP_DECAY_RATE,
+            // ALG_PARAM_ID_TEMP_DECAY_RATE,
             ALG_PARAM_ID_EPSILON,
             ALG_PARAM_ID_DEFAULT_Q_VALUE,
         },
@@ -79,7 +79,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_
     {ALG_ID_TENTS,
         {
             ALG_PARAM_ID_INIT_TEMP,
-            ALG_PARAM_ID_TEMP_DECAY_RATE,
+            // ALG_PARAM_ID_TEMP_DECAY_RATE,
             ALG_PARAM_ID_EPSILON,
             ALG_PARAM_ID_DEFAULT_Q_VALUE,
         },

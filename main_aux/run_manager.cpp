@@ -314,7 +314,7 @@ namespace thts {
         else if (alg_id == ALG_ID_MENTS || alg_id == ALG_ID_RENTS || alg_id == ALG_ID_TENTS)
         {
             MentsManagerArgs manager_args(env);
-            manager_args.temp_schedule_ptr = make_shared<SqrtSchedule>(get_init_temp(), get_temp_decay_rate());
+            manager_args.temp_schedule_ptr = make_shared<ConstSchedule>(get_init_temp());
             manager_args.epsilon = get_epsilon();
             manager_args.default_q_value = get_default_q_value();
             _add_thts_manager_params_to_args(manager_args);

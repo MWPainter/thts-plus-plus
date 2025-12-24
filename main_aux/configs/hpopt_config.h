@@ -24,7 +24,7 @@ static const std::vector<std::vector<HpoptConfigMap>> ALL_HPOPT_CONFIGS =
     HPOPT_CONFIG_001,
     HPOPT_CONFIG_300,
     HPOPT_CONFIG_310,
-    HPOPT_CONFIG_320,
+    // HPOPT_CONFIG_320,
     HPOPT_CONFIG_330,
     HPOPT_CONFIG_340,
     HPOPT_CONFIG_350,

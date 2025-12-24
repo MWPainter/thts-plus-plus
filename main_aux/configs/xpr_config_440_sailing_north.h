@@ -43,7 +43,7 @@ static const std::vector<ConfigMap> CONFIG_440 =
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
         {ALG_PARAM_ID_INIT_TEMP,        6.24637},
-        {ALG_PARAM_ID_TEMP_DECAY_RATE,  16.8901},
+        // {ALG_PARAM_ID_TEMP_DECAY_RATE,  16.8901},
         {ALG_PARAM_ID_EPSILON,          0.176438},
         {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -122.977},
     },
@@ -51,7 +51,7 @@ static const std::vector<ConfigMap> CONFIG_440 =
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
         {ALG_PARAM_ID_INIT_TEMP,        3.47742},
-        {ALG_PARAM_ID_TEMP_DECAY_RATE,  12.0975},
+        // {ALG_PARAM_ID_TEMP_DECAY_RATE,  12.0975},
         {ALG_PARAM_ID_EPSILON,          0.252338},
         {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -120.505},
     },
@@ -59,7 +59,7 @@ static const std::vector<ConfigMap> CONFIG_440 =
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
         {ALG_PARAM_ID_INIT_TEMP,        0.0848362},
-        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0164081},
+        // {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0164081},
         {ALG_PARAM_ID_EPSILON,          0.348206},        
         {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -148.039},
 
