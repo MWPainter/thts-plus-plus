@@ -3,12 +3,14 @@
 #include "helper_templates.h"
 #include "mo/mo_helper.h"
 
+#include <cmath>
 #include <limits>
 #include <sstream>
 
 using namespace std; 
 
 namespace thts {
+    
     CztDNode::CztDNode(
         shared_ptr<CztManager> thts_manager,
         shared_ptr<const State> state,
@@ -38,6 +40,24 @@ namespace thts {
         // num_visits += 1;
     } 
 
+    /**
+     * N term for CZT (estimate for total number of trials (that will be run in total))
+     * Either the number of visits to this node, or, min_k 2^k s.t. num_visits < 2^k
+     */
+    double CztDNode::get_N_term(MoThtsContext& ctx) const
+    {
+        CztManager& manager = (CztManager&) *thts_manager;
+        int num_visits = get_num_visits(ctx);
+
+        if (!manager.use_doubling_N_term) {
+            return static_cast<double>(num_visits);
+        }
+
+        int k = (num_visits > 0) ? static_cast<int>(ceil(log2(num_visits + 1))) : 0;
+        k = max(k, manager.min_log2_N);
+        return static_cast<double>(1 << k);  // 2^k
+    }
+
     void CztDNode::fill_cz_values_and_ball_ptrs(
         ActionVector& actions,
         unordered_map<shared_ptr<const Action>,double>& cz_values, 
@@ -55,7 +75,7 @@ namespace thts {
             // Compute the confidence interval of a ball with radius 1 and no visits
             if (!has_child_node_itfc(action)) {
                 double unit_ball_radius = 1.0;
-                action_cz_value = 2.0 * unit_ball_radius + manager.bias * sqrt(log(get_num_visits(ctx)+3));
+                action_cz_value = 2.0 * unit_ball_radius + manager.bias * sqrt(log(get_N_term(ctx)+3));
                 cz_values[action] = action_cz_value;
                 cz_balls[action] = nullptr;
 
@@ -72,7 +92,7 @@ namespace thts {
 
                     ball_cz_pre_index_value += opp_coeff * ball.get_scalarised_avg_return_or_value(ctx.context_weight.vec);
                     ball_cz_pre_index_value += 2.0 * ball.radius();
-                    ball_cz_pre_index_value += manager.bias * ball.confidence_radius(get_num_visits(ctx));
+                    ball_cz_pre_index_value += manager.bias * ball.confidence_radius(get_N_term(ctx));
                     cz_pre_indices[ball_ptr] = ball_cz_pre_index_value;
                 }
 

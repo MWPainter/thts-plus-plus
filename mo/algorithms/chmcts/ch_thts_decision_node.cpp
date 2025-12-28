@@ -68,10 +68,17 @@ namespace thts {
         increment_and_update_backup_count();
 
         convex_hull = ConvexHull();
-        for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : children) {
+        for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : children) 
+        {
             ChThtsCNode& ch_child = (ChThtsCNode&) *child_pair.second;
             convex_hull |= ch_child.convex_hull;
         }  
+
+        // if leaf node, add heuristic value to convex hull
+        if (convex_hull.size() == 0) 
+        {
+            convex_hull = ConvexHull(mo_heuristic_value);
+        }
 
         // remember to incr num_backups
         num_backups++;

@@ -135,6 +135,9 @@ namespace thts {
              * N.B. Marked virtual so that these functions can be mocked easily.
              */
             virtual int get_rand_int(int min_included, int max_excluded) {
+                if (min_included >= max_excluded) {
+                    throw std::invalid_argument("min_included must be less than max_excluded");
+                }
                 std::lock_guard<std::mutex> lg(rng_lock);
                 int len = int_distr(int_gen) % (max_excluded - min_included);
                 return min_included + len;

@@ -12,7 +12,7 @@ namespace thts {
         static const bool adaptive_bias_default=false;
         static const bool normalize_Q_values_in_selection_default=true;
         static constexpr double bias_default=1.0;
-        static const int heuristic_psuedo_trials_default=0;
+        static const int heuristic_psuedo_trials_default=1;
         static const bool recommend_most_visited_default=true;
         static constexpr double epsilon_exploration_default=0.0;
 

@@ -16,16 +16,19 @@ namespace thts {
      */
     struct MoThtsManagerArgs : public ThtsManagerArgs {
         static const int reward_dim_default = -1;
+        static const int heuristic_psuedo_trials_default=1;
         static const bool use_vector_visit_counts_default = false;
         
         int reward_dim;
         MoHeuristicFnPtr mo_heuristic_fn;
+        int heuristic_psuedo_trials;
         bool use_vector_visit_counts;
 
         MoThtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env) :
             ThtsManagerArgs(std::static_pointer_cast<ThtsEnv>(thts_env)),
             reward_dim(MoThtsManagerArgs::reward_dim_default),
             mo_heuristic_fn(nullptr),
+            heuristic_psuedo_trials(heuristic_psuedo_trials_default),
             use_vector_visit_counts(MoThtsManagerArgs::use_vector_visit_counts_default) {}
 
         virtual ~MoThtsManagerArgs() = default;
@@ -44,6 +47,7 @@ namespace thts {
         public:
             int reward_dim;
             MoHeuristicFnPtr mo_heuristic_fn;
+            int heuristic_psuedo_trials;
             bool use_vector_visit_counts;
 
             /**

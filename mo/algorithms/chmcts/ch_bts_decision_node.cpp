@@ -64,7 +64,6 @@ namespace thts {
             }
         }
 
-
         // compute (numerical stability) normalisation term
         numerical_stability_term = numeric_limits<double>::lowest();
         for (pair<shared_ptr<const Action>,double> pair : q_values) {

@@ -48,6 +48,11 @@ namespace thts {
             virtual std::string get_pretty_print_val() const override;
 
         private:
+            // N term for CZT (estimate for total number of trials (that will be run in total))
+            // Either the number of visits to this node, or, min_k 2^k s.t. num_visits < 2^k
+            double get_N_term(MoThtsContext& ctx) const;
+
+            // Fills "CZ values" used to select action
             void fill_cz_values_and_ball_ptrs(
                 ActionVector& actions,
                 std::unordered_map<std::shared_ptr<const Action>,double>& cz_values, 

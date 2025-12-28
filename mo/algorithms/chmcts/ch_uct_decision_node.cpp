@@ -56,6 +56,11 @@ namespace thts {
                 if (candidate_bias > bias) bias = candidate_bias;
             }
         }
+        
+        // Optionally normalise Q-values
+        if (manager.normalize_Q_values_in_selection) {
+            thts::helper::linearly_normalise_values<shared_ptr<const Action>>(ucb_q_values);
+        }
 
         // Compute ucb values
         shared_ptr<ActionVector> actions = env.get_valid_actions_itfc(state,ctx);

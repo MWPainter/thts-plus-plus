@@ -67,9 +67,14 @@ namespace thts {
         }
 
         // convex pareto_ch to a list of Vec objects, and sample from it randomly
+        // small chance in multi-threaded environments that the convex hull is empty, so we sample action randomly from all actions in that case
         vector<Vec> pareto_ch_points;
         for (const Vec& v : pareto_ch.ch_points) {
             pareto_ch_points.push_back(v);
+        }
+        if (pareto_ch_points.size() == 0) {
+            int act_indx = manager.get_rand_int(0,env_actions->size());
+            return env_actions->at(act_indx);
         }
         int vec_indx = manager.get_rand_int(0,pareto_ch_points.size());
         Vec random_ch_point = pareto_ch_points[vec_indx];
