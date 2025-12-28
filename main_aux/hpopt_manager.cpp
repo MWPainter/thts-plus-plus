@@ -384,6 +384,19 @@ namespace thts {
             cout << "Run#=" << repeats_run 
                 << ", mean_eval=" << mean_eval 
                 << ", std_mean_eval=" << std_mean_eval << " >? " << estimate_confidence_threshold << endl;
+
+            // Early stopping: stop run more than min repeats and cleanly worse than best 
+            // i.e. if confidence intervals don't overlap (1.3 std ≈ 90% CI, so <1% chance of error)
+            constexpr double early_stop_z = 1.3;
+            if (repeats_run >= min_repeats && 
+                mean_eval + early_stop_z * std_mean_eval < best_mean_eval - early_stop_z * best_std_mean_eval)
+            {
+                cout << "Early stopping: " << mean_eval << " + " << early_stop_z << "*" << std_mean_eval 
+                    << " = " << (mean_eval + early_stop_z * std_mean_eval) 
+                    << " < " << (best_mean_eval - early_stop_z * best_std_mean_eval)
+                    << " = " << best_mean_eval << " - " << early_stop_z << "*" << best_std_mean_eval << endl;
+                break;
+            }
         }
 
         // Update if best eval so far
