@@ -385,7 +385,7 @@ namespace thts {
                 << ", mean_eval=" << mean_eval 
                 << ", std_mean_eval=" << std_mean_eval << " >? " << estimate_confidence_threshold << endl;
 
-            // Early stopping: stop run more than min repeats and cleanly worse than best 
+            // Early stopping: stop run more than min repeats and clearly worse than best 
             // i.e. if confidence intervals don't overlap (1.65 std ≈ 95% CI, so <0.1% chance of error)
             constexpr double early_stop_z = 1.65;
             if (repeats_run >= min_repeats && 
