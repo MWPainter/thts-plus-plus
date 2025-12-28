@@ -29,22 +29,6 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_310 =
         {HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES,     10},
         {HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ,          20},
     },
-    // uct params
-    {
-        {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
-        {ALG_PARAM_ID_BIAS, std::make_pair(1.0e-4,  1.0e4)},
-    },
-    // max uct params
-    {
-        {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_BIAS, std::make_pair(1.0e-4,  1.0e4)},
-    },
-    // hmcts params
-    {
-        {XPR_OR_ALG_ID_TAG,         ALG_ID_HMCTS},
-        {ALG_PARAM_ID_BIAS,         std::make_pair(1.0e-4,  1.0e4)},
-        {ALG_PARAM_ID_UCT_BUDGET,   std::make_pair(1.0,     5000.0)},
-    },
     // ments params
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
