@@ -6,7 +6,7 @@
 #include "main_aux/configs/constants_experiments.h"
 #include "main_aux/configs/constants_hpopt.h"
 
-static const std::vector<HpoptConfigMap> HPOPT_CONFIG_300 =
+static const std::vector<HpoptConfigMap> HPOPT_CONFIG_301 =
 {
     // xpr params
     {
