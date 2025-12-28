@@ -2,6 +2,7 @@
 
 make clean && make &&
 ./run_memory_limited 8G ./auxexpr opt 300 && 
+./run_memory_limited 8G ./auxexpr opt 301 && 
 ./run_memory_limited 8G ./auxexpr opt 310 && 
 ./run_memory_limited 8G ./auxexpr opt 330 && 
 ./run_memory_limited 8G ./auxexpr opt 340 && 
