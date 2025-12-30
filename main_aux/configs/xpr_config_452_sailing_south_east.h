@@ -19,67 +19,67 @@ static const std::vector<ConfigMap> CONFIG_452 =
         {XPR_PARAM_ID_TERMINATION_BOUND,        250000},
         {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    25},
         {XPR_PARAM_ID_SEARCH_THREADS,           16},
-        {XPR_PARAM_ID_EVAL_DELTA,               500},
-        {XPR_PARAM_ID_EVAL_ROLLOUTS,            1024},
+        {XPR_PARAM_ID_EVAL_DELTA,               1000},
+        {XPR_PARAM_ID_EVAL_ROLLOUTS,            512},
         {XPR_PARAM_ID_EVAL_THREADS,             16},
     },
-    // uct params - -222.146
+    // uct params - -226.204
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
-        {ALG_PARAM_ID_BIAS, 0.096123},
+        {ALG_PARAM_ID_BIAS, 0.0883178},
     },
-    // max uct params: -221.204
+    // max uct params: -224.499
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_BIAS, 0.373008},
+        {ALG_PARAM_ID_BIAS, 0.389263},
     },
-    // hmcts params: -221.563
+    // hmcts params: -225.882
     {
         {XPR_OR_ALG_ID_TAG,         ALG_ID_HMCTS},
-        {ALG_PARAM_ID_BIAS,         0.0926668},
-        {ALG_PARAM_ID_UCT_BUDGET,   6},
+        {ALG_PARAM_ID_BIAS,         0.0967555},
+        {ALG_PARAM_ID_UCT_BUDGET,   9},
     },
-    // ments params: -220.449
+    // ments params: -226.093
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
-        {ALG_PARAM_ID_INIT_TEMP,        6.24637},
+        {ALG_PARAM_ID_INIT_TEMP,        0.0473387},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  16.8901},
-        {ALG_PARAM_ID_EPSILON,          0.176438},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -122.977},
+        {ALG_PARAM_ID_EPSILON,          0.263028},
+        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -90.53},
     },
-    // rents params: -219.884
+    // rents params: -227.238
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
-        {ALG_PARAM_ID_INIT_TEMP,        3.47742},
+        {ALG_PARAM_ID_INIT_TEMP,        0.0475893},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  12.0975},
-        {ALG_PARAM_ID_EPSILON,          0.252338},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -120.505},
+        {ALG_PARAM_ID_EPSILON,          0.999743},
+        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -89.5957},
     },
-    // tents params: 0.823497
+    // tents params: -226.635
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
-        {ALG_PARAM_ID_INIT_TEMP,        0.0848362},
+        {ALG_PARAM_ID_INIT_TEMP,        0.10757},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0164081},
-        {ALG_PARAM_ID_EPSILON,          0.348206},        
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -148.039},
+        {ALG_PARAM_ID_EPSILON,          1.0},        
+        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -99.994},
 
     },
-    // bts params: -221.573
+    // bts params: -224.742
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_BTS},
-        {ALG_PARAM_ID_INIT_TEMP,        1.56971},
-        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.413781},
-        {ALG_PARAM_ID_EPSILON,          0.112603},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -0.0211122},
+        {ALG_PARAM_ID_INIT_TEMP,        0.2646},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.144703},
+        {ALG_PARAM_ID_EPSILON,          0.162603},
+        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -42.7671},
     },
-    // dents params: -221.499
+    // dents params: -225.263
     {
         {XPR_OR_ALG_ID_TAG,                     ALG_ID_DENTS},
-        {ALG_PARAM_ID_INIT_TEMP,                253.808},
-        {ALG_PARAM_ID_TEMP_DECAY_RATE,          9996.88},
-        {ALG_PARAM_ID_EPSILON,                  0.000746498},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,          -173.041},
-        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.000100159},
+        {ALG_PARAM_ID_INIT_TEMP,                0.188999},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,          0.296287},
+        {ALG_PARAM_ID_EPSILON,                  0.0746498},
+        {ALG_PARAM_ID_DEFAULT_Q_VALUE,          -0.0274888},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.000100453},
         {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    1.00086},
     },
 };

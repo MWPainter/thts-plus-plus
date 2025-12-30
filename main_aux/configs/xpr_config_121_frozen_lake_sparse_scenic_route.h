@@ -19,8 +19,8 @@ static const std::vector<ConfigMap> CONFIG_121 =
         {XPR_PARAM_ID_TERMINATION_BOUND,        250000},
         {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    25},
         {XPR_PARAM_ID_SEARCH_THREADS,           16},
-        {XPR_PARAM_ID_EVAL_DELTA,               500},
-        {XPR_PARAM_ID_EVAL_ROLLOUTS,            1024},
+        {XPR_PARAM_ID_EVAL_DELTA,               2500},
+        {XPR_PARAM_ID_EVAL_ROLLOUTS,            256},
         {XPR_PARAM_ID_EVAL_THREADS,             16},
     },
     // range of ments params

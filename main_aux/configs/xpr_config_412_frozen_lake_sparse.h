@@ -19,19 +19,19 @@ static const std::vector<ConfigMap> CONFIG_412 =
         {XPR_PARAM_ID_TERMINATION_BOUND,        250000},
         {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    25},
         {XPR_PARAM_ID_SEARCH_THREADS,           16},
-        {XPR_PARAM_ID_EVAL_DELTA,               500},
-        {XPR_PARAM_ID_EVAL_ROLLOUTS,            1024},
+        {XPR_PARAM_ID_EVAL_DELTA,               1000},
+        {XPR_PARAM_ID_EVAL_ROLLOUTS,            512},
         {XPR_PARAM_ID_EVAL_THREADS,             16},
     },
-    // uct params - 0.830846
+    // uct params - 0.835016
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
-        {ALG_PARAM_ID_BIAS, 3.42101},
+        {ALG_PARAM_ID_BIAS, 3.10925},
     },
-    // max uct params: 0.819522
+    // max uct params: 0.794887
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_BIAS, 1.99952},
+        {ALG_PARAM_ID_BIAS, 1.42329},
     },
     // hmcts params: 0.83045
     {
@@ -39,47 +39,47 @@ static const std::vector<ConfigMap> CONFIG_412 =
         {ALG_PARAM_ID_BIAS,         3.16228},
         {ALG_PARAM_ID_UCT_BUDGET,   5},
     },
-    // ments params: 19.2
+    // ments params: 0.827363
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
-        {ALG_PARAM_ID_INIT_TEMP,        0.0001},
+        {ALG_PARAM_ID_INIT_TEMP,        0.0026165},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.00284344},
         {ALG_PARAM_ID_EPSILON,          1.0},
         {ALG_PARAM_ID_DEFAULT_Q_VALUE,  0.0},
     },
-    // rents params: 0.825869
+    // rents params: 0.824824
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
-        {ALG_PARAM_ID_INIT_TEMP,        0.0011585},
+        {ALG_PARAM_ID_INIT_TEMP,        0.000141045},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.00010024},
-        {ALG_PARAM_ID_EPSILON,          0.999815},
+        {ALG_PARAM_ID_EPSILON,          1.0},
         {ALG_PARAM_ID_DEFAULT_Q_VALUE,  0.0},
     },
-    // tents params: 0.823497
+    // tents params: 0.830534
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
-        {ALG_PARAM_ID_INIT_TEMP,        0.00604732},
+        {ALG_PARAM_ID_INIT_TEMP,        0.00151683},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0001},
-        {ALG_PARAM_ID_EPSILON,          0.65416},        
+        {ALG_PARAM_ID_EPSILON,          1.0},      
         {ALG_PARAM_ID_DEFAULT_Q_VALUE,  0.0},
 
     },
-    // bts params: 0.830768
+    // bts params: 0.830997
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_BTS},
         {ALG_PARAM_ID_INIT_TEMP,        0.540259},
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.00843341},
-        {ALG_PARAM_ID_EPSILON,          0.423088},
+        {ALG_PARAM_ID_EPSILON,          0.999823},
         {ALG_PARAM_ID_DEFAULT_Q_VALUE,  0.0},
     },
     // dents params: 0.839783
     {
         {XPR_OR_ALG_ID_TAG,                     ALG_ID_DENTS},
-        {ALG_PARAM_ID_INIT_TEMP,                29.2042},
-        {ALG_PARAM_ID_TEMP_DECAY_RATE,          66.7969},
-        {ALG_PARAM_ID_EPSILON,                  0.427961},
+        {ALG_PARAM_ID_INIT_TEMP,                0.897669,},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,          0.000339204},
+        {ALG_PARAM_ID_EPSILON,                  0.999702},
         {ALG_PARAM_ID_DEFAULT_Q_VALUE,          0.0},
-        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       71.6231},
-        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    382.446},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.00114433},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    82.446},
     },
 };

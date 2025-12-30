@@ -11,13 +11,7 @@ make clean && make &&
 ./run_memory_limited 8G ./auxexpr eval 100 && 
 ./run_memory_limited 8G ./auxexpr eval 101 && 
 ./run_memory_limited 8G ./auxexpr eval 102 && 
-./run_memory_limited 8G ./auxexpr eval 103 && 
-./run_memory_limited 8G ./auxexpr eval 110 && 
-./run_memory_limited 8G ./auxexpr eval 111 && 
-./run_memory_limited 8G ./auxexpr eval 112 && 
-./run_memory_limited 8G ./auxexpr eval 120 && 
-./run_memory_limited 8G ./auxexpr eval 121 && 
-./run_memory_limited 8G ./auxexpr eval 122
+./run_memory_limited 8G ./auxexpr eval 103 
 
 
 
@@ -42,3 +36,9 @@ make clean && make &&
 ./run_memory_limited 8G ./auxexpr eval 450 && 
 ./run_memory_limited 8G ./auxexpr eval 451 && 
 ./run_memory_limited 8G ./auxexpr eval 452 && 
+./run_memory_limited 8G ./auxexpr eval 120 && 
+./run_memory_limited 8G ./auxexpr eval 121 && 
+./run_memory_limited 8G ./auxexpr eval 122 && 
+./run_memory_limited 8G ./auxexpr eval 110 && 
+./run_memory_limited 8G ./auxexpr eval 111 && 
+./run_memory_limited 8G ./auxexpr eval 112
