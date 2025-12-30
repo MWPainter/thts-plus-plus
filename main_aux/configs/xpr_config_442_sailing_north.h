@@ -23,45 +23,45 @@ static const std::vector<ConfigMap> CONFIG_442 =
         {XPR_PARAM_ID_EVAL_ROLLOUTS,            512},
         {XPR_PARAM_ID_EVAL_THREADS,             16},
     },
-    // uct params - -222.146
+    // uct params - -222.779
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
-        {ALG_PARAM_ID_BIAS, 0.096123},
+        {ALG_PARAM_ID_BIAS, 0.0857737},
     },
-    // max uct params: -221.204
+    // max uct params: -220.874
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_BIAS, 0.373008},
+        {ALG_PARAM_ID_BIAS, 0.470522},
     },
-    // hmcts params: -221.563
+    // hmcts params: -222.461
     {
         {XPR_OR_ALG_ID_TAG,         ALG_ID_HMCTS},
-        {ALG_PARAM_ID_BIAS,         0.0926668},
+        {ALG_PARAM_ID_BIAS,         0.110371},
         {ALG_PARAM_ID_UCT_BUDGET,   6},
     },
-    // ments params: -220.449
+    // ments params: -222.613
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
-        {ALG_PARAM_ID_INIT_TEMP,        6.24637},
+        {ALG_PARAM_ID_INIT_TEMP,        0.000100003},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  16.8901},
-        {ALG_PARAM_ID_EPSILON,          0.176438},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -122.977},
+        {ALG_PARAM_ID_EPSILON,          0.279416},
+        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -99.995},
     },
-    // rents params: -219.884
+    // rents params: -222.987
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
-        {ALG_PARAM_ID_INIT_TEMP,        3.47742},
+        {ALG_PARAM_ID_INIT_TEMP,        1.29657},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  12.0975},
-        {ALG_PARAM_ID_EPSILON,          0.252338},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -120.505},
+        {ALG_PARAM_ID_EPSILON,          1.00045e-06},
+        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -32.3045},
     },
-    // tents params: 0.823497
+    // tents params: -223.371
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
-        {ALG_PARAM_ID_INIT_TEMP,        0.0848362},
+        {ALG_PARAM_ID_INIT_TEMP,        0.12976},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0164081},
-        {ALG_PARAM_ID_EPSILON,          0.348206},        
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -148.039},
+        {ALG_PARAM_ID_EPSILON,          0.99659},        
+        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  -100.0},
 
     },
     // bts params: -221.573
@@ -75,10 +75,10 @@ static const std::vector<ConfigMap> CONFIG_442 =
     // dents params: -221.499
     {
         {XPR_OR_ALG_ID_TAG,                     ALG_ID_DENTS},
-        {ALG_PARAM_ID_INIT_TEMP,                253.808},
-        {ALG_PARAM_ID_TEMP_DECAY_RATE,          9996.88},
-        {ALG_PARAM_ID_EPSILON,                  0.000746498},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,          -173.041},
+        {ALG_PARAM_ID_INIT_TEMP,                1.25388},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,          0.888495},
+        {ALG_PARAM_ID_EPSILON,                  0.124649},
+        {ALG_PARAM_ID_DEFAULT_Q_VALUE,          -0.00180721},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.000100159},
         {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    1.00086},
     },
