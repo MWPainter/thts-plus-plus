@@ -10,13 +10,17 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        throw runtime_error("Expecting exactly two arguments: [eval|opt] [expr_id], specifying if we want to run an "
-                            "eval experiment, or perform hyperparamter optimisation.");
+    if (argc < 3 || argc > 4) {
+        throw runtime_error("Usage: program [eval|opt] [expr_id] [optional: xpr_dir_override]\n"
+                            "  eval: run an evaluation experiment\n"
+                            "  opt: perform hyperparameter optimisation\n"
+                            "  xpr_dir_override: optional directory name to add results to an existing experiment");
     }
 
+    string xpr_dir_override = (argc == 4) ? argv[3] : "";
+
     if (string(argv[1]) == "eval") {
-        thts::main_xpr(argv[2]);
+        thts::main_xpr(argv[2], xpr_dir_override);
     } else if (string(argv[1]) == "opt") {  
         thts::main_hp_opt(argv[2]);
     } else {

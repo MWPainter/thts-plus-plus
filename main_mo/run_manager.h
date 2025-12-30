@@ -27,12 +27,18 @@ namespace thts {
             std::time_t xpr_timestamp;
             ConfigMap xpr_config;
             ConfigMap alg_config;
+            std::string xpr_dir_override;  // Optional override for experiment directory name
 
             /**
              * Initialised constructor
              * - performs validation on the config to check for user error in the config
+             * - xpr_dir_override: if non-empty, overrides "get_xpr_name()_timestamp" in get_eval_logs_dir()
             */
-            RunManager(std::time_t xpr_timestamp, ConfigMap xpr_config, ConfigMap alg_config);
+            RunManager(
+                std::time_t xpr_timestamp, 
+                ConfigMap xpr_config, 
+                ConfigMap alg_config,
+                std::string xpr_dir_override="");
 
         private:
             /**
@@ -50,9 +56,11 @@ namespace thts {
              * Returns a vector of RunIDs from a vector of ConfigMaps
              * - expects the first ConfigMap to specify the xpr level params
              * - each following ConfigMap specifies and algorithm and corresponding params to run
+             * - xpr_dir_override: if non-empty, overrides the experiment directory name
              */
             static std::shared_ptr<std::vector<RunManager>> get_run_managers_from_config_vector(
-                std::vector<ConfigMap>& config_vector);
+                std::vector<ConfigMap>& config_vector,
+                std::string xpr_dir_override="");
 
             /**
              * Getters - xpr level config

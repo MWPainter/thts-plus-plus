@@ -10,8 +10,9 @@ namespace thts {
     /**
      * Main entry point for running experiments
      * Performs all of the (replicated) runs corresponding xpr_id with prefix 'xpr_id_prefix'
+     * xpr_dir_override: if non-empty, overrides the experiment directory name (to add results to existing experiment)
     */
-    void main_xpr(std::string xpr_id_prefix);
+    void main_xpr(std::string xpr_id_prefix, std::string xpr_dir_override="");
 
     /**
      * Runs the searches corresponding to a RunManager

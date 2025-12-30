@@ -45,8 +45,15 @@ namespace thts {
     /**
      * Constructor
      */
-    RunManager::RunManager(std::time_t xpr_timestamp, ConfigMap xpr_config, ConfigMap alg_config) :
-        xpr_timestamp(xpr_timestamp), xpr_config(xpr_config), alg_config(alg_config)
+    RunManager::RunManager(
+        std::time_t xpr_timestamp, 
+        ConfigMap xpr_config, 
+        ConfigMap alg_config,
+        std::string xpr_dir_override) :
+            xpr_timestamp(xpr_timestamp), 
+            xpr_config(xpr_config), 
+            alg_config(alg_config),
+            xpr_dir_override(xpr_dir_override)
     {
         validate_config_or_raise_exception();
     }
@@ -163,13 +170,15 @@ namespace thts {
     /**
      * Config -> RunManagers
      */
-    shared_ptr<vector<RunManager>> RunManager::get_run_managers_from_config_vector(vector<ConfigMap>& config_vector)
+    shared_ptr<vector<RunManager>> RunManager::get_run_managers_from_config_vector(
+        vector<ConfigMap>& config_vector,
+        string xpr_dir_override)
     {
         time_t xpr_timestamp = std::time(nullptr);
         shared_ptr<vector<RunManager>> run_managers = std::make_shared<vector<RunManager>>();
         for (size_t i=1; i<config_vector.size(); i++)
         {  
-            run_managers->push_back(RunManager(xpr_timestamp, config_vector[0], config_vector[i]));
+            run_managers->push_back(RunManager(xpr_timestamp, config_vector[0], config_vector[i], xpr_dir_override));
         }
         return run_managers;
     }
@@ -418,9 +427,13 @@ namespace thts {
     string RunManager::get_eval_logs_dir() 
     {
         stringstream ss;
-        ss << "aux_eval_logs/" 
-            << get_xpr_name() << "_" << xpr_timestamp << "/"
-            << get_env_id() << "/"
+        ss << "aux_eval_logs/";
+        if (xpr_dir_override.empty()) {
+            ss << get_xpr_name() << "_" << xpr_timestamp;
+        } else {
+            ss << xpr_dir_override;
+        }
+        ss << "/" << get_env_id() << "/"
             << get_alg_id() << "/"
             << get_params_string_helper();
         return ss.str();

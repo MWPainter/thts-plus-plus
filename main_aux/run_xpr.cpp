@@ -35,11 +35,12 @@ namespace thts {
      * Checks if any run's need python
      * If so, makes an interpreter and releases gil
      */
-    void main_xpr(string xpr_id_prefix)
+    void main_xpr(string xpr_id_prefix, string xpr_dir_override)
     {
         // Read in config
         vector<ConfigMap> xpr_configs = RunManager::lookup_config_vector_from_xpr_prefix(xpr_id_prefix);
-        shared_ptr<vector<RunManager>> run_managers_ptr = RunManager::get_run_managers_from_config_vector(xpr_configs);
+        shared_ptr<vector<RunManager>> run_managers_ptr = RunManager::get_run_managers_from_config_vector(
+            xpr_configs, xpr_dir_override);
         vector<RunManager>& run_managers = *run_managers_ptr;
 
         // Check if any run ids need python
