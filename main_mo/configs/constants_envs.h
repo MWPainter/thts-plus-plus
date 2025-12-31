@@ -22,6 +22,14 @@ static const std::string ENV_ID_PY_DEBUG_3 = "py_debug_env_3"; // not stoch + 4 
 static const std::string ENV_ID_PY_DEBUG_4 = "py_debug_env_4"; // stoch + 4 rew
 
 // ---------------------------------------------------------------------------------------------------------------------
+// Environment id's - toy tree
+// ---------------------------------------------------------------------------------------------------------------------
+
+static const std::string ENV_ID_TOY_TREE_DENSE = "toy_tree_dense";
+static const std::string ENV_ID_TOY_TREE_SPARSE = "toy_tree_sparse";
+// TODO: variable sized toy tree for scalability
+
+// ---------------------------------------------------------------------------------------------------------------------
 // Environment id's - DST (vamplew = original)
 // ---------------------------------------------------------------------------------------------------------------------
 

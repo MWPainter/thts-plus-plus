@@ -3,9 +3,9 @@
 #include "main_aux/run_manager.h"
 #include "main_aux/run_xpr.h"
 
-#include "thts_env.h"
-#include "thts_manager.h"
-#include "thts_decision_node.h"
+#include "mo/mo_thts_env.h"
+#include "mo/mo_thts_manager.h"
+#include "mo/mo_thts_decision_node.h"
 
 #include <ctime>
 #include <filesystem>

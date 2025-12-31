@@ -1,12 +1,12 @@
 #include "main_aux/run_xpr.h"
 
 #include "helper_templates.h"
+#include "mo/mo_helper_templates.h"
 
-#include "mc_eval.h"
+#include "mo/mo_mc_eval.h"
 
-#include "thts.h"
-#include "py/py_thts.h"
-#include "py/py_multiprocessing_thts_env.h"
+#include "mo/mo_thts.h"
+#include "py/mo_py_multiprocessing_thts_env.h"
 
 #include "py/py_helper.h"
 #include <Python.h>
@@ -99,8 +99,8 @@ namespace thts {
             double search_budget_consumed = 0.0;
 
             // get env and manager
-            shared_ptr<ThtsEnv> env = run_manager.get_env();
-            shared_ptr<ThtsManager> thts_manager = run_manager.get_thts_manager(env);
+            shared_ptr<MoThtsEnv> env = run_manager.get_env();
+            shared_ptr<MoThtsManager> thts_manager = run_manager.get_thts_manager(env);
 
             // (If python env) start up multiprocessing servers
             if (run_manager.is_python_env())
@@ -111,15 +111,15 @@ namespace thts {
 
                 for (int i=0; i < num_envs_required; i++) 
                 {
-                    PyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<PyMultiprocessingThtsEnv>(
+                    MoPyMultiprocessingThtsEnv& py_mp_env = *dynamic_pointer_cast<MoPyMultiprocessingThtsEnv>(
                         thts_manager->thts_env(i));
                     py_mp_env.start_python_server(i);
                 }
             }
 
             // Setup search
-            shared_ptr<ThtsDNode> root_node = run_manager.get_root_search_node(env, thts_manager);
-            shared_ptr<ThtsPool> thts_pool = make_shared<ThtsPool>(thts_manager, root_node, run_manager.get_num_search_threads());
+            shared_ptr<MoThtsDNode> root_node = run_manager.get_root_search_node(env, thts_manager);
+            shared_ptr<MoThtsPool> thts_pool = make_shared<MoThtsPool>(thts_manager, root_node, run_manager.get_num_search_threads());
 
             // Eval at 0 trials
             double eval_mean = 0.0, eval_std = 0.0;
@@ -157,6 +157,7 @@ namespace thts {
                 // eval (always run final eval, but only log if 'run_evals')
                 if (!hpopt || search_budget_consumed >= run_manager.get_termination_bound())
                 {
+                    // TODO: update to use all MO eval metrics + log them
                     pair<double,double> eval = mc_eval(env, root_node, thts_manager, run_manager);
                     eval_mean = eval.first;
                     final_eval_mean = eval_mean;
@@ -209,17 +210,21 @@ namespace thts {
      * Perform an mc eval (of policy from tree node)
     */
     pair<double,double> mc_eval(
-        shared_ptr<ThtsEnv> env, 
-        shared_ptr<ThtsDNode> root_node, 
-        shared_ptr<ThtsManager> thts_manager,
+        shared_ptr<MoThtsEnv> env, 
+        shared_ptr<MoThtsDNode> root_node, 
+        shared_ptr<MoThtsManager> thts_manager,
         RunManager& run_manager) 
     {   
+        // TODO: update this to include r_min and r_max in MoMCEvaluator
+        // TODO: update this to return the MO eval metrics
         shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(root_node, env, thts_manager);
-        MCEvaluator evaluator(eval_policy, run_manager.get_max_trial_length(), thts_manager);
+        MoMCEvaluator evaluator(eval_policy, run_manager.get_max_trial_length(), thts_manager);
         evaluator.run_rollouts(run_manager.get_num_eval_rollouts(), run_manager.get_num_eval_threads());
         double mean = evaluator.get_mean_return();
         double std_dev = evaluator.get_stddev_return();
         return make_pair(mean,std_dev);
     }
+
+    // TODO: add functions for other eval metrics - e.g. hypervolume
 
 }

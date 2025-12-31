@@ -25,8 +25,8 @@ namespace thts {
      * Perform an mc eval (of policy from tree node)
     */
     std::pair<double,double> mc_eval(
-        std::shared_ptr<ThtsEnv> env, 
-        std::shared_ptr<ThtsDNode> root_node, 
-        std::shared_ptr<ThtsManager> thts_manager,
+        std::shared_ptr<MoThtsEnv> env, 
+        std::shared_ptr<MoThtsDNode> root_node, 
+        std::shared_ptr<MoThtsManager> thts_manager,
         RunManager& run_manager);
 }

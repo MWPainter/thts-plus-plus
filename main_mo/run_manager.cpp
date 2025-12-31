@@ -99,6 +99,7 @@ namespace thts {
             }
         }
 
+        // TODO: update validation for the MO algorithms and params (this is old single objective version)
         string alg_id = get_config_value<std::string>(alg_config, XPR_OR_ALG_ID_TAG);
 
         set<string> alg_ids =
@@ -223,10 +224,11 @@ namespace thts {
     }
 
     /**
-     * Returns an instance of ThtsEnv to use for this run
+     * Returns an instance of MoThtsEnv to use for this run
     */
-    shared_ptr<ThtsEnv> RunManager::get_env()
+    shared_ptr<MoThtsEnv> RunManager::get_env()
     {
+        // TODO: update this for the MO envs
         string thts_unique_filename = get_eval_logs_dir();
         string env_id = get_env_id();
 
@@ -275,28 +277,31 @@ namespace thts {
     }
 
     /**
-     * Helper to add params to a manager args object for ThtsManager level params
+     * Helper to add params to a manager args object for MoThtsManager level params
      */
-    void RunManager::_add_thts_manager_params_to_args(ThtsManagerArgs& manager_args)
+    void RunManager::_add_thts_manager_params_to_args(MoThtsManagerArgs& manager_args)
     {
         manager_args.num_threads = get_num_search_threads();
         manager_args.num_envs = std::max(get_num_search_threads(), get_num_eval_threads());
         manager_args.max_depth = get_max_trial_length();
-        manager_args.heuristic_fn = (get_mcts_mode()) ? helper::rollout_heuristic_fn : helper::zero_heuristic_fn;
+        // TODO: make sure using correct heuristic function and passing dim in if necessary
+        manager_args.mo_heuristic_fn = (get_mcts_mode()) ? helper::mo_rollout_heuristic_fn : helper::mo_zero_heuristic_fn;
         manager_args.mcts_mode = get_mcts_mode();
         manager_args.graph_search = get_graph_search();
         manager_args.first_visit = true;
     }
     
     /**
-     * Returns and instance of ThtsManager to use for this run
+     * Returns and instance of MoThtsManager to use for this run
      * Creates the manager and sets algorithm level parameters
      * Then adds the experiment level parameters and returns
     */
-    shared_ptr<ThtsManager> RunManager::get_thts_manager(shared_ptr<ThtsEnv> env)
+    shared_ptr<MoThtsManager> RunManager::get_thts_manager(shared_ptr<MoThtsEnv> env)
     {
         string alg_id = get_alg_id();
-        shared_ptr<ThtsManager> thts_manager = nullptr;
+        shared_ptr<MoThtsManager> thts_manager = nullptr;
+
+        // TODO: update this for the MO algorithms and params (this is old single objective version)
 
         if (alg_id == ALG_ID_UCT || alg_id == ALG_ID_MAX_UCT) 
         {
@@ -355,9 +360,10 @@ namespace thts {
     /**
      * Returns a root node to use for search given these params
     */
-    shared_ptr<ThtsDNode> RunManager::get_root_search_node(shared_ptr<ThtsEnv> env, shared_ptr<ThtsManager> manager)
+    shared_ptr<MoThtsDNode> RunManager::get_root_search_node(shared_ptr<MoThtsEnv> env, shared_ptr<MoThtsManager> manager)
     {
         string alg_id = get_alg_id();
+        // TODO: update this for the MO algorithms and params (this is old single objective version)
         if (alg_id == ALG_ID_UCT) {
             shared_ptr<UctManager> uct_manager = static_pointer_cast<UctManager>(manager);
             return make_shared<UctDNode>(uct_manager, env->get_initial_state_itfc(), 0, 0);
@@ -427,7 +433,7 @@ namespace thts {
     string RunManager::get_eval_logs_dir() 
     {
         stringstream ss;
-        ss << "aux_eval_logs/";
+        ss << "mo_eval_logs/";
         if (xpr_dir_override.empty()) {
             ss << get_xpr_name() << "_" << xpr_timestamp;
         } else {
@@ -523,6 +529,7 @@ namespace thts {
         fs << endl;
 
         // Header for main body
+        // TODO: update this for any additional MO eval metrics
         fs << endl << "Evals: " << endl << endl;
         fs << "run_idx,eval,eval_std,num_trials,runtime,search_budget_consumed,num_eval_samples" << endl;
     }
@@ -537,6 +544,7 @@ namespace thts {
         double search_budget_consumed, 
         int num_eval_samples)
     {
+        // TODO: update this for any additional MO eval metrics (corresponding to the header)
         fs << run_idx << "," 
             << eval << "," 
             << eval_std << "," 
@@ -579,7 +587,9 @@ namespace thts {
         return file;
     }
 
-    void RunManager::dump_tree_log(shared_ptr<ThtsDNode> root_node, int run_idx)
+    // TODO: add functions for outputting final convex hull data to a file
+
+    void RunManager::dump_tree_log(shared_ptr<MoThtsDNode> root_node, int run_idx)
     {
         ofstream tree_log_fs = get_tree_log_filestream(run_idx);
         tree_log_fs << root_node->get_pretty_print_string(2) << endl;

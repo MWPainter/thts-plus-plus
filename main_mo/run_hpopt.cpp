@@ -1,12 +1,12 @@
 #include "main_aux/run_hpopt.h"
 
 #include "helper_templates.h"
+#include "mo/mo_helper_templates.h"
 
-#include "mc_eval.h"
+#include "mo/mo_mc_eval.h"
 
-#include "thts.h"
-#include "py/py_thts.h"
-#include "py/py_multiprocessing_thts_env.h"
+#include "mo/mo_thts.h"
+#include "py/mo_py_multiprocessing_thts_env.h"
 
 #include "py/py_helper.h"
 #include <Python.h>

@@ -1,0 +1,66 @@
+D(vl=-100(temp:0.058,entrpy:6.39243,val_temp:0,soft_val:-100),#v=250000)[
+|	"2"->C(vl=-100(entrpy:5.06939,val_temp:0,soft_val:-100),#v=66338)[
+|	|	({(0,0,1)},66338)->D(vl=-99(temp:0.058,entrpy:5.06939,val_temp:0,soft_val:-99),#v=66338)[
+|	|	|	"2"->C(vl=-99(entrpy:3.63254,val_temp:0,soft_val:-99),#v=20422)[
+|	|	|	|	({(0,0,2)},20422)->D(vl=-98(temp:0.058,entrpy:3.63254,val_temp:0,soft_val:-98),#v=20422)[...],
+|	|	|	],
+|	|	|	"3"->C(vl=-99(entrpy:3.46021,val_temp:0,soft_val:-99),#v=15359)[
+|	|	|	|	({(0,0,2)},15359)->D(vl=-98(temp:0.058,entrpy:3.46021,val_temp:0,soft_val:-98),#v=15359)[...],
+|	|	|	],
+|	|	|	"0"->C(vl=-99(entrpy:3.73581,val_temp:0,soft_val:-99),#v=15304)[
+|	|	|	|	({(1,0,2)},15304)->D(vl=-98(temp:0.058,entrpy:3.73581,val_temp:0,soft_val:-98),#v=15304)[...],
+|	|	|	],
+|	|	|	"1"->C(vl=-99(entrpy:3.90382,val_temp:0,soft_val:-99),#v=15252)[
+|	|	|	|	({(0,1,2)},15252)->D(vl=-98(temp:0.058,entrpy:3.90382,val_temp:0,soft_val:-98),#v=15252)[...],
+|	|	|	],
+|	|	],
+|	],
+|	"0"->C(vl=-100(entrpy:4.94007,val_temp:0,soft_val:-100),#v=61268)[
+|	|	({(1,0,1)},61268)->D(vl=-99(temp:0.058,entrpy:4.94007,val_temp:0,soft_val:-99),#v=61268)[
+|	|	|	"2"->C(vl=-99(entrpy:3.53336,val_temp:0,soft_val:-99),#v=19075)[
+|	|	|	|	({(0,0,2)},19075)->D(vl=-98(temp:0.058,entrpy:3.53336,val_temp:0,soft_val:-98),#v=19075)[...],
+|	|	|	],
+|	|	|	"0"->C(vl=-99(entrpy:3.59488,val_temp:0,soft_val:-99),#v=14181)[
+|	|	|	|	({(2,0,2)},14181)->D(vl=-98(temp:0.058,entrpy:3.59488,val_temp:0,soft_val:-98),#v=14181)[...],
+|	|	|	],
+|	|	|	"1"->C(vl=-99(entrpy:3.53931,val_temp:0,soft_val:-99),#v=14032)[
+|	|	|	|	({(1,1,2)},14032)->D(vl=-98(temp:0.058,entrpy:3.53931,val_temp:0,soft_val:-98),#v=14032)[...],
+|	|	|	],
+|	|	|	"3"->C(vl=-99(entrpy:3.54754,val_temp:0,soft_val:-99),#v=13979)[
+|	|	|	|	({(1,0,2)},13979)->D(vl=-98(temp:0.058,entrpy:3.54754,val_temp:0,soft_val:-98),#v=13979)[...],
+|	|	|	],
+|	|	],
+|	],
+|	"1"->C(vl=-100(entrpy:4.96329,val_temp:0,soft_val:-100),#v=61262)[
+|	|	({(0,1,1)},61262)->D(vl=-99(temp:0.058,entrpy:4.96329,val_temp:0,soft_val:-99),#v=61262)[
+|	|	|	"2"->C(vl=-99(entrpy:3.58622,val_temp:0,soft_val:-99),#v=19072)[
+|	|	|	|	({(0,1,2)},19072)->D(vl=-98(temp:0.058,entrpy:3.58622,val_temp:0,soft_val:-98),#v=19072)[...],
+|	|	|	],
+|	|	|	"1"->C(vl=-99(entrpy:3.55144,val_temp:0,soft_val:-99),#v=14095)[
+|	|	|	|	({(0,2,2)},14095)->D(vl=-98(temp:0.058,entrpy:3.55144,val_temp:0,soft_val:-98),#v=14095)[...],
+|	|	|	],
+|	|	|	"3"->C(vl=-99(entrpy:3.68078,val_temp:0,soft_val:-99),#v=14078)[
+|	|	|	|	({(0,0,2)},14078)->D(vl=-98(temp:0.058,entrpy:3.68078,val_temp:0,soft_val:-98),#v=14078)[...],
+|	|	|	],
+|	|	|	"0"->C(vl=-99(entrpy:3.48956,val_temp:0,soft_val:-99),#v=14016)[
+|	|	|	|	({(1,1,2)},14016)->D(vl=-98(temp:0.058,entrpy:3.48956,val_temp:0,soft_val:-98),#v=14016)[...],
+|	|	|	],
+|	|	],
+|	],
+|	"3"->C(vl=-100(entrpy:5.05178,val_temp:0,soft_val:-100),#v=61132)[
+|	|	({(0,0,1)},61132)->D(vl=-99(temp:0.058,entrpy:5.05178,val_temp:0,soft_val:-99),#v=61132)[
+|	|	|	"1"->C(vl=-99(entrpy:3.72225,val_temp:0,soft_val:-99),#v=19307)[
+|	|	|	|	({(0,1,2)},19307)->D(vl=-98(temp:0.058,entrpy:3.72225,val_temp:0,soft_val:-98),#v=19307)[...],
+|	|	|	],
+|	|	|	"2"->C(vl=-99(entrpy:3.64805,val_temp:0,soft_val:-99),#v=14046)[
+|	|	|	|	({(0,0,2)},14046)->D(vl=-98(temp:0.058,entrpy:3.64805,val_temp:0,soft_val:-98),#v=14046)[...],
+|	|	|	],
+|	|	|	"3"->C(vl=-99(entrpy:3.63268,val_temp:0,soft_val:-99),#v=13924)[
+|	|	|	|	({(0,0,2)},13924)->D(vl=-98(temp:0.058,entrpy:3.63268,val_temp:0,soft_val:-98),#v=13924)[...],
+|	|	|	],
+|	|	|	"0"->C(vl=-99(entrpy:3.65895,val_temp:0,soft_val:-99),#v=13854)[
+|	|	|	|	({(1,0,2)},13854)->D(vl=-98(temp:0.058,entrpy:3.65895,val_temp:0,soft_val:-98),#v=13854)[...],
+|	|	|	],
+|	|	],
+|	],
+],

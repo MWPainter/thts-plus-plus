@@ -141,6 +141,8 @@ namespace thts {
             }
         }
 
+
+        // TODO: update this for list of MO algorithms
         string alg_id = get_config_value<std::string>(alg_config, XPR_OR_ALG_ID_TAG);
 
         set<string> alg_ids =
@@ -375,6 +377,7 @@ namespace thts {
         // run evals
         while (repeats_run < min_repeats || std_mean_eval > estimate_confidence_threshold)
         {
+            // TODO: update this to use MO eval metrics
             double eval = thts::run_searches(*sampled_run_manager, true, false);
 
             evals.push_back(eval);
@@ -535,7 +538,7 @@ namespace thts {
     std::filesystem::path HpoptManager::get_hpopt_summary_filename()
     {
         stringstream ss;
-        ss << "aux_hpopt_summaries/" << get_xpr_name() << "_" << xpr_timestamp << "_alg_" << get_alg_id() << ".txt";
+        ss << "mo_hpopt_summaries/" << get_xpr_name() << "_" << xpr_timestamp << "_alg_" << get_alg_id() << ".txt";
         std::filesystem::path filepath(ss.str());
         return filepath;
     }
@@ -627,6 +630,7 @@ namespace thts {
         }
         
         // csv header for eval lines
+        // TODO: update this for MO eval metrics
         hpopt_summary_fs << endl << "Evaluations:" << endl << endl;
         hpopt_summary_fs << "hp_opt_iter,mean_eval,std_mean_eval,best_eval_so_far";
         for (const string& alg_param_id : ALG_ID_TO_ALG_PARAM_IDS.at(alg_id))
@@ -639,6 +643,7 @@ namespace thts {
     void HpoptManager::write_hpopt_summary_sample_eval_line(
         shared_ptr<RunManager> run_manager, double mean_eval, double std_mean_eval)
     {
+        // TODO: update this for MO eval metrics
         string alg_id = get_alg_id();
         // Use the alg_config from the run_manager directly
         const ConfigMap& alg_params = run_manager->alg_config;
@@ -660,6 +665,7 @@ namespace thts {
     
     void HpoptManager::write_hpopt_summary_footer()
     {   
+        // TODO: update this for MO eval metrics
         hpopt_summary_fs << endl << "Best Params: " << endl << endl;
         hpopt_summary_fs << "mean_eval - " << best_mean_eval << endl;
         hpopt_summary_fs << "std_mean_eval - " << best_std_mean_eval << endl;

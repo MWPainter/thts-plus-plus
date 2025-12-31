@@ -1,8 +1,8 @@
 #pragma once
 
-#include "thts_env.h"
-#include "thts_manager.h"
-#include "thts_decision_node.h"
+#include "mo/mo_thts_env.h"
+#include "mo/mo_thts_manager.h"
+#include "mo/mo_thts_decision_node.h"
 
 #include <ctime>
 #include <filesystem>
@@ -97,21 +97,21 @@ namespace thts {
             bool is_python_env();
 
             /**
-             * Returns an instance of ThtsEnv to use for this run
+             * Returns an instance of MoThtsEnv to use for this run
             */
-            std::shared_ptr<ThtsEnv> get_env();
+            std::shared_ptr<MoThtsEnv> get_env();
 
             /**
-             * Returns and instance of ThtsManager to use for this run
+             * Returns and instance of MoThtsManager to use for this run
             */
-            void _add_thts_manager_params_to_args(ThtsManagerArgs& manager_args);
-            std::shared_ptr<ThtsManager> get_thts_manager(std::shared_ptr<ThtsEnv> env);
+            void _add_thts_manager_params_to_args(MoThtsManagerArgs& manager_args);
+            std::shared_ptr<MoThtsManager> get_thts_manager(std::shared_ptr<MoThtsEnv> env);
 
             /**
              * Returns a root node to use for search given these params
             */
-            std::shared_ptr<ThtsDNode> get_root_search_node(
-                std::shared_ptr<ThtsEnv> env, std::shared_ptr<ThtsManager> manager);
+            std::shared_ptr<MoThtsDNode> get_root_search_node(
+                std::shared_ptr<MoThtsEnv> env, std::shared_ptr<MoThtsManager> manager);
             
             /**
              * Helper to make a string of of all alg level params
@@ -144,6 +144,6 @@ namespace thts {
              */
             std::filesystem::path get_tree_log_filename(int run_idx);
             std::ofstream get_tree_log_filestream(int run_idx);
-            void dump_tree_log(std::shared_ptr<ThtsDNode> root_node, int run_idx);
+            void dump_tree_log(std::shared_ptr<MoThtsDNode> root_node, int run_idx);
     };
 }
