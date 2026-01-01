@@ -228,48 +228,188 @@ namespace thts {
     */
     shared_ptr<MoThtsEnv> RunManager::get_env()
     {
-        // TODO: update this for the MO envs
         string thts_unique_filename = get_eval_logs_dir();
         string env_id = get_env_id();
 
         if (GYM_ENVS.contains(env_id)) {
             shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-            return make_shared<GymMultiprocessingThtsEnv>(pickle_wrapper, thts_unique_filename, env_id);
+            return make_shared<MoGymMultiprocessingThtsEnv>(pickle_wrapper, thts_unique_filename, env_id);
         }
-        
-        if (env_id == ENV_ID_D_CHAIN_10)        return make_shared<DChainEnv>(10,1.0);
-        if (env_id == ENV_ID_MOD_D_CHAIN_10)    return make_shared<DChainEnv>(10,0.5);
-        if (env_id == ENV_ID_ENTROPY_TRAP_10)   return make_shared<EntropyTrapEnv>(10,10,1.0);
-        if (env_id == ENV_ID_ENTROPY_TRAP_15)   return make_shared<EntropyTrapEnv>(15,15,1.0);
 
-        if (env_id == ENV_ID_FROZEN_LAKE_NO_HOLE_DENSE)             return make_shared<FrozenLakeEnv>(6,6,FL_6x6_NO_HOLE_MAP,false,FL_DENSE_REWARD);
-        if (env_id == ENV_ID_FROZEN_LAKE_NO_HOLE_SPARSE_LEN)        return make_shared<FrozenLakeEnv>(6,6,FL_6x6_NO_HOLE_MAP,false,FL_SPARSE_LEN_REWARD);
-        if (env_id == ENV_ID_FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED) return make_shared<FrozenLakeEnv>(6,6,FL_6x6_NO_HOLE_MAP,false,FL_SPARSE_DISCOUNTED_REWARD);
+        if (TIMED_GYM_ENVS.contains(env_id)) {
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            return make_shared<TimedMoGymMultiprocessingThtsEnv>(pickle_wrapper, thts_unique_filename, env_id);
+        }
 
-        if (env_id == ENV_ID_FROZEN_LAKE_S_8x8)     return make_shared<FrozenLakeEnv>(8,8,FL_8x8_MAP,false,FL_SPARSE_DISCOUNTED_REWARD);
-        if (env_id == ENV_ID_FROZEN_LAKE_D_8x8)     return make_shared<FrozenLakeEnv>(8,8,FL_8x8_MAP,false,FL_DENSE_REWARD);
-        if (env_id == ENV_ID_FROZEN_LAKE_D_8x16)    return make_shared<FrozenLakeEnv>(8,16,FL_GEN_8x16_MAP,false,FL_DENSE_REWARD);
-        if (env_id == ENV_ID_FROZEN_LAKE_S_8x16)    return make_shared<FrozenLakeEnv>(8,16,FL_GEN_8x16_MAP,false,FL_SPARSE_DISCOUNTED_REWARD);
-        if (env_id == ENV_ID_FROZEN_LAKE_D_16x16)   return make_shared<FrozenLakeEnv>(16,16,FL_GEN_16x16_MAP,false,FL_DENSE_REWARD);
-        if (env_id == ENV_ID_FROZEN_LAKE_S_16x16)   return make_shared<FrozenLakeEnv>(16,16,FL_GEN_16x16_MAP,false,FL_SPARSE_DISCOUNTED_REWARD);
+        if (env_id == ENV_ID_IMPROVED_DST 
+            || env_id == ENV_ID_IMPROVED_STOCH_DST 
+            || env_id == ENV_ID_VAMPLEW_DST 
+            || env_id == ENV_ID_VAMPLEW_STOCH_DST) 
+        {
+            py::gil_scoped_acquire acq;
+    
 
-        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_4x4) return make_shared<FrozenLakeEnv>(4,4,FL_4x4_MAP,true,FL_DENSE_REWARD);
-        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_4x4) return make_shared<FrozenLakeEnv>(4,4,FL_4x4_MAP,true,FL_SPARSE_DISCOUNTED_REWARD,1.0);
-        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_5x5) return make_shared<FrozenLakeEnv>(5,5,FL_GEN_5x5_MAP,true,FL_DENSE_REWARD);
-        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_5x5) return make_shared<FrozenLakeEnv>(5,5,FL_GEN_5x5_MAP,true,FL_SPARSE_DISCOUNTED_REWARD,1.0);
-        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_6x6) return make_shared<FrozenLakeEnv>(6,6,FL_GEN_6x6_MAP,true,FL_DENSE_REWARD);
-        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_6x6) return make_shared<FrozenLakeEnv>(6,6,FL_GEN_6x6_MAP,true,FL_SPARSE_DISCOUNTED_REWARD,1.0);
-        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_4x8) return make_shared<FrozenLakeEnv>(4,8,FL_GEN_4x8_MAP,true,FL_DENSE_REWARD);
-        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_4x8) return make_shared<FrozenLakeEnv>(4,8,FL_GEN_4x8_MAP,true,FL_SPARSE_DISCOUNTED_REWARD,1.0);
-        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_4x12) return make_shared<FrozenLakeEnv>(4,12,FL_GEN_4x12_MAP,true,FL_DENSE_REWARD);
-        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_4x12) return make_shared<FrozenLakeEnv>(4,12,FL_GEN_4x12_MAP,true,FL_SPARSE_DISCOUNTED_REWARD,1.0);
+            bool swept_by_current = (env_id == ENV_ID_IMPROVED_STOCH_DST || env_id == ENV_ID_VAMPLEW_STOCH_DST);
+            double swept_by_current_prob = swept_by_current ? 0.2 : 0.0;
+            bool is_vamplew = (env_id == ENV_ID_VAMPLEW_DST || env_id == ENV_ID_VAMPLEW_STOCH_DST);
+    
+            py::dict kw_args;
+            kw_args["swept_by_current_prob"] = to_string(swept_by_current_prob);
+            kw_args["is_vamplew"] = is_vamplew ? "True" : "False";
+            kw_args["max_steps"] = to_string(this->get_max_trial_length());
+            shared_ptr<py::dict> kw_args_ptr = make_shared<py::dict>(kw_args);
 
-        if (env_id == ENV_ID_SAILING_NORTH_ID)             return make_shared<SailingEnv>(8,8,NN);
-        if (env_id == ENV_ID_SAILING_SOUTH_EAST_ID)        return make_shared<SailingEnv>(8,8,SE);
-        if (env_id == ENV_ID_SAILING_8x16_NORTH_ID)        return make_shared<SailingEnv>(8,16,NN);
-        if (env_id == ENV_ID_SAILING_8x16_SOUTH_EAST_ID)   return make_shared<SailingEnv>(8,16,SE);
-        if (env_id == ENV_ID_SAILING_16x16_NORTH_ID)       return make_shared<SailingEnv>(16,16,NN);
-        if (env_id == ENV_ID_SAILING_16x16_SOUTH_EAST_ID)  return make_shared<SailingEnv>(16,16,SE);
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            string module_name = "main_mo.envs.custom_deep_sea_treasure";
+            string class_name = "ImprovedDeepSeaTreasureThtsEnv";
+            return make_shared<MoPyMultiprocessingThtsEnv>(
+                pickle_wrapper, 
+                thts_unique_filename, 
+                module_name, 
+                class_name, 
+                kw_args_ptr);
+        }
+
+        if (env_id == ENV_ID_FRUIT_TREE_7 
+            || env_id == ENV_ID_FRUIT_TREE_STOCH_5 
+            || env_id == ENV_ID_FRUIT_TREE_STOCH_7) 
+        {
+            py::gil_scoped_acquire acq;
+            
+            py::dict kw_args;
+            kw_args["depth"] = to_string((env_id == ENV_ID_FRUIT_TREE_STOCH_5) ? 5 : 7);
+            kw_args["action_noise"] = to_string((env_id == ENV_ID_FRUIT_TREE_7) ? 0.0 : 0.2);
+            shared_ptr<py::dict> kw_args_ptr = make_shared<py::dict>(kw_args);
+
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            string module_name = "main_mo.envs.custom_fruit_tree";
+            string class_name = "StochFruitTreeThtsEnv";
+            return make_shared<MoPyMultiprocessingThtsEnv>(
+                pickle_wrapper, 
+                thts_unique_filename, 
+                module_name, 
+                class_name, 
+                kw_args_ptr);
+        }
+
+        if (env_id == ENV_ID_DEBUG_1) 
+        {
+            int walk_len = 10;
+            double wrong_dir_prob = 0.0;
+            bool add_extra_rewards = false;
+            return make_shared<TestMoThtsEnv>(walk_len, wrong_dir_prob, add_extra_rewards);
+        }
+        if (env_id == ENV_ID_DEBUG_2) 
+        {
+            int walk_len = 10;
+            double wrong_dir_prob = 0.25;
+            bool add_extra_rewards = false;
+            return make_shared<TestMoThtsEnv>(walk_len, wrong_dir_prob, add_extra_rewards);
+        }
+        if (env_id == ENV_ID_DEBUG_3) 
+        {
+            int walk_len = 10;
+            double wrong_dir_prob = 0.0;
+            bool add_extra_rewards = true;
+            return make_shared<TestMoThtsEnv>(walk_len, wrong_dir_prob, add_extra_rewards);
+        }
+        if (env_id == ENV_ID_DEBUG_4) 
+        {
+            int walk_len = 10;
+            double wrong_dir_prob = 0.25;
+            bool add_extra_rewards = true;
+            return make_shared<TestMoThtsEnv>(walk_len, wrong_dir_prob, add_extra_rewards);
+        }
+
+        if (env_id == ENV_ID_PY_DEBUG_1) 
+        {
+            py::gil_scoped_acquire acq;
+            
+            py::dict kw_args;
+            kw_args["walk_len"] = to_string(10);
+            kw_args["wrong_dir_prob"] = to_string(0.0);
+            kw_args["add_extra_rewards"] = "False";
+            shared_ptr<py::dict> kw_args_ptr = make_shared<py::dict>(kw_args);
+
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            string module_name = "main_mo.envs.test_mo_thts_env";
+            string class_name = "TestMoThtsEnv";
+            return make_shared<MoPyMultiprocessingThtsEnv>(
+                pickle_wrapper, 
+                thts_unique_filename, 
+                module_name, 
+                class_name, 
+                kw_args_ptr);
+        }
+        if (env_id == ENV_ID_PY_DEBUG_2) 
+        {
+            py::gil_scoped_acquire acq;
+            
+            py::dict kw_args;
+            kw_args["walk_len"] = to_string(10);
+            kw_args["wrong_dir_prob"] = to_string(0.25);
+            kw_args["add_extra_rewards"] = "False";
+            shared_ptr<py::dict> kw_args_ptr = make_shared<py::dict>(kw_args);
+
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            string module_name = "main_mo.envs.test_mo_thts_env";
+            string class_name = "TestMoThtsEnv";
+            return make_shared<MoPyMultiprocessingThtsEnv>(
+                pickle_wrapper, 
+                thts_unique_filename, 
+                module_name, 
+                class_name, 
+                kw_args_ptr);
+        }
+        if (env_id == ENV_ID_PY_DEBUG_3) 
+        {
+            py::gil_scoped_acquire acq;
+            
+            py::dict kw_args;
+            kw_args["walk_len"] = to_string(10);
+            kw_args["wrong_dir_prob"] = to_string(0.0);
+            kw_args["add_extra_rewards"] = "True";
+            shared_ptr<py::dict> kw_args_ptr = make_shared<py::dict>(kw_args);
+
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            string module_name = "main_mo.envs.test_mo_thts_env";
+            string class_name = "TestMoThtsEnv";
+            return make_shared<MoPyMultiprocessingThtsEnv>(
+                pickle_wrapper, 
+                thts_unique_filename, 
+                module_name, 
+                class_name, 
+                kw_args_ptr);
+        }
+        if (env_id == ENV_ID_PY_DEBUG_4) 
+        {
+            py::gil_scoped_acquire acq;
+            
+            py::dict kw_args;
+            kw_args["walk_len"] = to_string(10);
+            kw_args["wrong_dir_prob"] = to_string(0.25);
+            kw_args["add_extra_rewards"] = "True";
+            shared_ptr<py::dict> kw_args_ptr = make_shared<py::dict>(kw_args);
+
+            shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
+            string module_name = "main_mo.envs.test_mo_thts_env";
+            string class_name = "TestMoThtsEnv";
+            return make_shared<MoPyMultiprocessingThtsEnv>(
+                pickle_wrapper, 
+                thts_unique_filename, 
+                module_name, 
+                class_name, 
+                kw_args_ptr);
+        }
+
+        if (env_id == ENV_ID_TOY_TREE_DENSE)
+        {
+            return make_shared<ToyTreeEnv>(2, 5, 10, false);
+        }
+        if (env_id == ENV_ID_TOY_TREE_SPARSE)
+        {
+            return make_shared<ToyTreeEnv>(2, 5, 10, true);
+        }
 
         stringstream ss;
         ss << "Error in get_env for env_id = " << env_id;

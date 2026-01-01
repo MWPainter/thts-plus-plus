@@ -24,14 +24,15 @@ from mo_gym_thts_env import MoGymThtsEnv
 
 class ImprovedDeepSeaTreasureThtsEnv(MoGymThtsEnv):
 
-    def __init__(self, swept_by_current_prob=0.0, is_vamplew=False):
+    def __init__(self, swept_by_current_prob=0.0, is_vamplew=False, max_steps=1000):
         swept_by_current_prob = float(swept_by_current_prob)
         is_vamplew = bool(int(is_vamplew))
+        max_steps = int(max_steps)
 
         self.fully_observable = True
         
         self.env = DeepSeaTreasureV0.new(
-            max_steps=1000,
+            max_steps=max_steps,
             swept_by_current_prob=swept_by_current_prob
         )
 

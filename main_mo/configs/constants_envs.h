@@ -92,6 +92,9 @@ static const std::unordered_set<std::string> PY_ENVS =
     ENV_ID_FRUIT_TREE_7,
     ENV_ID_FRUIT_TREE_STOCH_5,
     ENV_ID_FRUIT_TREE_STOCH_7,
+
+    ENV_ID_RESOURCE_GATHER_TIMED,
+    ENV_ID_FOUR_ROOM_TIMED,
 };
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -112,3 +115,12 @@ static const std::unordered_set<std::string> GYM_ENVS =
     // ENV_ID_HIGHWAY,
 };
 
+// ---------------------------------------------------------------------------------------------------------------------
+// Environment id's - gymnasium (timed)
+// ---------------------------------------------------------------------------------------------------------------------
+
+static const std::unordered_set<std::string> TIMED_GYM_ENVS =
+{
+    ENV_ID_RESOURCE_GATHER_TIMED,
+    ENV_ID_FOUR_ROOM_TIMED,
+};
