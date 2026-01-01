@@ -52,10 +52,10 @@ static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_S_4x12 = "slippy_frozen_lake_
 
 static const std::string ENV_ID_SAILING_NORTH_ID = "sailing_(8x8,N)";
 static const std::string ENV_ID_SAILING_SOUTH_EAST_ID = "sailing_(8x8,SE)";
-static const std::string ENV_ID_SAILING_8x16_NORTH_ID = "sailing_(8x8,N)";
-static const std::string ENV_ID_SAILING_8x16_SOUTH_EAST_ID = "sailing_(8x8,SE)";
-static const std::string ENV_ID_SAILING_16x16_NORTH_ID = "sailing_(8x8,N)";
-static const std::string ENV_ID_SAILING_16x16_SOUTH_EAST_ID = "sailing_(8x8,SE)";
+static const std::string ENV_ID_SAILING_8x16_NORTH_ID = "sailing_(8x16,N)";
+static const std::string ENV_ID_SAILING_8x16_SOUTH_EAST_ID = "sailing_(8x16,SE)";
+static const std::string ENV_ID_SAILING_16x16_NORTH_ID = "sailing_(16x16,N)";
+static const std::string ENV_ID_SAILING_16x16_SOUTH_EAST_ID = "sailing_(16x16,SE)";
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Environment id's - python
