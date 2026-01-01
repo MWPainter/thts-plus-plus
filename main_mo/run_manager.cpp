@@ -416,6 +416,8 @@ namespace thts {
         throw runtime_error(ss.str());
     }
 
+    // TODO: implement get_r_max and get_r_min for each env here (can use max_trial_length if necessary here)
+
     /**
      * Helper to add params to a manager args object for MoThtsManager level params
      */
