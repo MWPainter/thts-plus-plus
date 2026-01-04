@@ -16,7 +16,8 @@ namespace thts {
         shared_ptr<MoThtsManager> manager,
         Vec r_min,
         Vec r_max,
-        bool well_spaced_eval) :
+        bool well_spaced_eval
+        bool normalised_value_space) :
             MCEvaluator(policy,max_trial_length,manager),
             mo_sampled_returns(),
             sampled_ctx_returns(),
@@ -24,8 +25,18 @@ namespace thts {
             r_min(r_min),
             r_max(r_max),
             well_spaced_eval(well_spaced_eval),
+            normalised_value_space(normalised_value_space),
             context_weights()
     {
+    }
+
+    /**
+     * Computes a reweighting of the contextual return 
+     * alpha(w) = 1 / dot(r_max - r_min, w)
+     */
+    double MoMCEvaluator::reweighting_coefficient(Vec context_weight) 
+    {
+        return 1.0 / context_weight.dot(r_max - r_min);
     }
 
     /**
@@ -37,6 +48,14 @@ namespace thts {
         Vec context_vec = context_weights.back();
         context_weights.pop_back();
         lock.unlock();
+
+        // If normalised value space, then scale the context weight by (r_max - r_min) and normalise
+        // See comments in mo_mc_eval.h for more details (but gives algorithm correct unnormalised weights)
+        Vec context_vec_for_alg = Vec(context_vec);
+        if (normalised_value_space) {
+            context_vec_for_alg = context_vec_for_alg * (r_max - r_min);
+            context_vec_for_alg = context_vec_for_alg / context_vec_for_alg.norm();
+        }
 
         // Reset
         shared_ptr<MoThtsEnv> thts_env = dynamic_pointer_cast<MoThtsEnv>(manager->thts_env(thread_id));
@@ -50,7 +69,7 @@ namespace thts {
         // Start trial
         // shared_ptr<MoThtsContext> mo_context = static_pointer_cast<MoThtsContext>(
         //     thts_env->sample_context_itfc(thread_id, *manager));
-        shared_ptr<MoThtsContext> mo_context = make_shared<MoThtsContext>(context_vec);
+        shared_ptr<MoThtsContext> mo_context = make_shared<MoThtsContext>(context_vec_for_alg);
         manager->register_thts_context(thread_id, mo_context);
         shared_ptr<const State> state = thts_env->get_initial_state_itfc();
 
@@ -67,14 +86,18 @@ namespace thts {
             state = next_state;
         }
 
+        // If normalised value space, then normalise the return from the algorithm between 0 and 1
+        if (normalised_value_space) {
+            mo_sample_return = (mo_sample_return - r_min) / (r_max - r_min);
+        }
+
         // store rollout result
-        double contextual_return = mo_sample_return.dot(mo_context->context_weight);
-        Vec normalised_sample_return = (mo_sample_return - r_min) / (r_max - r_min);
-        double normalised_contextual_return = normalised_sample_return.dot(mo_context->context_weight);
+        double contextual_return = mo_sample_return.dot(context_vec);
+        double reweighted_contextual_return = contextual_return * reweighting_coefficient(context_vec);
         lock_guard lg(lock);
         mo_sampled_returns.push_back(mo_sample_return);
         sampled_ctx_returns.push_back(contextual_return);
-        sampled_normalised_ctx_returns.push_back(normalised_contextual_return);
+        sampled_reweighted_ctx_returns.push_back(reweighted_contextual_return);
     }
 
     /**
@@ -113,11 +136,6 @@ namespace thts {
 
     }
 
-    double MoMCEvaluator::get_mo_return_mean(Vec context_weights)
-    {
-        return context_weights.dot(get_mo_return_mean());
-    }
-
     double MoMCEvaluator::get_mo_ctx_return_mean()
     {
         double weight = 1.0 / sampled_ctx_returns.size();
@@ -128,11 +146,11 @@ namespace thts {
         return mean;
     }
     
-    double MoMCEvaluator::get_normalised_mo_ctx_return_mean()
+    double MoMCEvaluator::get_reweighted_mo_ctx_return_mean()
     {
-        double weight = 1.0 / sampled_normalised_ctx_returns.size();
+        double weight = 1.0 / sampled_reweighted_ctx_returns.size();
         double mean = 0.0;
-        for (double val : sampled_normalised_ctx_returns) {
+        for (double val : sampled_reweighted_ctx_returns) {
             mean += weight * val;
         }
         return mean;
@@ -169,12 +187,12 @@ namespace thts {
         return stddev;
     }
     
-    double MoMCEvaluator::get_normalised_mo_ctx_return_variance()
+    double MoMCEvaluator::get_reweighted_mo_ctx_return_variance()
     {
-        double mean = get_normalised_mo_ctx_return_mean();
-        double weight = 1.0 / (sampled_normalised_ctx_returns.size() - 1.0);
+        double mean = get_reweighted_mo_ctx_return_mean();
+        double weight = 1.0 / (sampled_reweighted_ctx_returns.size() - 1.0);
         double stddev = 0.0;
-        for (double val : sampled_normalised_ctx_returns) {
+        for (double val : sampled_reweighted_ctx_returns) {
             stddev += weight * pow(val - mean, 2.0);
         }
         return stddev;

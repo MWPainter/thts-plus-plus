@@ -15,6 +15,7 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_001 =
         {XPR_PARAM_ID_ENV,                              ENV_ID_PY_DEBUG_2},
         {XPR_PARAM_ID_MCTS_MODE,                        true},
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
+        {XPR_PARAM_ID_VECTOR_VISIT_COUNTS,              false},
         {XPR_PARAM_ID_MAX_TRIAL_LENGTH,                 10000},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,                  true},
         {XPR_PARAM_ID_TERMINATION_BOUND,                1.0},
@@ -31,42 +32,42 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_001 =
     },
     // czt params
     {
-        {XPR_OR_ALG_ID_TAG, ALG_ID_CZT},
+        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
         {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-4,  1.0e4)},
         {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1,       1024)},
     },
     // czt doubling params
     {
-        {XPR_OR_ALG_ID_TAG, ALG_ID_CZT_DOUBLING},
+        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT_DOUBLING},
         {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-4,  1.0e4)},
         {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1,       1024)},
         {ALG_PARAM_ID_MIN_LOG2_N,                   std::make_pair(0,       10)},
     },
     // ch uct params
     {
-        {XPR_OR_ALG_ID_TAG, ALG_ID_CH_UCT},
-        {ALG_PARAM_ID_BIAS, std::make_pair(1.0e-4,   1.0e4)},
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_UCT},
+        {ALG_PARAM_ID_BIAS,                 std::make_pair(1.0e-4,   1.0e4)},
     },
     // ch czt params
     {
-        {XPR_OR_ALG_ID_TAG, ALG_ID_CH_CZT},
+        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT},
         {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-4,  1.0e4)},
         {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1,       1024)},
     },
     // ch czt doubling params
     {
-        {XPR_OR_ALG_ID_TAG, ALG_ID_CH_CZT_DOUBLING},
+        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT_DOUBLING},
         {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-4,  1.0e4)},
         {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1,       1024)},
         {ALG_PARAM_ID_MIN_LOG2_N,                   std::make_pair(0,       10)},
     },
     // bts params
     {
-        {XPR_OR_ALG_ID_TAG,             ALG_ID_CH_BTS},
-        {ALG_PARAM_ID_INIT_TEMP,        std::make_pair(1.0e-4,  1.0e4)},
-        {ALG_PARAM_ID_TEMP_DECAY_RATE,  std::make_pair(1.0e-4,  1.0e4)},
-        {ALG_PARAM_ID_EPSILON,          std::make_pair(1.0e-6,  1.0e0)},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  std::make_pair(-100.0,  0.0)},
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,            std::make_pair(1.0e-4,  1.0e4)},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,      std::make_pair(1.0e-4,  1.0e4)},
+        {ALG_PARAM_ID_EPSILON,              std::make_pair(1.0e-6,  1.0e0)},
+        {ALG_PARAM_ID_DEFAULT_Q_VALUE,      std::make_pair(-100.0,  0.0)},
     },
     // dents params
     {
@@ -80,12 +81,12 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_001 =
     },
     // ch hvuct params
     {
-        {XPR_OR_ALG_ID_TAG, ALG_ID_CH_HVUCT},
-        {ALG_PARAM_ID_BIAS, std::make_pair(1.0e-4,   1.0e4)},
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_HVUCT},
+        {ALG_PARAM_ID_BIAS,                 std::make_pair(1.0e-4,   1.0e4)},
     },
     // ch pareto params
     {
-        {XPR_OR_ALG_ID_TAG, ALG_ID_CH_PARETO},
-        {ALG_PARAM_ID_BIAS, std::make_pair(1.0e-4,   1.0e4)},
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_PARETO},
+        {ALG_PARAM_ID_BIAS,                 std::make_pair(1.0e-4,   1.0e4)},
     },
 };

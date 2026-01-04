@@ -30,6 +30,7 @@ static const std::string XPR_PARAM_ID_NAME = "xpr_name";                        
 static const std::string XPR_PARAM_ID_ENV = "env_id";                           // the env id for this experiment
 static const std::string XPR_PARAM_ID_MCTS_MODE = "mcts_mode";                  // if MCTS mode should be used
 static const std::string XPR_PARAM_ID_GRAPH_SEARCH = "graph_search";            // if should run over graph instead of tree (transposition table use)
+static const std::string XPR_PARAM_ID_VECTOR_VISIT_COUNTS = "vec_visit_counts"; // whether to use vector visit counts
 static const std::string XPR_PARAM_ID_MAX_TRIAL_LENGTH = "max_trial_length";    // max trial length
 static const std::string XPR_PARAM_ID_RUNTIME_BOUNDED = "runtime_bounded";      // if algorithms should be bounded using runtime (or number of trials)
 static const std::string XPR_PARAM_ID_TERMINATION_BOUND = "term_bound";         // runtime (or #trials) that algorithm is allowed

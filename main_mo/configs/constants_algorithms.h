@@ -30,6 +30,7 @@ static const std::string ALG_ID_CH_PARETO = "ch_pareto";
 // Constants to identify parameters used by algoirithms
 // ---------------------------------------------------------------------------------------------------------------------
 
+static const std::string ALG_PARAM_ID_VECTOR_VISIT_COUNTS = "vector_visit_counts";                  // whether to use vector visit counts
 static const std::string ALG_PARAM_ID_BIAS = "bias";                                                // bias param (uct algorithms)
 static const std::string ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH = "czt_ball_split_visit_thresh";  // minimum number of visits at a ball in czt algorithms before alowed to split 
 static const std::string ALG_PARAM_ID_MIN_LOG2_N = "min_log2_n";                                    // minimum value of N (total num trials estimate) for doubling czt

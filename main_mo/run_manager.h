@@ -3,6 +3,7 @@
 #include "mo/mo_thts_env.h"
 #include "mo/mo_thts_manager.h"
 #include "mo/mo_thts_decision_node.h"
+#include "mo/data_structures/convex_hull.h"
 
 #include <ctime>
 #include <filesystem>
@@ -17,6 +18,20 @@
 
 
 namespace thts {
+
+    /**
+     * Struct to store the MO eval metrics
+    */
+    struct MoEvalMetrics {
+        double ctx_mean;
+        double ctx_std_dev;
+        double reweighted_ctx_mean;
+        double reweighted_ctx_std_dev;
+        double normalised_ctx_mean;
+        double normalised_ctx_std_dev;
+        double hypervolume;
+        double normalised_hypervolume;
+    };
 
     /**
      * Struct to cleanly wrap interaction with configs for running one algorithm as part of an experiment
@@ -69,6 +84,7 @@ namespace thts {
             std::string get_env_id();
             bool get_mcts_mode();
             bool get_graph_search();
+            bool get_vector_visit_counts();
             int get_max_trial_length();
             bool xpr_is_runtime_bounded();
             double get_termination_bound();
@@ -102,6 +118,12 @@ namespace thts {
             std::shared_ptr<MoThtsEnv> get_env();
 
             /**
+             * Returns the upper/lower bounds of the environment value
+             */
+            Eigen::ArrayXd get_env_value_upper_bound();
+            Eigen::ArrayXd get_env_value_lower_bound();
+
+            /**
              * Returns and instance of MoThtsManager to use for this run
             */
             void _add_thts_manager_params_to_args(MoThtsManagerArgs& manager_args);
@@ -132,8 +154,7 @@ namespace thts {
             void write_eval_log_line(
                 std::ofstream& fs, 
                 int run_idx, 
-                double eval, 
-                double eval_std, 
+                MoEvalMetrics& mo_eval_metrics, 
                 int num_trials, 
                 double runtime, 
                 double search_budget_consumed, 
@@ -145,5 +166,12 @@ namespace thts {
             std::filesystem::path get_tree_log_filename(int run_idx);
             std::ofstream get_tree_log_filestream(int run_idx);
             void dump_tree_log(std::shared_ptr<MoThtsDNode> root_node, int run_idx);
+
+            /**
+             * Filestream to dump convex hull data to
+             */
+            std::filesystem::path get_convex_hull_log_filename(int run_idx);
+            std::ofstream get_convex_hull_log_filestream(int run_idx);
+            void dump_convex_hull_log(const ConvexHull& convex_hull, int run_idx);
     };
 }

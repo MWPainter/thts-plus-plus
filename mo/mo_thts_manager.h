@@ -16,7 +16,7 @@ namespace thts {
      */
     struct MoThtsManagerArgs : public ThtsManagerArgs {
         static const int reward_dim_default = -1;
-        static const int heuristic_psuedo_trials_default=1;
+        static const int heuristic_psuedo_trials_default=0;
         static const bool use_vector_visit_counts_default = false;
         
         int reward_dim;

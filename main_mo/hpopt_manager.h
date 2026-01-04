@@ -42,6 +42,7 @@ namespace thts {
             ConfigMap best_config_map;
             double best_mean_eval;
             double best_std_mean_eval;
+            MoEvalMetrics best_mo_eval_metrics;
             std::ofstream hpopt_summary_fs;
             int hp_opt_iter;
             bayesopt::Parameters bo_params;
@@ -99,6 +100,7 @@ namespace thts {
             std::string get_env_id();
             bool get_mcts_mode();
             bool get_graph_search();
+            bool get_vector_visit_counts();
             int get_max_trial_length();
             bool xpr_is_runtime_bounded();
             double get_termination_bound();
@@ -173,7 +175,7 @@ namespace thts {
              */
             void write_hpopt_summary_header();
             void write_hpopt_summary_sample_eval_line(
-                std::shared_ptr<RunManager> run_manager, double mean_eval, double std_mean_eval);
+                std::shared_ptr<RunManager> run_manager, MoEvalMetrics& mo_eval_metrics);
             void write_hpopt_summary_footer();
     };
 }

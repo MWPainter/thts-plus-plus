@@ -80,6 +80,7 @@ namespace thts {
             XPR_PARAM_ID_MCTS_MODE, 
             XPR_PARAM_ID_MAX_TRIAL_LENGTH,
             XPR_PARAM_ID_GRAPH_SEARCH,
+            XPR_PARAM_ID_VECTOR_VISIT_COUNTS,
             XPR_PARAM_ID_RUNTIME_BOUNDED, 
             XPR_PARAM_ID_TERMINATION_BOUND, 
             XPR_PARAM_ID_REPEATED_RUNS_PER_ALG, 
@@ -99,19 +100,19 @@ namespace thts {
             }
         }
 
-        // TODO: update validation for the MO algorithms and params (this is old single objective version)
         string alg_id = get_config_value<std::string>(alg_config, XPR_OR_ALG_ID_TAG);
 
         set<string> alg_ids =
         {
-            ALG_ID_UCT, 
-            ALG_ID_MAX_UCT, 
-            ALG_ID_HMCTS, 
-            ALG_ID_MENTS, 
-            ALG_ID_RENTS, 
-            ALG_ID_TENTS, 
-            ALG_ID_BTS, 
-            ALG_ID_DENTS,
+            ALG_ID_CZT, 
+            ALG_ID_CZT_DOUBLING, 
+            ALG_ID_CH_UCT, 
+            ALG_ID_CH_CZT, 
+            ALG_ID_CH_CZT_DOUBLING, 
+            ALG_ID_CH_BTS, 
+            ALG_ID_CH_DENTS, 
+            ALG_ID_CH_HVUCT, 
+            ALG_ID_CH_PARETO, 
         };
 
         if (!alg_ids.contains(alg_id))
@@ -192,6 +193,7 @@ namespace thts {
     string RunManager::get_env_id()             { return get_config_value<std::string>(xpr_config, XPR_PARAM_ID_ENV); }
     bool RunManager::get_mcts_mode()            { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_MCTS_MODE); }
     bool RunManager::get_graph_search()         { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_GRAPH_SEARCH); }
+    bool RunManager::get_vector_visit_counts()  { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_VECTOR_VISIT_COUNTS); }
     int RunManager::get_max_trial_length()      { return get_config_value<int>(xpr_config, XPR_PARAM_ID_MAX_TRIAL_LENGTH); }
     bool RunManager::xpr_is_runtime_bounded()   { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_RUNTIME_BOUNDED); }
     double RunManager::get_termination_bound()  { return get_config_value<double>(xpr_config, XPR_PARAM_ID_TERMINATION_BOUND); }
@@ -416,21 +418,36 @@ namespace thts {
         throw runtime_error(ss.str());
     }
 
-    // TODO: implement get_r_max and get_r_min for each env here (can use max_trial_length if necessary here)
+    Eigen::ArrayXd RunManager::get_env_value_upper_bound()
+    {
+        // TODO: implement this
+        throw runtime_error("get_env_value_upper_bound not implemented for env_id = " + get_env_id());
+    }
+
+    Eigen::ArrayXd RunManager::get_env_value_lower_bound()
+    {
+        // TODO: implement this
+        throw runtime_error("get_env_value_lower_bound not implemented for env_id = " + get_env_id());
+    }
 
     /**
      * Helper to add params to a manager args object for MoThtsManager level params
      */
-    void RunManager::_add_thts_manager_params_to_args(MoThtsManagerArgs& manager_args)
+    void RunManager::_add_thts_manager_params_to_args(MoThtsManagerArgs& manager_args, shared_ptr<MoThtsEnv> env)
     {
         manager_args.num_threads = get_num_search_threads();
         manager_args.num_envs = std::max(get_num_search_threads(), get_num_eval_threads());
         manager_args.max_depth = get_max_trial_length();
-        // TODO: make sure using correct heuristic function and passing dim in if necessary
-        manager_args.mo_heuristic_fn = (get_mcts_mode()) ? helper::mo_rollout_heuristic_fn : helper::mo_zero_heuristic_fn;
         manager_args.mcts_mode = get_mcts_mode();
         manager_args.graph_search = get_graph_search();
         manager_args.first_visit = true;
+        manager_args.reward_dim = env->get_reward_dim();
+        // MoThtsManager will load correct zero heuristic function based on reward dim if not set
+        if (get_mcts_mode()) {
+            manager_args.mo_heuristic_fn = helper::mo_rollout_heuristic_fn;
+            manager_args.heuristic_psuedo_trials = 1;
+        }
+        manager_args.use_vector_visit_counts = get_vector_visit_counts();
     }
     
     /**
@@ -443,57 +460,74 @@ namespace thts {
         string alg_id = get_alg_id();
         shared_ptr<MoThtsManager> thts_manager = nullptr;
 
-        // TODO: update this for the MO algorithms and params (this is old single objective version)
-
-        if (alg_id == ALG_ID_UCT || alg_id == ALG_ID_MAX_UCT) 
+        if (alg_id == ALG_ID_CZT || alg_id == ALG_ID_CZT_DOUBLING) 
         {
-            UctManagerArgs manager_args(env);
+            CztManagerArgs manager_args(env);
             manager_args.bias = get_bias();
-            _add_thts_manager_params_to_args(manager_args);
-            return make_shared<UctManager>(manager_args);
-        }
-
-        else if (alg_id == ALG_ID_HMCTS)
-        {
-            if (xpr_is_runtime_bounded())
+            if (alg_id == ALG_ID_CZT_DOUBLING)
             {
-                throw runtime_error("HMCTS requires a total budget (num trials) to be specified ahead of time, so HMCTS cannot be used for runtime bounded experiments.");
+                manager_args.use_doubling_N_term = true;
+                manager_args.min_log2_N = get_min_log2_N();
             }
-            HmctsManagerArgs manager_args(env);
-            manager_args.bias = get_bias();
-            manager_args.total_budget = get_termination_bound();
-            manager_args.uct_budget_threshold = get_uct_budget();
-            _add_thts_manager_params_to_args(manager_args);
-            return make_shared<HmctsManager>(manager_args);
+            _add_thts_manager_params_to_args(manager_args,env);
+            return make_shared<CztManager>(manager_args);
         }
 
-        else if (alg_id == ALG_ID_MENTS || alg_id == ALG_ID_RENTS || alg_id == ALG_ID_TENTS)
+        else if (alg_id == ALG_ID_CH_UCT)
         {
-            MentsManagerArgs manager_args(env);
-            manager_args.temp_schedule_ptr = make_shared<SqrtSchedule>(get_init_temp(), get_temp_decay_rate());
-            manager_args.epsilon = get_epsilon();
-            manager_args.default_q_value = get_default_q_value();
-            _add_thts_manager_params_to_args(manager_args);
-            return make_shared<MentsManager>(manager_args);
+            ChUctManagerArgs manager_args(env);
+            manager_args.bias = get_bias();
+            _add_thts_manager_params_to_args(manager_args,env);
+            return make_shared<ChUctManager>(manager_args);
         }
 
-        else if (alg_id == ALG_ID_BTS || alg_id == ALG_ID_DENTS)
+        else if (alg_id == ALG_ID_CH_CZT || alg_id == ALG_ID_CH_CZT_DOUBLING) 
+        {
+            ChCztManagerArgs manager_args(env);
+            manager_args.bias = get_bias();
+            if (alg_id == ALG_ID_CH_CZT_DOUBLING)
+            {
+                manager_args.use_doubling_N_term = true;
+                manager_args.min_log2_N = get_min_log2_N();
+            }
+            _add_thts_manager_params_to_args(manager_args,env);
+            return make_shared<ChCztManagerArgs>(manager_args);
+        }
+
+        else if (alg_id == ALG_ID_CH_BTS) // || alg_id == ALG_ID_CH_DENTS)
         {
             DentsManagerArgs manager_args(env);
             manager_args.temp_schedule_ptr = make_shared<SqrtSchedule>(get_init_temp(), get_temp_decay_rate());
             manager_args.epsilon = get_epsilon();
             manager_args.default_q_value = get_default_q_value();
             
-            if (alg_id == ALG_ID_DENTS)
-            {
-                manager_args.entropy_coeff_schedule_ptr = make_shared<LinearSchedule>(get_init_entropy_coeff(), get_entropy_zero_at());
-            }
+            // if (alg_id == ALG_ID_CH_DENTS)
+            // {
+            //     manager_args.entropy_coeff_schedule_ptr = make_shared<LinearSchedule>(get_init_entropy_coeff(), get_entropy_zero_at());
+            // }
 
-            _add_thts_manager_params_to_args(manager_args);
+            _add_thts_manager_params_to_args(manager_args,env);
 
             return make_shared<DentsManager>(manager_args);
         }
-        
+
+        else if (alg_id == ALG_ID_CH_HVUCT)
+        {
+            ChHvuctManagerArgs manager_args(env);
+            manager_args.bias = get_bias();
+            manager_args.hv_reference_point = get_env_value_lower_bound();
+            _add_thts_manager_params_to_args(manager_args,env);
+            return make_shared<ChHvuctManager>(manager_args);
+        }
+
+        else if (alg_id == ALG_ID_CH_PARETO)
+        {
+            ChParetoManagerArgs manager_args(env);
+            manager_args.bias = get_bias();
+            _add_thts_manager_params_to_args(manager_args,env);
+            return make_shared<ChParetoManager>(manager_args);
+        }
+
         stringstream ss;
         ss << "Error in RunManager get_thts_manager for alg_id = " << alg_id;
         throw runtime_error(ss.str());
@@ -505,38 +539,29 @@ namespace thts {
     shared_ptr<MoThtsDNode> RunManager::get_root_search_node(shared_ptr<MoThtsEnv> env, shared_ptr<MoThtsManager> manager)
     {
         string alg_id = get_alg_id();
-        // TODO: update this for the MO algorithms and params (this is old single objective version)
-        if (alg_id == ALG_ID_UCT) {
-            shared_ptr<UctManager> uct_manager = static_pointer_cast<UctManager>(manager);
-            return make_shared<UctDNode>(uct_manager, env->get_initial_state_itfc(), 0, 0);
+        if (alg_id == ALG_ID_CZT || alg_id == ALG_ID_CZT_DOUBLING) {
+            shared_ptr<CztManager> czt_manager = static_pointer_cast<CztManager>(manager);
+            return make_shared<CztDNode>(czt_manager, env->get_initial_state_itfc(), 0, 0);
+        }   
+        if (alg_id == ALG_ID_CH_UCT) {
+            shared_ptr<ChUctManager> chuct_manager = static_pointer_cast<ChUctManager>(manager);
+            return make_shared<ChUctDNode>(chuct_manager, env->get_initial_state_itfc(), 0, 0);
         }
-        if (alg_id == ALG_ID_MAX_UCT) {
-            shared_ptr<UctManager> uct_manager = static_pointer_cast<UctManager>(manager);
-            return make_shared<MaxUctDNode>(uct_manager, env->get_initial_state_itfc(), 0, 0);
+        if (alg_id == ALG_ID_CH_CZT || alg_id == ALG_ID_CH_CZT_DOUBLING) {
+            shared_ptr<ChCztManager> chczt_manager = static_pointer_cast<ChCztManager>(manager);
+            return make_shared<ChCztDNode>(chczt_manager, env->get_initial_state_itfc(), 0, 0);
         }
-        if (alg_id == ALG_ID_MENTS) {
-            shared_ptr<MentsManager> ments_manager = static_pointer_cast<DentsManager>(manager);
-            return make_shared<MentsDNode>(ments_manager, env->get_initial_state_itfc(), 0, 0);
+        if (alg_id == ALG_ID_CH_BTS) {
+            shared_ptr<ChBtsManager> chbts_manager = static_pointer_cast<ChBtsManager>(manager);
+            return make_shared<ChBtsDNode>(chbts_manager, env->get_initial_state_itfc(), 0, 0);
         }
-        if (alg_id == ALG_ID_BTS) {
-            shared_ptr<DentsManager> bts_manager = static_pointer_cast<DentsManager>(manager);
-            return make_shared<EstDNode>(bts_manager, env->get_initial_state_itfc(), 0, 0);
+        if (alg_id == ALG_ID_CH_HVUCT) {
+            shared_ptr<ChHvuctManager> chhvuct_manager = static_pointer_cast<ChHvuctManager>(manager);
+            return make_shared<ChHvuctDNode>(chhvuct_manager, env->get_initial_state_itfc(), 0, 0);
         }
-        if (alg_id == ALG_ID_DENTS) {
-            shared_ptr<DentsManager> dents_manager = static_pointer_cast<DentsManager>(manager);
-            return make_shared<DentsDNode>(dents_manager, env->get_initial_state_itfc(), 0, 0);
-        }
-        if (alg_id == ALG_ID_RENTS) {
-            shared_ptr<MentsManager> ments_manager = static_pointer_cast<MentsManager>(manager);
-            return make_shared<RentsDNode>(ments_manager, env->get_initial_state_itfc(), 0, 0);
-        }
-        if (alg_id == ALG_ID_TENTS) {
-            shared_ptr<MentsManager> ments_manager = static_pointer_cast<MentsManager>(manager);
-            return make_shared<TentsDNode>(ments_manager, env->get_initial_state_itfc(), 0, 0);
-        }
-        if (alg_id == ALG_ID_HMCTS) {
-            shared_ptr<HmctsManager> uct_manager = static_pointer_cast<HmctsManager>(manager);
-            return make_shared<HmctsDNode>(uct_manager, env->get_initial_state_itfc(), 0, 0);
+        if (alg_id == ALG_ID_CH_PARETO) {
+            shared_ptr<ChParetoManager> chpareto_manager = static_pointer_cast<ChParetoManager>(manager);
+            return make_shared<ChParetoDNode>(chpareto_manager, env->get_initial_state_itfc(), 0, 0);
         }
 
         stringstream ss;
@@ -634,6 +659,7 @@ namespace thts {
             << XPR_PARAM_ID_ENV << ","
             << XPR_PARAM_ID_MCTS_MODE << ","
             << XPR_PARAM_ID_GRAPH_SEARCH << ","
+            << XPR_PARAM_ID_VECTOR_VISIT_COUNTS << ","
             << XPR_PARAM_ID_MAX_TRIAL_LENGTH << ","
             << XPR_PARAM_ID_RUNTIME_BOUNDED << ","
             << XPR_PARAM_ID_TERMINATION_BOUND << ","
@@ -646,6 +672,7 @@ namespace thts {
             << get_env_id() << ","
             << get_mcts_mode() << ","
             << get_graph_search() << ","
+            << get_vector_visit_counts() << ","
             << get_max_trial_length() << ","
             << xpr_is_runtime_bounded() << ","
             << get_termination_bound() << ","
@@ -671,9 +698,20 @@ namespace thts {
         fs << endl;
 
         // Header for main body
-        // TODO: update this for any additional MO eval metrics
         fs << endl << "Evals: " << endl << endl;
-        fs << "run_idx,eval,eval_std,num_trials,runtime,search_budget_consumed,num_eval_samples" << endl;
+        fs << "run_idx,"
+            << "ctx_mean,"
+            << "ctx_std_dev,"
+            << "reweighted_ctx_mean,"
+            << "reweighted_ctx_std_dev,"
+            << "normalised_ctx_mean,"
+            << "normalised_ctx_std_dev,"
+            << "hypervolume,"
+            << "normalised_hypervolume,"
+            << "num_trials,"
+            << "runtime,"
+            << "search_budget_consumed,"
+            << "num_eval_samples" << endl;
     }
 
     void RunManager::write_eval_log_line(
@@ -686,13 +724,18 @@ namespace thts {
         double search_budget_consumed, 
         int num_eval_samples)
     {
-        // TODO: update this for any additional MO eval metrics (corresponding to the header)
         fs << run_idx << "," 
-            << eval << "," 
-            << eval_std << "," 
+            << mo_eval_metrics.ctx_mean << "," 
+            << mo_eval_metrics.ctx_std_dev << "," 
+            << mo_eval_metrics.reweighted_ctx_mean << "," 
+            << mo_eval_metrics.reweighted_ctx_std_dev << "," 
+            << mo_eval_metrics.normalised_ctx_mean << "," 
+            << mo_eval_metrics.normalised_ctx_std_dev << "," 
+            << mo_eval_metrics.hypervolume << "," 
+            << mo_eval_metrics.normalised_hypervolume << "," 
             << num_trials << "," 
             << runtime << "," 
-            << search_budget_consumed << "," 
+            << search_budget_consumed << ","
             << num_eval_samples << endl;
     }
 
@@ -729,12 +772,49 @@ namespace thts {
         return file;
     }
 
-    // TODO: add functions for outputting final convex hull data to a file
-
     void RunManager::dump_tree_log(shared_ptr<MoThtsDNode> root_node, int run_idx)
     {
         ofstream tree_log_fs = get_tree_log_filestream(run_idx);
         tree_log_fs << root_node->get_pretty_print_string(2) << endl;
         tree_log_fs.close();
+    }
+
+    std::filesystem::path RunManager::get_convex_hull_log_filename(int run_idx)
+    {
+
+        stringstream filename_ss;
+        filename_ss << "convex_hull_log_run_" << _int_to_string_padded(run_idx, 4) << ".txt";
+
+        std::filesystem::path dir = get_eval_logs_dir();
+        std::filesystem::path filename = dir / filename_ss.str();
+
+        return filename;
+    }
+
+    std::ofstream RunManager::get_convex_hull_log_filestream(int run_idx)
+    {
+
+        std::filesystem::path filename = get_convex_hull_log_filename(run_idx);
+        std::filesystem::path dir = filename.parent_path();
+
+        if (!std::filesystem::exists(dir)) {
+            std::filesystem::create_directories(dir);
+        }
+
+        // Open the file (will create it if it doesn't exist)
+        ofstream file(filename, ios::out | ios::trunc);
+        if (!file.is_open()) 
+        {
+            throw runtime_error("Failed to open file: " + filename.string());
+        }
+
+        return file;
+    }
+
+    void RunManager::dump_convex_hull_log(const ConvexHull& convex_hull, int run_idx)
+    {
+        ofstream convex_hull_log_fs = get_convex_hull_log_filestream(run_idx);
+        convex_hull_log_fs << convex_hull << endl;
+        convex_hull_log_fs.close();
     }
 }

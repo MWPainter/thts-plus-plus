@@ -490,7 +490,7 @@ void czt_test() {
     cout << "Mean MO ctx return." << endl;
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
 }
 
 void czt_4d_test() {
@@ -562,7 +562,7 @@ void czt_4d_test() {
     cout << "Mean MO ctx return." << endl;
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
 }
 
 void gym_env_test() {
@@ -706,7 +706,7 @@ void mo_gym_env_test(string thts_unique_filename="/") {
     cout << "Mean MO ctx return." << endl;
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
 
     // Trying to make python embedding exit gracefully 
     manager.reset();
@@ -818,7 +818,7 @@ void sm_bts_test() {
     cout << "Mean MO ctx return." << endl;
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
 }
 
 void sm_bts_4d_test() {
@@ -884,7 +884,7 @@ void sm_bts_4d_test() {
     cout << "Mean MO ctx return." << endl;
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
 }
 
 void sm_dents_test() {
@@ -954,7 +954,7 @@ void sm_dents_test() {
     cout << "Mean MO ctx return." << endl;
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
 }
 
 void sm_bts_bin_tree_test() {
@@ -1024,7 +1024,7 @@ void sm_bts_bin_tree_test() {
     cout << "Mean MO ctx return." << endl;
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
 }
 
 void sm_bts_bin_tree_4d_test() {
@@ -1085,7 +1085,7 @@ void sm_bts_bin_tree_4d_test() {
     cout << "Mean MO ctx return." << endl;
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
 }
 
 void chmcts_test() {
@@ -1160,7 +1160,7 @@ void chmcts_test() {
     cout << "Mean MO ctx return." << endl;
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
 }
 
 void chmcts_4d_test() { 
@@ -1235,7 +1235,7 @@ void chmcts_4d_test() {
     cout << "Mean MO ctx return." << endl;
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
 }
 
 // void ch_lin_prog_debugging() {
@@ -1639,7 +1639,7 @@ void ch_bts_test() {
     cout << "Mean MO ctx return." << endl;
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
 }
 
 void ch_uct_test() {
@@ -1714,7 +1714,7 @@ void ch_uct_test() {
     cout << "Mean MO ctx return." << endl;
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
 }
 
 void ch_hvuct_test() {
@@ -1788,7 +1788,7 @@ void ch_hvuct_test() {
     cout << "Mean MO ctx return." << endl;
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
 }
 
 void ch_pareto_uct_test() {
@@ -1861,7 +1861,7 @@ void ch_pareto_uct_test() {
     cout << "Mean MO ctx return." << endl;
     cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
     cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_normalised_mo_ctx_return_mean() << endl;
+    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
 }
 
 // C++ entry point for debugging
@@ -1895,8 +1895,6 @@ int main(int argc, char *argv[]) {
 
     /**
      * Testing python gym envs 
-     * TODO: this currently fails, because gym envs requires algorithms to run in a model free mode, but we only have 
-     *      single objective algorithms implemented in a planning mode
     */
     gym_env_test();
 

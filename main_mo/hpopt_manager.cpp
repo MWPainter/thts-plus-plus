@@ -59,6 +59,7 @@ namespace thts {
         best_config_map(),
         best_mean_eval(std::numeric_limits<double>::lowest()),
         best_std_mean_eval(std::numeric_limits<double>::lowest()),
+        best_mo_eval_metrics(),
         hpopt_summary_fs(),
         hp_opt_iter(0),
         bo_params(params)
@@ -79,6 +80,7 @@ namespace thts {
         best_config_map(other.best_config_map),
         best_mean_eval(other.best_mean_eval),
         best_std_mean_eval(other.best_std_mean_eval),
+        best_mo_eval_metrics(other.best_mo_eval_metrics),
         hpopt_summary_fs(),
         hp_opt_iter(other.hp_opt_iter),
         bo_params(other.bo_params)
@@ -116,6 +118,7 @@ namespace thts {
             XPR_PARAM_ID_ENV, 
             XPR_PARAM_ID_MCTS_MODE, 
             XPR_PARAM_ID_GRAPH_SEARCH,
+            XPR_PARAM_ID_VECTOR_VISIT_COUNTS,
             XPR_PARAM_ID_MAX_TRIAL_LENGTH,
             XPR_PARAM_ID_RUNTIME_BOUNDED, 
             XPR_PARAM_ID_TERMINATION_BOUND, 
@@ -141,20 +144,19 @@ namespace thts {
             }
         }
 
-
-        // TODO: update this for list of MO algorithms
         string alg_id = get_config_value<std::string>(alg_config, XPR_OR_ALG_ID_TAG);
 
         set<string> alg_ids =
         {
-            ALG_ID_UCT, 
-            ALG_ID_MAX_UCT, 
-            ALG_ID_HMCTS, 
-            ALG_ID_MENTS, 
-            ALG_ID_RENTS, 
-            ALG_ID_TENTS, 
-            ALG_ID_BTS, 
-            ALG_ID_DENTS,
+            ALG_ID_CZT, 
+            ALG_ID_CZT_DOUBLING, 
+            ALG_ID_CH_UCT, 
+            ALG_ID_CH_CZT, 
+            ALG_ID_CH_CZT_DOUBLING, 
+            ALG_ID_CH_BTS, 
+            ALG_ID_CH_DENTS, 
+            ALG_ID_CH_HVUCT, 
+            ALG_ID_CH_PARETO, 
         };
 
         if (!alg_ids.contains(alg_id))
@@ -274,6 +276,7 @@ namespace thts {
     string HpoptManager::get_env_id()             { return get_config_value<std::string>(xpr_config, XPR_PARAM_ID_ENV); }
     bool HpoptManager::get_mcts_mode()            { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_MCTS_MODE); }
     bool HpoptManager::get_graph_search()         { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_GRAPH_SEARCH); }
+    bool HpoptManager::get_vector_visit_counts()  { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_VECTOR_VISIT_COUNTS); }
     int HpoptManager::get_max_trial_length()      { return get_config_value<int>(xpr_config, XPR_PARAM_ID_MAX_TRIAL_LENGTH); }
     bool HpoptManager::xpr_is_runtime_bounded()   { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_RUNTIME_BOUNDED); }
     double HpoptManager::get_termination_bound()  { return get_config_value<double>(xpr_config, XPR_PARAM_ID_TERMINATION_BOUND); }
@@ -364,6 +367,7 @@ namespace thts {
         double mean_eval = 0.0;
         double std_eval = 0.0;
         double std_mean_eval = 0.0;
+        MoEvalMetrics avg_mo_eval_metrics = MoEvalMetrics();
 
         int min_repeats = get_hpopt_min_repeats();
         double estimate_confidence_threshold = get_hpopt_estimate_confidence_threshold();
@@ -377,9 +381,21 @@ namespace thts {
         // run evals
         while (repeats_run < min_repeats || std_mean_eval > estimate_confidence_threshold)
         {
-            // TODO: update this to use MO eval metrics
-            double eval = thts::run_searches(*sampled_run_manager, true, false);
+            MoEvalMetrics mo_eval_metrics = thts::run_searches(*sampled_run_manager, true, false, false);
 
+            avg_mo_eval_metrics.ctx_mean *= repeats_run / (double)(repeats_run + 1);
+            avg_mo_eval_metrics.reweighted_ctx_mean *= repeats_run / (double)(repeats_run + 1);
+            avg_mo_eval_metrics.normalised_ctx_mean *= repeats_run / (double)(repeats_run + 1);
+            avg_mo_eval_metrics.hypervolume *= repeats_run / (double)(repeats_run + 1);
+            avg_mo_eval_metrics.normalised_hypervolume *= repeats_run / (double)(repeats_run + 1);
+
+            avg_mo_eval_metrics.ctx_mean += mo_eval_metrics.ctx_mean / (double)(repeats_run + 1);
+            avg_mo_eval_metrics.reweighted_ctx_mean += mo_eval_metrics.reweighted_ctx_mean / (double)(repeats_run + 1);
+            avg_mo_eval_metrics.normalised_ctx_mean += mo_eval_metrics.normalised_ctx_mean / (double)(repeats_run + 1);
+            avg_mo_eval_metrics.hypervolume += mo_eval_metrics.hypervolume / (double)(repeats_run + 1);
+            avg_mo_eval_metrics.normalised_hypervolume += mo_eval_metrics.normalised_hypervolume / (double)(repeats_run + 1);
+
+            double eval = mo_eval_metrics.ctx_mean;
             evals.push_back(eval);
             _update_statistics_(evals, mean_eval, std_eval, std_mean_eval);
             repeats_run++;
@@ -408,10 +424,11 @@ namespace thts {
             this->best_config_map = sampled_run_manager->alg_config;
             this->best_mean_eval = mean_eval;
             this->best_std_mean_eval = std_mean_eval;
+            this->best_mo_eval_metrics = mo_eval_metrics;
         }
         
         // Write to logs
-        this->write_hpopt_summary_sample_eval_line(sampled_run_manager, mean_eval, std_mean_eval);
+        this->write_hpopt_summary_sample_eval_line(sampled_run_manager, avg_mo_eval_metrics);
 
         // Return sample eval
         hp_opt_iter++;
@@ -440,6 +457,7 @@ namespace thts {
             {XPR_PARAM_ID_ENV,                      get_config_value<std::string>(xpr_config, XPR_PARAM_ID_ENV)},
             {XPR_PARAM_ID_MCTS_MODE,                get_config_value<bool>(xpr_config, XPR_PARAM_ID_MCTS_MODE)},
             {XPR_PARAM_ID_GRAPH_SEARCH,             get_config_value<bool>(xpr_config, XPR_PARAM_ID_GRAPH_SEARCH)},
+            {XPR_PARAM_ID_VECTOR_VISIT_COUNTS,      get_config_value<bool>(xpr_config, XPR_PARAM_ID_VECTOR_VISIT_COUNTS)},
             {XPR_PARAM_ID_MAX_TRIAL_LENGTH,         get_config_value<int>(xpr_config, XPR_PARAM_ID_MAX_TRIAL_LENGTH)},
             {XPR_PARAM_ID_RUNTIME_BOUNDED,          get_config_value<bool>(xpr_config, XPR_PARAM_ID_RUNTIME_BOUNDED)},
             {XPR_PARAM_ID_TERMINATION_BOUND,        get_config_value<double>(xpr_config, XPR_PARAM_ID_TERMINATION_BOUND)},
@@ -587,6 +605,7 @@ namespace thts {
             << XPR_PARAM_ID_ENV << ","
             << XPR_PARAM_ID_MCTS_MODE << ","
             << XPR_PARAM_ID_GRAPH_SEARCH << ","
+            << XPR_PARAM_ID_VECTOR_VISIT_COUNTS << ","
             << XPR_PARAM_ID_MAX_TRIAL_LENGTH << ","
             << XPR_PARAM_ID_RUNTIME_BOUNDED << ","
             << XPR_PARAM_ID_TERMINATION_BOUND << ","
@@ -604,6 +623,7 @@ namespace thts {
             << get_env_id() << ","
             << get_mcts_mode() << ","
             << get_graph_search() << ","
+            << get_vector_visit_counts() << ","
             << get_max_trial_length() << ","
             << xpr_is_runtime_bounded() << ","
             << get_termination_bound() << ","
@@ -630,9 +650,16 @@ namespace thts {
         }
         
         // csv header for eval lines
-        // TODO: update this for MO eval metrics
         hpopt_summary_fs << endl << "Evaluations:" << endl << endl;
-        hpopt_summary_fs << "hp_opt_iter,mean_eval,std_mean_eval,best_eval_so_far";
+        hpopt_summary_fs << "hp_opt_iter,"
+            << "mean_eval,"
+            << "std_mean_eval,"
+            << "best_eval_so_far,"
+            << "ctx_mean,"
+            << "reweighted_ctx_mean,"
+            << "normalised_ctx_mean,"
+            << "hypervolume,"
+            << "normalised_hypervolume";
         for (const string& alg_param_id : ALG_ID_TO_ALG_PARAM_IDS.at(alg_id))
         {
             hpopt_summary_fs << "," << alg_param_id;
@@ -641,14 +668,19 @@ namespace thts {
     }
 
     void HpoptManager::write_hpopt_summary_sample_eval_line(
-        shared_ptr<RunManager> run_manager, double mean_eval, double std_mean_eval)
+        shared_ptr<RunManager> run_manager, MoEvalMetrics& mo_eval_metrics)
     {
-        // TODO: update this for MO eval metrics
         string alg_id = get_alg_id();
         // Use the alg_config from the run_manager directly
         const ConfigMap& alg_params = run_manager->alg_config;
 
-        hpopt_summary_fs << hp_opt_iter << "," << mean_eval << "," << std_mean_eval << "," << this->best_mean_eval;
+        hpopt_summary_fs 
+            << hp_opt_iter << "," 
+            << mo_eval_metrics.ctx_mean << "," 
+            << mo_eval_metrics.reweighted_ctx_mean << "," 
+            << mo_eval_metrics.normalised_ctx_mean << "," 
+            << mo_eval_metrics.hypervolume << "," 
+            << mo_eval_metrics.normalised_hypervolume;
         for (const string& alg_param_id : ALG_ID_TO_ALG_PARAM_IDS.at(alg_id))
         {
             // Extract value from variant and print it
@@ -665,11 +697,21 @@ namespace thts {
     
     void HpoptManager::write_hpopt_summary_footer()
     {   
-        // TODO: update this for MO eval metrics
-        hpopt_summary_fs << endl << "Best Params: " << endl << endl;
+        hpopt_summary_fs << endl;
+        hpopt_summary_fs << "Best Params Eval: " << endl << endl;
         hpopt_summary_fs << "mean_eval - " << best_mean_eval << endl;
         hpopt_summary_fs << "std_mean_eval - " << best_std_mean_eval << endl;
-        
+        hpopt_summary_fs << endl;
+
+        hpopt_summary_fs << "Best Eval Metrics: " << endl << endl;
+        hpopt_summary_fs << "ctx_mean - " << best_mo_eval_metrics.ctx_mean << endl;
+        hpopt_summary_fs << "reweighted_ctx_mean - " << best_mo_eval_metrics.reweighted_ctx_mean << endl;
+        hpopt_summary_fs << "normalised_ctx_mean - " << best_mo_eval_metrics.normalised_ctx_mean << endl;
+        hpopt_summary_fs << "hypervolume - " << best_mo_eval_metrics.hypervolume << endl;
+        hpopt_summary_fs << "normalised_hypervolume - " << best_mo_eval_metrics.normalised_hypervolume << endl;
+        hpopt_summary_fs << endl;
+
+        hpopt_summary_fs << "Best Params: " << endl << endl;
         string alg_id = get_alg_id();
 
         for (const string& alg_param_id : ALG_ID_TO_ALG_PARAM_IDS.at(alg_id))

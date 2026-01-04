@@ -70,7 +70,7 @@ namespace thts {
      * Performs all of the (replicated) searches corresponding to 'run_id'
      * If hpopt is true, then dont run any logging, and only return the final mc eval
     */
-    double run_searches(RunManager& run_manager, bool hpopt, bool log_trees)
+    double run_searches(RunManager& run_manager, bool hpopt, bool log_trees, bool log_convex_hulls)
     {
         // Open eval log
         ofstream eval_log_fs;
@@ -81,7 +81,7 @@ namespace thts {
         }
 
         // final eval to return
-        double final_eval_mean = 0.0; 
+        MoEvalMetrics final_mo_eval_metrics = MoEvalMetrics(); 
         
         // Run the perscribed number of repeats
         for (int run_idx=0; run_idx < run_manager.get_repeated_runs_per_alg(); run_idx++)
@@ -125,11 +125,8 @@ namespace thts {
             double eval_mean = 0.0, eval_std = 0.0;
             if (!hpopt)
             {
-                pair<double,double> eval = mc_eval(env, root_node, thts_manager, run_manager);
-                eval_mean = eval.first;
-                eval_std = eval.second;
-                run_manager.write_eval_log_line(
-                    eval_log_fs, run_idx, eval_mean, eval_std, 0.0, 0.0, 0.0, run_manager.get_num_eval_rollouts());
+                MoEvalMetrics mo_eval_metrics = run_evals(env, root_node, thts_manager, run_manager);
+                run_manager.write_eval_log_line(eval_log_fs, run_idx, mo_eval_metrics, 0, 0.0, 0.0, run_manager.get_num_eval_rollouts());
             }
 
             // run trials, evaluating every eval delta
@@ -157,22 +154,11 @@ namespace thts {
                 // eval (always run final eval, but only log if 'run_evals')
                 if (!hpopt || search_budget_consumed >= run_manager.get_termination_bound())
                 {
-                    // TODO: update to use all MO eval metrics + log them
-                    pair<double,double> eval = mc_eval(env, root_node, thts_manager, run_manager);
-                    eval_mean = eval.first;
-                    final_eval_mean = eval_mean;
-                    eval_std = eval.second;
+                    MoEvalMetrics mo_eval_metrics = run_evals(env, root_node, thts_manager, run_manager);
+                    final_mo_eval_metrics = mo_eval_metrics;
                     if (!hpopt)
                     {
-                        run_manager.write_eval_log_line(
-                            eval_log_fs, 
-                            run_idx, 
-                            eval_mean, 
-                            eval_std, 
-                            total_trials_run, 
-                            total_runtime, 
-                            search_budget_consumed, 
-                            run_manager.get_num_eval_rollouts());
+                        run_manager.write_eval_log_line(eval_log_fs, run_idx, mo_eval_metrics, total_trials_run, total_runtime, search_budget_consumed, run_manager.get_num_eval_rollouts());
                     } 
                 }
             }
@@ -181,6 +167,15 @@ namespace thts {
             if (log_trees)
             {
                 run_manager.dump_tree_log(root_node, run_idx);
+            }
+
+            // Log convex hulls if wanted
+            if (log_convex_hulls)
+            {
+                // TODO: make sure MoThtsDNode has a function to get the convex hull and its implemented for all algorithms
+                throw runtime_error("Convex hull logging not implemented yet");
+                ConvexHull convex_hull = root_node->get_convex_hull();
+                run_manager.dump_convex_hull_log(convex_hull, run_idx);
             }
 
             // Flush
@@ -203,28 +198,60 @@ namespace thts {
             eval_log_fs.close();
         }
         
-        return final_eval_mean;
+        return final_mo_eval_metrics;
     }
 
     /**
      * Perform an mc eval (of policy from tree node)
     */
-    pair<double,double> mc_eval(
+    MoEvalMetrics run_evals(
         shared_ptr<MoThtsEnv> env, 
         shared_ptr<MoThtsDNode> root_node, 
         shared_ptr<MoThtsManager> thts_manager,
         RunManager& run_manager) 
     {   
-        // TODO: update this to include r_min and r_max in MoMCEvaluator
-        // TODO: update this to return the MO eval metrics
+        // MO eval metrics to return
+        MoEvalMetrics mo_eval_metrics = MoEvalMetrics();
+
+        // Eval policy and min/max values
         shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(root_node, env, thts_manager);
-        MoMCEvaluator evaluator(eval_policy, run_manager.get_max_trial_length(), thts_manager);
-        evaluator.run_rollouts(run_manager.get_num_eval_rollouts(), run_manager.get_num_eval_threads());
-        double mean = evaluator.get_mean_return();
-        double std_dev = evaluator.get_stddev_return();
-        return make_pair(mean,std_dev);
+        Vec value_lower_bound = run_manager.get_env_value_lower_bound();
+        Vec value_upper_bound = run_manager.get_env_value_upper_bound();
+
+        // Contextual return and reweighted contextual return
+        MoMCEvaluator unnormalised_evaluator(
+            eval_policy, 
+            run_manager.get_max_trial_length(), 
+            thts_manager, 
+            value_lower_bound, 
+            value_upper_bound,
+            true,
+            false
+        );
+        unnormalised_evaluator.run_rollouts(run_manager.get_num_eval_rollouts(), run_manager.get_num_eval_threads());
+        mo_eval_metrics.ctx_mean = unnormalised_evaluator.get_mo_ctx_return_mean();
+        mo_eval_metrics.ctx_std_dev = unnormalised_evaluator.get_mo_ctx_return_variance();
+        mo_eval_metrics.reweighted_ctx_mean = unnormalised_evaluator.get_reweighted_mo_ctx_return_mean();
+        mo_eval_metrics.reweighted_ctx_std_dev = unnormalised_evaluator.get_reweighted_mo_ctx_return_variance();
+
+        // Normalised contextual return
+        MoMCEvaluator normalised_evaluator(
+            eval_policy, 
+            run_manager.get_max_trial_length(), 
+            thts_manager, 
+            value_lower_bound, 
+            value_upper_bound,
+            true,
+            true
+        );
+        normalised_evaluator.run_rollouts(run_manager.get_num_eval_rollouts(), run_manager.get_num_eval_threads());
+        mo_eval_metrics.normalised_ctx_mean = normalised_evaluator.get_mo_ctx_return_mean();
+        mo_eval_metrics.normalised_ctx_std_dev = normalised_evaluator.get_mo_ctx_return_variance();
+
+        // TODO: add (normalised) hypervolume computation here
+        // TODO: AND TRANSLATE/SCALE CONVEX HULL FOR NORMALISED HV
+        throw runtime_error("Hypervolume computation not implemented yet");
+
+        return mo_eval_metrics;
     }
-
-    // TODO: add functions for other eval metrics - e.g. hypervolume
-
 }

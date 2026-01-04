@@ -19,12 +19,12 @@ namespace thts {
      * Returns the final eval_mean of the final search (which is only used in hp opt)
      * Flag to change some parts of the loop when running hpopts
      */
-    double run_searches(RunManager& run_manager, bool hpopt=false, bool log_trees=true);
+     MoEvalMetrics run_searches(RunManager& run_manager, bool hpopt=false, bool log_trees=true, bool log_convex_hulls=true);
 
     /**
-     * Perform an mc eval (of policy from tree node)
+     * Perform an mc eval and return the MO eval metrics
     */
-    std::pair<double,double> mc_eval(
+    MoEvalMetrics run_evals(
         std::shared_ptr<MoThtsEnv> env, 
         std::shared_ptr<MoThtsDNode> root_node, 
         std::shared_ptr<MoThtsManager> thts_manager,
