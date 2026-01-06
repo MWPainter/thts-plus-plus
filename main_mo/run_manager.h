@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "main_aux/configs/xpr_config.h"
+#include "main_mo/configs/xpr_config.h"
 
 
 namespace thts {
@@ -99,7 +99,8 @@ namespace thts {
              */
             std::string get_alg_id();
             double get_bias();
-            int get_uct_budget();
+            double get_czt_ball_split_visit_thresh();
+            double get_min_log2_N();
             double get_init_temp();
             double get_temp_decay_rate();
             double get_init_entropy_coeff();
@@ -126,7 +127,7 @@ namespace thts {
             /**
              * Returns and instance of MoThtsManager to use for this run
             */
-            void _add_thts_manager_params_to_args(MoThtsManagerArgs& manager_args);
+            void _add_thts_manager_params_to_args(MoThtsManagerArgs& manager_args, std::shared_ptr<MoThtsEnv> env);
             std::shared_ptr<MoThtsManager> get_thts_manager(std::shared_ptr<MoThtsEnv> env);
 
             /**

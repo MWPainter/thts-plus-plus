@@ -1,13 +1,15 @@
 #pragma once
 
-#include "main_aux/configs/config_map.h"
+#include "main_mo/configs/config_map.h"
 
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Experiment configs
 // ---------------------------------------------------------------------------------------------------------------------
 
-#include "main_aux/configs/xpr_config_000_debug.h"
+#include "main_mo/configs/xpr_config_000_debug.h"
+#include "main_mo/configs/xpr_config_001_debug.h"
+#include "main_mo/configs/xpr_config_002_debug.h"
 
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -17,4 +19,6 @@
 static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
 {
     CONFIG_000,
+    CONFIG_001,
+    CONFIG_002,
 };

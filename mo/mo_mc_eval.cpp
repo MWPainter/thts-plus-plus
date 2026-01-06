@@ -16,12 +16,12 @@ namespace thts {
         shared_ptr<MoThtsManager> manager,
         Vec r_min,
         Vec r_max,
-        bool well_spaced_eval
+        bool well_spaced_eval,
         bool normalised_value_space) :
             MCEvaluator(policy,max_trial_length,manager),
             mo_sampled_returns(),
             sampled_ctx_returns(),
-            sampled_normalised_ctx_returns(),
+            sampled_reweighted_ctx_returns(),
             r_min(r_min),
             r_max(r_max),
             well_spaced_eval(well_spaced_eval),
@@ -78,7 +78,7 @@ namespace thts {
             shared_ptr<const Action> action = thread_policy.get_action(state, *mo_context);
             shared_ptr<const State> next_state = thts_env->sample_transition_distribution_itfc(
                 state, action, *manager, *mo_context);
-            shared_ptr<const Observation> obsv = static_pointer_cast<const Observation>(next_state); //TODO: do this properly for partial obs at some point, need to be careful with PythonGym envs and not calling step twice
+            shared_ptr<const Observation> obsv = static_pointer_cast<const Observation>(next_state);
             
             mo_sample_return += thts_env->get_mo_reward_itfc(state, action, *mo_context);
 
@@ -168,12 +168,6 @@ namespace thts {
             stddev += weight * (diff * diff);
         }
         return stddev;
-
-    }
-    
-    double MoMCEvaluator::get_mo_return_variance(Vec context_weights)
-    {
-        return context_weights.dot(get_mo_return_variance());
     }
     
     double MoMCEvaluator::get_mo_ctx_return_variance()

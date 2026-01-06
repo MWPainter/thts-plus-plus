@@ -4,8 +4,8 @@ anaconda_env_lib_dir="/home/michael/anaconda3/envs/thts++mo/lib"
 dirname=$(readlink -f -- $(dirname "${BASH_SOURCE[0]}"))
 
 # python path
-export PYTHONPATH=$dirname/main/envs:$PYTHONPATH        # so python can find envs for experiments
-export PYTHONPATH=$dirname/main/envs/dst:$PYTHONPATH        # so python can find envs for experiments
+export PYTHONPATH=$dirname/main_mo/envs:$PYTHONPATH        # so python can find envs for experiments
+export PYTHONPATH=$dirname/main_mo/envs/dst:$PYTHONPATH        # so python can find envs for experiments
 export PYTHONPATH=$dirname/py:$PYTHONPATH               # so python can find python code in thts-plus-plus/py dir
 export PYTHONPATH=$dirname:$PYTHONPATH                  # so python can find python code in thts-plus-plus dir
 

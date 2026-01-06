@@ -1,4 +1,4 @@
-#include "main_aux/run_hpopt.h"
+#include "main_mo/run_hpopt.h"
 
 #include "helper_templates.h"
 #include "mo/mo_helper_templates.h"

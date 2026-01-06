@@ -142,6 +142,10 @@ def _generate_well_spaced_points(num_points, dim, project_and_clip_fn, s, opt_lr
   # Body for jax.lax.fori_loop
   def loop_fn(iter, loop_state):
     free_points, opt_state = loop_state
+    # Print progress (prints every iteration - JAX doesn't easily support conditional printing)
+    percent_val = iter * 100.0 / opt_iters
+    jax.debug.print("Iteration {iter} / {total} ({percent:.1f}%)", 
+                     iter=iter, total=opt_iters, percent=percent_val)
     grads = grad_loss_fn(free_points)
     updates, opt_state = optimizer.update(grads, opt_state)
     free_points = optax.apply_updates(free_points, updates)
@@ -154,6 +158,30 @@ def _generate_well_spaced_points(num_points, dim, project_and_clip_fn, s, opt_lr
   
   # Return the result (the free points with )
   return jnp.concatenate((jnp.eye(dim),free_points), axis=0)
+
+
+
+def generate_well_spaced_simplex_points_2d(num_points):
+  """
+  Generates a set of well spaced points on the 2D simplex. (i.e. the line from (0,1) to (1,0))
+  Energy based generation gives many [0,1] and [1,0] points, and is also a bit overkill for 2D
+  """
+  a_values = jnp.linspace(0.0, 1.0, num_points)
+  b_values = 1.0 - a_values
+  return jnp.stack([a_values, b_values], axis=1)
+
+
+
+def generate_well_spaced_hypersphere_points_2d(num_points):
+  """
+  Generates a set of well spaced points on the 2D hypersphere (circle) between [0,1] and [1,0].
+  Points lie on the quarter circle in the first quadrant.
+  Energy based generation gives many [0,1] and [1,0] points, and is also a bit overkill for 2D
+  """
+  angles = jnp.linspace(0.0, jnp.pi / 2.0, num_points)
+  x_values = jnp.clip(jnp.cos(angles), 0.0, 1.0)
+  y_values = jnp.clip(jnp.sin(angles), 0.0, 1.0)
+  return jnp.stack([x_values, y_values], axis=1)
 
 
 
@@ -188,10 +216,19 @@ def generate_and_cache_simplex_points(num_points, dim):
   cache_dir_path = os.path.join(dir_path, "cached_simplex_points", str(dim)+"dim")
   cache_file_path = os.path.join(cache_dir_path, str(num_points)+"points.txt")
 
+  if os.path.exists(cache_file_path):
+    raise Exception(f"Cache file already exists for {num_points} simplex points in {dim} dimensions")
+
   if not os.path.exists(cache_dir_path):
     os.makedirs(cache_dir_path)
 
-  generated_points = generate_well_spaced_points(num_points, dim, project_and_clip_simplex)
+  generated_points = None
+  if dim == 2:
+    generated_points = generate_well_spaced_simplex_points_2d(num_points)
+  elif dim > 2:
+    generated_points = generate_well_spaced_points(num_points, dim, project_and_clip_simplex)
+  else:
+    raise Exception("Dimension must be 2 or greater")
 
   with open(cache_file_path, "w+") as csv_file:
     csv_writer = csv.writer(csv_file, delimiter=",")
@@ -202,10 +239,19 @@ def generate_and_cache_hypersphere_points(num_points, dim):
   cache_dir_path = os.path.join(dir_path, "cached_hypersphere_points", str(dim)+"dim")
   cache_file_path = os.path.join(cache_dir_path, str(num_points)+"points.txt")
 
+  if os.path.exists(cache_file_path):
+    raise Exception(f"Cache file already exists for {num_points} hypersphere points in {dim} dimensions")
+
   if not os.path.exists(cache_dir_path):
     os.makedirs(cache_dir_path)
 
-  generated_points = generate_well_spaced_points(num_points, dim, project_and_clip_hypersphere)
+  generated_points = None
+  if dim == 2:
+    generated_points = generate_well_spaced_hypersphere_points_2d(num_points)
+  elif dim > 2:
+    generated_points = generate_well_spaced_points(num_points, dim, project_and_clip_hypersphere)
+  else:
+    raise Exception("Dimension must be 2 or greater")
 
   with open(cache_file_path, "w+") as csv_file:
     csv_writer = csv.writer(csv_file, delimiter=",")

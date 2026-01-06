@@ -5,35 +5,35 @@
 #include "main_mo/configs/constants_algorithms.h"
 #include "main_mo/configs/constants_experiments.h"
 
-static const std::vector<ConfigMap> CONFIG_000 =
+static const std::vector<ConfigMap> CONFIG_002 =
 {
     // xpr params
     {
         {XPR_OR_ALG_ID_TAG,                             XPR_PARAMS_ID_TAG},
-        {XPR_PARAM_ID_NAME,                             "000_debug"},
-        {XPR_PARAM_ID_ENV,                              ENV_ID_DEBUG_2},
+        {XPR_PARAM_ID_NAME,                             "002_debug"},
+        {XPR_PARAM_ID_ENV,                              ENV_ID_VAMPLEW_STOCH_DST_10},
         {XPR_PARAM_ID_MCTS_MODE,                        true},
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
         {XPR_PARAM_ID_VECTOR_VISIT_COUNTS,              false},
-        {XPR_PARAM_ID_MAX_TRIAL_LENGTH,                 10000},
+        {XPR_PARAM_ID_MAX_TRIAL_LENGTH,                 26*2},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,                  true},
-        {XPR_PARAM_ID_TERMINATION_BOUND,                1.0},
+        {XPR_PARAM_ID_TERMINATION_BOUND,                10.0},
         {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            5},
         {XPR_PARAM_ID_SEARCH_THREADS,                   16},
-        {XPR_PARAM_ID_EVAL_DELTA,                       0.25},
-        {XPR_PARAM_ID_EVAL_ROLLOUTS,                    128},
+        {XPR_PARAM_ID_EVAL_DELTA,                       0.1},
+        {XPR_PARAM_ID_EVAL_ROLLOUTS,                    1024},
         {XPR_PARAM_ID_EVAL_THREADS,                     16},
     },
     // czt params
     {
         {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
-        {ALG_PARAM_ID_BIAS,                         2.0},
+        {ALG_PARAM_ID_BIAS,                         4.0},
         {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  4},
     },
     // czt doubling params
     {
         {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT_DOUBLING},
-        {ALG_PARAM_ID_BIAS,                         2.0},
+        {ALG_PARAM_ID_BIAS,                         4.0},
         {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  4},
         {ALG_PARAM_ID_MIN_LOG2_N,                   3},
     },
@@ -45,13 +45,13 @@ static const std::vector<ConfigMap> CONFIG_000 =
     // ch czt params
     {
         {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT},
-        {ALG_PARAM_ID_BIAS,                         2.0},
+        {ALG_PARAM_ID_BIAS,                         4.0},
         {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  4},
     },
     // ch czt doubling params
     {
         {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT_DOUBLING},
-        {ALG_PARAM_ID_BIAS,                         2.0},
+        {ALG_PARAM_ID_BIAS,                         4.0},
         {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  4},
         {ALG_PARAM_ID_MIN_LOG2_N,                   3},
     },

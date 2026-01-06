@@ -102,6 +102,7 @@ namespace thts {
         thts_manager = new_thts_manager;
         root_node = new_root_node;
         logger = new_logger;
+        trials_completed = 0;
     }
 
     /**
@@ -355,20 +356,7 @@ namespace thts {
     * trials are finished.
     */
     void ThtsPool::try_log() {
-        if (logger != nullptr) {
-            lock_guard<mutex> logging_lg(logging_lock);
-            trials_completed++;
-            logger->trial_completed();
-
-            if (logger->should_log()) {
-                lock_guard<recursive_mutex> root_node_lg(root_node->lock);
-                logger->log(root_node);
-            }
-
-            if (trials_completed == num_trials) {
-                logger->update_prior_runtime();
-            }
-        }
+        // No-op, never used logger and was a artifact from old implementation ported
     }
 
     /**
@@ -418,6 +406,8 @@ namespace thts {
             work_left_lock.unlock();
             run_thts_trial(trials_remaining_copy, tid);
             work_left_lock.lock();
+            
+            trials_completed++;
         }
     }
 

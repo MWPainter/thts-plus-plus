@@ -103,6 +103,8 @@ namespace thts::helper {
      */
     string well_spaced_points_filename(int num_points, int dim, bool is_simplex)
     {
+        // Get the absolute path by resolving relative to current working directory
+        filesystem::path base_path = filesystem::current_path();
         stringstream ss;
         ss << "util/cached_";
         if (is_simplex) {
@@ -110,8 +112,9 @@ namespace thts::helper {
         } else {
             ss << "hypersphere";
         }
-        ss << "_points/" << to_string(dim) << "_dim/" << to_string(num_points) << "_points.txt";
-        return ss.str();
+        ss << "_points/" << to_string(dim) << "dim/" << to_string(num_points) << "points.txt";
+        filesystem::path file_path = base_path / ss.str();
+        return file_path.string();
     }
 
     /**
@@ -144,10 +147,20 @@ namespace thts::helper {
         }
 
         // Run appropriate python function
-        py::module_ py_module = py::module_::import("util.generate_well_spaced_vectors");
+        // Some exception handling from cursor to help with debugging
         string fn_name = is_simplex ? "generate_and_cache_simplex_points" : "generate_and_cache_hypersphere_points";
-        py::object py_gen_and_cache_points_fn = py_module.attr(fn_name.c_str());
-        py_gen_and_cache_points_fn(num_points, dim);
+        try {
+            py::module_ py_module = py::module_::import("util.generate_well_spaced_vectors");
+            py::object py_gen_and_cache_points_fn = py_module.attr(fn_name.c_str());
+            py_gen_and_cache_points_fn(num_points, dim);
+        } catch (py::error_already_set &e) {
+            cerr << "Error calling Python function " << fn_name << ": " << endl;
+            cerr << "Python exception type: " << py::str(e.type()).cast<std::string>() << endl;
+            cerr << "Python exception value: " << e.what() << endl;
+            e.restore();
+            PyErr_Print();
+            throw runtime_error("Failed to generate well spaced points via Python function");
+        }
         
         cout << "Finished generating well spaced points." << endl;
     }
@@ -156,31 +169,43 @@ namespace thts::helper {
      * Makes sure well spaced points are generated
      * Loads them in from the cached file
      */
-    vector<Eigen::ArrayXd> get_well_spaced_points(int num_points, int dim, bool is_simplex)
+    vector<Eigen::ArrayXd> get_well_spaced_points(size_t num_points, size_t dim, bool is_simplex)
     {
         ensure_well_spaced_points_generated(num_points, dim, is_simplex);
         string filename = well_spaced_points_filename(num_points, dim, is_simplex);
 
         ifstream cache_file(filename);
+        if (!cache_file.is_open() || !cache_file.good()) {
+            throw runtime_error("Failed to open cache file: " + filename);
+        }
         string line;
         vector<Eigen::ArrayXd> vectors;
         vectors.reserve(num_points);
         while (getline(cache_file,line)) {
+            if (line.empty()) {
+                continue;
+            }
             vector<string> vec_as_string = thts::helper::string_split(line);
+            if (vec_as_string.size() != dim) {
+                throw runtime_error("Invalid number of dimensions in cache file. Expected " + to_string(dim) + ", got " + to_string(vec_as_string.size()));
+            }
             Eigen::ArrayXd vec(dim);
-            for (int i=0; i<dim; i++) {
+            for (size_t i=0; i<dim; i++) {
                 vec[i] = stod(vec_as_string[i]);
             }
             vectors.push_back(vec);
         }
+        if (vectors.size() != num_points) {
+            throw runtime_error("Invalid number of points in cache file. Expected " + to_string(num_points) + ", got " + to_string(vectors.size()));
+        }
         return vectors;
     }
 
-    vector<Eigen::ArrayXd> get_well_spaced_hyperphere_points(int num_points, int dim) {
+    vector<Eigen::ArrayXd> get_well_spaced_hyperphere_points(size_t num_points, size_t dim) {
         return get_well_spaced_points(num_points, dim, false);
     }
 
-    vector<Eigen::ArrayXd> get_well_spaced_simplex_points(int num_points, int dim) {
+    vector<Eigen::ArrayXd> get_well_spaced_simplex_points(size_t num_points, size_t dim) {
         return get_well_spaced_points(num_points, dim, true);
     }
 
@@ -188,19 +213,17 @@ namespace thts::helper {
      * Implementation of the rollout heuristic function.
      */
     Eigen::ArrayXd mo_rollout_heuristic_fn(
-        shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth) 
+        shared_ptr<const State> state, MoThtsEnv& env, MoThtsManager& manager, int depth) 
     {
-        MoThtsEnv& mo_env = dynamic_cast<MoThtsEnv&>(env);
-        MoThtsManager& mo_manager = (MoThtsManager&) manager;
         ThtsContext& ctx = *manager.get_thts_context();
         int rollout_steps_left = manager.max_depth - depth;
-        Eigen::ArrayXd rollout_reward = Eigen::ArrayXd::Zero(mo_manager.reward_dim);
+        Eigen::ArrayXd rollout_reward = Eigen::ArrayXd::Zero(manager.reward_dim);
 
-        while (rollout_steps_left-- > 0 && !mo_env.is_sink_state_itfc(state, ctx)) {
-            shared_ptr<ActionVector> actions = mo_env.get_valid_actions_itfc(state, ctx);
+        while (rollout_steps_left-- > 0 && !env.is_sink_state_itfc(state, ctx)) {
+            shared_ptr<ActionVector> actions = env.get_valid_actions_itfc(state, ctx);
             int index = manager.get_rand_int(0, actions->size());
             shared_ptr<const Action> action = actions->at(index);
-            rollout_reward += mo_env.get_mo_reward_itfc(state, action, ctx);
+            rollout_reward += env.get_mo_reward_itfc(state, action, ctx);
             state = env.sample_transition_distribution_itfc(state, action, manager, ctx);
         }
         

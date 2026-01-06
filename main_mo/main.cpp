@@ -1,5 +1,5 @@
-#include "main_aux/run_xpr.h"
-#include "main_aux/run_hpopt.h"
+#include "main_mo/run_xpr.h"
+#include "main_mo/run_hpopt.h"
 
 #include <memory>
 #include <iostream>

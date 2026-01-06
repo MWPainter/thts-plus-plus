@@ -1,5 +1,5 @@
 """
-Want a custom fruit deep sea treasure environment, which is adapted from:
+Want a custom deep sea treasure environment, which is adapted from:
 (paper) https://arxiv.org/pdf/2110.06742
 (code) https://github.com/imec-idlab/deep-sea-treasure/tree/master
 
@@ -19,20 +19,31 @@ Outline:
 # DstThtsEnv
 #####
 
+from operator import is_
 from deep_sea_treasure import DeepSeaTreasureV0, VamplewWrapper, FuelWrapper
 from mo_gym_thts_env import MoGymThtsEnv
+from custom_deep_sea_treasure_maps import MAPS
 
 class ImprovedDeepSeaTreasureThtsEnv(MoGymThtsEnv):
 
-    def __init__(self, swept_by_current_prob=0.0, is_vamplew=False, max_steps=1000):
+    def __init__(self, swept_by_current_prob=0.0, is_vamplew=False, max_steps=1000, map_id=0):
         swept_by_current_prob = float(swept_by_current_prob)
-        is_vamplew = bool(int(is_vamplew))
+        is_vamplew = bool(is_vamplew)
         max_steps = int(max_steps)
+        map_id = int(map_id)
+        max_velocity = 1.0 if is_vamplew else 2.0
+
+        if map_id not in MAPS:
+            raise ValueError(f"Invalid map id: {map_id}")
+        
+        treasure_values = MAPS[map_id]
 
         self.fully_observable = True
         
         self.env = DeepSeaTreasureV0.new(
+            treasure_values=treasure_values,
             max_steps=max_steps,
+            max_velocity=max_velocity,
             swept_by_current_prob=swept_by_current_prob
         )
 

@@ -55,11 +55,13 @@ namespace thts {
             ConvexHull& operator=(const ConvexHull& ch);
             ConvexHull& operator=(const ConvexHull&& ch);
             ConvexHull& operator*=(double rhs);
+            ConvexHull& operator*=(const Vec& rhs);
             ConvexHull& operator|=(const ConvexHull& rhs);
             ConvexHull& operator|=(const ConvexHull&& rhs);
             ConvexHull& operator+=(const ConvexHull& rhs);
             ConvexHull& operator+=(const ConvexHull&& rhs);
             ConvexHull& operator+=(const Vec& rhs);
+            ConvexHull& operator-=(const Vec& rhs);
 
         protected:
             /**
@@ -83,9 +85,11 @@ namespace thts {
             int reward_dim() const;
             std::size_t size() const;
             ConvexHull scale(double scale) const;
+            ConvexHull scale(const Vec& scale) const;
             ConvexHull combine(const ConvexHull& other) const;
             ConvexHull add(const ConvexHull& other) const;
             ConvexHull add(const Vec& v) const;
+            ConvexHull subtract(const Vec& v) const;
 
             /**
              * If this convex hull is equal to another convex hull (ignoring any tags)
@@ -141,6 +145,8 @@ namespace std {
     */
     ConvexHull operator*(const ConvexHull& ch, double s);
     ConvexHull operator*(double s, const ConvexHull& ch);
+    ConvexHull operator*(const ConvexHull& ch, const Vec& v);
+    ConvexHull operator*(const Vec& v, const ConvexHull& ch);
 
     /**
      * Union of two convex hulls
@@ -157,6 +163,8 @@ namespace std {
     */
     ConvexHull operator+(const ConvexHull& ch, const Vec& v);
     ConvexHull operator+(const Vec& v, const ConvexHull& ch);
+    ConvexHull operator-(const ConvexHull& ch, const Vec& v);
+    ConvexHull operator-(const Vec& v, const ConvexHull& ch);
 
     /**
      * Equality of convex hulls

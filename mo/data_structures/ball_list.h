@@ -31,6 +31,8 @@ namespace thts {
         public:
             CzBall(const double radius, const Eigen::ArrayXd& center);
 
+            int dim() const;
+
             bool point_in_domain(const Eigen::ArrayXd& point) const;
 
             void update_avg_return(const Eigen::ArrayXd& trial_return);
@@ -66,10 +68,15 @@ namespace thts {
             mutable std::mutex lock;
             int num_backups;
             int num_backups_before_allowed_to_split;
-            double largest_ball_radius;
-            double smallest_ball_radius;
-            std::unordered_map<double,std::vector<std::shared_ptr<CzBall>>> ball_list;
+            double base_ball_radius;  // The largest radius (level 0) - initial ball
+            int max_level;  // Maximum level (0 is largest, each level divides radius by 2)
+            std::unordered_map<int,std::vector<std::shared_ptr<CzBall>>> ball_list;  // Maps level -> balls
             std::shared_ptr<CzBall> init_ball;
+            int _dim;
+            
+            // Helper functions to convert between radius and level
+            int radius_to_level(double radius) const;
+            double level_to_radius(int level) const;
 
         public:
             /**
@@ -82,6 +89,11 @@ namespace thts {
              * Initialise member variables
             */
             CzBallList(int dim, int num_trials_before_allowed_to_split);
+            
+            CzBallList(const CzBallList&) = delete;
+            CzBallList& operator=(const CzBallList&) = delete;
+            CzBallList(CzBallList&&) = delete;
+            CzBallList& operator=(CzBallList&&) = delete;
 
             /**
              * Gets the initial ball

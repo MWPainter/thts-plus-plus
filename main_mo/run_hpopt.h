@@ -1,6 +1,6 @@
 #pragma once
 
-#include "main_aux/hpopt_manager.h"
+#include "main_mo/hpopt_manager.h"
 
 #include <ctime>
 #include <memory>

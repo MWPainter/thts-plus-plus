@@ -1,10 +1,10 @@
 #pragma once
 
-#include "main_aux/configs/hpopt_config_map.h"
+#include "main_mo/configs/hpopt_config_map.h"
 
-#include "main_aux/configs/constants_algorithms.h"
-#include "main_aux/configs/constants_experiments.h"
-#include "main_aux/configs/constants_hpopt.h"
+#include "main_mo/configs/constants_algorithms.h"
+#include "main_mo/configs/constants_experiments.h"
+#include "main_mo/configs/constants_hpopt.h"
 
 static const std::vector<HpoptConfigMap> HPOPT_CONFIG_001 =
 {
@@ -22,7 +22,7 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_001 =
         // {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            2},
         {XPR_PARAM_ID_SEARCH_THREADS,                   16},
         {XPR_PARAM_ID_EVAL_DELTA,                       0.25},
-        {XPR_PARAM_ID_EVAL_ROLLOUTS,                    4096},
+        {XPR_PARAM_ID_EVAL_ROLLOUTS,                    128},
         {XPR_PARAM_ID_EVAL_THREADS,                     16},
         {HPOPT_PARAM_ID_MIN_REPEATS,                    10},
         {HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD,  1.0},
@@ -69,16 +69,16 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_001 =
         {ALG_PARAM_ID_EPSILON,              std::make_pair(1.0e-6,  1.0e0)},
         {ALG_PARAM_ID_DEFAULT_Q_VALUE,      std::make_pair(-100.0,  0.0)},
     },
-    // dents params
-    {
-        {XPR_OR_ALG_ID_TAG,                     ALG_ID_CH_DENTS},
-        {ALG_PARAM_ID_INIT_TEMP,                std::make_pair(1.0e-4,  1.0e4)},
-        {ALG_PARAM_ID_TEMP_DECAY_RATE,          std::make_pair(1.0e-4,  1.0e4)},
-        {ALG_PARAM_ID_EPSILON,                  std::make_pair(1.0e-6,  1.0e0)},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,          std::make_pair(-100.0,  0.0)},
-        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       std::make_pair(1.0e-4,  1.0e4)},
-        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    std::make_pair(1.0e0,   1.0e4)},
-    },
+    // // dents params
+    // {
+    //     {XPR_OR_ALG_ID_TAG,                     ALG_ID_CH_DENTS},
+    //     {ALG_PARAM_ID_INIT_TEMP,                std::make_pair(1.0e-4,  1.0e4)},
+    //     {ALG_PARAM_ID_TEMP_DECAY_RATE,          std::make_pair(1.0e-4,  1.0e4)},
+    //     {ALG_PARAM_ID_EPSILON,                  std::make_pair(1.0e-6,  1.0e0)},
+    //     {ALG_PARAM_ID_DEFAULT_Q_VALUE,          std::make_pair(-100.0,  0.0)},
+    //     {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       std::make_pair(1.0e-4,  1.0e4)},
+    //     {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    std::make_pair(1.0e0,   1.0e4)},
+    // },
     // ch hvuct params
     {
         {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_HVUCT},

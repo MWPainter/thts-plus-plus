@@ -3,7 +3,7 @@
 #include "thts_types.h"
 #include "mo/mo_thts_env.h"
 
-namespace thts::test{
+namespace thts {
     using namespace std;
     using namespace thts;
 

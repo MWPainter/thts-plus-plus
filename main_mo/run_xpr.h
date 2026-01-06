@@ -1,6 +1,6 @@
 #pragma once
 
-#include "main_aux/run_manager.h"
+#include "main_mo/run_manager.h"
 
 #include <ctime>
 #include <memory>
@@ -19,7 +19,7 @@ namespace thts {
      * Returns the final eval_mean of the final search (which is only used in hp opt)
      * Flag to change some parts of the loop when running hpopts
      */
-     MoEvalMetrics run_searches(RunManager& run_manager, bool hpopt=false, bool log_trees=true, bool log_convex_hulls=true);
+    MoEvalMetrics run_searches(RunManager& run_manager, bool hpopt=false, bool log_trees=true, bool log_convex_hulls=true);
 
     /**
      * Perform an mc eval and return the MO eval metrics

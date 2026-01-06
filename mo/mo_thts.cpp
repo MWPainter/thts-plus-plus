@@ -68,6 +68,7 @@ namespace thts {
                     visited.insert(chance_node);
                 }
                 shared_ptr<const Observation> observation = chance_node->sample_observation_itfc(context);
+                chance_node->update_empirical_distribution(observation);
                 int post_visit_children = chance_node->get_num_children();
                 if (post_visit_children > pre_visit_children) {
                     new_decision_node_created_this_trial = true;
@@ -76,7 +77,7 @@ namespace thts {
             }
 
             // push onto 'nodes_to_backup' and 'rewards'
-            MoThtsEnv& mo_thts_env = *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());
+            MoThtsEnv& mo_thts_env = *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env(tid));
             Eigen::ArrayXd reward = mo_thts_env.get_mo_reward_itfc(state, action, context);
             nodes_to_backup.push_back(make_pair(cur_node, chance_node));
             rewards.push_back(reward);
@@ -163,11 +164,13 @@ namespace thts {
             shared_ptr<MoThtsCNode> chance_node = static_pointer_cast<MoThtsCNode>(pr.second);
             filtered_nodes_to_backup.pop_back();
 
+            if (chance_node != nullptr)
             {
                 ThtsNodeLockGuard lg(chance_node);
                 chance_node->backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);
             }
 
+            if (decision_node != nullptr)
             {
                 ThtsNodeLockGuard lg(decision_node);
                 decision_node->backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "main_aux/run_manager.h"
-#include "main_aux/run_xpr.h"
+#include "main_mo/run_manager.h"
+#include "main_mo/run_xpr.h"
 
 #include "mo/mo_thts_env.h"
 #include "mo/mo_thts_manager.h"
@@ -19,7 +19,7 @@
 #include "bayesopt/bayesopt.hpp"
 #include "bayesopt/parameters.hpp"
 
-#include "main_aux/configs/hpopt_config.h"
+#include "main_mo/configs/hpopt_config.h"
 
 
 namespace thts {

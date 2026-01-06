@@ -37,8 +37,9 @@ static const std::string ENV_ID_IMPROVED_DST = "deep-sea-treasure-improved";
 static const std::string ENV_ID_IMPROVED_STOCH_DST = "deep-sea-treasure-improved-stoch";
 static const std::string ENV_ID_VAMPLEW_DST = "deep-sea-treasure-vamplew";
 static const std::string ENV_ID_VAMPLEW_STOCH_DST = "deep-sea-treasure-vamplew-stoch";
-// TODO: variable sized DST for scalability
-// TODO: make sure that can input a map that is randomly generated + cache the generated ones like in frozen lake
+// MO Gymnasium map
+static const std::string ENV_ID_VAMPLEW_DST_MO_GYM = "deep-sea-treasure-vamplew-mo-gym";
+static const std::string ENV_ID_VAMPLEW_STOCH_DST_MO_GYM = "deep-sea-treasure-vamplew-stoch-mo-gym";
  
 // ---------------------------------------------------------------------------------------------------------------------
 // Environment id's - fruit tree
@@ -64,12 +65,9 @@ static const std::string ENV_ID_FOUR_ROOM = "four-room-v0";
 // Environment id's - mo gymnasium (cts obs / discr act)
 // ---------------------------------------------------------------------------------------------------------------------
 
-// TODO: which of these have constant initial state?
-// static const std::string ENV_ID_MOUNTAIN_CAR = "mo-mountaincar-v0";             
-// static const std::string ENV_ID_LUNAR_LANDER = "mo-lunar-lander-v2";         
-// static const std::string ENV_ID_MINECART_DETERMINISTIC = "minecart-deterministic-v0";
-// static const std::string ENV_ID_MINECART = "minecart-v0";
-// static const std::string ENV_ID_HIGHWAY = "mo-highway-v0";  
+// static const std::string ENV_ID_MOUNTAIN_CAR = "mo-mountaincar-v0";   // stochastic starting state          
+static const std::string ENV_ID_MINECART_DETERMINISTIC = "minecart-deterministic-v0";
+// static const std::string ENV_ID_MINECART = "minecart-v0"; // continuous transitions (rewards are in state and from normal distribution)
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Environment id's - mo gymnasium (discr obs / discr act) + extra time cost
@@ -79,11 +77,46 @@ static const std::string ENV_ID_RESOURCE_GATHER_TIMED = "resource-gathering-time
 static const std::string ENV_ID_FOUR_ROOM_TIMED = "four-room-timed-v0";
 
 // ---------------------------------------------------------------------------------------------------------------------
-// Environment id's - python
+// Environment id's - variable sized DST (vamplew = original)
+// ---------------------------------------------------------------------------------------------------------------------
+
+static const std::string ENV_ID_VAMPLEW_DST_10 = "deep-sea-treasure-vamplew-010";
+static const std::string ENV_ID_VAMPLEW_STOCH_DST_10 = "deep-sea-treasure-vamplew-stoch-010";
+// static const std::string ENV_ID_VAMPLEW_DST_11 = "deep-sea-treasure-vamplew-011";
+// static const std::string ENV_ID_VAMPLEW_STOCH_DST_11 = "deep-sea-treasure-vamplew-stoch-011";
+// static const std::string ENV_ID_VAMPLEW_DST_12 = "deep-sea-treasure-vamplew-012";
+// static const std::string ENV_ID_VAMPLEW_STOCH_DST_12 = "deep-sea-treasure-vamplew-stoch-012";
+// static const std::string ENV_ID_VAMPLEW_DST_13 = "deep-sea-treasure-vamplew-013";
+// static const std::string ENV_ID_VAMPLEW_STOCH_DST_13 = "deep-sea-treasure-vamplew-stoch-013";
+// static const std::string ENV_ID_VAMPLEW_DST_14 = "deep-sea-treasure-vamplew-014";
+// static const std::string ENV_ID_VAMPLEW_STOCH_DST_14 = "deep-sea-treasure-vamplew-stoch-014";
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Environment id's - variable sized DST (improved)
+// ---------------------------------------------------------------------------------------------------------------------
+
+// static const std::string ENV_ID_IMPROVED_DST_10 = "deep-sea-treasure-improved-010";
+// static const std::string ENV_ID_IMPROVED_STOCH_DST_10 = "deep-sea-treasure-improved-stoch-010";
+// static const std::string ENV_ID_IMPROVED_DST_11 = "deep-sea-treasure-improved-011";
+// static const std::string ENV_ID_IMPROVED_STOCH_DST_11 = "deep-sea-treasure-improved-stoch-011";
+// static const std::string ENV_ID_IMPROVED_DST_12 = "deep-sea-treasure-improved-012";
+// static const std::string ENV_ID_IMPROVED_STOCH_DST_12 = "deep-sea-treasure-improved-stoch-012";
+// static const std::string ENV_ID_IMPROVED_DST_13 = "deep-sea-treasure-improved-013";
+// static const std::string ENV_ID_IMPROVED_STOCH_DST_13 = "deep-sea-treasure-improved-stoch-013";
+// static const std::string ENV_ID_IMPROVED_DST_14 = "deep-sea-treasure-improved-014";
+// static const std::string ENV_ID_IMPROVED_STOCH_DST_14 = "deep-sea-treasure-improved-stoch-014";
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Environment id's - python (not DST)
 // ---------------------------------------------------------------------------------------------------------------------
 
 static const std::unordered_set<std::string> PY_ENVS =
 {
+    ENV_ID_PY_DEBUG_1,
+    ENV_ID_PY_DEBUG_2,
+    ENV_ID_PY_DEBUG_3,
+    ENV_ID_PY_DEBUG_4,
+    
     ENV_ID_IMPROVED_DST,
     ENV_ID_IMPROVED_STOCH_DST,
     ENV_ID_VAMPLEW_DST,
@@ -123,4 +156,43 @@ static const std::unordered_set<std::string> TIMED_GYM_ENVS =
 {
     ENV_ID_RESOURCE_GATHER_TIMED,
     ENV_ID_FOUR_ROOM_TIMED,
+};
+
+// ---------------------------------------------------------------------------------------------------------------------
+// DST sets
+// ---------------------------------------------------------------------------------------------------------------------
+
+static const std::unordered_set<std::string> DST_ENVS =
+{
+    ENV_ID_IMPROVED_DST,
+    ENV_ID_IMPROVED_STOCH_DST,
+
+    ENV_ID_VAMPLEW_DST,
+    ENV_ID_VAMPLEW_STOCH_DST,
+
+    ENV_ID_VAMPLEW_DST_MO_GYM,
+    ENV_ID_VAMPLEW_STOCH_DST_MO_GYM,
+
+    ENV_ID_VAMPLEW_DST_10,
+    ENV_ID_VAMPLEW_STOCH_DST_10,
+};
+
+static const std::unordered_set<std::string> VAMPLEW_DST_ENVS =
+{
+    ENV_ID_VAMPLEW_DST,
+    ENV_ID_VAMPLEW_STOCH_DST,
+    
+    ENV_ID_VAMPLEW_DST_MO_GYM,
+    ENV_ID_VAMPLEW_STOCH_DST_MO_GYM,
+
+    ENV_ID_VAMPLEW_DST_10,
+    ENV_ID_VAMPLEW_STOCH_DST_10,
+};
+
+static const std::unordered_set<std::string> STOCH_DST_ENVS =
+{
+    ENV_ID_IMPROVED_STOCH_DST,   
+    ENV_ID_VAMPLEW_STOCH_DST,
+    ENV_ID_VAMPLEW_STOCH_DST_MO_GYM,
+    ENV_ID_VAMPLEW_STOCH_DST_10,
 };

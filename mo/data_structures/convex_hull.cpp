@@ -107,6 +107,13 @@ namespace thts {
         return lhs;
     }
 
+    ConvexHull& ConvexHull::operator*=(const Vec& rhs)
+    {
+        ConvexHull& lhs = *this;
+        lhs = lhs * rhs;
+        return lhs;
+    }
+
     /**
      * |=
     */
@@ -144,7 +151,12 @@ namespace thts {
         lhs = lhs + rhs;
         return lhs;
     }
-    
+    ConvexHull& ConvexHull::operator-=(const Vec& rhs)
+    {
+        ConvexHull& lhs = *this;
+        lhs = lhs - rhs;
+        return lhs;
+    }
 
     
 
@@ -476,6 +488,16 @@ namespace thts {
         return ConvexHull(scaled_ch_points, true);
     };
 
+    ConvexHull ConvexHull::scale(const Vec& scale) const
+    {
+        unordered_set<Vec> scaled_ch_points;
+        scaled_ch_points.reserve(size());
+        for (const Vec& point : ch_points) {
+            scaled_ch_points.insert(Vec(point*scale));
+        }
+        return ConvexHull(scaled_ch_points, true);
+    };
+
     /**
      * Adapted from mo/pareto_front.cc
      * 
@@ -534,6 +556,15 @@ namespace thts {
             summed_points.insert(point + v);
         }
         return ConvexHull(summed_points, true);
+    };
+
+    ConvexHull ConvexHull::subtract(const Vec& v) const
+    {
+        unordered_set<Vec> subtracted_points;
+        for (const Vec& point : ch_points) {
+            subtracted_points.insert(point - v);
+        }
+        return ConvexHull(subtracted_points, true);
     };
 
     /**
@@ -761,6 +792,13 @@ namespace std {
         return ch.scale(s);
     }
 
+    ConvexHull operator*(const ConvexHull& ch, const Vec& v) {
+        return ch.scale(v);
+    }
+    ConvexHull operator*(const Vec& v, const ConvexHull& ch) {
+        return ch.scale(v);
+    }
+
     ConvexHull operator|(const ConvexHull& ch1, const ConvexHull& ch2) {
         return ch1.combine(ch2);
     }
@@ -775,6 +813,14 @@ namespace std {
 
     ConvexHull operator+(const Vec& v, const ConvexHull& ch) {
         return ch.add(v);
+    }
+
+    ConvexHull operator-(const ConvexHull& ch, const Vec& v) {
+        return ch.subtract(v);
+    }
+
+    ConvexHull operator-(const Vec& v, const ConvexHull& ch) {
+        return ch.subtract(v);
     }
 
     bool operator==(const ConvexHull& lhs, const ConvexHull& rhs) {

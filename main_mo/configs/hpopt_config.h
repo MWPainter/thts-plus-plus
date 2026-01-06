@@ -1,12 +1,12 @@
 #pragma once
 
-#include "main_aux/configs/hpopt_config_map.h"
+#include "main_mo/configs/hpopt_config_map.h"
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Experiment configs
 // ---------------------------------------------------------------------------------------------------------------------
 
-#include "main_aux/configs/hpopt_config_001_debug.h"
+#include "main_mo/configs/hpopt_config_001_debug.h"
 
 // ---------------------------------------------------------------------------------------------------------------------
 // List of all configs

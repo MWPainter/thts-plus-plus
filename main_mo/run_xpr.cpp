@@ -1,4 +1,4 @@
-#include "main_aux/run_xpr.h"
+#include "main_mo/run_xpr.h"
 
 #include "helper_templates.h"
 #include "mo/mo_helper_templates.h"
@@ -70,7 +70,7 @@ namespace thts {
      * Performs all of the (replicated) searches corresponding to 'run_id'
      * If hpopt is true, then dont run any logging, and only return the final mc eval
     */
-    double run_searches(RunManager& run_manager, bool hpopt, bool log_trees, bool log_convex_hulls)
+    MoEvalMetrics run_searches(RunManager& run_manager, bool hpopt, bool log_trees, bool log_convex_hulls)
     {
         // Open eval log
         ofstream eval_log_fs;
@@ -172,8 +172,6 @@ namespace thts {
             // Log convex hulls if wanted
             if (log_convex_hulls)
             {
-                // TODO: make sure MoThtsDNode has a function to get the convex hull and its implemented for all algorithms
-                throw runtime_error("Convex hull logging not implemented yet");
                 ConvexHull convex_hull = root_node->get_convex_hull();
                 run_manager.dump_convex_hull_log(convex_hull, run_idx);
             }
@@ -248,9 +246,12 @@ namespace thts {
         mo_eval_metrics.normalised_ctx_mean = normalised_evaluator.get_mo_ctx_return_mean();
         mo_eval_metrics.normalised_ctx_std_dev = normalised_evaluator.get_mo_ctx_return_variance();
 
-        // TODO: add (normalised) hypervolume computation here
-        // TODO: AND TRANSLATE/SCALE CONVEX HULL FOR NORMALISED HV
-        throw runtime_error("Hypervolume computation not implemented yet");
+        ConvexHull convex_hull = root_node->get_convex_hull();
+        mo_eval_metrics.hypervolume = convex_hull.hypervolume(value_lower_bound);
+
+        ConvexHull scaled_convex_hull = (convex_hull - value_lower_bound) * (1.0 / (value_upper_bound - value_lower_bound));
+        Vec origin = Vec(value_lower_bound.size(), 0.0);
+        mo_eval_metrics.normalised_hypervolume = scaled_convex_hull.hypervolume(origin);
 
         return mo_eval_metrics;
     }

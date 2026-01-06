@@ -92,7 +92,9 @@ TEST_INCLUDES = -Iexternal/googletest/build/include
 # C++ flags
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20 
 CPPFLAGS += -Wpedantic -Wno-vla -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wsign-promo -Wstrict-null-sentinel -Werror -Wno-unused
-CPPFLAGS += -O3 --param max-gcse-memory=1048576 # 1GB for gcse optimization
+# Optimization flags (excluded for debug targets)
+OPTIMIZATION_FLAGS = -O3 --param max-gcse-memory=1048576 # 1GB for gcse optimization
+CPPFLAGS += $(OPTIMIZATION_FLAGS)
 
 # C++ flags for building pybind11 executable/library
 PY_LIB_CPPFLAGS += -fPIC -fvisibility=hidden # needed to create shared library
@@ -222,7 +224,7 @@ $(TARGET_THTS_TEST): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(TEST_OBJECTS)
 	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) -o $@ $^ $(GTEST) $(LDFLAGS)
 
 # Add a debug tests target. Adds -g to flags for debug info, and then just runs tests target
-$(TARGET_THTS_TEST_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
+$(TARGET_THTS_TEST_DEBUG): CPPFLAGS := $(filter-out $(OPTIMIZATION_FLAGS),$(CPPFLAGS)) $(CPPFLAGS_DEBUG)
 $(TARGET_THTS_TEST_DEBUG): $(TARGET_THTS_TEST)
 
 # Building the python library
@@ -231,7 +233,7 @@ $(TARGET_THTS_PY_LIB): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(PY_MAIN_OBJ)
 	$(CXX) -shared $(PY_LIB_CPPFLAGS) $(CPPFLAGS) $^ -o $(THTS_PY_LIB_FULL_NAME) $(LDFLAGS)
 
 # C++ entry point for debugging python C++ entry point
-$(TARGET_THTS_PY_LIB_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
+$(TARGET_THTS_PY_LIB_DEBUG): CPPFLAGS := $(filter-out $(OPTIMIZATION_FLAGS),$(CPPFLAGS)) $(CPPFLAGS_DEBUG)
 $(TARGET_THTS_PY_LIB_DEBUG): $(TARGET_THTS_PY_EX)
 
 # C++ entry point
@@ -240,7 +242,7 @@ $(TARGET_THTS_PY_EX): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(PY_MAIN_OBJ)
 	$(CXX) -shared $(PY_EX_CPPFLAGS) $(CPPFLAGS) $^ -o $(TARGET_THTS_PY_EX) $(LDFLAGS)
 
 # C++ entry point for debugging python C++ entry point
-$(TARGET_THTS_PY_EX_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
+$(TARGET_THTS_PY_EX_DEBUG): CPPFLAGS := $(filter-out $(OPTIMIZATION_FLAGS),$(CPPFLAGS)) $(CPPFLAGS_DEBUG)
 $(TARGET_THTS_PY_EX_DEBUG): $(TARGET_THTS_PY_EX)
 
 # Py Env Server entry point
@@ -249,7 +251,7 @@ $(TARGET_PY_ENV_SERVER): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(PY_ENV_SERVER_
 	$(CXX) -shared $(PY_EX_CPPFLAGS) $(CPPFLAGS) $^ -o $(TARGET_PY_ENV_SERVER) $(LDFLAGS)
 
 # Debug Py Env Server entry point
-$(TARGET_PY_ENV_SERVER_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
+$(TARGET_PY_ENV_SERVER_DEBUG): CPPFLAGS := $(filter-out $(OPTIMIZATION_FLAGS),$(CPPFLAGS)) $(CPPFLAGS_DEBUG)
 $(TARGET_PY_ENV_SERVER_DEBUG): $(TARGET_PY_ENV_SERVER)
 
 # Mo Expr entry point
@@ -258,7 +260,7 @@ $(TARGET_MO_EXPR): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(MAIN_MO_OBJECTS)
 	$(CXX) -shared $(PY_EX_CPPFLAGS) $(CPPFLAGS) $^ -o $(TARGET_MO_EXPR) $(LDFLAGS)
 
 # Mo Debug expr entry
-$(TARGET_MO_EXPR_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
+$(TARGET_MO_EXPR_DEBUG): CPPFLAGS := $(filter-out $(OPTIMIZATION_FLAGS),$(CPPFLAGS)) $(CPPFLAGS_DEBUG)
 $(TARGET_MO_EXPR_DEBUG): $(TARGET_MO_EXPR)
 
 # Aux Expr entry point
@@ -267,7 +269,7 @@ $(TARGET_AUX_EXPR): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(MAIN_AUX_OBJECTS)
 	$(CXX) -shared $(PY_EX_CPPFLAGS) $(CPPFLAGS) $^ -o $(TARGET_AUX_EXPR) $(LDFLAGS)
 
 # Aux Debug expr entry
-$(TARGET_AUX_EXPR_DEBUG): CPPFLAGS += $(CPPFLAGS_DEBUG)
+$(TARGET_AUX_EXPR_DEBUG): CPPFLAGS := $(filter-out $(OPTIMIZATION_FLAGS),$(CPPFLAGS)) $(CPPFLAGS_DEBUG)
 $(TARGET_AUX_EXPR_DEBUG): $(TARGET_AUX_EXPR)
 
 

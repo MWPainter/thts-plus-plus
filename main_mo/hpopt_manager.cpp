@@ -1,4 +1,4 @@
-#include "main_aux/hpopt_manager.h"
+#include "main_mo/hpopt_manager.h"
 
 #include "helper.h"
 
@@ -23,10 +23,8 @@
 #include "py/py_multiprocessing_thts_env.h"
 #include "py/gym_multiprocessing_thts_env.h"
 
-#include "main_aux/envs/d_chain.h"
-#include "main_aux/envs/entropy_trap.h"
-#include "main_aux/envs/frozen_lake.h"
-#include "main_aux/envs/sailing.h"
+#include "main_mo/envs/tree_env.h"
+#include "main_mo/envs/test_mo_thts_env.h"
 
 #include <algorithm>
 #include <cmath>
@@ -102,9 +100,9 @@ namespace thts {
      */  
     void HpoptManager::validate_config_or_raise_exception()
     {
-        if (xpr_config.size() != 17)
+        if (xpr_config.size() != 18)
         {
-            throw runtime_error("Expecting 17 entries in the xpr level config.");
+            throw runtime_error("Expecting 18 entries in the xpr level config.");
         }
 
         if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != HPOPT_PARAMS_ID_TAG)
@@ -424,7 +422,7 @@ namespace thts {
             this->best_config_map = sampled_run_manager->alg_config;
             this->best_mean_eval = mean_eval;
             this->best_std_mean_eval = std_mean_eval;
-            this->best_mo_eval_metrics = mo_eval_metrics;
+            this->best_mo_eval_metrics = avg_mo_eval_metrics;
         }
         
         // Write to logs

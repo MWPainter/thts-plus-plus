@@ -1,6 +1,6 @@
 #pragma once
 
-#include "main_aux/configs/constants_algorithms.h"
+#include "main_mo/configs/constants_algorithms.h"
 
 #include <unordered_set>
 

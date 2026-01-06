@@ -196,7 +196,7 @@ namespace thts {
     ConvexHull CztDNode::get_convex_hull() const {
         ConvexHull approx_convex_hull;
         for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pair : children) {
-            CztDNode& child = (CztDNode&) *pair.second;
+            CztCNode& child = static_cast<CztCNode&>(*pair.second);
             approx_convex_hull |= child.ball_list.get_approximate_convex_hull();
         }
         return approx_convex_hull;

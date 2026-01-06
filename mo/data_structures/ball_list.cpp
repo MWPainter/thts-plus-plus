@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <sstream>
+#include <iostream>
 
 
 using namespace std;
@@ -66,6 +67,28 @@ namespace thts {
         return num_backups;
     }
 
+    // Helper functions to convert between radius and level
+    // Level 0 = largest radius (base_ball_radius), each level divides by 2
+    int CzBallList::radius_to_level(double radius) const {
+        if (radius <= 0.0 || base_ball_radius <= 0.0) {
+            throw runtime_error("Invalid radius or base_ball_radius for level conversion");
+        }
+        double ratio = base_ball_radius / radius;  // Note: base_ball_radius is larger
+        // Round to nearest level to handle floating point precision
+        int level = static_cast<int>(round(log2(ratio)));
+        if (level < 0) {
+            level = 0;  // Can't have negative levels
+        }
+        return level;
+    }
+    
+    double CzBallList::level_to_radius(int level) const {
+        if (level < 0) {
+            throw runtime_error("Level cannot be negative");
+        }
+        return base_ball_radius / pow(2.0, level);
+    }
+
     /**
      * Constructor
      * 
@@ -79,11 +102,16 @@ namespace thts {
         lock(),
         num_backups(0),
         num_backups_before_allowed_to_split(num_backups_before_allowed_to_split),
-        largest_ball_radius(0.0),
-        smallest_ball_radius(0.0),
+        base_ball_radius(0.0),
+        max_level(0),
         ball_list(),
-        init_ball(nullptr)
+        init_ball(nullptr),
+        _dim(dim)
     {
+        if (dim <= 1) {
+            throw runtime_error("Dimension must be positive");
+        }
+
         Eigen::ArrayXd centroid(dim);
         for (int i=0; i<dim; i++) {
             centroid[i] = 1.0 / dim;
@@ -96,9 +124,9 @@ namespace thts {
         init_ball = make_shared<CzBall>(init_ball_radius, centroid);
         
         lock_guard<mutex> lg(lock);
-        largest_ball_radius = init_ball_radius;
-        smallest_ball_radius = init_ball_radius;
-        ball_list[init_ball_radius].push_back(init_ball);
+        base_ball_radius = init_ball_radius;  // This is the largest radius (level 0)
+        max_level = 0;  // Initial ball is at level 0 (largest)
+        ball_list[0].push_back(init_ball);
     }
 
     /**
@@ -112,11 +140,13 @@ namespace thts {
      * Get all balls
     */
     shared_ptr<vector<shared_ptr<CzBall>>> CzBallList::get_all_balls() const {
-        shared_ptr<vector<shared_ptr<CzBall>>> all_balls;        
-        for (double cur_radius = smallest_ball_radius; cur_radius <= largest_ball_radius; cur_radius *= 2.0) {
-            lock_guard<mutex> lg(lock);
-            for (shared_ptr<CzBall> ball : ball_list.at(cur_radius)) {
-                all_balls->push_back(ball);
+        shared_ptr<vector<shared_ptr<CzBall>>> all_balls = make_shared<vector<shared_ptr<CzBall>>>();
+        lock_guard<mutex> lg(lock);
+        for (int level = 0; level <= max_level; level++) {
+            if (ball_list.find(level) != ball_list.end()) {
+                for (shared_ptr<CzBall> ball : ball_list.at(level)) {
+                    all_balls->push_back(ball);
+                }
             }
         }
         return all_balls;
@@ -134,15 +164,19 @@ namespace thts {
         shared_ptr<vector<shared_ptr<CzBall>>> relevant_balls;
         relevant_balls = make_shared<vector<shared_ptr<CzBall>>>();
 
-        for (double cur_radius = smallest_ball_radius; cur_radius <= largest_ball_radius; cur_radius *= 2.0) {
-            lock_guard<mutex> lg(lock);
-            for (shared_ptr<CzBall> ball : ball_list.at(cur_radius)) {
-                if (ball->point_in_domain(weight)) {
-                    relevant_balls->push_back(ball);
+        lock_guard<mutex> lg(lock);
+        int current_max_level = max_level;
+        // Iterate from smallest (max_level) to largest (level 0)
+        for (int level = current_max_level; level >= 0; level--) {
+            if (ball_list.find(level) != ball_list.end()) {
+                for (shared_ptr<CzBall> ball : ball_list.at(level)) {
+                    if (ball->point_in_domain(weight)) {
+                        relevant_balls->push_back(ball);
+                    }
                 }
-            }
-            if (relevant_balls->size() > 0) {
-                break;
+                if (relevant_balls->size() > 0) {
+                    break;
+                }
             }
         }
 
@@ -159,10 +193,16 @@ namespace thts {
         shared_ptr<vector<shared_ptr<CzBall>>> bigger_balls;
         bigger_balls = make_shared<vector<shared_ptr<CzBall>>>();
 
-        for (double cur_radius = min_radius; cur_radius <= largest_ball_radius; cur_radius *= 2.0) {
-            lock_guard<mutex> lg(lock);
-            vector<shared_ptr<CzBall>> cur_radius_balls = ball_list.at(cur_radius);
-            bigger_balls->insert(bigger_balls->end(), cur_radius_balls.begin(), cur_radius_balls.end());
+        lock_guard<mutex> lg(lock);
+        int min_level = radius_to_level(min_radius);
+        int current_max_level = max_level;
+        // Iterate from min_level to level 0 (largest)   (smaller to larger radius)
+        // But we want balls with radius >= min_radius, which means level <= min_level
+        for (int level = min_level; level >= 0; level--) {
+            if (ball_list.find(level) != ball_list.end()) {
+                vector<shared_ptr<CzBall>> cur_level_balls = ball_list.at(level);
+                bigger_balls->insert(bigger_balls->end(), cur_level_balls.begin(), cur_level_balls.end());
+            }
         }
 
         return bigger_balls;
@@ -171,20 +211,24 @@ namespace thts {
     string CzBallList::get_pretty_print_string() const {
         stringstream ss;
         ss << "radius // ball_visits // avg_return // center" << endl;
-        for (double cur_radius = largest_ball_radius; cur_radius >= smallest_ball_radius; cur_radius /= 2.0) {
-            lock_guard<mutex> lg(lock);
-            for (shared_ptr<CzBall> ball : ball_list.at(cur_radius)) {
-                ss << ball->radius() << " // " << ball->get_num_backups() << " // [";
-                Eigen::ArrayXd ar = ball->get_avg_return_or_value();
-                for (int i=0; i<ar.size(); i++) {
-                    ss << ar[i] << ",";
+        lock_guard<mutex> lg(lock);
+        int current_max_level = max_level;
+        // Iterate from largest (level 0) to smallest (max_level)  
+        for (int level = 0; level <= current_max_level; level++) {
+            if (ball_list.find(level) != ball_list.end()) {
+                for (shared_ptr<CzBall> ball : ball_list.at(level)) {
+                    ss << ball->radius() << " // " << ball->get_num_backups() << " // [";
+                    Eigen::ArrayXd ar = ball->get_avg_return_or_value();
+                    for (int i=0; i<ar.size(); i++) {
+                        ss << ar[i] << ",";
+                    }
+                    ss << "] // [";
+                    Eigen::ArrayXd c = ball->center();
+                    for (int i=0; i<c.size(); i++) {
+                        ss << c[i] << ",";
+                    }
+                    ss << "]" << endl;
                 }
-                ss << "] // [";
-                Eigen::ArrayXd c = ball->center();
-                for (int i=0; i<c.size(); i++) {
-                    ss << c[i] << ",";
-                }
-                ss << "]" << endl;
             }
         }
         return ss.str();
@@ -206,9 +250,10 @@ namespace thts {
             chosen_ball = make_shared<CzBall>(new_ball_radius, weight);
             
             lock_guard<mutex> lg(lock);
-            ball_list[new_ball_radius].push_back(chosen_ball);
-            if (new_ball_radius < smallest_ball_radius) {
-                smallest_ball_radius = new_ball_radius;
+            int new_level = radius_to_level(new_ball_radius);
+            ball_list[new_level].push_back(chosen_ball);
+            if (new_level > max_level) {
+                max_level = new_level;  // Higher level means smaller radius
             }
         }
         return chosen_ball;
@@ -251,17 +296,37 @@ namespace thts {
     /**
      * Gets an approximate convex hull from this ball list
      * 
-     * Just going to put all of the MO values stored in balls into the convex hull and let it prune and do its thing
-     * Bit concerned with some values being vewry old/stale leading to innaccurate values
-     * Also about there being a lot fo values and lots of randomness leading to a maximisation bias
-     * But going to just try it and see if it works
+     * Originally was just taking MO over all values from all balls, but there 
+     * is the case that some coarse balls have stale values that "got lucky"
+     * 
+     * Think the most fair way to do this is to generate a bunch of random 
+     * weights, and uses the balls that would be used in CZ during 
+     * recommendations
+     *
+     * Note that there is one ball list per action, and CZT node will take the 
+     * union of all the convex hulls from all the ball lists
      */
     ConvexHull CzBallList::get_approximate_convex_hull() const 
     {
+        int num_random_weights = 100;
+        vector<Eigen::ArrayXd> random_weights = thts::helper::get_well_spaced_simplex_points(
+            num_random_weights, _dim);
+
         unordered_set<Vec> ball_avg_returns;
-        for (shared_ptr<CzBall> ball : *get_all_balls()) {
-            lock_guard<mutex> lg(ball->stats_lock);
-            ball_avg_returns.insert(ball->avg_return_or_value);
+        for (Eigen::ArrayXd& random_weight : random_weights) {
+            shared_ptr<vector<shared_ptr<CzBall>>> relevant_balls = get_relevant_balls(random_weight);
+            
+            Eigen::ArrayXd most_relevant_return = Eigen::ArrayXd::Zero(_dim);
+            double most_relevant_return_value = numeric_limits<double>::lowest();
+            for (shared_ptr<CzBall> ball : *relevant_balls) {
+                double ball_value = ball->get_scalarised_avg_return_or_value(random_weight);
+                if (ball_value > most_relevant_return_value) {
+                    most_relevant_return_value = ball_value;
+                    most_relevant_return = ball->get_avg_return_or_value();
+                }
+            }
+            
+            ball_avg_returns.insert(most_relevant_return);
         }
         return ConvexHull(ball_avg_returns);
     }

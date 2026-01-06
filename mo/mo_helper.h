@@ -58,15 +58,15 @@ namespace thts::helper {
      * - handles if python interpreter is initialised or not (temporarily initialises an interpreter if not)
      * - assumes that thread calling this function has the GIL, OR, is the only thread running python code at the moment
      */
-    std::vector<Eigen::ArrayXd> get_well_spaced_points(int num_points, int dim, bool is_simplex=false);
-    std::vector<Eigen::ArrayXd> get_well_spaced_hyperphere_points(int num_points, int dim);
-    std::vector<Eigen::ArrayXd> get_well_spaced_simplex_points(int num_points, int dim);
+    std::vector<Eigen::ArrayXd> get_well_spaced_points(size_t num_points, size_t dim, bool is_simplex=false);
+    std::vector<Eigen::ArrayXd> get_well_spaced_hyperphere_points(size_t num_points, size_t dim);
+    std::vector<Eigen::ArrayXd> get_well_spaced_simplex_points(size_t num_points, size_t dim);
 
     /**
      * The multi objective rollout heuristic function, that returns an MC estimate of 'state' with a rollout with random policy
      */
     Eigen::ArrayXd mo_rollout_heuristic_fn(
-        std::shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth);
+        std::shared_ptr<const State> state, MoThtsEnv& env, MoThtsManager& manager, int depth);
 
 
 
