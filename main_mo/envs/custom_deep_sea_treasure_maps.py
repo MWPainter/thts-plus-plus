@@ -1,5 +1,7 @@
 # Width to max(x+y) mapping:
 WIDTH_TO_MAX_XY = {
+    0: 19,
+    1: 19,
     10: 26,
     11: 30,
     12: 35,
