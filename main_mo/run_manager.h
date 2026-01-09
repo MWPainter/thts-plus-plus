@@ -43,6 +43,7 @@ namespace thts {
             ConfigMap xpr_config;
             ConfigMap alg_config;
             std::string xpr_dir_override;  // Optional override for experiment directory name
+            std::string thts_unique_filename;
 
             /**
              * Initialised constructor
@@ -53,7 +54,8 @@ namespace thts {
                 std::time_t xpr_timestamp, 
                 ConfigMap xpr_config, 
                 ConfigMap alg_config,
-                std::string xpr_dir_override="");
+                std::string xpr_dir_override="",
+                std::string thts_unique_filename="");
 
         private:
             /**

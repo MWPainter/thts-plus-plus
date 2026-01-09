@@ -79,6 +79,7 @@ namespace thts {
             // std::unordered_set<Vec> prune(
             //     const std::unordered_set<Vec>& ref_points, 
             //     const std::unordered_set<Vec>& points) const;
+            static std::unordered_set<Vec> pareto_prune(const std::unordered_set<Vec>& points);
             static std::unordered_set<Vec> prune(const std::unordered_set<Vec>& points);
 
         public:

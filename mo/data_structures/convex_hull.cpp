@@ -505,17 +505,44 @@ namespace thts {
     // };
 
     /**
+     * Prunes a set of 'points' to a set of points that form a Pareto Front
+    */
+    unordered_set<Vec> ConvexHull::pareto_prune(const unordered_set<Vec>& points) // static
+    {
+        unordered_set<Vec> pruned_points;
+        pruned_points.reserve(points.size());
+        vector<Vec> points_vec(points.begin(), points.end());
+        for (size_t i=0; i<points_vec.size(); i++) {
+            bool is_dominated = false;
+            for (size_t j=0; j<points_vec.size(); j++) {
+                if (i == j) {
+                    continue;
+                }
+                if (points_vec[j].strongly_pareto_dominates(points_vec[i])) {
+                    is_dominated = true;
+                    break;
+                }
+            }
+            if (!is_dominated) {
+                pruned_points.insert(points_vec[i]);
+            }
+        }
+        return pruned_points;
+    }
+
+    /**
      * Prunes a set of 'points' to a set of points that form a Convex Hull
      * 
      * Because working with a single set of points, 'pruned_points' will always contain *it in the 
      * strongly_convex_dominated call, so set 'ignore_if_point_in_ref_points' to true here, to avoid all points being 
      * pruned by themselves
      * 
-     * 
+     * The linear program pruning seems to struggle when two points are colinear along one of the axes
+     * So first pareto prune the points to solve these cases
     */
     unordered_set<Vec> ConvexHull::prune(const unordered_set<Vec>& points) // static
     {
-        unordered_set<Vec> pruned_points(points);
+        unordered_set<Vec> pruned_points = pareto_prune(points);
         
         for (auto it = pruned_points.begin(); it != pruned_points.end(); ) {
             bool is_dominated = strongly_convex_dominated(pruned_points, *it);

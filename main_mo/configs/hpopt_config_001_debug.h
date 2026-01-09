@@ -34,14 +34,14 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_001 =
     {
         {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
         {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-4,  1.0e4)},
-        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1,       1024)},
+        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1.0,     1024.0)},
     },
     // czt doubling params
     {
         {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT_DOUBLING},
         {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-4,  1.0e4)},
-        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1,       1024)},
-        {ALG_PARAM_ID_MIN_LOG2_N,                   std::make_pair(0,       10)},
+        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1.0,     1024.0)},
+        {ALG_PARAM_ID_MIN_LOG2_N,                   std::make_pair(0.0,     10.0)},
     },
     // ch uct params
     {
@@ -52,14 +52,14 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_001 =
     {
         {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT},
         {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-4,  1.0e4)},
-        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1,       1024)},
+        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1.0,     1024.0)},
     },
     // ch czt doubling params
     {
         {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT_DOUBLING},
         {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-4,  1.0e4)},
-        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1,       1024)},
-        {ALG_PARAM_ID_MIN_LOG2_N,                   std::make_pair(0,       10)},
+        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1.0,     1024.0)},
+        {ALG_PARAM_ID_MIN_LOG2_N,                   std::make_pair(0.0,     10.0)},
     },
     // bts params
     {

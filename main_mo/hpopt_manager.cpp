@@ -36,6 +36,8 @@
 #include <stdexcept>
 #include <sstream>
 #include <string>
+#include <functional>
+#include "helper_templates.h"
 
 using namespace std;
 using namespace thts;
@@ -370,8 +372,11 @@ namespace thts {
         int min_repeats = get_hpopt_min_repeats();
         double estimate_confidence_threshold = get_hpopt_estimate_confidence_threshold();
 
+        // create temp file for this query
+        filesystem::path temp_file_path = get_temp_file_path_for_query(query);
+
         // get run manager with params corresponding to this query
-        shared_ptr<RunManager> sampled_run_manager = get_run_manager_for_query(query);
+        shared_ptr<RunManager> sampled_run_manager = get_run_manager_for_query(query, temp_file_path);
 
         cout << "hp_opt_iter:" << hp_opt_iter << ", query_vector:" << query << endl;
         cout << "sampled_params:" << sampled_run_manager->get_params_string_helper() << endl;
@@ -406,6 +411,7 @@ namespace thts {
             // i.e. if confidence intervals don't overlap (1.65 std ≈ 95% CI, so <0.1% chance of error)
             constexpr double early_stop_z = 1.65;
             if (repeats_run >= min_repeats && 
+                best_mean_eval != std::numeric_limits<double>::lowest() &&
                 mean_eval + early_stop_z * std_mean_eval < best_mean_eval - early_stop_z * best_std_mean_eval)
             {
                 cout << "Early stopping: " << mean_eval << " + " << early_stop_z << "*" << std_mean_eval 
@@ -415,6 +421,9 @@ namespace thts {
                 break;
             }
         }
+
+        // close temp file for this query
+        delete_temp_file(temp_file_path);
 
         // Update if best eval so far
         if (mean_eval > best_mean_eval)
@@ -436,11 +445,12 @@ namespace thts {
     /**
      * Convert bayesopt sample into a RunManager/ConfigMap to run a search with
      */
-    shared_ptr<RunManager> HpoptManager::get_run_manager_for_query(const bayesopt::vectord& query)
+    shared_ptr<RunManager> HpoptManager::get_run_manager_for_query(const bayesopt::vectord& query, filesystem::path temp_file_path)
     {
         ConfigMap query_xpr_config = get_run_manager_xpr_config_for_query(query);
         ConfigMap query_alg_config = get_run_manager_alg_config_for_query(query);
-        return make_shared<RunManager>(xpr_timestamp, query_xpr_config, query_alg_config);
+        string thts_unique_filename = temp_file_path.string();
+        return make_shared<RunManager>(xpr_timestamp, query_xpr_config, query_alg_config, "", thts_unique_filename);
     }
 
 
@@ -724,5 +734,57 @@ namespace thts {
             }
         }
         hpopt_summary_fs << endl;
+    }
+
+    /**
+     * Generate a unique temporary file path for a given query vector
+     * Uses a hash of the query vector values to create a unique identifier
+     */
+    std::filesystem::path HpoptManager::get_temp_file_path_for_query(const bayesopt::vectord& query)
+    {
+        // Create a hash from the query vector values
+        size_t query_hash = 0;
+        for (size_t i = 0; i < query.size(); ++i) {
+            query_hash = thts::helper::hash_combine(query_hash, query[i]);
+        }
+        
+        // Also incorporate xpr_timestamp and alg_id for additional uniqueness
+        query_hash = thts::helper::hash_combine(query_hash, xpr_timestamp);
+        std::hash<std::string> string_hasher;
+        query_hash = thts::helper::hash_combine(query_hash, string_hasher(get_alg_id()));
+        
+        // Create unique filename using hash and ensure it's in a temp directory
+        stringstream ss;
+        ss << "tmp/" << get_xpr_name() << "_" << xpr_timestamp << "_alg_" << get_alg_id() 
+           << "_query_" << std::hex << query_hash << ".tmp";
+        
+        std::filesystem::path filepath(ss.str());
+        
+        // Create parent directory if it doesn't exist
+        std::filesystem::path dir = filepath.parent_path();
+        if (!std::filesystem::exists(dir)) {
+            std::filesystem::create_directories(dir);
+        }
+        
+        // Create the file and write "Urgh!" to it, then close immediately
+        std::ofstream file(filepath, std::ios::out | std::ios::trunc);
+        if (file.is_open()) {
+            file << "Urgh!" << std::endl;
+            file.close();
+        } else {
+            throw runtime_error("Failed to create temp file: " + filepath.string());
+        }
+        
+        return filepath;
+    }
+
+    /**
+     * Close and delete the current temporary file
+     */
+    void HpoptManager::delete_temp_file(filesystem::path temp_file_path)
+    {
+        if (!temp_file_path.empty() && std::filesystem::exists(temp_file_path)) {
+            std::filesystem::remove(temp_file_path);
+        }
     }
 }

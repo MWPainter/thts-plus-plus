@@ -18,7 +18,7 @@ static const std::vector<ConfigMap> CONFIG_002 =
         {XPR_PARAM_ID_MAX_TRIAL_LENGTH,                 26*2},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,                  true},
         {XPR_PARAM_ID_TERMINATION_BOUND,                10.0},
-        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            5},
+        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            25},
         {XPR_PARAM_ID_SEARCH_THREADS,                   16},
         {XPR_PARAM_ID_EVAL_DELTA,                       0.1},
         {XPR_PARAM_ID_EVAL_ROLLOUTS,                    1024},

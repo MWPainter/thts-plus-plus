@@ -168,6 +168,14 @@ namespace thts {
         return (vec >= other.vec).all();
     }
 
+    bool Vec::strongly_pareto_dominates(const Vec& other, double tolerance) const
+    {
+        if (vec.size() != other.vec.size()) {
+            throw runtime_error("Trying to use 'strongly_pareto_dominate' with vectors with different dims.");
+        }
+        return (vec + tolerance > other.vec).all();
+    }
+
     bool Vec::equals(const Vec& other) const {
         if (vec.size() != other.vec.size()) {
             return false;
@@ -190,6 +198,13 @@ namespace thts {
             cur_hash = helper::hash_combine(cur_hash,vec[i]);
         }
         return cur_hash;
+    }
+
+
+
+
+    Vec Vec::operator+(const double s) const {
+        return Vec(vec + s);
     }
 
 

@@ -47,11 +47,13 @@ namespace thts {
         std::time_t xpr_timestamp, 
         ConfigMap xpr_config, 
         ConfigMap alg_config,
-        std::string xpr_dir_override) :
+        std::string xpr_dir_override,
+        std::string thts_unique_filename) :
             xpr_timestamp(xpr_timestamp), 
             xpr_config(xpr_config), 
             alg_config(alg_config),
-            xpr_dir_override(xpr_dir_override)
+            xpr_dir_override(xpr_dir_override),
+            thts_unique_filename(thts_unique_filename)
     {
         validate_config_or_raise_exception();
     }
@@ -233,17 +235,22 @@ namespace thts {
     */
     shared_ptr<MoThtsEnv> RunManager::get_env()
     {
-        string thts_unique_filename = get_eval_logs_dir();
+        string unique_filename;
+        if (!this->thts_unique_filename.empty()) {
+            unique_filename = this->thts_unique_filename;
+        } else {
+            unique_filename = get_eval_logs_dir();
+        }
         string env_id = get_env_id();
 
         if (GYM_ENVS.contains(env_id)) {
             shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-            return make_shared<MoGymMultiprocessingThtsEnv>(pickle_wrapper, thts_unique_filename, env_id);
+            return make_shared<MoGymMultiprocessingThtsEnv>(pickle_wrapper, unique_filename, env_id);
         }
 
         if (TIMED_GYM_ENVS.contains(env_id)) {
             shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-            return make_shared<TimedMoGymMultiprocessingThtsEnv>(pickle_wrapper, thts_unique_filename, env_id);
+            return make_shared<TimedMoGymMultiprocessingThtsEnv>(pickle_wrapper, unique_filename, env_id);
         }
 
         if (DST_ENVS.contains(env_id)) 
@@ -271,7 +278,7 @@ namespace thts {
             string class_name = "ImprovedDeepSeaTreasureThtsEnv";
             return make_shared<MoPyMultiprocessingThtsEnv>(
                 pickle_wrapper, 
-                thts_unique_filename, 
+                unique_filename, 
                 module_name, 
                 class_name, 
                 kw_args_ptr);
@@ -293,7 +300,7 @@ namespace thts {
             string class_name = "StochFruitTreeThtsEnv";
             return make_shared<MoPyMultiprocessingThtsEnv>(
                 pickle_wrapper, 
-                thts_unique_filename, 
+                unique_filename, 
                 module_name, 
                 class_name, 
                 kw_args_ptr);
@@ -343,7 +350,7 @@ namespace thts {
             string class_name = "TestMoThtsEnv";
             return make_shared<MoPyMultiprocessingThtsEnv>(
                 pickle_wrapper, 
-                thts_unique_filename, 
+                unique_filename, 
                 module_name, 
                 class_name, 
                 kw_args_ptr);
@@ -363,7 +370,7 @@ namespace thts {
             string class_name = "TestMoThtsEnv";
             return make_shared<MoPyMultiprocessingThtsEnv>(
                 pickle_wrapper, 
-                thts_unique_filename, 
+                unique_filename, 
                 module_name, 
                 class_name, 
                 kw_args_ptr);
@@ -383,7 +390,7 @@ namespace thts {
             string class_name = "TestMoThtsEnv";
             return make_shared<MoPyMultiprocessingThtsEnv>(
                 pickle_wrapper, 
-                thts_unique_filename, 
+                unique_filename, 
                 module_name, 
                 class_name, 
                 kw_args_ptr);
@@ -403,7 +410,7 @@ namespace thts {
             string class_name = "TestMoThtsEnv";
             return make_shared<MoPyMultiprocessingThtsEnv>(
                 pickle_wrapper, 
-                thts_unique_filename, 
+                unique_filename, 
                 module_name, 
                 class_name, 
                 kw_args_ptr);

@@ -6,6 +6,8 @@
 
 #include "helper.h"
 
+#include <iostream>
+
 namespace thts::python::helper {
     using namespace std;
     namespace py = pybind11;
@@ -35,7 +37,14 @@ namespace thts::python::helper {
                 "257th, 258th, ..., threads will get the same shared memory as the 1st, 2nd, ..., threads and "
                 "clobbering in shared memory IPC will occur.");
         }
-        return ftok(thts_unique_filename.c_str(), tid+1);
+        key_t key = ftok(thts_unique_filename.c_str(), tid+1);
+        if (key == (key_t)-1) {
+            stringstream ss;
+            ss << "Error generating unix key with ftok for file: " << thts_unique_filename 
+               << ", tid: " << tid << ", errno: " << errno << ", strerror: " << strerror(errno);
+            throw runtime_error(ss.str());
+        }
+        return key;
     }
 
     /**
@@ -56,10 +65,12 @@ namespace thts::python::helper {
         int semid = semget(key, num_sems, flags);
         if (semid < 0) {
             stringstream ss;
-            ss << "Error creating filesystem semaphores (try running 'ipcrm -v -a' to clear unix semaphores and "
-               << "rerunning), errno: " << strerror(errno) << ". Most commonly this is caused by semaphores already existing for "
-               << "the unix key trying to create semaphores for. Alternatively, maybe the system limit of semaphores "
-               << "has been reached (soln would still be to try running ipcrm -v -a).";
+            ss << "Error creating filesystem semaphores. "
+               << "Errno: " << errno 
+               << ", strerror: " << strerror(errno) << ". "
+               << "(Previous encounters with this failure have been semaphore for the unix key "
+               << "already existing. The system limit of semaphore already existing. Solution is usually "
+               << "to run 'ipcrm -v -a', which will clear all semaphores and shared memory segments).";
             throw runtime_error(ss.str());
         }
 

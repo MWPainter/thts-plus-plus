@@ -136,7 +136,7 @@ namespace thts {
             /**
              * Convert bayesopt sample into a RunManager/ConfigMap to run a search with
              */
-            std::shared_ptr<RunManager> get_run_manager_for_query(const bayesopt::vectord& query);
+            std::shared_ptr<RunManager> get_run_manager_for_query(const bayesopt::vectord& query, std::filesystem::path temp_file_path);
             ConfigMap get_run_manager_xpr_config_for_query(const bayesopt::vectord& query);
             ConfigMap get_run_manager_alg_config_for_query(const bayesopt::vectord& query);
 
@@ -177,5 +177,15 @@ namespace thts {
             void write_hpopt_summary_sample_eval_line(
                 std::shared_ptr<RunManager> run_manager, MoEvalMetrics& mo_eval_metrics);
             void write_hpopt_summary_footer();
+
+            /**
+             * Generate a unique temporary file path for a given query vector
+             */
+            std::filesystem::path get_temp_file_path_for_query(const bayesopt::vectord& query);
+
+            /**
+             * Close and delete the current temporary file
+             */
+            void delete_temp_file(std::filesystem::path temp_file_path);
     };
 }
