@@ -1,6 +1,10 @@
 #include "py/shared_mem_wrapper.h"
 
 #include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <cctype>
+#include <algorithm>
 
 using namespace std;
 namespace py = pybind11;
@@ -86,11 +90,15 @@ namespace thts::python {
 
         int* shm_rpc_id_ptr = (int*) shared_mem_ptr;
         rpc_id = *shm_rpc_id_ptr;
-        int* shm_value_type_ptr = shm_rpc_id_ptr + 1;
+        int* shm_value_type_ptr = shm_rpc_id_ptr + 1;      
         value_type = *shm_value_type_ptr;
 
         switch (value_type)
         {
+            case SMT_error:
+                read_strings_from_shared_mem();
+                throw runtime_error("Client recieved error message from server: " + strings->at(0));
+                return;
             case SMT_none:
                 return;
             case SMT_strings:
@@ -184,6 +192,8 @@ namespace thts::python {
 
         switch (value_type)
         {
+            case SMT_error:
+                return write_strings_to_shared_mem();
             case SMT_none:
                 return;
             case SMT_strings:

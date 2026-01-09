@@ -52,14 +52,13 @@ namespace thts {
         
         // Place treasures using the sorted property
         // For each row x, treasure_map[x] contains the treasure for that row
-        for (size_t i = 0; i < num_cols; i++) {
-            int x = static_cast<int>(i);
-            const TreasureEntry& treasure = (*treasure_map)[i];
+        for (int x = 0; x < num_cols; x++) {
+            const TreasureEntry& treasure = (*treasure_map)[x];
             int treasure_y = treasure.position[1];
             
             sea_map[x][treasure_y] = treasure.value;
-            for (size_t j = treasure_y + 1; j < num_rows; j++) {
-                sea_map[x][j] = -10.0;
+            for (int y = treasure_y + 1; y < num_rows; y++) {
+                sea_map[x][y] = -10.0;
             }
         }
     }

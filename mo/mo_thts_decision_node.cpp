@@ -21,7 +21,8 @@ namespace thts {
         shared_ptr<const State> state,
         int decision_depth,
         int decision_timestep,
-        shared_ptr<const MoThtsCNode> parent) :
+        shared_ptr<const MoThtsCNode> parent,
+        bool eval_mo_heuristic) :
             ThtsDNode(thts_manager, state, decision_depth, decision_timestep, parent),
             mo_heuristic_value(thts_manager->reward_dim, 0.0),
             vector_visit_count(thts_manager->reward_dim, 0.0),
@@ -29,7 +30,7 @@ namespace thts {
             total_cnode_backups_in_subtree(0),
             total_dnode_backups_in_subtree(0)
     {
-        if (thts_manager->mo_heuristic_fn != nullptr
+        if (eval_mo_heuristic && thts_manager->mo_heuristic_fn != nullptr
             && !thts_manager->thts_env()->is_sink_state_itfc(state, *thts_manager->get_thts_context()))
         {
             MoThtsEnv& mo_thts_env = (MoThtsEnv&) *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());

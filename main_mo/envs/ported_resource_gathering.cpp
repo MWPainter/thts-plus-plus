@@ -1,5 +1,6 @@
 #include "ported_resource_gathering.h"
 #include <sstream>
+#include "helper_templates.h"
 
 using namespace std;
 
@@ -10,7 +11,7 @@ namespace thts {
     size_t ResourceGatheringState::hash() const {
         size_t h = 0;
         for (int i = 0; i < 4; i++) {
-            h ^= hash<int>()(state[i]) + 0x9e3779b9 + (h << 6) + (h >> 2);
+            h = thts::helper::hash_combine(h, state[i]);
         }
         return h;
     }

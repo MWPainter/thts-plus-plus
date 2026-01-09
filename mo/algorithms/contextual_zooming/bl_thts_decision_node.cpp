@@ -8,13 +8,15 @@ namespace thts {
         shared_ptr<const State> state,
         int decision_depth,
         int decision_timestep,
-        shared_ptr<const BlThtsCNode> parent) :
+        shared_ptr<const BlThtsCNode> parent,
+        bool eval_mo_heuristic) :
             MoThtsDNode(
                 static_pointer_cast<MoThtsManager>(thts_manager),
                 state,
                 decision_depth,
                 decision_timestep,
-                static_pointer_cast<const MoThtsCNode>(parent)),
+                static_pointer_cast<const MoThtsCNode>(parent),
+                eval_mo_heuristic),
             ball_list(thts_manager->reward_dim, thts_manager->num_backups_before_allowed_to_split)
     {
     }

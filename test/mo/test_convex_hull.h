@@ -131,5 +131,15 @@ namespace thts::test {
         std::unordered_set<Vec> public_prune(const std::unordered_set<Vec>& points) const {
             return ConvexHull::prune(points);
         }
+
+        /**
+         * Public version of 'strongly_convex_dominated' for testing
+        */
+        static bool public_strongly_convex_dominated(
+            const std::unordered_set<Vec>& ref_points, 
+            const Vec& point) 
+        {
+            return ConvexHull::strongly_convex_dominated(ref_points, point);
+        }
     };
 }

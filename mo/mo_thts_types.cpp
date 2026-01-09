@@ -169,11 +169,23 @@ namespace thts {
     }
 
     bool Vec::equals(const Vec& other) const {
+        if (vec.size() != other.vec.size()) {
+            return false;
+        }
         return (vec == other.vec).all();
+    }
+
+    bool Vec::approx_equals(const Vec& other, double tolerance) const {
+        if (vec.size() != other.vec.size()) {
+            return false;
+        }
+        // Use Eigen's isApprox for approximate equality
+        return vec.isApprox(other.vec, tolerance);
     }
 
     std::size_t Vec::hash() const {
         size_t cur_hash = 0;
+        cur_hash = thts::helper::hash_combine(cur_hash, vec.size());
         for (int i=0; i < vec.size(); i++) {
             cur_hash = helper::hash_combine(cur_hash,vec[i]);
         }

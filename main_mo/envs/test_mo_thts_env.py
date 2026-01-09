@@ -28,7 +28,10 @@ class TestMoThtsEnv(MoPyThtsEnv):
             same_dir_bonus: Bonus for continuing in same direction
             gamma: Discount factor for extra rewards
         """
+        if isinstance(add_extra_rewards, str):
+            add_extra_rewards = (add_extra_rewards.lower() == "true")
         reward_dim = 4 if add_extra_rewards else 2
+        
         super().__init__(reward_dim=reward_dim, fully_observable=True)
         self.walk_len = int(walk_len)
         self.wrong_dir_prob = float(wrong_dir_prob)

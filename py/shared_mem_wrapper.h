@@ -15,10 +15,11 @@ namespace thts::python {
      * Enum to specify what is being shared over the shared memory
      */
     enum SharedMemType {
-        SMT_none = 0,           // making rpc call with no arguments/return value
-        SMT_strings = 1,        // making rpc call with arguments/return value being a vector of strings
-        SMT_doubles = 2,        // making rpc call with arguments/return value being a vector of doubles
-        SMT_prob_distr = 3,     // making rpc call with arguments/return value being a map from strings to doubles
+        SMT_error = 0,          // indicating error occurred during rpc call
+        SMT_none = 1,           // making rpc call with no arguments/return value
+        SMT_strings = 2,        // making rpc call with arguments/return value being a vector of strings
+        SMT_doubles = 3,        // making rpc call with arguments/return value being a vector of doubles
+        SMT_prob_distr = 4,     // making rpc call with arguments/return value being a map from strings to doubles
     };
 
     /**

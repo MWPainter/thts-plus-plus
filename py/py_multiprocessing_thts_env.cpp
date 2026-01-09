@@ -182,60 +182,87 @@ namespace thts::python {
     void PyMultiprocessingThtsEnv::server_main(int tid) {
         shared_mem_wrapper = make_shared<SharedMemWrapper>(
             thts_unique_filename, tid, shared_memory_size_in_bytes, true);
+        
+        try {
+            while(true) {
+                shared_mem_wrapper->server_wait_for_rpc_call();
+                int rpc_id = shared_mem_wrapper->rpc_id;
 
-        while(true) {
-            shared_mem_wrapper->server_wait_for_rpc_call();
-            int rpc_id = shared_mem_wrapper->rpc_id;
+                if (rpc_id == RPC_kill_server) {
+                    return;
+                } 
+                else if (rpc_id == RPC_get_initial_state) 
+                {
+                    shared_mem_wrapper->strings = get_initial_state_py_server();
+                    shared_mem_wrapper->value_type = SMT_strings;
+                } 
+                else if (rpc_id == RPC_is_sink_state) 
+                {
+                    string& state = shared_mem_wrapper->strings->at(0);
+                    shared_mem_wrapper->strings = is_sink_state_py_server(state);
+                    shared_mem_wrapper->value_type = SMT_strings;
+                } 
+                else if (rpc_id == RPC_get_valid_actions) 
+                {
+                    string& state = shared_mem_wrapper->strings->at(0);
+                    shared_mem_wrapper->strings = get_valid_actions_py_server(state);
+                    shared_mem_wrapper->value_type = SMT_strings;
+                } 
+                else if (rpc_id == RPC_get_transition_distribution) 
+                {
+                    string& state = shared_mem_wrapper->strings->at(0);
+                    string& action = shared_mem_wrapper->strings->at(1);
+                    shared_mem_wrapper->prob_distr = get_transition_distribution_py_server(state, action);
+                    shared_mem_wrapper->value_type = SMT_prob_distr;
+                } 
+                else if (rpc_id == RPC_sample_transition_distribution) 
+                {
+                    string& state = shared_mem_wrapper->strings->at(0);
+                    string& action = shared_mem_wrapper->strings->at(1);
+                    shared_mem_wrapper->strings = sample_transition_distribution_py_server(state, action);
+                    shared_mem_wrapper->value_type = SMT_strings;
+                } 
+                else if (rpc_id == RPC_get_reward) 
+                {
+                    string& state = shared_mem_wrapper->strings->at(0);
+                    string& action = shared_mem_wrapper->strings->at(1);
+                    shared_mem_wrapper->doubles = get_reward_py_server(state, action);
+                    shared_mem_wrapper->value_type = SMT_doubles;
+                } 
+                else if (rpc_id == RPC_reset) 
+                {
+                    reset_py_server();
+                    shared_mem_wrapper->value_type = SMT_none;
+                } 
 
-            if (rpc_id == RPC_kill_server) {
-                return;
-            } 
-            else if (rpc_id == RPC_get_initial_state) 
-            {
-                shared_mem_wrapper->strings = get_initial_state_py_server();
-                shared_mem_wrapper->value_type = SMT_strings;
-            } 
-            else if (rpc_id == RPC_is_sink_state) 
-            {
-                string& state = shared_mem_wrapper->strings->at(0);
-                shared_mem_wrapper->strings = is_sink_state_py_server(state);
-                shared_mem_wrapper->value_type = SMT_strings;
-            } 
-            else if (rpc_id == RPC_get_valid_actions) 
-            {
-                string& state = shared_mem_wrapper->strings->at(0);
-                shared_mem_wrapper->strings = get_valid_actions_py_server(state);
-                shared_mem_wrapper->value_type = SMT_strings;
-            } 
-            else if (rpc_id == RPC_get_transition_distribution) 
-            {
-                string& state = shared_mem_wrapper->strings->at(0);
-                string& action = shared_mem_wrapper->strings->at(1);
-                shared_mem_wrapper->prob_distr = get_transition_distribution_py_server(state, action);
-                shared_mem_wrapper->value_type = SMT_prob_distr;
-            } 
-            else if (rpc_id == RPC_sample_transition_distribution) 
-            {
-                string& state = shared_mem_wrapper->strings->at(0);
-                string& action = shared_mem_wrapper->strings->at(1);
-                shared_mem_wrapper->strings = sample_transition_distribution_py_server(state, action);
-                shared_mem_wrapper->value_type = SMT_strings;
-            } 
-            else if (rpc_id == RPC_get_reward) 
-            {
-                string& state = shared_mem_wrapper->strings->at(0);
-                string& action = shared_mem_wrapper->strings->at(1);
-                shared_mem_wrapper->doubles = get_reward_py_server(state, action);
-                shared_mem_wrapper->value_type = SMT_doubles;
-            } 
-            else if (rpc_id == RPC_reset) 
-            {
-                reset_py_server();
-                shared_mem_wrapper->value_type = SMT_none;
-            } 
-
+                shared_mem_wrapper->rpc_id = 0;
+                shared_mem_wrapper->server_send_rpc_call_result();
+            }
+        }
+        catch (const exception& e) {
+            string error_msg = string("Server process error: ") + e.what();
+            cerr << "[SERVER] " << error_msg << endl;
             shared_mem_wrapper->rpc_id = 0;
+            shared_mem_wrapper->value_type = SMT_error;
+            shared_mem_wrapper->strings.reset();
+            shared_mem_wrapper->doubles.reset();
+            shared_mem_wrapper->prob_distr.reset();
+            shared_mem_wrapper->strings = make_shared<vector<string>>();
+            shared_mem_wrapper->strings->push_back(error_msg);
             shared_mem_wrapper->server_send_rpc_call_result();
+            throw;
+        } catch (...) {
+            string error_msg = "Server process error: Unknown error occurred in server process.";
+            cerr << "[SERVER] " << error_msg << endl;
+            shared_mem_wrapper->rpc_id = 0;
+            shared_mem_wrapper->value_type = SMT_error;
+            shared_mem_wrapper->strings.reset();
+            shared_mem_wrapper->doubles.reset();
+            shared_mem_wrapper->prob_distr.reset();
+            shared_mem_wrapper->strings = make_shared<vector<string>>();
+            shared_mem_wrapper->strings->push_back(error_msg);
+            shared_mem_wrapper->server_send_rpc_call_result();
+            throw;
         }
     }
 

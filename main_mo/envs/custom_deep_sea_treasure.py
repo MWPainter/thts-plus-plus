@@ -20,6 +20,7 @@ Outline:
 #####
 
 from operator import is_
+import logging
 from deep_sea_treasure import DeepSeaTreasureV0, VamplewWrapper, FuelWrapper
 from mo_gym_thts_env import MoGymThtsEnv
 from custom_deep_sea_treasure_maps import MAPS
@@ -27,6 +28,9 @@ from custom_deep_sea_treasure_maps import MAPS
 class ImprovedDeepSeaTreasureThtsEnv(MoGymThtsEnv):
 
     def __init__(self, swept_by_current_prob=0.0, is_vamplew=False, max_steps=1000, map_id=0):
+        if isinstance(is_vamplew, str):
+            is_vamplew = (is_vamplew.lower() == "true")
+            
         swept_by_current_prob = float(swept_by_current_prob)
         is_vamplew = bool(is_vamplew)
         max_steps = int(max_steps)

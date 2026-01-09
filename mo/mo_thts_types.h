@@ -80,6 +80,7 @@ namespace thts {
             bool weakly_pareto_dominates(const Vec& other) const;
 
             bool equals(const Vec& other) const;
+            bool approx_equals(const Vec& other, double tolerance = 1e-9) const;
             std::size_t hash() const;
 
             Vec operator+(const Vec& other) const;

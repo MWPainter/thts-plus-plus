@@ -16,13 +16,15 @@ namespace thts {
         shared_ptr<const State> state,
         int decision_depth,
         int decision_timestep,
-        shared_ptr<const CztCNode> parent) :
+        shared_ptr<const CztCNode> parent,
+        bool eval_mo_heuristic) :
             BlThtsDNode(
                 static_pointer_cast<BlThtsManager>(thts_manager),
                 state,
                 decision_depth,
                 decision_timestep,
-                static_pointer_cast<const BlThtsCNode>(parent)),
+                static_pointer_cast<const BlThtsCNode>(parent),
+                eval_mo_heuristic),
             _action_ctx_key(),
             _ball_ctx_key()
     {

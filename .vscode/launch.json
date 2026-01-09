@@ -37,7 +37,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "build-auxexpr-debug",
+            "preLaunchTask": "build-auxexpr-debug-with-py-env",
             "miDebuggerPath": "/usr/bin/gdb"
         },
         {
@@ -72,7 +72,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "build-auxexpr-debug",
+            "preLaunchTask": "build-auxexpr-debug-with-py-env",
             "miDebuggerPath": "/usr/bin/gdb"
         },
         {
@@ -107,7 +107,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "build-pyex-debug",
+            "preLaunchTask": "build-pyex-debug-with-py-env",
             "miDebuggerPath": "/usr/bin/gdb"
         },
         
@@ -144,7 +144,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "build-moexpr-debug",
+            "preLaunchTask": "build-moexpr-debug-with-py-env",
             "miDebuggerPath": "/usr/bin/gdb"
         },
         
@@ -181,7 +181,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "build-moexpr-debug",
+            "preLaunchTask": "build-moexpr-debug-with-py-env",
             "miDebuggerPath": "/usr/bin/gdb"
         },
         
@@ -218,7 +218,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "build-moexpr-debug",
+            "preLaunchTask": "build-moexpr-debug-with-py-env",
             "miDebuggerPath": "/usr/bin/gdb"
         },
         
@@ -255,7 +255,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "build-moexpr-debug",
+            "preLaunchTask": "build-moexpr-debug-with-py-env",
             "miDebuggerPath": "/usr/bin/gdb"
         },
     ]

@@ -20,7 +20,9 @@ namespace thts {
                     static_pointer_cast<CztManager>(thts_manager),
                     state,
                     decision_depth,
-                    decision_timestep)) // not passing parent pointer because CZT doesnt use it
+                    decision_timestep,
+                    nullptr, // not passing parent pointer because CZT doesnt use it
+                    false)) // dont evaluate MO heuristic twice, will cause bug running twice with gym envs
     {
     }
     

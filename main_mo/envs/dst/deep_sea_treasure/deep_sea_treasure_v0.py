@@ -131,12 +131,12 @@ class DeepSeaTreasureV0(gym.Env): #type: ignore[misc]
 
 		# Reward is a 2 x N matrix
 		# The maximum value is the highest possible reward, minimum value is determined by time-reward, which is infinite
-		reward_low: npt.NDArray[np.single] = np.asarray([0.0, -1.0])
+		reward_low: npt.NDArray[np.single] = np.asarray([0.0, -1.0], dtype=np.float32)
 
 		if env_config["implicit_collision_constraint"]:
 			reward_low -= 1.0
 
-		self.reward_space = gym.spaces.Box(low=reward_low, high=np.asarray([max(self.treasures.values()), -1.0]), shape=(2,))#, dtype=np.float32)
+		self.reward_space = gym.spaces.Box(low=reward_low, high=np.asarray([max(self.treasures.values()), -1.0], dtype=np.float32), shape=(2,), dtype=np.float32)
 
 		# Minimum/Maximum velocity:
 		self.max_vel = np.asarray([[float(env_config["max_velocity"])], [float(env_config["max_velocity"])]], dtype=np.int32)

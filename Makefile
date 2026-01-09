@@ -187,7 +187,7 @@ $(MO_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 # Build test object files rule
 $(TEST_OBJECTS): $$(patsubst $(BIN_DIR)/%.o, %.cpp, $$@)
 	@mkdir -p $(@D)
-	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(TEST_INCLUDES) $(PY_EX_CPPFLAGS) $(PY_LIB_CPPFLAGS) -c -o $@ $<
 
 $(PY_MAIN_OBJ) : $(PY_MAIN)
 	@mkdir -p bin/py/main
@@ -224,6 +224,7 @@ $(TARGET_THTS_TEST): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(TEST_OBJECTS)
 	$(CXX) $(CPPFLAGS) $(PY_EX_CPPFLAGS) -o $@ $^ $(GTEST) $(LDFLAGS)
 
 # Add a debug tests target. Adds -g to flags for debug info, and then just runs tests target
+$(TARGET_THTS_TEST_DEBUG): INCLUDES += $(TEST_INCLUDES)
 $(TARGET_THTS_TEST_DEBUG): CPPFLAGS := $(filter-out $(OPTIMIZATION_FLAGS),$(CPPFLAGS)) $(CPPFLAGS_DEBUG)
 $(TARGET_THTS_TEST_DEBUG): $(TARGET_THTS_TEST)
 

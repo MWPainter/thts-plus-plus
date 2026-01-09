@@ -56,6 +56,38 @@
             "options": {
                 "cwd": "${workspaceFolder}"
             }
+        },
+        {
+            "label": "build-py_env_server-debug",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source ~/anaconda3/etc/profile.d/conda.sh && conda activate thts++mo && source export_local_paths_desktop.sh && make py_env_server-debug"
+            ],
+            "group": "build",
+            "problemMatcher": ["$gcc"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "build-auxexpr-debug-with-py-env",
+            "dependsOn": ["build-py_env_server-debug", "build-auxexpr-debug"],
+            "dependsOrder": "sequence",
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "build-pyex-debug-with-py-env",
+            "dependsOn": ["build-py_env_server-debug", "build-pyex-debug"],
+            "dependsOrder": "sequence",
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "build-moexpr-debug-with-py-env",
+            "dependsOn": ["build-py_env_server-debug", "build-moexpr-debug"],
+            "dependsOrder": "sequence",
+            "problemMatcher": ["$gcc"]
         }
     ]
 }

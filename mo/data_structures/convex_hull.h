@@ -43,8 +43,8 @@ namespace thts {
 
         public:
             ConvexHull();
-            ConvexHull(const std::unordered_set<Eigen::ArrayXd>& init_points, bool already_pareto_front=false);
-            ConvexHull(const std::unordered_set<Vec>& init_points, bool already_pareto_front=false);
+            ConvexHull(const std::unordered_set<Eigen::ArrayXd>& init_points, bool already_convex_hull=false);
+            ConvexHull(const std::unordered_set<Vec>& init_points, bool already_convex_hull=false);
             ConvexHull(const Vec& heuristic_val);
             ConvexHull(const ConvexHull& ch);
             ConvexHull(const ConvexHull&& ch);

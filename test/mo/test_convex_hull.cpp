@@ -691,3 +691,26 @@ TEST(Ch_Hypervolume, hypervolume_error) {
     Vec ref_point = make_vec(2.0, 2.0, 2.0);
     EXPECT_ANY_THROW(ch.hypervolume(ref_point));
 }
+
+/**
+ * Test strongly_convex_dominated with a specific case that was causing issues
+ * This tests the case where the point to consider is in the ref_points set
+ */
+TEST(Ch_StronglyConvexDominated, point_in_ref_points) {
+    unordered_set<Vec> ref_points = {
+        make_vec(16.72, -8),
+        make_vec(5.92, -2),
+        make_vec(3.96, -4.7),
+        make_vec(3.96, -18.5),
+        make_vec(2, -32),
+        make_vec(3.96, -3),
+        make_vec(3.30667, -5.66667),
+        make_vec(8.86667, -8.5)
+    };
+    
+    Vec point = make_vec(3.96, -4.7);
+    
+    // Should ignore the duplicate point, and be dominated by [3.96, -3]
+    bool is_dominated = TestableConvexHull::public_strongly_convex_dominated(ref_points, point);
+    EXPECT_TRUE(is_dominated);
+}

@@ -28,6 +28,46 @@ namespace thts {
     // using namespace lemon;
     
     /**
+     * Helper function to remove approximate duplicates from a set of Vec
+     * Keeps the first occurrence of each approximately equal vector
+     */
+    static unordered_set<Vec> remove_approx_duplicates(const unordered_set<Vec>& points) {
+        unordered_set<Vec> deduplicated;
+        deduplicated.reserve(points.size());
+        
+        for (const Vec& point : points) {
+            bool is_duplicate = false;
+            for (const Vec& existing : deduplicated) {
+                if (point.approx_equals(existing)) {
+                    is_duplicate = true;
+                    break;
+                }
+            }
+            if (!is_duplicate) {
+                deduplicated.insert(point);
+            }
+        }
+        
+        return deduplicated;
+    }
+    
+    /**
+     * Helper function to remove pareto dominated points from a set of Vec
+     */
+    static unordered_set<Vec> remove_pareto_dominated(const unordered_set<Vec>& points) {
+        unordered_set<Vec> unique_points = remove_approx_duplicates(points);
+        vector<Vec> unique_points_vec(unique_points.begin(), unique_points.end());
+        for (size_t i=0; i<unique_points_vec.size(); i++) {
+            for (size_t j=0; j<unique_points_vec.size(); j++) {
+                if (i != j && unique_points_vec[i].weakly_pareto_dominates(unique_points_vec[j])) {
+                    unique_points_vec.erase(unique_points_vec.begin() + j);
+                }
+            }
+        }   
+        return unordered_set<Vec>(unique_points_vec.begin(), unique_points_vec.end());
+    }
+    
+    /**
      * Constructor, empty
     */
     ConvexHull::ConvexHull() :
@@ -39,8 +79,8 @@ namespace thts {
      * Constructor, set of Tagged points
      * Note that not assuming that 'init_points' is a Pareto Front, do use 'add_points' function to prune
     */
-    ConvexHull::ConvexHull(const unordered_set<Vec>& init_points, bool already_pareto_front) :
-        ch_points(already_pareto_front ? init_points : prune(init_points))
+    ConvexHull::ConvexHull(const unordered_set<Vec>& init_points, bool already_convex_hull) :
+        ch_points(already_convex_hull ? init_points : prune(remove_approx_duplicates(init_points)))
     {
     };
 
@@ -226,14 +266,29 @@ namespace thts {
      * -- for use this will look like {{0,1,...,m-1},{0,1,...,m-1},...,{0,1,...,m-1}}
      * 
      * Finally, note that CLP will minimise the objective, and the program we gave above is maximisation
+     *
+     * Also, assumes that any approximately equal points have been removed from any convex hull sets already. 
+     * If point is in ref_points, then we are pruning a convex hull, and that ref point should be ignored.
      */
     bool ConvexHull::strongly_convex_dominated( 
         const unordered_set<Vec>& ref_points, 
         const Vec& point) // static
     {   
-        // Base case where lp will be unbounded and would throw an error
-        if (ref_points.size() == 0 || (ref_points.size() == 1 && ref_points.contains(point))) {
+        // Base/degenerate case
+        // Point cant be dominated by nothing
+        if (ref_points.size() == 0) {
             return false;
+        }
+
+        // Base/degenerate case
+        // If ref_points contains only one point, revert to pareto domination
+        // Unless we are in the case that have one point in a convex hull 
+        if (ref_points.size() == 1) {
+            if (ref_points.contains(point)) {
+                return false;
+            }
+            Vec ref_point = *ref_points.begin();
+            return ref_point.weakly_pareto_dominates(point);
         }
 
         // Size of lp
@@ -330,7 +385,7 @@ namespace thts {
         // Not sure if there's any difference in implementations there *shrugs* but this is what the examples call so...
         lp.dual();
 
-        // For debugging
+        // // For debugging
         // cout << "In lp solver:" << endl;
         // cout << "Obj values = " << lp.objectiveValue() << endl;
         // const double *soltn = lp.primalColumnSolution();
@@ -340,7 +395,24 @@ namespace thts {
         // cout << endl;
 
         // Also seems like should use lp.numberPrimalInfeasibilities() to check actually got a solution
-        if (lp.numberPrimalInfeasibilities() > 0) {
+        // if (lp.numberPrimalInfeasibilities() > 0) {
+        // If infeasible, return error, shouldn't be passing infeasible problems to lp solver
+        if (!lp.primalFeasible()) {
+            
+            // For debugging
+            cout << "In lp solver:" << endl;
+            cout << "Obj values = " << lp.objectiveValue() << endl;
+            const double *soltn = lp.primalColumnSolution();
+            for (int i=0; i<num_vars; i++) {
+                cout << "Var[" << i << "] = " << soltn[i] << endl;
+            }
+            cout << "Number of primal infeasibilities = " << lp.numberPrimalInfeasibilities() << endl;
+            cout << endl;
+
+            // Print out variables run with
+            cout << "Ref points = " << thts::helper::unordered_set_pretty_print_string(ref_points) << endl;
+            cout << "Point to consider = " << point << endl;
+
             throw runtime_error("Lin prog in convex hull cant be solved, its infeasible or unbounded.");
         }
 
@@ -664,7 +736,18 @@ namespace thts {
                 projected_point.vec[i] = ref_point.vec[i];
                 projected_points.insert(projected_point);
             }
+            // and remove pareto dominated the points to remove redundant projected points
+            projected_points = remove_pareto_dominated(projected_points);
             geometric_hull_points.insert(projected_points.begin(), projected_points.end());
+        }
+
+        // Corner case, algorithm actually only got the reference point (worst possible value)
+        // Leads to geometric_hull_points.size() == 1
+        // For volume to be >0, need to have geometic_hull_points.size() > dim anyway
+        // So just return 0.0 in this case
+        size_t dim_size_t = static_cast<size_t>(dim);
+        if (geometric_hull_points.size() <= dim_size_t) {
+            return 0.0;
         }
 
         // Convert the geometric hull points to a flat vector for qhull
@@ -674,7 +757,7 @@ namespace thts {
         for (const Vec& point : geometric_hull_points) {
             qhull_flat_input.insert(qhull_flat_input.end(), point.vec.begin(), point.vec.end());
         }
-        
+
         // Run qhull to compute the convex hull, and output the hypervolume
         orgQhull::Qhull qhull;
         qhull.runQhull("", dim, num_points, qhull_flat_input.data(), "Qt Qx");

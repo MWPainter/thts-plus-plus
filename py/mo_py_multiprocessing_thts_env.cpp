@@ -9,6 +9,9 @@
 #include <unistd.h>
 
 #include <iostream>
+#include <stdexcept>
+#include <string>
+#include "helper_templates.h"
 
 namespace py = pybind11;
 using namespace std; 

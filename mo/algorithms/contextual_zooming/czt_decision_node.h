@@ -30,7 +30,8 @@ namespace thts {
                 std::shared_ptr<const State> state,
                 int decision_depth,
                 int decision_timestep,
-                std::shared_ptr<const CztCNode> parent=nullptr); 
+                std::shared_ptr<const CztCNode> parent=nullptr,
+                bool eval_mo_heuristic=true); 
 
             virtual ~CztDNode() = default;
             
