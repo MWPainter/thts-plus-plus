@@ -257,7 +257,6 @@ namespace thts {
         {
             py::gil_scoped_acquire acq;
     
-
             bool swept_by_current = STOCH_DST_ENVS.contains(env_id);
             double swept_by_current_prob = swept_by_current ? 0.2 : 0.0;
             bool is_vamplew = VAMPLEW_DST_ENVS.contains(env_id);

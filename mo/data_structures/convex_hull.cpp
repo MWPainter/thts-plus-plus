@@ -52,22 +52,6 @@ namespace thts {
     }
     
     /**
-     * Helper function to remove pareto dominated points from a set of Vec
-     */
-    static unordered_set<Vec> remove_pareto_dominated(const unordered_set<Vec>& points) {
-        unordered_set<Vec> unique_points = remove_approx_duplicates(points);
-        vector<Vec> unique_points_vec(unique_points.begin(), unique_points.end());
-        for (size_t i=0; i<unique_points_vec.size(); i++) {
-            for (size_t j=0; j<unique_points_vec.size(); j++) {
-                if (i != j && unique_points_vec[i].weakly_pareto_dominates(unique_points_vec[j])) {
-                    unique_points_vec.erase(unique_points_vec.begin() + j);
-                }
-            }
-        }   
-        return unordered_set<Vec>(unique_points_vec.begin(), unique_points_vec.end());
-    }
-    
-    /**
      * Constructor, empty
     */
     ConvexHull::ConvexHull() :
@@ -764,7 +748,7 @@ namespace thts {
                 projected_points.insert(projected_point);
             }
             // and remove pareto dominated the points to remove redundant projected points
-            projected_points = remove_pareto_dominated(projected_points);
+            projected_points = pareto_prune(projected_points);
             geometric_hull_points.insert(projected_points.begin(), projected_points.end());
         }
 

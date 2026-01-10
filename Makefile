@@ -92,8 +92,10 @@ TEST_INCLUDES = -Iexternal/googletest/build/include
 # C++ flags
 CPPFLAGS = $(INCLUDES) -Wall -std=c++20 
 CPPFLAGS += -Wpedantic -Wno-vla -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wsign-promo -Wstrict-null-sentinel -Werror -Wno-unused
+# CPPFLAGS += -Wpedantic -Wno-vla -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wsign-promo -Wstrict-null-sentinel -Wno-unused
 # Optimization flags (excluded for debug targets)
 OPTIMIZATION_FLAGS = -O3 --param max-gcse-memory=1048576 # 1GB for gcse optimization
+# OPTIMIZATION_FLAGS = -O2 --param max-gcse-memory=1048576 # 1GB for gcse optimization
 CPPFLAGS += $(OPTIMIZATION_FLAGS)
 
 # C++ flags for building pybind11 executable/library
