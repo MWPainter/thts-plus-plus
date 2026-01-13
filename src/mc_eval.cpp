@@ -23,6 +23,20 @@ namespace thts {
         cur_node(policy.root_node), 
         thts_env(thts_env),
         manager(policy.manager) {}
+
+    /**
+     * Virtual copy constructor
+    */
+    shared_ptr<EvalPolicy> EvalPolicy::clone(shared_ptr<ThtsEnv> thts_env) {
+        return make_shared<EvalPolicy>(*this, thts_env);
+    }
+
+    /**
+     * Get root node
+    */
+    shared_ptr<const ThtsDNode> EvalPolicy::get_root_node() const {
+        return root_node;
+    }
     
     /**
      * Resets cur_node back to root node.
@@ -160,7 +174,7 @@ namespace thts {
         // spawn
         vector<thread> threads;
         for (int i=0; i<num_threads; i++) {
-            shared_ptr<EvalPolicy> thread_eval_policy = make_shared<EvalPolicy>(*policy,manager->thts_env(i));
+            shared_ptr<EvalPolicy> thread_eval_policy = policy->clone(manager->thts_env(i));
             threads.push_back(thread(
                 &MCEvaluator::thread_run_rollouts, 
                 this, 

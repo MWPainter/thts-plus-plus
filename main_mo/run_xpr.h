@@ -2,6 +2,9 @@
 
 #include "main_mo/run_manager.h"
 
+#include "mo/mo_mc_eval.h"
+#include "mo/algorithms/prior/chvi.h"
+
 #include <ctime>
 #include <memory>
 #include <vector>
@@ -21,12 +24,27 @@ namespace thts {
      */
     MoEvalMetrics run_searches(RunManager& run_manager, bool hpopt=false, bool log_trees=true, bool log_convex_hulls=true);
 
+    MoEvalMetrics run_chvi(RunManager& run_manager, bool log_convex_hulls=true);
+
+
     /**
      * Perform an mc eval and return the MO eval metrics
     */
     MoEvalMetrics run_evals(
+        std::shared_ptr<EvalPolicy> eval_policy,
+        std::shared_ptr<MoThtsEnv> env, 
+        std::shared_ptr<MoThtsManager> thts_manager,
+        RunManager& run_manager);
+
+    MoEvalMetrics run_evals_thts(
         std::shared_ptr<MoThtsEnv> env, 
         std::shared_ptr<MoThtsDNode> root_node, 
+        std::shared_ptr<MoThtsManager> thts_manager,
+        RunManager& run_manager);
+
+    MoEvalMetrics run_evals_chvi(
+        std::shared_ptr<MoThtsEnv> env, 
+        std::shared_ptr<Chvi> chvi,
         std::shared_ptr<MoThtsManager> thts_manager,
         RunManager& run_manager);
 }

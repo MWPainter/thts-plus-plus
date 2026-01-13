@@ -23,6 +23,8 @@
 
 #include "main_mo/envs/tree_env.h"
 #include "main_mo/envs/test_mo_thts_env.h"
+#include "main_mo/envs/ported_dst.h"
+#include "main_mo/envs/ported_resource_gathering.h"
 
 #include <iomanip>
 #include <iostream>
@@ -104,6 +106,7 @@ namespace thts {
 
         set<string> alg_ids =
         {
+            ALG_ID_CHVI,
             ALG_ID_CZT, 
             ALG_ID_CZT_DOUBLING, 
             ALG_ID_CH_UCT, 
@@ -207,6 +210,7 @@ namespace thts {
      * Getters - alg level config
      */
     string RunManager::get_alg_id()                         { return get_config_value<std::string>(alg_config, XPR_OR_ALG_ID_TAG); }
+    bool RunManager::is_chvi()                              { return get_alg_id() == ALG_ID_CHVI; }
     double RunManager::get_bias()                           { return get_config_value<double>(alg_config, ALG_PARAM_ID_BIAS); }
     double RunManager::get_czt_ball_split_visit_thresh()    { return get_config_value<double>(alg_config, ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH); }
     double RunManager::get_min_log2_N()                     { return get_config_value<double>(alg_config, ALG_PARAM_ID_MIN_LOG2_N); }
@@ -739,6 +743,12 @@ namespace thts {
     {
         string alg_id = get_alg_id();
         shared_ptr<MoThtsManager> thts_manager = nullptr;
+
+        if (alg_id == ALG_ID_CHVI) {
+            MoThtsManagerArgs manager_args(env);
+            _add_thts_manager_params_to_args(manager_args,env);
+            return make_shared<MoThtsManager>(manager_args);
+        }
 
         if (alg_id == ALG_ID_CZT || alg_id == ALG_ID_CZT_DOUBLING) 
         {

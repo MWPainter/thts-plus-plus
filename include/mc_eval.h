@@ -52,10 +52,22 @@ namespace thts {
 
             EvalPolicy(const EvalPolicy& policy, std::shared_ptr<ThtsEnv> thts_env);
 
+            virtual ~EvalPolicy() = default;
+
+            /**
+             * Virtual copy constructor
+             */
+            virtual std::shared_ptr<EvalPolicy> clone(std::shared_ptr<ThtsEnv> thts_env);
+
+            /**
+             * Get root node
+            */
+            std::shared_ptr<const ThtsDNode> get_root_node() const;
+
             /**
              * Resets cur_node back to root node
             */
-            void reset();
+            virtual void reset();
 
             /**
              * Gets a uniform random action.
@@ -66,13 +78,13 @@ namespace thts {
             /**
              * Gets the best recommendation from the current node.
             */
-            std::shared_ptr<const Action> get_action(
+            virtual std::shared_ptr<const Action> get_action(
                 std::shared_ptr<const State> state, ThtsContext& context);
 
             /**
              * Updates 'cur_node' for the last step taken in a trial.
             */
-            void update_step(std::shared_ptr<const Action> action, std::shared_ptr<const Observation> obsv);
+            virtual void update_step(std::shared_ptr<const Action> action, std::shared_ptr<const Observation> obsv);
     };
 
     /**

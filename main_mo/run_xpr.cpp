@@ -23,6 +23,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/embed.h>
 
+#include "main_mo/envs/ported_dst.h"
+#include "main_mo/envs/ported_resource_gathering.h"
+
 using namespace std;
 namespace py = pybind11;
 using namespace thts;
@@ -72,6 +75,11 @@ namespace thts {
     */
     MoEvalMetrics run_searches(RunManager& run_manager, bool hpopt, bool log_trees, bool log_convex_hulls)
     {
+        // CHVI integration (appreciate not search, but want everything to call run_searches)
+        if (run_manager.is_chvi()) {
+            return run_chvi(run_manager, log_convex_hulls);
+        }
+
         // Open eval log
         ofstream eval_log_fs;
         if (!hpopt)
@@ -125,7 +133,7 @@ namespace thts {
             double eval_mean = 0.0, eval_std = 0.0;
             if (!hpopt)
             {
-                MoEvalMetrics mo_eval_metrics = run_evals(env, root_node, thts_manager, run_manager);
+                MoEvalMetrics mo_eval_metrics = run_evals_thts(env, root_node, thts_manager, run_manager);
                 run_manager.write_eval_log_line(eval_log_fs, run_idx, mo_eval_metrics, 0, 0.0, 0.0, run_manager.get_num_eval_rollouts());
             }
 
@@ -154,7 +162,7 @@ namespace thts {
                 // eval (always run final eval, but only log if 'run_evals')
                 if (!hpopt || search_budget_consumed >= run_manager.get_termination_bound())
                 {
-                    MoEvalMetrics mo_eval_metrics = run_evals(env, root_node, thts_manager, run_manager);
+                    MoEvalMetrics mo_eval_metrics = run_evals_thts(env, root_node, thts_manager, run_manager);
                     final_mo_eval_metrics = mo_eval_metrics;
                     if (!hpopt)
                     {
@@ -200,11 +208,140 @@ namespace thts {
     }
 
     /**
+     * Runs CHVI
+    */
+    MoEvalMetrics run_chvi(RunManager& run_manager, bool log_convex_hulls)
+    {
+        // Open eval log
+        ofstream eval_log_fs = run_manager.get_eval_log_filestream();
+        run_manager.write_eval_log_header(eval_log_fs);
+
+        // final eval to return
+        MoEvalMetrics final_mo_eval_metrics = MoEvalMetrics(); 
+
+        // Variables for "runtime"
+        double total_iters_run = 0.0;
+        double total_runtime = 0.0;
+        double search_budget_consumed = 0.0;
+
+        // get env + thtsmanager (only user in evals)
+        shared_ptr<MoThtsEnv> env = run_manager.get_env();
+        shared_ptr<MoThtsManager> thts_manager = run_manager.get_thts_manager(env);
+
+        // Get all states (and checks that env has this implemented)
+        StateSet states;
+        {
+            shared_ptr<PortedDeepSeaTreasureThtsEnv> ported_env = dynamic_pointer_cast<PortedDeepSeaTreasureThtsEnv>(env);
+            if (ported_env != nullptr) {
+                states = ported_env->get_all_states();
+            } 
+        }
+        {
+            shared_ptr<PortedResourceGatheringThtsEnv> ported_env = dynamic_pointer_cast<PortedResourceGatheringThtsEnv>(env);
+            if (ported_env != nullptr) {
+                states = ported_env->get_all_states();
+            } 
+        }
+        if (states.empty()) {
+            throw runtime_error("get_all_states not implemented for env, cant run CHVI");
+        }
+
+
+        // extract info from env in tabular form
+        StateSet sink_states;
+        TransitionProbs transition_probs;
+        RewardMap reward_map;
+
+        for (shared_ptr<const State> state : states) {
+            ThtsContext ctx;
+            if (env->is_sink_state_itfc(state, ctx)) {
+                sink_states.insert(state);
+            }
+            shared_ptr<ActionVector> actions = env->get_valid_actions_itfc(state, ctx);
+            for (shared_ptr<const Action> action : *actions) {
+                transition_probs[state][action] = *env->get_transition_distribution_itfc(state, action, ctx);
+                reward_map[state].emplace(action, Vec(env->get_mo_reward_itfc(state, action, ctx)));
+            }
+        }
+
+        shared_ptr<Chvi> chvi = make_shared<Chvi>(
+            run_manager.get_num_search_threads(), 
+            env->get_reward_dim(), 
+            env->get_initial_state_itfc(), 
+            states, 
+            sink_states, 
+            transition_probs, 
+            reward_map);
+
+        // Eval at 0 trials
+        double eval_mean = 0.0, eval_std = 0.0;
+        for (int run_idx=0; run_idx < run_manager.get_repeated_runs_per_alg(); run_idx++)
+        {
+            MoEvalMetrics mo_eval_metrics = run_evals_chvi(env, chvi, thts_manager, run_manager);
+            run_manager.write_eval_log_line(eval_log_fs, run_idx, mo_eval_metrics, 0, 0.0, 0.0, run_manager.get_num_eval_rollouts());
+        }
+
+        // run iterations, evaluating every eval delta
+        while (search_budget_consumed < run_manager.get_termination_bound())
+        {
+            // output something
+            cout << "Running CHVI, iters run so far: " << total_iters_run << ", with search budget consumed: " << search_budget_consumed << endl;
+
+            // get budget to consume now
+            int max_iter = numeric_limits<int>::max();
+            double max_runtime = numeric_limits<double>::max();
+            if (run_manager.xpr_is_runtime_bounded()) {
+                max_runtime = run_manager.get_eval_delta();
+            } else {
+                max_iter = run_manager.get_eval_delta();
+            }
+
+            // run chvi
+            auto start_timestamp = std::chrono::steady_clock::now();
+            chvi->run(max_iter, max_runtime);
+            auto end_timestamp = std::chrono::steady_clock::now();
+
+            // Update runtimes
+            total_iters_run = chvi->get_num_iters_run();
+            total_runtime += std::chrono::duration<double>(end_timestamp - start_timestamp).count();
+            search_budget_consumed += run_manager.get_eval_delta();
+
+            // eval (always run final eval, but only log if 'run_evals')
+            for (int run_idx=0; run_idx < run_manager.get_repeated_runs_per_alg(); run_idx++)
+            {
+                MoEvalMetrics mo_eval_metrics = run_evals_chvi(env, chvi, thts_manager, run_manager);
+                final_mo_eval_metrics = mo_eval_metrics;
+                run_manager.write_eval_log_line(eval_log_fs, run_idx, mo_eval_metrics, total_iters_run, total_runtime, search_budget_consumed, run_manager.get_num_eval_rollouts());
+            }
+        }
+
+        // Log convex hulls if wanted
+        if (log_convex_hulls)
+        {
+            ConvexHull convex_hull = chvi->get_root_chvi_value();
+            run_manager.dump_convex_hull_log(convex_hull, 0);
+        }
+
+        // Flush
+        eval_log_fs.flush();
+        
+        // Release resources in reverse order
+        // (iirc, not doing this can cause python resources to be released without holding gil and segfaults)
+        env.reset();
+        chvi.reset();
+
+        // close eval file
+        eval_log_fs.close();
+        
+        return final_mo_eval_metrics;
+    }
+
+    /**
      * Perform an mc eval (of policy from tree node)
     */
     MoEvalMetrics run_evals(
+        shared_ptr<EvalPolicy> eval_policy,
         shared_ptr<MoThtsEnv> env, 
-        shared_ptr<MoThtsDNode> root_node, 
         shared_ptr<MoThtsManager> thts_manager,
         RunManager& run_manager) 
     {   
@@ -212,7 +349,6 @@ namespace thts {
         MoEvalMetrics mo_eval_metrics = MoEvalMetrics();
 
         // Eval policy and min/max values
-        shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(root_node, env, thts_manager);
         Vec value_lower_bound = run_manager.get_env_value_lower_bound();
         Vec value_upper_bound = run_manager.get_env_value_upper_bound();
 
@@ -245,8 +381,21 @@ namespace thts {
         normalised_evaluator.run_rollouts(run_manager.get_num_eval_rollouts(), run_manager.get_num_eval_threads());
         mo_eval_metrics.normalised_ctx_mean = normalised_evaluator.get_mo_ctx_return_mean();
         mo_eval_metrics.normalised_ctx_std_dev = normalised_evaluator.get_mo_ctx_return_variance();
-
-        ConvexHull convex_hull = root_node->get_convex_hull();
+        
+        ConvexHull convex_hull;
+        shared_ptr<const ThtsDNode> root_node = eval_policy->get_root_node();
+        if (root_node != nullptr) {
+            convex_hull = dynamic_pointer_cast<const MoThtsDNode>(root_node)->get_convex_hull();
+        } 
+        else
+        {
+            shared_ptr<ChviEvalPolicy> chvi_eval_policy = dynamic_pointer_cast<ChviEvalPolicy>(eval_policy);
+            if (chvi_eval_policy == nullptr) {
+                throw runtime_error("No way to get convex hull from eval policy?");
+            }
+            shared_ptr<Chvi> chvi = chvi_eval_policy->chvi;
+            convex_hull = chvi->get_root_chvi_value();
+        }
         mo_eval_metrics.hypervolume = convex_hull.hypervolume(value_lower_bound);
 
         ConvexHull scaled_convex_hull = (convex_hull - value_lower_bound) * (1.0 / (value_upper_bound - value_lower_bound));
@@ -254,5 +403,31 @@ namespace thts {
         mo_eval_metrics.normalised_hypervolume = scaled_convex_hull.hypervolume(origin);
 
         return mo_eval_metrics;
+    }
+
+    /**
+     * Thts interface for evals
+    */
+    MoEvalMetrics run_evals_thts(
+        shared_ptr<MoThtsEnv> env, 
+        shared_ptr<MoThtsDNode> root_node, 
+        shared_ptr<MoThtsManager> thts_manager,
+        RunManager& run_manager)
+    {
+        shared_ptr<EvalPolicy> eval_policy = make_shared<EvalPolicy>(root_node, env, thts_manager);
+        return run_evals(eval_policy, env, thts_manager, run_manager);
+    }
+
+    /**
+     * CHVI interface for evals
+    */
+    MoEvalMetrics run_evals_chvi(
+        shared_ptr<MoThtsEnv> env, 
+        shared_ptr<Chvi> chvi,
+        shared_ptr<MoThtsManager> thts_manager,
+        RunManager& run_manager)
+    {
+        shared_ptr<ChviEvalPolicy> eval_policy = make_shared<ChviEvalPolicy>(chvi);
+        return run_evals(eval_policy, env, thts_manager, run_manager);
     }
 }

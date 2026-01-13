@@ -3,22 +3,31 @@
 #include "mo/mo_thts_types.h"
 #include "mo/data_structures/convex_hull.h"
 
+#include "mc_eval.h"
+
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
+#include <queue>
+#include <vector>
+
 namespace thts {
 
-    typedef std::unordered_set<std::shared_ptr<State>> StateSet;
-    typedef std::unordered_map<std::shared_ptr<State>, 
-                               std::unordered_map<std::shared_ptr<Action>, 
-                                            std::unordered_map<std::shared_ptr<State>, double>>> TransitionProbs;
-    typedef std::unordered_map<std::shared_ptr<State>, 
-                               std::unordered_map<std::shared_ptr<Action>, Vec>> RewardMap;
-    typedef std::unordered_map<std::shared_ptr<State>, std::shared_ptr<ConvexHull>> VMap;
+    typedef std::unordered_set<std::shared_ptr<const State>> StateSet;
+    typedef std::unordered_map<std::shared_ptr<const State>, 
+                               std::unordered_map<std::shared_ptr<const Action>, 
+                                            std::unordered_map<std::shared_ptr<const State>, double>>> TransitionProbs;
+    typedef std::unordered_map<std::shared_ptr<const State>, 
+                               std::unordered_map<std::shared_ptr<const Action>, Vec>> RewardMap;
+    typedef std::unordered_map<std::shared_ptr<const State>, std::shared_ptr<ConvexHull>> VMap;
+    typedef std::unordered_map<std::shared_ptr<const State>, 
+                               std::unordered_map<std::shared_ptr<const Action>, std::shared_ptr<ConvexHull>>> QMap;
     
     class Chvi {
         int num_threads;
-        double max_time;
 
         const int dim;
-        const std::shared_ptr<State> start_state;
+        const std::shared_ptr<const State> start_state;
         const StateSet states;
         const StateSet sink_states;
         const TransitionProbs transition_probs;
@@ -27,25 +36,66 @@ namespace thts {
         // Double buffering for thread-safe synchronous value iteration
         VMap chvi_values;           // Values being read from (previous iteration)
         VMap chvi_values_next;      // Values being written to (current iteration)
+        
+        // Q-value storage: Q(s,a) for each state-action pair
+        QMap chvi_q_values;         // Q values from previous iteration
+        QMap chvi_q_values_next;    // Q values being written to (current iteration)
+        
+        // Work queue and synchronization for multi-threaded execution
+        std::queue<std::shared_ptr<const State>> work_queue;
+        std::mutex queue_mutex;
+        std::condition_variable queue_cv;
+        std::atomic<bool> should_stop;
+        std::atomic<int> threads_waiting;
+        std::atomic<bool> iteration_complete;
+        
+        // Cached list of non-sink states
+        std::vector<std::shared_ptr<const State>> non_sink_states;
+        
+        // Iteration tracking
+        std::atomic<int> completed_iterations;      // Number of fully completed iterations
+        std::atomic<int> backups_completed_current; // Number of backups completed in current iteration
+        int total_backups_per_iter;                 // Total number of backups per iteration (size of non_sink_states)
 
         public:
             Chvi(
                 int num_threads, 
-                double max_time, 
                 int dim,
-                std::shared_ptr<State> start_state, 
+                std::shared_ptr<const State> start_state, 
                 StateSet states, 
                 StateSet sink_states, 
                 TransitionProbs transition_probs, 
                 RewardMap reward_map);
             virtual ~Chvi() = default;
 
-            void run();
+            void run(double max_time, int max_iter);
 
-            ConvexHull get_chvi_value(std::shared_ptr<State> state) const;
+            ConvexHull get_chvi_value(std::shared_ptr<const State> state) const;
             ConvexHull get_root_chvi_value() const;
+            ConvexHull get_chvi_q_value(std::shared_ptr<const State> state, std::shared_ptr<const Action> action) const;
+            
+            double get_num_iters_run() const;
 
         private:
-            void backup(std::shared_ptr<State> state);
+            void backup(std::shared_ptr<const State> state);
+    };
+
+
+    /**
+     * CHVI Eval Policy
+     * 
+     * Implement an eval policy with CHVI values for the actions.
+    */
+    class ChviEvalPolicy : public EvalPolicy {
+        public:
+            std::shared_ptr<Chvi> chvi;
+
+            ChviEvalPolicy(std::shared_ptr<Chvi> chvi);
+            ~ChviEvalPolicy() = default;
+
+            virtual std::shared_ptr<EvalPolicy> clone(std::shared_ptr<ThtsEnv> thts_env) override;
+            virtual void reset() override;
+            virtual std::shared_ptr<const Action> get_action(std::shared_ptr<const State> state, ThtsContext& context) override;
+            virtual void update_step(std::shared_ptr<const Action> action, std::shared_ptr<const Observation> obsv) override;
     };
 }

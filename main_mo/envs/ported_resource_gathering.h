@@ -129,7 +129,7 @@ namespace thts {
              * Returns the set of all possible states in the environment
              * Includes all regular states, pre-death state, and terminal state
              */
-            std::vector<std::shared_ptr<const State>> get_all_states() const;
+            std::unordered_set<std::shared_ptr<const State>> get_all_states() const;
 
         private:
             shared_ptr<const ResourceGatheringState> make_next_state(

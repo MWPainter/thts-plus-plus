@@ -163,8 +163,8 @@ namespace thts {
         return valid_actions;
     }
 
-    std::vector<std::shared_ptr<const State>> PortedResourceGatheringThtsEnv::get_all_states() const {
-        std::vector<std::shared_ptr<const State>> all_states;
+    unordered_set<shared_ptr<const State>> PortedResourceGatheringThtsEnv::get_all_states() const {
+        unordered_set<shared_ptr<const State>> all_states;
         
         // Add all regular states: [x, y, has_gold, has_gem]
         // x, y: 0 to SIZE-1 (0 to 4)
@@ -173,7 +173,7 @@ namespace thts {
             for (int y = 0; y < SIZE; y++) {
                 for (int has_gold = 0; has_gold <= 1; has_gold++) {
                     for (int has_gem = 0; has_gem <= 1; has_gem++) {
-                        all_states.push_back(
+                        all_states.insert(
                             static_pointer_cast<const State>(
                                 make_shared<ResourceGatheringState>(x, y, has_gold, has_gem)));
                     }
@@ -182,11 +182,11 @@ namespace thts {
         }
         
         // Add pre-death state
-        all_states.push_back(
+        all_states.insert(
             static_pointer_cast<const State>(get_pre_death_state()));
         
         // Add terminal state
-        all_states.push_back(
+        all_states.insert(
             static_pointer_cast<const State>(get_terminal_state()));
         
         return all_states;

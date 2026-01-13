@@ -100,6 +100,7 @@ namespace thts {
              * Getters - alg level config
              */
             std::string get_alg_id();
+            bool is_chvi();
             double get_bias();
             double get_czt_ball_split_visit_thresh();
             double get_min_log2_N();

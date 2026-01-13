@@ -19,6 +19,7 @@ Converted to Python for map generation
 import sys
 import random
 import argparse
+import math
 
 # Constants for front shapes
 LINEAR = 0
@@ -30,7 +31,7 @@ MIN_TREASURE = 1
 MAX_TREASURE = 1000
 
 
-def construct_environment(width, min_depth, min_vertical_step, max_vertical_step, front_shape, seed, use_x_plus_y_max=True, scale=1.0):
+def construct_environment(r, width, min_depth, min_vertical_step, max_vertical_step, seed, use_x_plus_y_max=True, scale=1.0, curvature_k=1.0):
     """
     Sets up the properties of the environment based on the provided parameters.
     Returns a list of treasure positions and rewards in the format [[[x, y], reward], ...]
@@ -40,8 +41,6 @@ def construct_environment(width, min_depth, min_vertical_step, max_vertical_step
                          If False, max reward is 1000.
         scale: Multiplicative scale to apply to all treasure rewards.
     """
-    r = random.Random(seed)
-    
     # Set up the structure of the environment
     num_cols = width
     depths = [0] * num_cols
@@ -51,11 +50,16 @@ def construct_environment(width, min_depth, min_vertical_step, max_vertical_step
     step_range = max_vertical_step - min_vertical_step + 1
     
     for col in range(1, num_cols):
-        depths[col] = depths[col-1] + r.randint(0, step_range - 1) + min_vertical_step
+        min_vertical_step_this_col = min_vertical_step
+        step_range_this_col = step_range
+        if col == 1:
+            min_vertical_step_this_col = 1
+            step_range_this_col = step_range - 1
+        depths[col] = depths[col-1] + r.randint(0, step_range_this_col - 1) + min_vertical_step_this_col
         steps[col] = col + depths[col]
     
     # Calculate treasure rewards
-    treasure = set_treasure(num_cols, steps, front_shape, r, use_x_plus_y_max, depths, scale)
+    treasure = set_treasure(num_cols, steps, use_x_plus_y_max, depths, scale, curvature_k)
     
     # Generate output in the required format: [[[x, y], reward], ...]
     result = []
@@ -65,10 +69,14 @@ def construct_environment(width, min_depth, min_vertical_step, max_vertical_step
     return result
 
 
-def set_treasure(num_cols, steps, front_shape, r, use_x_plus_y_max, depths, scale):
+def set_treasure(num_cols, steps, use_x_plus_y_max, depths, scale, curvature_k):
     """
     Sets the treasure reward values based on the front shape.
     Returns an array of treasure values for each column.
+    
+    Args:
+        curvature_k: Exponent applied to the adjustment factor to control front curvature.
+                           Higher values make convex/concave shapes more pronounced.
     """
     treasure = [0] * num_cols
     
@@ -86,17 +94,12 @@ def set_treasure(num_cols, steps, front_shape, r, use_x_plus_y_max, depths, scal
     treasure_range = max_treasure_val - MIN_TREASURE
     
     for col in range(1, num_cols-1):
-        # Start by generating a linear set of values, then add/subtract from treasure to get different shapes
-        ratio = (steps[col] - steps[0]) / float(steps_range) if steps_range > 0 else 0
-        adjustment_factor = ratio * (1 - ratio)
-        treasure[col] = round(ratio * treasure_range + MIN_TREASURE)
-        
-        if front_shape == CONVEX:  # Increase treasure values to give a convex front
-            treasure[col] += adjustment_factor * treasure_range
-        elif front_shape == CONCAVE:  # Decrease treasure values to give a concave front
-            treasure[col] -= adjustment_factor * treasure_range
-        elif front_shape == MIXED:  # Only change some points to get a mixed front, possibly with some dominated points
-            treasure[col] += adjustment_factor * treasure_range * (r.random() * 2 - 1)
+        # treasure_x = ratio of num steps to reach this treasure to max treasure value
+        # treasure_y = ratio of treasure between min an max values
+        # (treasure_x,treasure_y) ranges from (0,0) to (1,1) in a concave shape to give the convex front
+        treasure_x = (steps[col] - steps[0]) / float(steps_range) if steps_range > 0 else 0
+        treasure_y = (1.0 - math.exp(-curvature_k * treasure_x)) / (1.0 - math.exp(-curvature_k))
+        treasure[col] = treasure_y * treasure_range + MIN_TREASURE
     
     # Apply multiplicative scale to all treasures
     treasure = [t * scale for t in treasure]
@@ -140,24 +143,19 @@ Examples:
                         help='Starting depth of the sea-bed - positive int (default: 1)')
     parser.add_argument('--min-vertical-step', type=int, default=0,
                         help='Minimum depth difference between neighbouring columns - int >= 0 (default: 0)')
-    parser.add_argument('--max-vertical-step', type=int, default=4,
-                        help='Maximum depth difference between neighbouring columns - int >= 0 (default: 4)')
-    parser.add_argument('--scale', type=float, default=1.0,
-                        help='Multiplicative scale to apply to all treasure rewards (default: 1.0)')
-    parser.add_argument('--front-shape', type=str, default='CONVEX',
-                        choices=['LINEAR', 'CONCAVE', 'CONVEX', 'MIXED'],
-                        help='Front shape (LINEAR, CONCAVE, CONVEX, or MIXED) (default: CONVEX)')
+    parser.add_argument('--max-vertical-step', type=int, default=3,
+                        help='Maximum depth difference between neighbouring columns - int >= 0 (default: 3)')
+    parser.add_argument('--scale', type=float, default=2.0,
+                        help='Multiplicative scale to apply to all treasure rewards (default: 2.0)')
     parser.add_argument('--seed', type=int, default=471,
                         help='Random seed for reproducibility (default: 471)')
     parser.add_argument('--no-use-x-plus-y-max', dest='use_x_plus_y_max', action='store_false',
                         default=True,
                         help='Use max reward of 1000 instead of max(x+y). Default: max reward equals max(x+y)')
+    parser.add_argument('--curvature-k', type=float, default=1.0,
+                        help='Constant controlling front curvature. Higher values make convex/concave shapes more pronounced (default: 1.0)')
     
     args = parser.parse_args()
-    
-    # Handle front_shape as string
-    front_shape_map = {'LINEAR': LINEAR, 'CONCAVE': CONCAVE, 'CONVEX': CONVEX, 'MIXED': MIXED}
-    front_shape = front_shape_map[args.front_shape]
     
     # Determine which widths to generate
     if args.widths:
@@ -183,16 +181,18 @@ Examples:
     # Generate maps for each width
     try:
         all_results = []
+        r = random.Random(args.seed)
         for width in widths:
             result = construct_environment(
+                r,
                 width,
                 args.min_depth,
                 args.min_vertical_step,
                 args.max_vertical_step,
-                front_shape,
                 args.seed,
                 args.use_x_plus_y_max,
-                args.scale
+                args.scale,
+                args.curvature_k
             )
             all_results.append((width, result))
         
@@ -212,7 +212,7 @@ Examples:
         print(f"\n# Width to max(x+y) mapping:")
         print("{")
         for width, max_xy in width_to_max_xy.items():
-            print(f"{width}: {max_xy}")
+            print(f"    {width}: {max_xy},")
         print("}")
         
     except Exception as e:

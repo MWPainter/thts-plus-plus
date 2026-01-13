@@ -87,7 +87,7 @@ namespace thts {
              * Returns the set of all possible reachable states in the environment
              * Includes all non-rock states and the terminal state
              */
-            std::vector<std::shared_ptr<const State>> get_all_states() const;
+            std::unordered_set<std::shared_ptr<const State>> get_all_states() const;
 
         private:
             shared_ptr<const IntPairState> sample_next_state(

@@ -16,6 +16,8 @@
 // Constants to identify different algorithms
 // ---------------------------------------------------------------------------------------------------------------------
 
+static const std::string ALG_ID_CHVI = "chvi";
+
 static const std::string ALG_ID_CZT = "czt";
 static const std::string ALG_ID_CZT_DOUBLING = "czt_doubling";
 static const std::string ALG_ID_CH_UCT = "ch_uct";
@@ -47,6 +49,10 @@ static const std::string ALG_PARAM_ID_DEFAULT_Q_VALUE = "default_q_value";      
 
 static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_ALG_PARAM_IDS =
 {
+    {ALG_ID_CHVI,
+        {
+        },
+    },
     {ALG_ID_CZT,
         {
             ALG_PARAM_ID_BIAS,
