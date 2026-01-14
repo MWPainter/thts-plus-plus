@@ -11,6 +11,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <iostream>
+
 namespace thts {
     using namespace std;
 
@@ -41,9 +43,8 @@ namespace thts {
             queue_cv(),
             should_stop(false),
             threads_waiting(0),
-            iteration_complete(false),
             non_sink_states(),
-            completed_iterations(0),
+            completed_iterations(-1),
             backups_completed_current(0),
             total_backups_per_iter(0)
     {
@@ -55,7 +56,7 @@ namespace thts {
         }
         
         // Initialize Q values for each state-action pair
-        for (const auto& [state, action_map] : transition_probs) {
+        for (const auto& [state, action_map] : this->transition_probs) {
             for (const auto& [action, _] : action_map) {
                 chvi_q_values[state][action] = make_shared<ConvexHull>(zero_vec);
                 chvi_q_values_next[state][action] = make_shared<ConvexHull>(zero_vec);
@@ -64,7 +65,7 @@ namespace thts {
         
         // Build list of non-sink states (cached for reuse)
         for (const auto& state : this->states) {
-            if (!sink_states.contains(state)) {
+            if (!this->sink_states.contains(state)) {
                 non_sink_states.push_back(state);
             }
         }
@@ -155,7 +156,6 @@ namespace thts {
         // Reset stop flags for new run
         should_stop.store(false);
         threads_waiting.store(0);
-        iteration_complete.store(false);
         
         // Time tracking - shared across threads
         auto start_time_point = chrono::steady_clock::now();
@@ -176,11 +176,18 @@ namespace thts {
                 {
                     unique_lock<mutex> lock(this->queue_mutex);
                     
-                    // Wait for work or stop signal
-                    while (this->work_queue.empty() && !this->should_stop.load() && !this->iteration_complete.load()) {
+                    // If queue is empty, wait for work or stop signal
+                    if (this->work_queue.empty()) {
                         this->threads_waiting++;
                         this->queue_cv.notify_all();  // Notify orchestrator that we're waiting
-                        this->queue_cv.wait(lock);
+                        
+                        // Wait for work or stop signal using cv wait
+                        // Checking predicate / wake up is atomic
+                        // (Important because protecting variables with atomic types, rather than mutex)
+                        this->queue_cv.wait(lock, [this]() {
+                            return !this->work_queue.empty() || this->should_stop.load();
+                        });
+                        
                         this->threads_waiting--;
                     }
                     
@@ -196,12 +203,12 @@ namespace thts {
                         return;
                     }
                     
-                    // Check if queue has work
+                    // Check if queue has work (might be empty after spurious wakeup)
                     if (!this->work_queue.empty()) {
                         state_to_backup = this->work_queue.front();
                         this->work_queue.pop();
                     } else {
-                        // No work and iteration might be complete, wait for next iteration
+                        // Spurious wakeup or race, loop again
                         continue;
                     }
                 }
@@ -232,14 +239,14 @@ namespace thts {
         // Orchestrator loop
         int iteration = 0;
         
-        while (iteration < max_iter && !time_exceeded() && !should_stop.load()) {
+        while (iteration++ < max_iter && !time_exceeded() && !should_stop.load()) {
             // Fill the queue with states for this iteration (only if queue is empty)
             {
                 lock_guard<mutex> lock(queue_mutex);
                 if (work_queue.empty()) {
-                    // Starting a new iteration - reset backup counter
+                    // Starting a new iteration - update iteration counters
+                    completed_iterations++;
                     backups_completed_current.store(0);
-                    iteration_complete.store(false);
                     for (const auto& state : non_sink_states) {
                         work_queue.push(state);
                     }
@@ -248,35 +255,31 @@ namespace thts {
             queue_cv.notify_all();
 
             // Wait for all workers to finish processing the queue or stop signal
-            {
-                unique_lock<mutex> lock(queue_mutex);
-                queue_cv.wait(lock, [this]() {
-                    return this->should_stop.load() || 
-                           (this->work_queue.empty() && this->threads_waiting.load() == this->num_threads);
-                });
-                iteration_complete.store(true);
-            }
-            
-            // Check if workers signaled to stop due to time limit
-            if (should_stop.load()) {
+            unique_lock<mutex> lock(queue_mutex);
+            queue_cv.wait(lock, [this]() {
+                return this->should_stop.load() || 
+                        (this->work_queue.empty() && this->threads_waiting.load() == this->num_threads);
+            });
+
+            // Check if time limit exceeded
+            if (time_exceeded() || should_stop.load()) {
                 break;
             }
             
-            // Swap buffers: copy next values to current values for next iteration
-            for (const auto& state : non_sink_states) {
-                *chvi_values[state] = *chvi_values_next[state];
-            }
-            
-            // Swap Q value buffers
-            for (const auto& [state, action_map] : chvi_q_values_next) {
-                for (const auto& [action, _] : action_map) {
-                    *chvi_q_values[state][action] = *chvi_q_values_next[state][action];
+            // Check if completed iteration 
+            if (this->work_queue.empty()) {
+                // Swap buffers: copy next values to current values for next iteration
+                for (const auto& state : non_sink_states) {
+                    *chvi_values[state] = *chvi_values_next[state];
+                }
+                
+                // Swap Q value buffers
+                for (const auto& [state, action_map] : chvi_q_values_next) {
+                    for (const auto& [action, _] : action_map) {
+                        *chvi_q_values[state][action] = *chvi_q_values_next[state][action];
+                    }
                 }
             }
-            
-            // Mark iteration as completed
-            completed_iterations++;
-            iteration++;
         }
 
         // Signal workers to stop and wake them up
@@ -362,9 +365,12 @@ namespace thts {
      * Constructor - takes a shared pointer to Chvi object
      * Note: thts_env and manager should be set via clone() or directly
      */
-    ChviEvalPolicy::ChviEvalPolicy(shared_ptr<Chvi> chvi) :
-        EvalPolicy(nullptr, nullptr, nullptr),
-        chvi(chvi)
+    ChviEvalPolicy::ChviEvalPolicy(
+        shared_ptr<Chvi> chvi, 
+        shared_ptr<ThtsEnv> thts_env, 
+        shared_ptr<ThtsManager> manager) :
+            EvalPolicy(nullptr, thts_env, manager),
+            chvi(chvi)
     {
         // thts_env and manager will be set when cloned or used
     }
@@ -374,7 +380,7 @@ namespace thts {
      */
     shared_ptr<EvalPolicy> ChviEvalPolicy::clone(shared_ptr<ThtsEnv> thts_env) {
         // Create a new ChviEvalPolicy with the same chvi object
-        return make_shared<ChviEvalPolicy>(chvi);
+        return make_shared<ChviEvalPolicy>(this->chvi, thts_env, this->manager);
     }
 
     /**

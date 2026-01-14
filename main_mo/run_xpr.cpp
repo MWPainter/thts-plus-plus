@@ -256,6 +256,7 @@ namespace thts {
             ThtsContext ctx;
             if (env->is_sink_state_itfc(state, ctx)) {
                 sink_states.insert(state);
+                continue;
             }
             shared_ptr<ActionVector> actions = env->get_valid_actions_itfc(state, ctx);
             for (shared_ptr<const Action> action : *actions) {
@@ -281,6 +282,15 @@ namespace thts {
             run_manager.write_eval_log_line(eval_log_fs, run_idx, mo_eval_metrics, 0, 0.0, 0.0, run_manager.get_num_eval_rollouts());
         }
 
+        // Dump convex hull at root after every delta
+        int ch_dump_idx = 0;
+        if (log_convex_hulls)
+        {
+            ConvexHull convex_hull = chvi->get_root_chvi_value();
+            run_manager.dump_convex_hull_log(convex_hull, ch_dump_idx);
+            ch_dump_idx++;
+        }
+
         // run iterations, evaluating every eval delta
         while (search_budget_consumed < run_manager.get_termination_bound())
         {
@@ -298,8 +308,11 @@ namespace thts {
 
             // run chvi
             auto start_timestamp = std::chrono::steady_clock::now();
-            chvi->run(max_iter, max_runtime);
+            chvi->run(max_runtime, max_iter);
             auto end_timestamp = std::chrono::steady_clock::now();
+
+            // Std out to say running evals
+            cout << "Running evals after " << total_iters_run << " iterations" << endl;
 
             // Update runtimes
             total_iters_run = chvi->get_num_iters_run();
@@ -313,13 +326,14 @@ namespace thts {
                 final_mo_eval_metrics = mo_eval_metrics;
                 run_manager.write_eval_log_line(eval_log_fs, run_idx, mo_eval_metrics, total_iters_run, total_runtime, search_budget_consumed, run_manager.get_num_eval_rollouts());
             }
-        }
 
-        // Log convex hulls if wanted
-        if (log_convex_hulls)
-        {
-            ConvexHull convex_hull = chvi->get_root_chvi_value();
-            run_manager.dump_convex_hull_log(convex_hull, 0);
+            // Log convex hulls if wanted
+            if (log_convex_hulls)
+            {
+                ConvexHull convex_hull = chvi->get_root_chvi_value();
+                run_manager.dump_convex_hull_log(convex_hull, ch_dump_idx);
+                ch_dump_idx++;
+            }
         }
 
         // Flush
@@ -427,7 +441,7 @@ namespace thts {
         shared_ptr<MoThtsManager> thts_manager,
         RunManager& run_manager)
     {
-        shared_ptr<ChviEvalPolicy> eval_policy = make_shared<ChviEvalPolicy>(chvi);
+        shared_ptr<ChviEvalPolicy> eval_policy = make_shared<ChviEvalPolicy>(chvi, env, thts_manager);
         return run_evals(eval_policy, env, thts_manager, run_manager);
     }
 }

@@ -47,7 +47,6 @@ namespace thts {
         std::condition_variable queue_cv;
         std::atomic<bool> should_stop;
         std::atomic<int> threads_waiting;
-        std::atomic<bool> iteration_complete;
         
         // Cached list of non-sink states
         std::vector<std::shared_ptr<const State>> non_sink_states;
@@ -90,7 +89,10 @@ namespace thts {
         public:
             std::shared_ptr<Chvi> chvi;
 
-            ChviEvalPolicy(std::shared_ptr<Chvi> chvi);
+            ChviEvalPolicy(
+                std::shared_ptr<Chvi> chvi,
+                std::shared_ptr<ThtsEnv> thts_env,
+                std::shared_ptr<ThtsManager> manager);
             ~ChviEvalPolicy() = default;
 
             virtual std::shared_ptr<EvalPolicy> clone(std::shared_ptr<ThtsEnv> thts_env) override;

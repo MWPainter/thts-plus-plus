@@ -94,16 +94,20 @@ namespace thts {
                 {0, 1}    // 3: right
             };
 
+            bool timed;
+
         public:
-            PortedResourceGatheringThtsEnv() : 
+            PortedResourceGatheringThtsEnv(bool timed=false) : 
                 ThtsEnv(true),
-                MoThtsEnv(3, true)  // reward_dim=3, fully_observable=true
+                MoThtsEnv(3, true),  // reward_dim=3, fully_observable=true
+                timed(timed)
             {
             }
 
             PortedResourceGatheringThtsEnv(PortedResourceGatheringThtsEnv& other) : 
                 ThtsEnv(true),
-                MoThtsEnv(3, true)
+                MoThtsEnv(3, true),
+                timed(other.timed)
             {
             }
 

@@ -304,6 +304,25 @@ namespace thts {
         ThtsContext& ctx) const 
     {
         Eigen::ArrayXd reward = Eigen::ArrayXd::Zero(3);
+        if (this->timed)
+        {
+            Eigen::ArrayXd reward = Eigen::ArrayXd::Zero(4);
+        }
+
+        // Check if transitioning from pre-death to terminal: return -1 death reward
+        const ResourceGatheringPreDeathState* pre_death_state = 
+            dynamic_cast<const ResourceGatheringPreDeathState*>(state.get());
+        if (pre_death_state != nullptr) {
+            // Transitioning from pre-death to terminal: full -1 death reward
+            reward[0] = -1.0;
+            return reward;
+        }
+
+        // On any (non death transition), add a time cost if have one
+        if (this->timed)
+        {
+            reward[3] = -1.0;
+        }
         
         shared_ptr<const ResourceGatheringState> next_state = make_next_state(state, action);
         int next_x = get_x(next_state);
@@ -434,17 +453,7 @@ namespace thts {
         shared_ptr<const State> state, 
         shared_ptr<const Action> action,
         ThtsContext& ctx) const
-    {
-        // Check if transitioning from pre-death to terminal: return -1 death reward
-        const ResourceGatheringPreDeathState* pre_death_state = 
-            dynamic_cast<const ResourceGatheringPreDeathState*>(state.get());
-        if (pre_death_state != nullptr) {
-            // Transitioning from pre-death to terminal: full -1 death reward
-            Eigen::ArrayXd reward = Eigen::ArrayXd::Zero(3);
-            reward[0] = -1.0;
-            return reward;
-        }
-        
+    {   
         shared_ptr<const ResourceGatheringState> state_itfc = 
             static_pointer_cast<const ResourceGatheringState>(state);
         shared_ptr<const IntAction> action_itfc = 
