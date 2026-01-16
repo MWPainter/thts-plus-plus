@@ -18,18 +18,26 @@ namespace thts {
         static const int reward_dim_default = -1;
         static const int heuristic_psuedo_trials_default=0;
         static const bool use_vector_visit_counts_default = false;
+
+        static const int convex_hull_max_size_default = -1;
+        static constexpr double convex_hull_tolerance_default = 1e-9;
         
         int reward_dim;
         MoHeuristicFnPtr mo_heuristic_fn;
         int heuristic_psuedo_trials;
         bool use_vector_visit_counts;
 
+        int convex_hull_max_size;
+        double convex_hull_tolerance;
+
         MoThtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env) :
             ThtsManagerArgs(std::static_pointer_cast<ThtsEnv>(thts_env)),
             reward_dim(MoThtsManagerArgs::reward_dim_default),
             mo_heuristic_fn(nullptr),
             heuristic_psuedo_trials(heuristic_psuedo_trials_default),
-            use_vector_visit_counts(MoThtsManagerArgs::use_vector_visit_counts_default) {}
+            use_vector_visit_counts(MoThtsManagerArgs::use_vector_visit_counts_default),
+            convex_hull_max_size(convex_hull_max_size_default),
+            convex_hull_tolerance(convex_hull_tolerance_default) {}
 
         virtual ~MoThtsManagerArgs() = default;
     };
@@ -49,6 +57,9 @@ namespace thts {
             MoHeuristicFnPtr mo_heuristic_fn;
             int heuristic_psuedo_trials;
             bool use_vector_visit_counts;
+
+            int convex_hull_max_size;
+            double convex_hull_tolerance;
 
             /**
              * Constructor. Initialises values directly other than random number generation.

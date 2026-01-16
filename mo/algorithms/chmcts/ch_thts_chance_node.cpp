@@ -20,7 +20,7 @@ namespace thts {
                 decision_timestep,
                 static_pointer_cast<const MoThtsDNode>(parent)),
             num_backups(0),
-            convex_hull(),
+            convex_hull(thts_manager->convex_hull_max_size, thts_manager->convex_hull_tolerance),
             local_reward() 
     {
         MoThtsEnv& env = *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());
@@ -51,16 +51,16 @@ namespace thts {
         
         // use empirical distribution to take an average of child ch values
         // If havent visited any children yet then convex hull of child values is just the zero vector
-        convex_hull = ConvexHull();  
+        MoThtsManager& manager = static_cast<MoThtsManager&>(*thts_manager);
+        convex_hull = ConvexHull(manager.convex_hull_max_size, manager.convex_hull_tolerance);  
         if (total_child_backups > 0) {
             for (pair<const shared_ptr<const Observation>,shared_ptr<ThtsDNode>>& child_pair : children) {
                 ChThtsDNode& ch_child = (ChThtsDNode&) *child_pair.second;
                 convex_hull += ch_child.convex_hull * (ch_child.num_backups / total_child_backups);
             }
         } else {
-            MoThtsManager& manager = (MoThtsManager&) *thts_manager;
             Vec zero_vec = (Vec) Eigen::ArrayXd::Zero(manager.reward_dim);
-            convex_hull = ConvexHull(zero_vec);
+            convex_hull = ConvexHull(zero_vec, manager.convex_hull_max_size, manager.convex_hull_tolerance);
         }
 
         // add reward to convex hull too

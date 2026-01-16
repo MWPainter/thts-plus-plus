@@ -18,7 +18,7 @@ namespace thts {
                 decision_timestep,
                 static_pointer_cast<const MoThtsCNode>(parent)),
             num_backups(0),
-            convex_hull(mo_heuristic_value)
+            convex_hull(mo_heuristic_value, thts_manager->convex_hull_max_size, thts_manager->convex_hull_tolerance)
     {
     }
     
@@ -67,7 +67,9 @@ namespace thts {
     {
         increment_and_update_backup_count();
 
-        convex_hull = ConvexHull();
+        MoThtsManager& manager = static_cast<MoThtsManager&>(*thts_manager);
+
+        convex_hull = ConvexHull(manager.convex_hull_max_size, manager.convex_hull_tolerance);
         for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : children) 
         {
             ChThtsCNode& ch_child = (ChThtsCNode&) *child_pair.second;
@@ -77,7 +79,7 @@ namespace thts {
         // if leaf node, add heuristic value to convex hull
         if (convex_hull.size() == 0) 
         {
-            convex_hull = ConvexHull(mo_heuristic_value);
+            convex_hull = ConvexHull(mo_heuristic_value, manager.convex_hull_max_size, manager.convex_hull_tolerance);
         }
 
         // remember to incr num_backups

@@ -27,6 +27,8 @@ namespace thts {
         int num_threads;
 
         const int dim;
+        const int convex_hull_max_size;
+        const double convex_hull_tolerance;
         const std::shared_ptr<const State> start_state;
         const StateSet states;
         const StateSet sink_states;
@@ -64,7 +66,9 @@ namespace thts {
                 StateSet states, 
                 StateSet sink_states, 
                 TransitionProbs transition_probs, 
-                RewardMap reward_map);
+                RewardMap reward_map,
+                int convex_hull_max_size=-1,
+                double convex_hull_tolerance=1e-9);
             virtual ~Chvi() = default;
 
             void run(double max_time, int max_iter);

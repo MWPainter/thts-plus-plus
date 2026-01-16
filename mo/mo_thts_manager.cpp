@@ -15,7 +15,9 @@ namespace thts {
         reward_dim(args.reward_dim),
         mo_heuristic_fn(args.mo_heuristic_fn),
         heuristic_psuedo_trials(args.heuristic_psuedo_trials),
-        use_vector_visit_counts(args.use_vector_visit_counts)
+        use_vector_visit_counts(args.use_vector_visit_counts),
+        convex_hull_max_size(args.convex_hull_max_size),
+        convex_hull_tolerance(args.convex_hull_tolerance)
     {
         MoThtsEnv& mo_thts_env = *dynamic_pointer_cast<MoThtsEnv>(thts_env()); 
         if (reward_dim == MoThtsManagerArgs::reward_dim_default) {

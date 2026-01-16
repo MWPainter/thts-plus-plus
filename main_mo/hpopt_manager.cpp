@@ -104,7 +104,7 @@ namespace thts {
     {
         if (xpr_config.size() != 18)
         {
-            throw runtime_error("Expecting 18 entries in the xpr level config.");
+            throw runtime_error("Expecting 20 entries in the xpr level config.");
         }
 
         if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != HPOPT_PARAMS_ID_TAG)
@@ -127,6 +127,8 @@ namespace thts {
             XPR_PARAM_ID_EVAL_DELTA, 
             XPR_PARAM_ID_EVAL_ROLLOUTS, 
             XPR_PARAM_ID_EVAL_THREADS,
+            XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,
+            XPR_PARAM_ID_CONVEX_HULL_TOLERANCE,
             HPOPT_PARAM_ID_MIN_REPEATS,
             HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD,
             HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES,
@@ -285,6 +287,8 @@ namespace thts {
     double HpoptManager::get_eval_delta()         { return get_config_value<double>(xpr_config, XPR_PARAM_ID_EVAL_DELTA); }
     int HpoptManager::get_num_eval_rollouts()     { return get_config_value<int>(xpr_config, XPR_PARAM_ID_EVAL_ROLLOUTS); }
     int HpoptManager::get_num_eval_threads()      { return get_config_value<int>(xpr_config, XPR_PARAM_ID_EVAL_THREADS); }
+    int HpoptManager::get_convex_hull_max_size()  { return get_config_value<int>(xpr_config, XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE); }
+    double HpoptManager::get_convex_hull_tolerance() { return get_config_value<double>(xpr_config, XPR_PARAM_ID_CONVEX_HULL_TOLERANCE); }
 
     /**
      * Getters - alg level config
@@ -474,6 +478,8 @@ namespace thts {
             {XPR_PARAM_ID_EVAL_DELTA,               get_config_value<double>(xpr_config, XPR_PARAM_ID_EVAL_DELTA)},
             {XPR_PARAM_ID_EVAL_ROLLOUTS,            get_config_value<int>(xpr_config, XPR_PARAM_ID_EVAL_ROLLOUTS)},
             {XPR_PARAM_ID_EVAL_THREADS,             get_config_value<int>(xpr_config, XPR_PARAM_ID_EVAL_THREADS)},
+            {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,     get_config_value<int>(xpr_config, XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE)},
+            {XPR_PARAM_ID_CONVEX_HULL_TOLERANCE,    get_config_value<double>(xpr_config, XPR_PARAM_ID_CONVEX_HULL_TOLERANCE)},
         };
     }
 

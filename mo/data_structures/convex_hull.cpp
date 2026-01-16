@@ -4,7 +4,9 @@
 #include "mo/mo_helper.h"
 #include "mo/mo_thts_types.h"
 
+#include <algorithm>
 #include <limits>
+#include <numeric>
 
 #include <iostream>
 #include <stdexcept>
@@ -28,51 +30,50 @@ namespace thts {
     // using namespace lemon;
     
     /**
-     * Helper function to remove approximate duplicates from a set of Vec
-     * Keeps the first occurrence of each approximately equal vector
-     */
-    static unordered_set<Vec> remove_approx_duplicates(const unordered_set<Vec>& points) {
-        unordered_set<Vec> deduplicated;
-        deduplicated.reserve(points.size());
-        
-        for (const Vec& point : points) {
-            bool is_duplicate = false;
-            for (const Vec& existing : deduplicated) {
-                if (point.approx_equals(existing)) {
-                    is_duplicate = true;
-                    break;
-                }
-            }
-            if (!is_duplicate) {
-                deduplicated.insert(point);
-            }
-        }
-        
-        return deduplicated;
-    }
-    
-    /**
      * Constructor, empty
     */
-    ConvexHull::ConvexHull() :
-        ch_points()
+    ConvexHull::ConvexHull(int max_size, double tolerance) :
+        ch_points(),
+        max_size(max_size),
+        tolerance(tolerance)
     {
+    };
+
+    /**
+     * Constructor, set of Eigen::ArrayXd points
+     * Note that not assuming that 'init_points' is a Pareto Front, do use 'add_points' function to prune
+    */
+    ConvexHull::ConvexHull(const unordered_set<Eigen::ArrayXd>& init_points, int max_size, double tolerance, bool already_convex_hull) :
+        ch_points(),
+        max_size(max_size),
+        tolerance(tolerance)
+    {
+        // Convert Eigen::ArrayXd to Vec
+        unordered_set<Vec> vec_points;
+        for (const auto& p : init_points) {
+            vec_points.insert(Vec(p));
+        }
+        ch_points = already_convex_hull ? vec_points : prune(vec_points, max_size, tolerance);
     };
     
     /**
-     * Constructor, set of Tagged points
+     * Constructor, set of Vec points
      * Note that not assuming that 'init_points' is a Pareto Front, do use 'add_points' function to prune
     */
-    ConvexHull::ConvexHull(const unordered_set<Vec>& init_points, bool already_convex_hull) :
-        ch_points(already_convex_hull ? init_points : prune(remove_approx_duplicates(init_points)))
+    ConvexHull::ConvexHull(const unordered_set<Vec>& init_points, int max_size, double tolerance, bool already_convex_hull) :
+        ch_points(already_convex_hull ? init_points : prune(init_points, max_size, tolerance)),
+        max_size(max_size),
+        tolerance(tolerance)
     {
     };
 
     /**
      * Constructor initialising from a heuristic val
     */
-    ConvexHull::ConvexHull(const Vec& heuristic_val) :
-        ch_points()
+    ConvexHull::ConvexHull(const Vec& heuristic_val, int max_size, double tolerance) :
+        ch_points(),
+        max_size(max_size),
+        tolerance(tolerance)
     {
         ch_points.insert(heuristic_val);
     };
@@ -81,7 +82,9 @@ namespace thts {
      * Copy constructor
     */
     ConvexHull::ConvexHull(const ConvexHull& ch) :
-        ch_points(ch.ch_points) 
+        ch_points(ch.ch_points),
+        max_size(ch.max_size),
+        tolerance(ch.tolerance)
     {
     };
 
@@ -89,7 +92,9 @@ namespace thts {
      * Move constructor
     */
     ConvexHull::ConvexHull(const ConvexHull&& ch) :
-        ch_points(std::move(ch.ch_points)) 
+        ch_points(std::move(ch.ch_points)),
+        max_size(ch.max_size),
+        tolerance(ch.tolerance)
     {
     };
 
@@ -99,6 +104,8 @@ namespace thts {
     ConvexHull& ConvexHull::operator=(const ConvexHull& ch) 
     {
         this->ch_points = ch.ch_points;
+        this->max_size = ch.max_size;
+        this->tolerance = ch.tolerance;
         return *this;
     }
 
@@ -108,6 +115,8 @@ namespace thts {
     ConvexHull& ConvexHull::operator=(const ConvexHull&& ch) 
     {
         this->ch_points = std::move(ch.ch_points);
+        this->max_size = ch.max_size;
+        this->tolerance = ch.tolerance;
         return *this;
     }
 
@@ -487,11 +496,36 @@ namespace thts {
     //     // Check if optimal value was negative (meaning its dominated) or not
     //     return lp.primal() <= 0.0;
     // };
+    
+    /**
+     * Helper function to remove approximate duplicates from a set of Vec
+     * Keeps the first occurrence of each approximately equal vector
+     */
+    unordered_set<Vec> ConvexHull::prune_approx_duplicates(const unordered_set<Vec>& points, double tolerance) // static
+    {
+        unordered_set<Vec> deduplicated;
+        deduplicated.reserve(points.size());
+        
+        for (const Vec& point : points) {
+            bool is_duplicate = false;
+            for (const Vec& existing : deduplicated) {
+                if (point.approx_equals(existing, tolerance)) {
+                    is_duplicate = true;
+                    break;
+                }
+            }
+            if (!is_duplicate) {
+                deduplicated.insert(point);
+            }
+        }
+        
+        return deduplicated;
+    }
 
     /**
      * Prunes a set of 'points' to a set of points that form a Pareto Front
     */
-    unordered_set<Vec> ConvexHull::pareto_prune(const unordered_set<Vec>& points) // static
+    unordered_set<Vec> ConvexHull::prune_pareto(const unordered_set<Vec>& points) // static
     {
         unordered_set<Vec> pruned_points;
         pruned_points.reserve(points.size());
@@ -524,9 +558,9 @@ namespace thts {
      * The linear program pruning seems to struggle when two points are colinear along one of the axes
      * So first pareto prune the points to solve these cases
     */
-    unordered_set<Vec> ConvexHull::prune(const unordered_set<Vec>& points) // static
+    unordered_set<Vec> ConvexHull::prune_convex(const unordered_set<Vec>& points) // static
     {
-        unordered_set<Vec> pruned_points = pareto_prune(points);
+        unordered_set<Vec> pruned_points = prune_pareto(points);
         
         for (auto it = pruned_points.begin(); it != pruned_points.end(); ) {
             bool is_dominated = strongly_convex_dominated(pruned_points, *it);
@@ -537,6 +571,73 @@ namespace thts {
             }
         }
 
+        return pruned_points;
+    }
+
+    unordered_set<Vec> ConvexHull::prune_size(const unordered_set<Vec>& points, int max_points) // static
+    {
+        if (points.size() <= static_cast<size_t>(max_points)) {
+            return points;
+        }
+        
+        vector<Vec> points_vec(points.begin(), points.end());
+        size_t n = points_vec.size();
+        int dim = points_vec[0].dim();
+        
+        // Compute crowding distance for each point
+        vector<double> crowding_dist(n, 0.0);
+        
+        for (int d = 0; d < dim; d++) {
+            // Sort indices by value in dimension d
+            vector<size_t> sorted_indices(n);
+            iota(sorted_indices.begin(), sorted_indices.end(), 0);
+            sort(sorted_indices.begin(), sorted_indices.end(), 
+                 [&](size_t a, size_t b) { return points_vec[a].vec[d] < points_vec[b].vec[d]; });
+            
+            // Boundary points get infinite distance (always keep them)
+            double range = points_vec[sorted_indices[n-1]].vec[d] - points_vec[sorted_indices[0]].vec[d];
+            if (range > 0) {
+                crowding_dist[sorted_indices[0]] = numeric_limits<double>::infinity();
+                crowding_dist[sorted_indices[n-1]] = numeric_limits<double>::infinity();
+                
+                // Interior points: distance = (neighbor_above - neighbor_below) / range
+                for (size_t i = 1; i < n - 1; i++) {
+                    double dist = (points_vec[sorted_indices[i+1]].vec[d] - 
+                                  points_vec[sorted_indices[i-1]].vec[d]) / range;
+                    crowding_dist[sorted_indices[i]] += dist;
+                }
+            }
+        }
+        
+        // Sort by crowding distance (descending) and keep top max_points
+        vector<size_t> indices(n);
+        iota(indices.begin(), indices.end(), 0);
+        sort(indices.begin(), indices.end(), 
+             [&](size_t a, size_t b) { return crowding_dist[a] > crowding_dist[b]; });
+        
+        unordered_set<Vec> result;
+        for (int i = 0; i < max_points; i++) {
+            result.insert(points_vec[indices[i]]);
+        }
+        return result;
+    }
+
+    /**
+     * Complete prune
+     * 
+     * 1. Remove approximate duplicates
+     * 2. Pareto prune (points aligned along an axis tend to cause issues for the linear program)
+     * 3. Convex prune
+     * 4. Remove points until num points is <= max_points
+    */
+    unordered_set<Vec> ConvexHull::prune(const unordered_set<Vec>& points, int max_points, double tolerance) // static
+    {
+        unordered_set<Vec> pruned_points = prune_approx_duplicates(points, tolerance);
+        pruned_points = prune_pareto(pruned_points);
+        pruned_points = prune_convex(pruned_points);
+        if (max_points > 0 && pruned_points.size() > static_cast<size_t>(max_points)) {
+            pruned_points = prune_size(pruned_points, max_points);
+        }
         return pruned_points;
     }
 
@@ -568,7 +669,7 @@ namespace thts {
         for (const Vec& point : ch_points) {
             scaled_ch_points.insert(Vec(point*scale));
         }
-        return ConvexHull(scaled_ch_points, true);
+        return ConvexHull(scaled_ch_points, max_size, tolerance, true);
     };
 
     ConvexHull ConvexHull::scale(const Vec& scale) const
@@ -578,7 +679,7 @@ namespace thts {
         for (const Vec& point : ch_points) {
             scaled_ch_points.insert(Vec(point*scale));
         }
-        return ConvexHull(scaled_ch_points, true);
+        return ConvexHull(scaled_ch_points, max_size, tolerance, true);
     };
 
     /**
@@ -604,7 +705,7 @@ namespace thts {
             combined_points.insert(point);
         }
 
-        return ConvexHull(combined_points);
+        return ConvexHull(combined_points, max_size, tolerance);
     };
 
     /**
@@ -626,7 +727,7 @@ namespace thts {
         }
 
         // constructor will prune points
-        return ConvexHull(summed_points);
+        return ConvexHull(summed_points, max_size, tolerance);
     };
 
     /**
@@ -638,7 +739,7 @@ namespace thts {
         for (const Vec& point : ch_points) {
             summed_points.insert(point + v);
         }
-        return ConvexHull(summed_points, true);
+        return ConvexHull(summed_points, max_size, tolerance, true);
     };
 
     ConvexHull ConvexHull::subtract(const Vec& v) const
@@ -647,7 +748,7 @@ namespace thts {
         for (const Vec& point : ch_points) {
             subtracted_points.insert(point - v);
         }
-        return ConvexHull(subtracted_points, true);
+        return ConvexHull(subtracted_points, max_size, tolerance, true);
     };
 
     /**
@@ -748,7 +849,7 @@ namespace thts {
                 projected_points.insert(projected_point);
             }
             // and remove pareto dominated the points to remove redundant projected points
-            projected_points = pareto_prune(projected_points);
+            projected_points = prune_pareto(projected_points);
             geometric_hull_points.insert(projected_points.begin(), projected_points.end());
         }
 

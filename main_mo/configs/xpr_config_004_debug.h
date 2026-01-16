@@ -23,6 +23,8 @@ static const std::vector<ConfigMap> CONFIG_004 =
         {XPR_PARAM_ID_EVAL_DELTA,                       1.0},
         {XPR_PARAM_ID_EVAL_ROLLOUTS,                    1024},
         {XPR_PARAM_ID_EVAL_THREADS,                     16},
+        {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,             -1},
+        {XPR_PARAM_ID_CONVEX_HULL_TOLERANCE,            1e-9},
     },
     // bts params
     {

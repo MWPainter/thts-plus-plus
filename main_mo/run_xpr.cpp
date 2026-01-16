@@ -272,7 +272,9 @@ namespace thts {
             states, 
             sink_states, 
             transition_probs, 
-            reward_map);
+            reward_map,
+            run_manager.get_convex_hull_max_size(),
+            run_manager.get_convex_hull_tolerance());
 
         // Eval at 0 trials
         double eval_mean = 0.0, eval_std = 0.0;

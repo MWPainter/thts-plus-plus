@@ -65,9 +65,9 @@ namespace thts {
      */  
     void RunManager::validate_config_or_raise_exception()
     {
-        if (xpr_config.size() != 14)
+        if (xpr_config.size() != 16)
         {
-            throw runtime_error("Expecting 14 entries in the xpr level config.");
+            throw runtime_error("Expecting 16 entries in the xpr level config.");
         }
 
         if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != XPR_PARAMS_ID_TAG)
@@ -90,6 +90,8 @@ namespace thts {
             XPR_PARAM_ID_EVAL_DELTA, 
             XPR_PARAM_ID_EVAL_ROLLOUTS, 
             XPR_PARAM_ID_EVAL_THREADS,
+            XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,
+            XPR_PARAM_ID_CONVEX_HULL_TOLERANCE,
         };
 
         for (string& xpr_param_id : xpr_param_ids) 
@@ -205,6 +207,8 @@ namespace thts {
     double RunManager::get_eval_delta()         { return get_config_value<double>(xpr_config, XPR_PARAM_ID_EVAL_DELTA); }
     int RunManager::get_num_eval_rollouts()     { return get_config_value<int>(xpr_config, XPR_PARAM_ID_EVAL_ROLLOUTS); }
     int RunManager::get_num_eval_threads()      { return get_config_value<int>(xpr_config, XPR_PARAM_ID_EVAL_THREADS); }
+    int RunManager::get_convex_hull_max_size()  { return get_config_value<int>(xpr_config, XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE); }
+    double RunManager::get_convex_hull_tolerance() { return get_config_value<double>(xpr_config, XPR_PARAM_ID_CONVEX_HULL_TOLERANCE); }
 
     /**
      * Getters - alg level config
@@ -748,6 +752,8 @@ namespace thts {
             manager_args.heuristic_psuedo_trials = 1;
         }
         manager_args.use_vector_visit_counts = get_vector_visit_counts();
+        manager_args.convex_hull_max_size = get_convex_hull_max_size();
+        manager_args.convex_hull_tolerance = get_convex_hull_tolerance();
     }
     
     /**

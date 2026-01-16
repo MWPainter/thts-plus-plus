@@ -40,12 +40,14 @@ namespace thts {
         // protected:
         public: 
             std::unordered_set<Vec> ch_points;
+            int max_size;
+            double tolerance;
 
         public:
-            ConvexHull();
-            ConvexHull(const std::unordered_set<Eigen::ArrayXd>& init_points, bool already_convex_hull=false);
-            ConvexHull(const std::unordered_set<Vec>& init_points, bool already_convex_hull=false);
-            ConvexHull(const Vec& heuristic_val);
+            ConvexHull(int max_size=-1, double tolerance=1e-9);
+            ConvexHull(const std::unordered_set<Eigen::ArrayXd>& init_points, int max_size=-1, double tolerance=1e-9, bool already_convex_hull=false);
+            ConvexHull(const std::unordered_set<Vec>& init_points, int max_size=-1, double tolerance=1e-9, bool already_convex_hull=false);
+            ConvexHull(const Vec& heuristic_val, int max_size=-1, double tolerance=1e-9);
             ConvexHull(const ConvexHull& ch);
             ConvexHull(const ConvexHull&& ch);
 
@@ -79,8 +81,12 @@ namespace thts {
             // std::unordered_set<Vec> prune(
             //     const std::unordered_set<Vec>& ref_points, 
             //     const std::unordered_set<Vec>& points) const;
-            static std::unordered_set<Vec> pareto_prune(const std::unordered_set<Vec>& points);
-            static std::unordered_set<Vec> prune(const std::unordered_set<Vec>& points);
+            static std::unordered_set<Vec> prune_approx_duplicates(
+                const std::unordered_set<Vec>& points, double tolerance = 1e-9);
+            static std::unordered_set<Vec> prune_pareto(const std::unordered_set<Vec>& points);
+            static std::unordered_set<Vec> prune_convex(const std::unordered_set<Vec>& points);
+            static std::unordered_set<Vec> prune_size(const std::unordered_set<Vec>& points, int max_points);
+            static std::unordered_set<Vec> prune(const std::unordered_set<Vec>& points, int max_points=-1, double tolerance = 1e-9);
 
         public:
             int reward_dim() const;

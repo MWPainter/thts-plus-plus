@@ -95,6 +95,8 @@ namespace thts {
             double get_eval_delta();
             int get_num_eval_rollouts();
             int get_num_eval_threads();
+            int get_convex_hull_max_size();
+            double get_convex_hull_tolerance();
 
             /**
              * Getters - alg level config
