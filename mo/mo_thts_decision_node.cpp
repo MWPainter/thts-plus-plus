@@ -3,6 +3,8 @@
 
 #include "mo/mo_thts_manager.h"
 
+#include <cmath>
+#include <limits>
 #include <stdexcept>
 #include <tuple>
 #include <utility>
@@ -28,7 +30,9 @@ namespace thts {
             vector_visit_count(thts_manager->reward_dim, 0.0),
             local_backups(0),
             total_cnode_backups_in_subtree(0),
-            total_dnode_backups_in_subtree(0)
+            total_dnode_backups_in_subtree(0),
+            solved_labelling(0),
+            solved_labelling_confidence_interval_range(numeric_limits<double>::max())
     {
         if (eval_mo_heuristic && thts_manager->mo_heuristic_fn != nullptr
             && !thts_manager->thts_env()->is_sink_state_itfc(state, *thts_manager->get_thts_context()))
@@ -39,6 +43,90 @@ namespace thts {
             num_visits = thts_manager->heuristic_psuedo_trials;
             local_backups = thts_manager->heuristic_psuedo_trials;
         }
+    }
+
+    vector<shared_ptr<const Action>> MoThtsDNode::get_actions_to_consider() const {
+        vector<shared_ptr<const Action>> actions_to_consider;
+        MoThtsManager& mo_thts_manager = (MoThtsManager&) *thts_manager;
+        
+        if (!mo_thts_manager.use_solved_labelling) {
+            // Return all children
+            for (const auto& pair : children) {
+                actions_to_consider.push_back(pair.first);
+            }
+            return actions_to_consider;
+        }
+        
+        // Find the minimum solved labelling among children
+        int min_solved_labelling = numeric_limits<int>::max();
+        for (const auto& pair : children) {
+            MoThtsCNode& child = (MoThtsCNode&) *pair.second;
+            int child_solved_labelling = child.get_solved_labelling();
+            if (child_solved_labelling < min_solved_labelling) {
+                min_solved_labelling = child_solved_labelling;
+            }
+        }
+        
+        // Return only children with the minimum solved labelling
+        for (const auto& pair : children) {
+            MoThtsCNode& child = (MoThtsCNode&) *pair.second;
+            if (child.get_solved_labelling() == min_solved_labelling) {
+                actions_to_consider.push_back(pair.first);
+            }
+        }
+        
+        return actions_to_consider;
+    }
+
+    int MoThtsDNode::get_local_solved_labelling() const {
+        MoThtsManager& mo_thts_manager = (MoThtsManager&) *thts_manager;
+        double delta = get_local_solved_labelling_confidence_interval_range();
+        double tau = mo_thts_manager.solved_labelling_tolerance;
+        
+        // Return 0 if not solved (delta > tau)
+        if (delta > tau) {
+            return 0;
+        }
+        
+        // Find the minimum i such that delta > tau / 2^i
+        // Equivalently, the maximum i such that delta <= tau / 2^i
+        // i.e., 2^i <= tau / delta
+        // i.e., i <= log2(tau / delta)
+        int i = static_cast<int>(floor(log2(tau / delta)));
+        return max(1, i);
+    }
+
+    int MoThtsDNode::get_solved_labelling() const {
+        return solved_labelling;
+    }
+
+    double MoThtsDNode::get_solved_labelling_confidence_interval_range() const {
+        int solved_labelling = get_solved_labelling();
+        if (solved_labelling == 0) {
+            MoThtsManager& mo_thts_manager = (MoThtsManager&) *thts_manager;
+            return mo_thts_manager.solved_labelling_value_scaling;
+        }
+        return solved_labelling_confidence_interval_range;
+    }
+
+    double MoThtsDNode::get_local_solved_labelling_confidence_interval_range() const {
+        return solved_labelling_confidence_interval_range;
+    }
+
+    void MoThtsDNode::update_solved_labelling() {
+        int min_labelling = get_local_solved_labelling();
+        
+        for (const auto& pair : children) {
+            MoThtsCNode& child = (MoThtsCNode&) *pair.second;
+            int child_labelling = child.get_solved_labelling();
+            if (child_labelling < min_labelling) {
+                min_labelling = child_labelling;
+            }
+        }
+        
+        solved_labelling = min_labelling;
+
+        update_solved_labelling_confidence_interval_range();
     }
 
     void MoThtsDNode::visit_itfc(ThtsContext& ctx) {

@@ -2,18 +2,48 @@
 #include <stdexcept>
 #include <algorithm>
 #include <cmath>
+#include <sstream>
 
 using namespace std;
 
 namespace thts {
     /**
+     * DSTState implementation
+     */
+    std::size_t DSTState::hash() const {
+        // Combine hashes of x, y, and timestep
+        std::size_t h1 = std::hash<int>{}(x);
+        std::size_t h2 = std::hash<int>{}(y);
+        std::size_t h3 = std::hash<int>{}(timestep);
+        // Combine using a common technique
+        return h1 ^ (h2 << 1) ^ (h3 << 2);
+    }
+
+    bool DSTState::equals(const DSTState& other) const {
+        return x == other.x && y == other.y && timestep == other.timestep;
+    }
+
+    bool DSTState::equals_itfc(const Observation& other) const {
+        const DSTState* other_state = dynamic_cast<const DSTState*>(&other);
+        if (other_state == nullptr) return false;
+        return equals(*other_state);
+    }
+
+    std::string DSTState::get_pretty_print_string() const {
+        std::ostringstream oss;
+        oss << "DSTState(x=" << x << ", y=" << y << ", timestep=" << timestep << ")";
+        return oss.str();
+    }
+
+    /**
      * Constructor
      */
-    PortedDeepSeaTreasureThtsEnv::PortedDeepSeaTreasureThtsEnv(int map_id, double swept_by_current_prob) : 
+    PortedDeepSeaTreasureThtsEnv::PortedDeepSeaTreasureThtsEnv(int map_id, double swept_by_current_prob, int max_timestep) : 
         ThtsEnv(true),
         MoThtsEnv(2, true),  // reward_dim=2, fully_observable=true
         map_id(map_id),
-        swept_by_current_prob(swept_by_current_prob)
+        swept_by_current_prob(swept_by_current_prob),
+        max_timestep(max_timestep)
     {
         initialize_map(map_id);
     }
@@ -23,6 +53,7 @@ namespace thts {
         MoThtsEnv(2, true),
         map_id(other.map_id),
         swept_by_current_prob(other.swept_by_current_prob),
+        max_timestep(other.max_timestep),
         sea_map(other.sea_map),
         num_cols(other.num_cols),
         num_rows(other.num_rows)
@@ -90,34 +121,41 @@ namespace thts {
         return value != 0.0 && value != -10.0;
     }
 
-    shared_ptr<const IntPairState> PortedDeepSeaTreasureThtsEnv::get_initial_state() const {
+    shared_ptr<const DSTState> PortedDeepSeaTreasureThtsEnv::get_initial_state() const {
         pair<int, int> init_pos = get_initial_position();
-        return make_shared<IntPairState>(IntPairState(init_pos.first, init_pos.second));
+        return make_shared<DSTState>(init_pos.first, init_pos.second, 0);
     }
 
-    shared_ptr<const IntPairState> PortedDeepSeaTreasureThtsEnv::get_terminal_state() const {
-        return make_shared<IntPairState>(IntPairState(TERMINAL_STATE_POS, TERMINAL_STATE_POS));
+    shared_ptr<const DSTState> PortedDeepSeaTreasureThtsEnv::get_terminal_state() const {
+        return make_shared<DSTState>(TERMINAL_STATE_POS, TERMINAL_STATE_POS, -1);
     }
 
-    bool PortedDeepSeaTreasureThtsEnv::is_terminal_state(shared_ptr<const IntPairState> state) const {
+    bool PortedDeepSeaTreasureThtsEnv::is_terminal_state(shared_ptr<const DSTState> state) const {
         int x = get_x(state);
         int y = get_y(state);
         return (x == TERMINAL_STATE_POS && y == TERMINAL_STATE_POS);
     }
 
-    bool PortedDeepSeaTreasureThtsEnv::is_sink_state(shared_ptr<const IntPairState> state, ThtsContext& ctx) const {
-        return is_terminal_state(state);
+    bool PortedDeepSeaTreasureThtsEnv::is_sink_state(shared_ptr<const DSTState> state, ThtsContext& ctx) const {
+        // State is a sink if it's the terminal state 
+        // OR if timestep has reached max_timestep
+        // AND if not at a treasure location (because we need to perform dummy transition to terminal state)
+        return is_terminal_state(state) || ((get_timestep(state) >= max_timestep) && !is_treasure_cell(get_x(state), get_y(state)));
     }
 
     shared_ptr<IntActionVector> PortedDeepSeaTreasureThtsEnv::get_valid_actions(
-        shared_ptr<const IntPairState> state, ThtsContext& ctx) const 
+        shared_ptr<const DSTState> state, ThtsContext& ctx) const 
     {
         shared_ptr<IntActionVector> valid_actions = make_shared<IntActionVector>();
-        // Terminal state has no valid actions
-        if (is_terminal_state(state)) {
+        // Sink states (terminal or max timestep) have no valid actions
+        if (is_sink_state(state, ctx)) {
             return valid_actions;
         }
-        // At treasure locations, any action transitions to terminal (all actions valid)
+        // If at a treasure location, all actions just transition to terminal state, so just reutrn one
+        if (is_treasure_cell(get_x(state), get_y(state))) {
+            valid_actions->push_back(make_shared<const IntAction>(0));
+            return valid_actions;
+        }
         // For normal states, all 4 actions are always valid (invalid moves just don't change position)
         for (int i = 0; i < 4; i++) {
             valid_actions->push_back(make_shared<const IntAction>(i));
@@ -128,13 +166,15 @@ namespace thts {
     unordered_set<shared_ptr<const State>> PortedDeepSeaTreasureThtsEnv::get_all_states() const {
         unordered_set<shared_ptr<const State>> all_states;
         
-        // Add all valid (non-rock) positions in the grid
-        for (int x = 0; x < num_cols; x++) {
-            for (int y = 0; y < num_rows; y++) {
-                if (is_valid_state(x, y)) {
-                    all_states.insert(
-                        static_pointer_cast<const State>(
-                            make_shared<IntPairState>(IntPairState(x, y))));
+        // Add all valid (non-rock) positions in the grid for all timesteps
+        for (int t = 0; t <= max_timestep; t++) {
+            for (int x = 0; x < num_cols; x++) {
+                for (int y = 0; y < num_rows; y++) {
+                    if (is_valid_state(x, y)) {
+                        all_states.insert(
+                            static_pointer_cast<const State>(
+                                make_shared<DSTState>(x, y, t)));
+                    }
                 }
             }
         }
@@ -146,13 +186,14 @@ namespace thts {
         return all_states;
     }
 
-    shared_ptr<const IntPairState> PortedDeepSeaTreasureThtsEnv::sample_next_state(
-        shared_ptr<const IntPairState> state, 
+    shared_ptr<const DSTState> PortedDeepSeaTreasureThtsEnv::sample_next_state(
+        shared_ptr<const DSTState> state, 
         shared_ptr<const IntAction> action,
         RandManager& rand_manager) const
     {
         int x = get_x(state);
         int y = get_y(state);
+        int t = get_timestep(state);
         
         // Compute next position from the action
         int next_x = x + DIR[action->action][0];
@@ -175,11 +216,12 @@ namespace thts {
             next_y = y;
         }
         
-        return make_shared<IntPairState>(IntPairState(next_x, next_y));
+        // Increment timestep
+        return make_shared<DSTState>(next_x, next_y, t + 1);
     }
 
     shared_ptr<StateDistr> PortedDeepSeaTreasureThtsEnv::get_transition_distribution(
-        shared_ptr<const IntPairState> state, 
+        shared_ptr<const DSTState> state, 
         shared_ptr<const IntAction> action, 
         ThtsContext& ctx) const 
     {
@@ -187,19 +229,23 @@ namespace thts {
         
         int x = get_x(state);
         int y = get_y(state);
+        int t = get_timestep(state);
         
-        // If already in terminal state, return empty distribution
-        if (is_terminal_state(state)) {
+        // If already in a sink state (terminal or max timestep), return empty distribution
+        if (is_sink_state(state, ctx)) {
             return transition_distribution;
         }
         
         // If at a treasure location, any action transitions to terminal state
         if (is_treasure_cell(x, y)) {
-            shared_ptr<const IntPairState> terminal_state = get_terminal_state();
+            shared_ptr<const DSTState> terminal_state = get_terminal_state();
             transition_distribution->insert_or_assign(
                 static_pointer_cast<const State>(terminal_state), 1.0);
             return transition_distribution;
         }
+
+        // Increment timestep for the next state
+        int next_t = t + 1;
 
         // First, compute position after action
         int next_x = x + DIR[action->action][0];
@@ -211,7 +257,7 @@ namespace thts {
         
         // With probability (1 - swept_by_current_prob): stay at next_x, next_y
         transition_distribution->insert_or_assign(
-            static_pointer_cast<const State>(make_shared<IntPairState>(IntPairState(next_x, next_y))),
+            static_pointer_cast<const State>(make_shared<DSTState>(next_x, next_y, next_t)),
             1.0 - swept_by_current_prob);
         
         // Otherwise, normal movement (with potential current sweep)
@@ -232,8 +278,8 @@ namespace thts {
                     swept_y = y;
                 }
                 
-                shared_ptr<const IntPairState> swept_state = 
-                    make_shared<IntPairState>(IntPairState(swept_x, swept_y));
+                shared_ptr<const DSTState> swept_state = 
+                    make_shared<DSTState>(swept_x, swept_y, next_t);
                 auto it = transition_distribution->find(static_pointer_cast<const State>(swept_state));
                 if (it != transition_distribution->end()) 
                 {
@@ -253,7 +299,7 @@ namespace thts {
     }
 
     shared_ptr<const State> PortedDeepSeaTreasureThtsEnv::sample_transition_distribution(
-        shared_ptr<const IntPairState> state, 
+        shared_ptr<const DSTState> state, 
         shared_ptr<const IntAction> action, 
         RandManager& rand_manager,
         ThtsContext& ctx) const 
@@ -261,9 +307,9 @@ namespace thts {
         int x = get_x(state);
         int y = get_y(state);
         
-        // If already in terminal state, return terminal state
-        if (is_terminal_state(state)) {
-            return static_pointer_cast<const State>(get_terminal_state());
+        // If already in a sink state (terminal or max timestep), return state as-is
+        if (is_sink_state(state, ctx)) {
+            return static_pointer_cast<const State>(state);
         }
         
         // If at a treasure location, any action transitions to terminal state
@@ -272,12 +318,12 @@ namespace thts {
         }
         
         // Otherwise, normal movement (with potential current sweep)
-        shared_ptr<const IntPairState> next_state = sample_next_state(state, action, rand_manager);
+        shared_ptr<const DSTState> next_state = sample_next_state(state, action, rand_manager);
         return static_pointer_cast<const State>(next_state);
     }
 
     Eigen::ArrayXd PortedDeepSeaTreasureThtsEnv::get_mo_reward(
-        shared_ptr<const IntPairState> state, 
+        shared_ptr<const DSTState> state, 
         shared_ptr<const IntAction> action,
         ThtsContext& ctx) const 
     {
@@ -303,19 +349,19 @@ namespace thts {
 
     // Interface implementations
     shared_ptr<const State> PortedDeepSeaTreasureThtsEnv::get_initial_state_itfc() const {
-        shared_ptr<const IntPairState> init_state = get_initial_state();
+        shared_ptr<const DSTState> init_state = get_initial_state();
         return static_pointer_cast<const State>(init_state);
     }
 
     bool PortedDeepSeaTreasureThtsEnv::is_sink_state_itfc(shared_ptr<const State> state, ThtsContext& ctx) const {
-        shared_ptr<const IntPairState> state_itfc = static_pointer_cast<const IntPairState>(state);
+        shared_ptr<const DSTState> state_itfc = static_pointer_cast<const DSTState>(state);
         return is_sink_state(state_itfc, ctx);
     }
 
     shared_ptr<ActionVector> PortedDeepSeaTreasureThtsEnv::get_valid_actions_itfc(
         shared_ptr<const State> state, ThtsContext& ctx) const
     {
-        shared_ptr<const IntPairState> state_itfc = static_pointer_cast<const IntPairState>(state);
+        shared_ptr<const DSTState> state_itfc = static_pointer_cast<const DSTState>(state);
         shared_ptr<IntActionVector> valid_actions_itfc = get_valid_actions(state_itfc, ctx);
 
         shared_ptr<ActionVector> valid_actions = make_shared<ActionVector>();
@@ -328,7 +374,7 @@ namespace thts {
     shared_ptr<StateDistr> PortedDeepSeaTreasureThtsEnv::get_transition_distribution_itfc(
         shared_ptr<const State> state, shared_ptr<const Action> action, ThtsContext& ctx) const
     {
-        shared_ptr<const IntPairState> state_itfc = static_pointer_cast<const IntPairState>(state);
+        shared_ptr<const DSTState> state_itfc = static_pointer_cast<const DSTState>(state);
         shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);
         return get_transition_distribution(state_itfc, action_itfc, ctx);
     }
@@ -339,7 +385,7 @@ namespace thts {
         RandManager& rand_manager, 
         ThtsContext& ctx) const 
     {
-        shared_ptr<const IntPairState> state_itfc = static_pointer_cast<const IntPairState>(state);
+        shared_ptr<const DSTState> state_itfc = static_pointer_cast<const DSTState>(state);
         shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);
         return sample_transition_distribution(state_itfc, action_itfc, rand_manager, ctx);
     }
@@ -366,7 +412,7 @@ namespace thts {
         shared_ptr<const Action> action,
         ThtsContext& ctx) const
     {
-        shared_ptr<const IntPairState> state_itfc = static_pointer_cast<const IntPairState>(state);
+        shared_ptr<const DSTState> state_itfc = static_pointer_cast<const DSTState>(state);
         shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);
         return get_mo_reward(state_itfc, action_itfc, ctx);
     }

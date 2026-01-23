@@ -235,7 +235,7 @@ namespace thts {
         return (PY_ENVS.contains(env_id) 
             || GYM_ENVS.contains(env_id)
             || TIMED_GYM_ENVS.contains(env_id)
-            || DST_ENVS.contains(env_id));
+            || DST_PY_ENVS.contains(env_id));
     }
 
     /**
@@ -274,9 +274,10 @@ namespace thts {
             {
                 bool swept_by_current = (env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP);
                 double swept_by_current_prob = swept_by_current ? 0.2 : 0.0;
+                int max_timestep = this->get_max_trial_length();
                 // bool is_vamplew = true;
                 int map_id = 10;
-                return make_shared<PortedDeepSeaTreasureThtsEnv>(map_id, swept_by_current_prob);
+                return make_shared<PortedDeepSeaTreasureThtsEnv>(map_id, swept_by_current_prob, max_timestep);
             }
 
             py::gil_scoped_acquire acq;

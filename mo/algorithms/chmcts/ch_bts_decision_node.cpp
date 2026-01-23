@@ -126,6 +126,11 @@ namespace thts {
         }
     }
 
+    void ChBtsDNode::update_solved_labelling_confidence_interval_range()
+    {
+        throw runtime_error("Not implemented yet");
+    }
+
     shared_ptr<const Action> ChBtsDNode::select_action(MoThtsContext& ctx)
     {
         ActionDistr action_distr;

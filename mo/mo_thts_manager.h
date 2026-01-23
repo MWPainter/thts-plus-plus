@@ -21,6 +21,11 @@ namespace thts {
 
         static const int convex_hull_max_size_default = -1;
         static constexpr double convex_hull_tolerance_default = 1e-9;
+
+        static const bool use_solved_labelling_default = false;
+        static constexpr double solved_labelling_value_scaling_default = std::numeric_limits<double>::infinity();
+        static constexpr double solved_labelling_delta_fail_probability_default = 0.01;
+        static constexpr double solved_labelling_tolerance_default = 1e-2;
         
         int reward_dim;
         MoHeuristicFnPtr mo_heuristic_fn;
@@ -30,6 +35,11 @@ namespace thts {
         int convex_hull_max_size;
         double convex_hull_tolerance;
 
+        bool use_solved_labelling;
+        double solved_labelling_value_scaling;
+        double solved_labelling_delta_fail_probability;
+        double solved_labelling_tolerance;
+
         MoThtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env) :
             ThtsManagerArgs(std::static_pointer_cast<ThtsEnv>(thts_env)),
             reward_dim(MoThtsManagerArgs::reward_dim_default),
@@ -37,7 +47,11 @@ namespace thts {
             heuristic_psuedo_trials(heuristic_psuedo_trials_default),
             use_vector_visit_counts(MoThtsManagerArgs::use_vector_visit_counts_default),
             convex_hull_max_size(convex_hull_max_size_default),
-            convex_hull_tolerance(convex_hull_tolerance_default) {}
+            convex_hull_tolerance(convex_hull_tolerance_default),
+            use_solved_labelling(use_solved_labelling_default),
+            solved_labelling_value_scaling(solved_labelling_value_scaling_default),
+            solved_labelling_delta_fail_probability(solved_labelling_delta_fail_probability_default),
+            solved_labelling_tolerance(solved_labelling_tolerance_default) {}
 
         virtual ~MoThtsManagerArgs() = default;
     };
@@ -60,6 +74,11 @@ namespace thts {
 
             int convex_hull_max_size;
             double convex_hull_tolerance;
+
+            bool use_solved_labelling;
+            double solved_labelling_value_scaling;
+            double solved_labelling_delta_fail_probability;
+            double solved_labelling_tolerance;
 
             /**
              * Constructor. Initialises values directly other than random number generation.

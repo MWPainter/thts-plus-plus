@@ -49,6 +49,8 @@ namespace thts {
             int local_backups;
             int total_cnode_backups_in_subtree;
             int total_dnode_backups_in_subtree;
+            int solved_labelling;
+            double solved_labelling_confidence_interval_range;
 
         public: 
             /**
@@ -68,6 +70,52 @@ namespace thts {
              * Mark destructor as virtual for subclassing.
              */
             virtual ~MoThtsDNode() = default;
+
+            /**
+             * Returns the set of actions to consider for selection.
+             *
+             * If thts_manager->use_solved_labelling is true, then this set will only contain the children minimum solved_labellings
+             */
+            std::vector<std::shared_ptr<const Action>> get_actions_to_consider() const;
+
+            /**
+             * Returns the a label for "how solved" this node is.
+             * Let delta be the the size of a confidence interval at this node
+             * If tau is the threshold acceptible for considering this node "solved"
+             * This function return the value: min_i s.t. delta > tau / 2^i
+             * 
+             * I.e. returning a value of 0 means that this node is not solved
+             * Returning a value of 1 means that this node is solved to within a tolerance of tau
+             * Further values indicate node is solved to further and further tolerances
+             */
+            int get_local_solved_labelling() const;
+
+            /**
+             * Returns the a label for "how solved" the subtree under this node is.
+             * That is, it returns the minimum of the local_solved_labelling and the solved_labelling all children
+             * I.e. a decision node is only solved if it is confident in its decision and all its children are solved
+             */
+            int get_solved_labelling() const;
+
+            /**
+             * Get a local confidence interval to estimate how "solved" this node is.
+             * If this node is not solved, return the maximum range. 
+             * If node is solved, then return the confidence interval range cached.
+             *
+             * Local is the version to use internally in the node
+             */
+            double get_solved_labelling_confidence_interval_range() const;
+        private:
+            double get_local_solved_labelling_confidence_interval_range() const;
+        public:
+
+            /**
+             * Update the solved labelling of this node.
+             * The confidence interval range is to be updated by the subclass.
+             * I.e. update_solved_labelling_confidence_interval_range() should update solved_labelling_confidence_interval_range
+             */
+            void update_solved_labelling();
+            virtual void update_solved_labelling_confidence_interval_range() = 0;
 
             /**
              * OVerride final the old backup fn (throws error if try to call)

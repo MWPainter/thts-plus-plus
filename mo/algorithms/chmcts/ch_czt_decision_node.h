@@ -49,6 +49,12 @@ namespace thts {
         protected:
             virtual std::string get_pretty_print_val() const override;
         
+        public:
+            /**
+            * Solved labelling
+            */
+            virtual void update_solved_labelling_confidence_interval_range() override;
+        
 
 
         /**

@@ -51,6 +51,12 @@ namespace thts {
             virtual void fill_ucb_q_values(ActionDistr& ucb_q_values, MoThtsContext& ctx) const override;
             // void fill_ucb_values(ActionDistr& ucb_values, MoThtsContext& ctx) const;
         
+        public:
+            /**
+            * Solved labelling
+            */
+            virtual void update_solved_labelling_confidence_interval_range() override;
+        
 
 
         /**

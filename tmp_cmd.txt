@@ -67,3 +67,18 @@ make clean && make auxexpr &&
 ./run_memory_limited 8G ./moexpr eval 001 ;
 ./run_memory_limited 8G ./moexpr opt 001 ;
 ./run_memory_limited 8G ./moexpr eval 002
+
+
+
+
+
+
+
+
+make clean && make && clear &&
+./run_memory_limited 8G ./moexpr eval 006 &&
+./run_memory_limited 8G ./moexpr eval 007 &&
+./run_memory_limited 8G ./moexpr eval 008 &&
+./run_memory_limited 8G ./moexpr eval 009 &&
+./run_memory_limited 8G ./moexpr eval 004 &&
+./run_memory_limited 8G ./moexpr eval 005 

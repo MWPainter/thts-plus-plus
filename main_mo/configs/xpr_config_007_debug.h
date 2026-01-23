@@ -5,12 +5,12 @@
 #include "main_mo/configs/constants_algorithms.h"
 #include "main_mo/configs/constants_experiments.h"
 
-static const std::vector<ConfigMap> CONFIG_005 =
+static const std::vector<ConfigMap> CONFIG_007 =
 {
     // xpr params
     {
         {XPR_OR_ALG_ID_TAG,                             XPR_PARAMS_ID_TAG},
-        {XPR_PARAM_ID_NAME,                             "005_debug"},
+        {XPR_PARAM_ID_NAME,                             "007_debug"},
         {XPR_PARAM_ID_ENV,                              ENV_ID_VAMPLEW_STOCH_DST_10_CPP},
         {XPR_PARAM_ID_MCTS_MODE,                        true},
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
@@ -18,7 +18,7 @@ static const std::vector<ConfigMap> CONFIG_005 =
         {XPR_PARAM_ID_MAX_TRIAL_LENGTH,                 26*2},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,                  true}, 
         {XPR_PARAM_ID_TERMINATION_BOUND,                90.0}, // 90 sec
-        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            25},
+        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            1},
         {XPR_PARAM_ID_SEARCH_THREADS,                   16},
         {XPR_PARAM_ID_EVAL_DELTA,                       1.0}, // log every 1 second
         {XPR_PARAM_ID_EVAL_ROLLOUTS,                    1024},
@@ -26,8 +26,12 @@ static const std::vector<ConfigMap> CONFIG_005 =
         {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,             25},
         {XPR_PARAM_ID_CONVEX_HULL_TOLERANCE,            1e-9},
     },
-    // chvi
+    // bts params
     {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI},
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,            1.0},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,      0.05},
+        {ALG_PARAM_ID_EPSILON,              1.0},
+        {ALG_PARAM_ID_DEFAULT_Q_VALUE,      0.0},
     },
 };

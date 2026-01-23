@@ -163,6 +163,21 @@ static const std::unordered_set<std::string> DST_ENVS =
     ENV_ID_VAMPLEW_STOCH_DST_10_CPP,     // set used to load env, cpp port needs to be different
 };
 
+static const std::unordered_set<std::string> DST_PY_ENVS =
+{
+    ENV_ID_IMPROVED_DST,
+    ENV_ID_IMPROVED_STOCH_DST,
+
+    ENV_ID_VAMPLEW_DST,
+    ENV_ID_VAMPLEW_STOCH_DST,
+
+    ENV_ID_VAMPLEW_DST_MO_GYM,
+    ENV_ID_VAMPLEW_STOCH_DST_MO_GYM,
+
+    ENV_ID_VAMPLEW_DST_10,
+    ENV_ID_VAMPLEW_STOCH_DST_10,
+};
+
 static const std::unordered_set<std::string> VAMPLEW_PY_DST_ENVS =
 {
     ENV_ID_VAMPLEW_DST,

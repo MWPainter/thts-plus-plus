@@ -826,8 +826,11 @@ namespace thts {
         // Check that the reference point is weakly dominated by all points in the convex hull
         for (const Vec& point : ch_points) {
             if (!point.weakly_pareto_dominates(ref_point)) {
-                throw runtime_error("Reference point needs to be (pareto) weakly dominated by all points in the convex "
-                    "hull to compute hypervolume.");
+                stringstream ss;
+                ss << "Reference point needs to be (pareto) weakly dominated by all points in the convex hull to compute hypervolume." << endl;
+                ss << "Reference point: " << ref_point << endl;
+                ss << "Culprit point in CH: " << point << endl;
+                throw runtime_error(ss.str());
             }
         }
 

@@ -29,6 +29,7 @@ namespace thts {
             int local_backups;
             int total_cnode_backups_in_subtree;
             int total_dnode_backups_in_subtree;
+            int solved_labelling;
 
         public: 
             /**
@@ -48,6 +49,60 @@ namespace thts {
              * Mark destructor as virtual for subclassing.
              */
             virtual ~MoThtsCNode() = default;
+
+            /**
+             * Returns the a label for "how solved" this node is.
+             * Let delta be the the size of a confidence interval at this node
+             * If tau is the threshold acceptible for considering this node "solved"
+             * This function return the value: min_i s.t. delta > tau / 2^i
+             * 
+             * I.e. returning a value of 0 means that this node is not solved
+             * Returning a value of 1 means that this node is solved to within a tolerance of tau
+             * Further values indicate node is solved to further and further tolerances
+             */
+            int get_solved_labelling() const;
+
+            /**
+             * Get a confidence interval to estimate how "solved" this node is.
+             *
+             * Part 0: What we're trying to compute a bound for
+             *    Roughly we have a true distribution of outcomes, p, and we want to compute some confidence intervals
+             *    If we have some interval (range) for each outcome, r(x), then our expected range is:
+             *        r = sum_x p(x)r(x)
+             *
+             *    However, we don't have the true distribtion p, and we don't know if we have the seen all outcomes yet
+             *    So we will split this into two parts:
+             *          r = sum_x_seen p(x)r(x) + sum_x_missing p(x)r(x) = r_seen + r_missing
+             * 
+             * Part 1: DKW inequality, implies bounds on the empirical distribution
+             *    With, empirical distribtuion q, true distribution p, outcome x, and prob > 1-delta:
+             *        p(x) <= q(x) + 2 sqrt(log(2/delta) / (2 * n)) 
+             *        Let q'(x_) = q(x) + 2 sqrt(log(2/delta) / (2 * n)) 
+             *
+             * Part 2: Range of confidence interval at this node:
+             *        Let r(x) be the range of the confidence interval for outcome x (from child)
+             *        Then r_seen, the range at this node (assuming we have seen all outcomes), can be bounded by:
+             *            r_seen = sum_x p(x)r(x) <= sum_x q'(x)r(x)
+             *
+             * Part 3: Missing mass
+             *  We also need to account for the mass that may be missing from the empirical distribution
+             *        (I.e. we may have not seen all possible outcomes yet)
+             *        We will use a Good Turing estimate to estimate the missing mass
+             *        Let M be the total missing mass, c be the number of outcomes seen exactly once, and n to total number of observations
+             *            M = sum_x_missing p(x)
+             *        The Good Turing estimate is then:
+             *            M' = c/n
+             *        With probability > 1-delta, we have:
+             *            M <= M' + sqrt(log(1/delta) / n)
+             *        Then r_missing, the range at this node (assuming we have not seen all outcomes), can be bounded by:
+             *            r_missing = sum_x_missing p(x)r(x) <=  r_max * (M' + sqrt(log(1/delta) / n))
+             *
+             *        Then the final confidence interval range is:
+             *            r = r_seen + r_missing 
+             *              = sum_x_seen [r(x) * (q(x) + 2 sqrt(log(2/delta) / (2 * n))) ] 
+             *                  + r_max * (M' + sqrt(log(1/delta) / n))
+             */
+            double get_solved_labelling_confidence_interval_range() const;
 
             /**
              * OVerride final the old backup fn (throws error if try to call)
