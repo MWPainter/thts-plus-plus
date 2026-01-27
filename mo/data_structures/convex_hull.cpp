@@ -19,6 +19,7 @@
 #include "libqhullcpp/Qhull.h"
 #include "libqhullcpp/QhullFacetList.h"
 #include "libqhullcpp/QhullVertexSet.h"
+#include "libqhullcpp/QhullHyperplane.h"
 #include "libqhullcpp/RboxPoints.h"
 
 
@@ -192,7 +193,9 @@ namespace thts {
     }
 
     
-
+    /**
+     * Below is CLP implementation of the strongly_convex_dominated function, commented out to try using QHull instead.
+     */
     /**
      * Retuns if 'point' is dominated by any point in 'ref_points'. 
      * 
@@ -549,6 +552,109 @@ namespace thts {
     }
 
     /**
+     * Prunes a set of 'points' to a set of points that form a Convex Hull (multi-objective sense)
+     * 
+     * Uses QHull to compute the geometric convex hull, then filters to keep only vertices
+     * from facets whose outward normal has all positive components. These are the facets
+     * facing the "good" direction for multi-objective optimization (where we want to maximize
+     * all objectives).
+     * 
+     * A point is on the multi-objective convex hull iff it is optimal for some linear 
+     * scalarization with positive weights. Such points must lie on facets with positive normals.
+     * 
+     * Falls back to LP-based approach if qhull fails or returns unexpected results.
+     */
+    unordered_set<Vec> ConvexHull::prune_convex(const unordered_set<Vec>& points) // static
+    {
+        // Make a copy of the points to avoid modifying the original set
+        unordered_set<Vec> points_copy = points;
+        
+        // Handle small cases - if 2 or fewer points, all are on the convex hull
+        if (points_copy.size() <= 2) {
+            return points_copy;
+        }
+        
+        int dim = points_copy.begin()->dim();
+        int num_points = static_cast<int>(points_copy.size());
+        
+        // For 1D, all pareto points are on the convex hull
+        if (dim == 1) {
+            return points_copy;
+        }
+        
+        // Need at least dim+1 points for a proper convex hull in dim dimensions
+        if (num_points <= dim) {
+            return points_copy;
+        }
+        
+        // Convert to flat array for qhull
+        vector<Vec> points_vec(points_copy.begin(), points_copy.end());
+        vector<double> coords;
+        coords.reserve(num_points * dim);
+        for (const Vec& p : points_vec) {
+            coords.insert(coords.end(), p.vec.begin(), p.vec.end());
+        }
+        
+        // Run qhull
+        try {
+            orgQhull::Qhull qhull;
+            qhull.runQhull("", dim, num_points, coords.data(), "Qx C-0 Qc Pp");
+            
+            // Collect vertices from facets with all-positive normals
+            unordered_set<Vec> result;
+            
+            for (const auto& facet : qhull.facetList()) {
+                // Get the facet's hyperplane (contains normal vector)
+                orgQhull::QhullHyperplane hyperplane = facet.hyperplane();
+                
+                // Check if all components of the normal are positive
+                // (pointing toward increasing objective values)
+                bool all_positive = true;
+                for (int i = 0; i < dim; i++) {
+                    if (hyperplane[i] <= 0.0) {
+                        all_positive = false;
+                        break;
+                    }
+                }
+                
+                if (all_positive) {
+                    // Add all vertices of this facet to the result
+                    for (const auto& vertex : facet.vertices()) {
+                        int idx = vertex.point().id();
+                        if (idx >= 0 && idx < num_points) {
+                            result.insert(points_vec[idx]);
+                        }
+                    }
+                }
+            }
+            
+            // If we got results, return them
+            if (!result.empty()) {
+                return result;
+            }
+            
+            // If no facets had all-positive normals, fall through to LP approach
+        } catch (...) {
+            // QHull failed (likely degenerate input), fall through to LP approach
+        }
+
+        // Fallback: use the LP-based approach for degenerate cases
+        unordered_set<Vec> pruned_points = points_copy;
+        for (auto it = pruned_points.begin(); it != pruned_points.end(); ) {
+            bool is_dominated = strongly_convex_dominated(pruned_points, *it);
+            if (is_dominated) {
+                it = pruned_points.erase(it);
+            } else {
+                it++;
+            }
+        }
+        return pruned_points;
+    }
+
+    /**
+     * Below is original implementation using LP solver to prune the convex hull. Commented out to try using QHull instead.
+     */
+    /**
      * Prunes a set of 'points' to a set of points that form a Convex Hull
      * 
      * Because working with a single set of points, 'pruned_points' will always contain *it in the 
@@ -558,21 +664,21 @@ namespace thts {
      * The linear program pruning seems to struggle when two points are colinear along one of the axes
      * So first pareto prune the points to solve these cases
     */
-    unordered_set<Vec> ConvexHull::prune_convex(const unordered_set<Vec>& points) // static
-    {
-        unordered_set<Vec> pruned_points = prune_pareto(points);
+    // unordered_set<Vec> ConvexHull::prune_convex(const unordered_set<Vec>& points) // static
+    // {
+    //     unordered_set<Vec> pruned_points = prune_pareto(points);
         
-        for (auto it = pruned_points.begin(); it != pruned_points.end(); ) {
-            bool is_dominated = strongly_convex_dominated(pruned_points, *it);
-            if (is_dominated) {
-                it = pruned_points.erase(it);
-            } else {
-                it++;
-            }
-        }
+    //     for (auto it = pruned_points.begin(); it != pruned_points.end(); ) {
+    //         bool is_dominated = strongly_convex_dominated(pruned_points, *it);
+    //         if (is_dominated) {
+    //             it = pruned_points.erase(it);
+    //         } else {
+    //             it++;
+    //         }
+    //     }
 
-        return pruned_points;
-    }
+    //     return pruned_points;
+    // }
 
     unordered_set<Vec> ConvexHull::prune_size(const unordered_set<Vec>& points, int max_points) // static
     {
@@ -851,8 +957,8 @@ namespace thts {
                 projected_point.vec[i] = ref_point.vec[i];
                 projected_points.insert(projected_point);
             }
-            // and remove pareto dominated the points to remove redundant projected points
-            projected_points = prune_pareto(projected_points);
+            // // and remove pareto dominated the points to remove redundant projected points
+            // projected_points = prune_pareto(projected_points);
             geometric_hull_points.insert(projected_points.begin(), projected_points.end());
         }
 
@@ -1014,10 +1120,6 @@ namespace std {
     }
 
     ConvexHull operator-(const ConvexHull& ch, const Vec& v) {
-        return ch.subtract(v);
-    }
-
-    ConvexHull operator-(const Vec& v, const ConvexHull& ch) {
         return ch.subtract(v);
     }
 

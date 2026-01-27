@@ -41,7 +41,7 @@ namespace thts::test {
          * With an option to say if we know that the set of points is already a pareto front
         */
         TestableConvexHull(const std::unordered_set<Vec>& init_points, bool already_pareto_front=false) :
-            ConvexHull(init_points, already_pareto_front) {};
+            ConvexHull(init_points, -1, 1e-9, already_pareto_front) {};
 
         /**
          * Copy constructor

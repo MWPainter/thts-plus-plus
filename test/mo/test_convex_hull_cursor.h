@@ -41,7 +41,7 @@ namespace thts::test {
          * With an option to say if we know that the set of points is already a convex hull
         */
         TestableConvexHull(const std::unordered_set<Vec>& init_points, bool already_convex_hull=false) :
-            ConvexHull(init_points, already_convex_hull) {};
+            ConvexHull(init_points, -1, 1e-9, already_convex_hull) {};
 
         /**
          * Copy constructor

@@ -173,7 +173,7 @@ TEST(Ch_Constructors, empty_constructor) {
 /**
  * Test constructing from set constructions, and prune fn
 */
-// TEST(Ch_Constructors, vector_constructors) {
+// TEST(Ch_Constructors, vector_constructors) { 
 //     vector<pair<Eigen::ArrayXd,string>> points1 = {
 //         make_pair(make_vec(1.0,2.0), "1"),
 //         make_pair(make_vec(2.0,1.0), "2"),

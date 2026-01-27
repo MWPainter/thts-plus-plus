@@ -171,7 +171,6 @@ namespace std {
     ConvexHull operator+(const ConvexHull& ch, const Vec& v);
     ConvexHull operator+(const Vec& v, const ConvexHull& ch);
     ConvexHull operator-(const ConvexHull& ch, const Vec& v);
-    ConvexHull operator-(const Vec& v, const ConvexHull& ch);
 
     /**
      * Equality of convex hulls
