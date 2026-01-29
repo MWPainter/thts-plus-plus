@@ -41,9 +41,10 @@ namespace thts {
     void main_xpr(string xpr_id_prefix, string xpr_dir_override)
     {
         // Read in config
+        time_t xpr_timestamp = std::time(nullptr);
         vector<ConfigMap> xpr_configs = RunManager::lookup_config_vector_from_xpr_prefix(xpr_id_prefix);
         shared_ptr<vector<RunManager>> run_managers_ptr = RunManager::get_run_managers_from_config_vector(
-            xpr_configs, xpr_dir_override);
+            xpr_configs, xpr_timestamp, xpr_dir_override);
         vector<RunManager>& run_managers = *run_managers_ptr;
 
         // Check if any run ids need python
@@ -97,8 +98,11 @@ namespace thts {
             // cout so know we're doing something
             if (!hpopt)
             {
-                cout << "Starting run on " << run_manager.get_env_id() << " with alg " << run_manager.get_alg_id() << " and params " 
-                    << run_manager.get_params_string_helper() << ", run_idx = " << run_idx << endl;
+                cout << "Starting run on " << run_manager.get_env_id() 
+                    << " with env size " << run_manager.get_env_size()
+                    << " with alg " << run_manager.get_alg_id() 
+                    << " and params " << run_manager.get_params_string_helper() 
+                    << ", run_idx = " << run_idx << endl;
             }
 
             // Variables for "runtime"
@@ -212,6 +216,12 @@ namespace thts {
     */
     MoEvalMetrics run_chvi(RunManager& run_manager, bool log_convex_hulls)
     {
+        // cout so know we're doing something
+        cout << "Starting CHVI run on " << run_manager.get_env_id() 
+            << " with env size " << run_manager.get_env_size()
+            << " with alg " << run_manager.get_alg_id() 
+            << endl;
+
         // Open eval log
         ofstream eval_log_fs = run_manager.get_eval_log_filestream();
         run_manager.write_eval_log_header(eval_log_fs);

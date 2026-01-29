@@ -65,9 +65,9 @@ namespace thts {
      */  
     void RunManager::validate_config_or_raise_exception()
     {
-        if (xpr_config.size() != 16)
+        if (xpr_config.size() != 17)
         {
-            throw runtime_error("Expecting 16 entries in the xpr level config.");
+            throw runtime_error("Expecting 17 entries in the xpr level config.");
         }
 
         if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != XPR_PARAMS_ID_TAG)
@@ -79,6 +79,7 @@ namespace thts {
         {
             XPR_PARAM_ID_NAME, 
             XPR_PARAM_ID_ENV, 
+            XPR_PARAM_ID_ENV_SIZE,
             XPR_PARAM_ID_MCTS_MODE, 
             XPR_PARAM_ID_MAX_TRIAL_LENGTH,
             XPR_PARAM_ID_GRAPH_SEARCH,
@@ -179,14 +180,50 @@ namespace thts {
      */
     shared_ptr<vector<RunManager>> RunManager::get_run_managers_from_config_vector(
         vector<ConfigMap>& config_vector,
+        time_t xpr_timestamp,
         string xpr_dir_override)
     {
-        time_t xpr_timestamp = std::time(nullptr);
         shared_ptr<vector<RunManager>> run_managers = std::make_shared<vector<RunManager>>();
+
+        // If env size is variable, then unpack sizes into seperate config_vectors
+        bool env_size_is_variable = config_value_is_int_vector(config_vector[0], XPR_PARAM_ID_ENV_SIZE);
+        if (env_size_is_variable) {
+            vector<int> env_sizes = get_config_value<vector<int>>(config_vector[0], XPR_PARAM_ID_ENV_SIZE);
+            for (int env_size : env_sizes) {
+                // Copy config vector
+                vector<ConfigMap> new_config_vector = config_vector;
+
+                // Override env size
+                ConfigMap xpr_config = new_config_vector[0];
+                xpr_config[XPR_PARAM_ID_ENV_SIZE] = env_size;
+
+                // Override max trial length on a per env size basis
+                string env_id = get_config_value<std::string>(xpr_config, XPR_PARAM_ID_ENV);
+                if (VARIABLE_SIZED_VAMPLEW_DST_ENVS.contains(env_id) || VARIABLE_SIZED_IMPROVED_DST_ENVS.contains(env_id))
+                {
+                    int max_xy_distance = get_max_xy_for_width(env_size);
+                    xpr_config[XPR_PARAM_ID_MAX_TRIAL_LENGTH] = max_xy_distance * 2;
+                }
+                else 
+                {
+                    throw runtime_error("Max trial length not overridden variable sizes env" + env_id);
+                }
+
+                // Update xpr_config in config_vector
+                new_config_vector[0] = xpr_config;
+
+                // Recursively get run managers for the new config vector
+                shared_ptr<vector<RunManager>> new_run_managers = get_run_managers_from_config_vector(new_config_vector, xpr_timestamp, xpr_dir_override);
+                run_managers->insert(run_managers->end(), new_run_managers->begin(), new_run_managers->end());
+            }
+            return run_managers;
+        }
+
+        // Otherwise, just return the run managers for the single config
         for (size_t i=1; i<config_vector.size(); i++)
         {  
             run_managers->push_back(RunManager(xpr_timestamp, config_vector[0], config_vector[i], xpr_dir_override));
-        }
+        }   
         return run_managers;
     }
 
@@ -196,6 +233,7 @@ namespace thts {
      */
     string RunManager::get_xpr_name()           { return get_config_value<std::string>(xpr_config, XPR_PARAM_ID_NAME); }
     string RunManager::get_env_id()             { return get_config_value<std::string>(xpr_config, XPR_PARAM_ID_ENV); }
+    int RunManager::get_env_size()              { return get_config_value<int>(xpr_config, XPR_PARAM_ID_ENV_SIZE); }
     bool RunManager::get_mcts_mode()            { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_MCTS_MODE); }
     bool RunManager::get_graph_search()         { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_GRAPH_SEARCH); }
     bool RunManager::get_vector_visit_counts()  { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_VECTOR_VISIT_COUNTS); }
@@ -269,15 +307,30 @@ namespace thts {
 
         if (DST_ENVS.contains(env_id)) 
         {
-
-            if (env_id == ENV_ID_VAMPLEW_DST_10_CPP || env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP)
+            if (env_id == ENV_ID_VAMPLEW_DST_10_CPP 
+                || env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP
+                || env_id == ENV_ID_VAMPLEW_DST_VARIABLE_CPP 
+                || env_id == ENV_ID_VAMPLEW_STOCH_DST_VARIABLE_CPP)
             {
                 bool swept_by_current = (env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP);
                 double swept_by_current_prob = swept_by_current ? 0.2 : 0.0;
                 int max_timestep = this->get_max_trial_length();
-                // bool is_vamplew = true;
-                int map_id = 10;
+                int map_id = this->get_env_size();
+                if (env_id == ENV_ID_VAMPLEW_DST_10_CPP || env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP)
+                {
+                    map_id = 10;
+                }
                 return make_shared<PortedDeepSeaTreasureThtsEnv>(map_id, swept_by_current_prob, max_timestep);
+            }
+
+            if (env_id == ENV_ID_IMPROVED_DST_VARIABLE_CPP || env_id == ENV_ID_IMPROVED_STOCH_DST_VARIABLE_CPP)
+            {
+                throw runtime_error("Improved DST not ported yet");
+                // int map_id = this->get_env_size();
+                // bool swept_by_current = (env_id == ENV_ID_IMPROVED_STOCH_DST_VARIABLE_CPP);
+                // double swept_by_current_prob = swept_by_current ? 0.2 : 0.0;
+                // int max_timestep = this->get_max_trial_length();
+                // return make_shared<PortedDeepSeaTreasureThtsEnv>(map_id, swept_by_current_prob, max_timestep);
             }
 
             py::gil_scoped_acquire acq;
@@ -285,10 +338,16 @@ namespace thts {
             bool swept_by_current = STOCH_PY_DST_ENVS.contains(env_id);
             double swept_by_current_prob = swept_by_current ? 0.2 : 0.0;
             bool is_vamplew = VAMPLEW_PY_DST_ENVS.contains(env_id);
-            int map_id = 0;
+            int map_id = 1;
 
-            if (env_id == ENV_ID_VAMPLEW_DST_MO_GYM || env_id == ENV_ID_VAMPLEW_STOCH_DST_MO_GYM) { map_id = 1; }
-            else if (env_id == ENV_ID_VAMPLEW_DST_10 || env_id == ENV_ID_VAMPLEW_STOCH_DST_10) { map_id = 10; }
+            if (env_id == ENV_ID_VAMPLEW_DST_10 || env_id == ENV_ID_VAMPLEW_STOCH_DST_10) 
+            { 
+                map_id = 10; 
+            }
+            else if (VARIABLE_SIZED_VAMPLEW_DST_ENVS.contains(env_id) || VARIABLE_SIZED_IMPROVED_DST_ENVS.contains(env_id))
+            {
+                map_id = this->get_env_size();
+            }
     
             py::dict kw_args;
             kw_args["swept_by_current_prob"] = to_string(swept_by_current_prob);
@@ -543,6 +602,27 @@ namespace thts {
             return max_val;
         }
 
+        if (VARIABLE_SIZED_VAMPLEW_DST_ENVS.contains(env_id))
+        {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd::Zero(2);
+            TreasureMap map = *get_map(this->get_env_size());
+            double max_treasure = map.back().value;
+            max_val[0] = max_treasure; 
+            max_val[1] = 0.0;
+            return max_val;
+        }
+
+        if (VARIABLE_SIZED_IMPROVED_DST_ENVS.contains(env_id))
+        {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd::Zero(3);
+            TreasureMap map = *get_map(this->get_env_size());
+            double max_treasure = map.back().value;
+            max_val[0] = max_treasure; 
+            max_val[1] = 0.0;
+            max_val[2] = 0.0;
+            return max_val;
+        }
+
         if (env_id == ENV_ID_FRUIT_TREE_7
             || env_id == ENV_ID_FRUIT_TREE_STOCH_5
             || env_id == ENV_ID_FRUIT_TREE_STOCH_7)
@@ -663,8 +743,27 @@ namespace thts {
             return max_steps * r_min;
         }
 
+        if (VARIABLE_SIZED_VAMPLEW_DST_ENVS.contains(env_id))
+        {
+            double max_steps = get_max_trial_length();
+            Eigen::ArrayXd r_min = Eigen::ArrayXd::Zero(2);
+            r_min[0] = 0.0; 
+            r_min[1] = -1.0; 
+            return max_steps * r_min;
+        }
+
         if (env_id == ENV_ID_IMPROVED_DST
             || env_id == ENV_ID_IMPROVED_STOCH_DST)
+        {
+            double max_steps = get_max_trial_length();
+            Eigen::ArrayXd r_min = Eigen::ArrayXd::Zero(3);
+            r_min[0] = 0.0; 
+            r_min[1] = -1.0; 
+            r_min[2] = -9.0; 
+            return max_steps * r_min;
+        }
+
+        if (VARIABLE_SIZED_IMPROVED_DST_ENVS.contains(env_id))
         {
             double max_steps = get_max_trial_length();
             Eigen::ArrayXd r_min = Eigen::ArrayXd::Zero(3);
@@ -919,9 +1018,10 @@ namespace thts {
         } else {
             ss << xpr_dir_override;
         }
-        ss << "/" << get_env_id() << "/"
-            << get_alg_id() << "/"
-            << get_params_string_helper();
+        ss << "/" << get_env_id() 
+            << "/" << "env_size=" << get_env_size()
+            << "/" << get_alg_id() 
+            << "/" << get_params_string_helper();
         return ss.str();
     }
 

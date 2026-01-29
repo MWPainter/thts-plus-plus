@@ -11,7 +11,8 @@ static const std::vector<ConfigMap> CONFIG_015 =
     {
         {XPR_OR_ALG_ID_TAG,                             XPR_PARAMS_ID_TAG},
         {XPR_PARAM_ID_NAME,                             "015_debug"},
-        {XPR_PARAM_ID_ENV,                              ENV_ID_VAMPLEW_DST_10_CPP},
+        {XPR_PARAM_ID_ENV,                              ENV_ID_VAMPLEW_STOCH_DST_10_CPP},
+        {XPR_PARAM_ID_ENV_SIZE,                         NO_ENV_SIZE},
         {XPR_PARAM_ID_MCTS_MODE,                        true},
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
         {XPR_PARAM_ID_VECTOR_VISIT_COUNTS,              false},
@@ -23,7 +24,7 @@ static const std::vector<ConfigMap> CONFIG_015 =
         {XPR_PARAM_ID_EVAL_DELTA,                       5.0}, // log every 1 second
         {XPR_PARAM_ID_EVAL_ROLLOUTS,                    1},
         {XPR_PARAM_ID_EVAL_THREADS,                     1},
-        {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,             25},
+        {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,             -1},
         {XPR_PARAM_ID_CONVEX_HULL_TOLERANCE,            1e-9},
     },
     // chvi

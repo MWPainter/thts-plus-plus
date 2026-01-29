@@ -46,6 +46,16 @@ static const std::string ENV_ID_VAMPLEW_STOCH_DST_10 = "deep-sea-treasure-vample
 // cpp port, generated maps DST (size 10)
 static const std::string ENV_ID_VAMPLEW_DST_10_CPP = "deep-sea-treasure-vamplew-010-cpp";
 static const std::string ENV_ID_VAMPLEW_STOCH_DST_10_CPP = "deep-sea-treasure-vamplew-stoch-010-cpp";
+// Variable sized Vamplew DST
+static const std::string ENV_ID_VAMPLEW_DST_VARIABLE = "deep-sea-treasure-vamplew-variable";
+static const std::string ENV_ID_VAMPLEW_STOCH_DST_VARIABLE = "deep-sea-treasure-vamplew-stoch-variable";
+static const std::string ENV_ID_VAMPLEW_DST_VARIABLE_CPP = "deep-sea-treasure-vamplew-variable-cpp";
+static const std::string ENV_ID_VAMPLEW_STOCH_DST_VARIABLE_CPP = "deep-sea-treasure-vamplew-stoch-variable-cpp";
+// Variable sized Improved DST
+static const std::string ENV_ID_IMPROVED_DST_VARIABLE = "deep-sea-treasure-improved-variable";
+static const std::string ENV_ID_IMPROVED_STOCH_DST_VARIABLE = "deep-sea-treasure-improved-stoch-variable";
+static const std::string ENV_ID_IMPROVED_DST_VARIABLE_CPP = "deep-sea-treasure-improved-variable-cpp";
+static const std::string ENV_ID_IMPROVED_STOCH_DST_VARIABLE_CPP = "deep-sea-treasure-improved-stoch-variable-cpp";
  
 // ---------------------------------------------------------------------------------------------------------------------
 // Environment id's - fruit tree
@@ -145,6 +155,7 @@ static const std::unordered_set<std::string> TIMED_GYM_ENVS =
 // DST sets
 // ---------------------------------------------------------------------------------------------------------------------
 
+// Set used to load the envs
 static const std::unordered_set<std::string> DST_ENVS =
 {
     ENV_ID_IMPROVED_DST,
@@ -161,8 +172,19 @@ static const std::unordered_set<std::string> DST_ENVS =
     
     ENV_ID_VAMPLEW_DST_10_CPP,           // set used to load env, cpp port needs to be different
     ENV_ID_VAMPLEW_STOCH_DST_10_CPP,     // set used to load env, cpp port needs to be different
+
+    ENV_ID_VAMPLEW_DST_VARIABLE,
+    ENV_ID_VAMPLEW_STOCH_DST_VARIABLE,
+    ENV_ID_VAMPLEW_DST_VARIABLE_CPP,
+    ENV_ID_VAMPLEW_STOCH_DST_VARIABLE_CPP,
+
+    ENV_ID_IMPROVED_DST_VARIABLE,
+    ENV_ID_IMPROVED_STOCH_DST_VARIABLE,
+    ENV_ID_IMPROVED_DST_VARIABLE_CPP,
+    ENV_ID_IMPROVED_STOCH_DST_VARIABLE_CPP,
 };
 
+// Set used to check if env needs a python interpreter
 static const std::unordered_set<std::string> DST_PY_ENVS =
 {
     ENV_ID_IMPROVED_DST,
@@ -176,6 +198,12 @@ static const std::unordered_set<std::string> DST_PY_ENVS =
 
     ENV_ID_VAMPLEW_DST_10,
     ENV_ID_VAMPLEW_STOCH_DST_10,
+
+    ENV_ID_VAMPLEW_DST_VARIABLE,
+    ENV_ID_VAMPLEW_STOCH_DST_VARIABLE,
+
+    ENV_ID_IMPROVED_DST_VARIABLE,
+    ENV_ID_IMPROVED_STOCH_DST_VARIABLE,
 };
 
 static const std::unordered_set<std::string> VAMPLEW_PY_DST_ENVS =
@@ -188,6 +216,11 @@ static const std::unordered_set<std::string> VAMPLEW_PY_DST_ENVS =
 
     ENV_ID_VAMPLEW_DST_10,
     ENV_ID_VAMPLEW_STOCH_DST_10,
+
+    ENV_ID_VAMPLEW_DST_VARIABLE,
+    ENV_ID_VAMPLEW_STOCH_DST_VARIABLE,
+    ENV_ID_VAMPLEW_DST_VARIABLE_CPP,
+    ENV_ID_VAMPLEW_STOCH_DST_VARIABLE_CPP,
 };
 
 static const std::unordered_set<std::string> STOCH_PY_DST_ENVS =
@@ -196,4 +229,32 @@ static const std::unordered_set<std::string> STOCH_PY_DST_ENVS =
     ENV_ID_VAMPLEW_STOCH_DST,
     ENV_ID_VAMPLEW_STOCH_DST_MO_GYM,
     ENV_ID_VAMPLEW_STOCH_DST_10,
+
+    ENV_ID_VAMPLEW_STOCH_DST_VARIABLE,
+    ENV_ID_VAMPLEW_STOCH_DST_VARIABLE_CPP,
+
+    ENV_ID_IMPROVED_STOCH_DST_VARIABLE,
+    ENV_ID_IMPROVED_STOCH_DST_VARIABLE_CPP,
+};
+
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Variable sized envs sets
+// ---------------------------------------------------------------------------------------------------------------------
+
+static const std::unordered_set<std::string> VARIABLE_SIZED_VAMPLEW_DST_ENVS =
+{
+    ENV_ID_VAMPLEW_DST_VARIABLE,
+    ENV_ID_VAMPLEW_STOCH_DST_VARIABLE,
+    ENV_ID_VAMPLEW_DST_VARIABLE_CPP,
+    ENV_ID_VAMPLEW_STOCH_DST_VARIABLE_CPP,
+};
+
+static const std::unordered_set<std::string> VARIABLE_SIZED_IMPROVED_DST_ENVS =
+{
+    ENV_ID_IMPROVED_DST_VARIABLE,
+    ENV_ID_IMPROVED_STOCH_DST_VARIABLE,
+    ENV_ID_IMPROVED_DST_VARIABLE_CPP,
+    ENV_ID_IMPROVED_STOCH_DST_VARIABLE_CPP,
 };

@@ -12,6 +12,7 @@ static const std::vector<ConfigMap> CONFIG_001 =
         {XPR_OR_ALG_ID_TAG,                             XPR_PARAMS_ID_TAG},
         {XPR_PARAM_ID_NAME,                             "001_debug"},
         {XPR_PARAM_ID_ENV,                              ENV_ID_PY_DEBUG_2},
+        {XPR_PARAM_ID_ENV_SIZE,                         NO_ENV_SIZE},
         {XPR_PARAM_ID_MCTS_MODE,                        true},
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
         {XPR_PARAM_ID_VECTOR_VISIT_COUNTS,              false},

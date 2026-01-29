@@ -12,6 +12,7 @@ static const std::vector<ConfigMap> CONFIG_002 =
         {XPR_OR_ALG_ID_TAG,                             XPR_PARAMS_ID_TAG},
         {XPR_PARAM_ID_NAME,                             "002_debug"},
         {XPR_PARAM_ID_ENV,                              ENV_ID_VAMPLEW_STOCH_DST_10},
+        {XPR_PARAM_ID_ENV_SIZE,                         NO_ENV_SIZE},
         {XPR_PARAM_ID_MCTS_MODE,                        true},
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
         {XPR_PARAM_ID_VECTOR_VISIT_COUNTS,              false},

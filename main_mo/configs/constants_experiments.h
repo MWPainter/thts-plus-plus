@@ -28,6 +28,7 @@ static const std::string XPR_PARAMS_ID_TAG = "xpr_params";                      
 
 static const std::string XPR_PARAM_ID_NAME = "xpr_name";                                // user readable name for experiment
 static const std::string XPR_PARAM_ID_ENV = "env_id";                                   // the env id for this experiment
+static const std::string XPR_PARAM_ID_ENV_SIZE = "env_size";                            // the size of the environment (if applicable)
 static const std::string XPR_PARAM_ID_MCTS_MODE = "mcts_mode";                          // if MCTS mode should be used
 static const std::string XPR_PARAM_ID_GRAPH_SEARCH = "graph_search";                    // if should run over graph instead of tree (transposition table use)
 static const std::string XPR_PARAM_ID_VECTOR_VISIT_COUNTS = "vec_visit_counts";         // whether to use vector visit counts
@@ -41,4 +42,6 @@ static const std::string XPR_PARAM_ID_EVAL_ROLLOUTS = "eval_rollouts";          
 static const std::string XPR_PARAM_ID_EVAL_THREADS = "eval_threads";                    // number of threads to use in evaluation
 static const std::string XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE = "convex_hull_max_size";    // max size of convex hull
 static const std::string XPR_PARAM_ID_CONVEX_HULL_TOLERANCE = "convex_hull_tolerance";  // tolerance controlling how close to consider points to be "equal" for convex hull
+
+static const int NO_ENV_SIZE = -1;
 

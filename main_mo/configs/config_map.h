@@ -15,7 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 
 // Type aliases
-using ConfigValue = std::variant<std::string, bool, int, double>;
+using ConfigValue = std::variant<std::string, bool, int, double, std::vector<int>>;
 using ConfigMap   = std::unordered_map<std::string, ConfigValue>;
 
 // Templated Helper to read value from config map (with numeric type casting support)
@@ -47,3 +47,6 @@ T get_config_value(const ConfigMap& config, const std::string& key)
     err_msg << "Type mismatch for key (" << key << "): cannot convert stored type to requested type.";
     throw std::runtime_error(err_msg.str());
 }
+
+// Helper to check if a config value is of type std::vector<int>
+bool config_value_is_int_vector(const ConfigMap& config, const std::string& key);

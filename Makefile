@@ -49,6 +49,7 @@ PY_MAIN_OBJ = bin/py/main/module.o
 
 MAIN_MO_SOURCES = $(wildcard main_mo/*.cpp)
 MAIN_MO_SOURCES += $(wildcard main_mo/envs/*.cpp)
+MAIN_MO_SOURCES += $(wildcard main_mo/configs/*.cpp)
 MAIN_MO_OBJECTS = $(patsubst main_mo/%.cpp, bin/main_mo/%.o, $(MAIN_MO_SOURCES))
 
 MAIN_AUX_SOURCES = $(wildcard main_aux/*.cpp)

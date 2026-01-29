@@ -90,4 +90,23 @@ make clean && make && clear &&
 ./run_memory_limited 8G ./moexpr eval 010 &&
 ./run_memory_limited 8G ./moexpr eval 011 &&
 ./run_memory_limited 8G ./moexpr eval 012 &&
-./run_memory_limited 8G ./moexpr eval 013
+./run_memory_limited 8G ./moexpr eval 013 &&
+./run_memory_limited 8G ./moexpr eval 014 &&
+./run_memory_limited 8G ./moexpr eval 015 &&
+./run_memory_limited 8G ./moexpr eval 016 &&
+./run_memory_limited 8G ./moexpr eval 020 &&
+./run_memory_limited 8G ./moexpr eval 021
+
+
+
+
+make clean && make && clear &&
+./run_memory_limited 8G ./moexpr eval 020 &&
+./run_memory_limited 8G ./moexpr eval 021 &&
+./run_memory_limited 8G ./moexpr eval 010 &&
+./run_memory_limited 8G ./moexpr eval 011 &&
+./run_memory_limited 8G ./moexpr eval 012 &&
+./run_memory_limited 8G ./moexpr eval 013 &&
+./run_memory_limited 8G ./moexpr eval 014 &&
+./run_memory_limited 8G ./moexpr eval 015 &&
+./run_memory_limited 8G ./moexpr eval 016

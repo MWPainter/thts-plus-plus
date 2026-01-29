@@ -77,6 +77,7 @@ namespace thts {
              */
             static std::shared_ptr<std::vector<RunManager>> get_run_managers_from_config_vector(
                 std::vector<ConfigMap>& config_vector,
+                std::time_t xpr_timestamp,
                 std::string xpr_dir_override="");
 
             /**
@@ -84,6 +85,7 @@ namespace thts {
              */
             std::string get_xpr_name();
             std::string get_env_id();
+            int get_env_size();
             bool get_mcts_mode();
             bool get_graph_search();
             bool get_vector_visit_counts();

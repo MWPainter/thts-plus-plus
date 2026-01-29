@@ -32,6 +32,7 @@
 #include <iomanip>
 #include <limits>
 #include <set>
+#include <type_traits>
 #include <vector>
 #include <stdexcept>
 #include <sstream>
@@ -702,7 +703,12 @@ namespace thts {
             {
                 const auto& variant_val = alg_params.at(alg_param_id);
                 std::visit([&](auto&& val) {
-                    hpopt_summary_fs << "," << val;
+                    using T = std::decay_t<decltype(val)>;
+                    if constexpr (std::is_same_v<T, std::vector<int>>) {
+                        throw runtime_error("Trying to print vector<int> to hpopt summary, and should never happen");
+                    } else {
+                        hpopt_summary_fs << "," << val;
+                    }
                 }, variant_val);
             }
         }
@@ -735,7 +741,12 @@ namespace thts {
             {
                 const auto& variant_val = this->best_config_map.at(alg_param_id);
                 std::visit([&](auto&& val) {
-                    hpopt_summary_fs << alg_param_id << " - " << val << endl;
+                    using T = std::decay_t<decltype(val)>;
+                    if constexpr (std::is_same_v<T, std::vector<int>>) {
+                        throw runtime_error("Trying to print vector<int> to hpopt summary, and should never happen");
+                    } else {
+                        hpopt_summary_fs << alg_param_id << " - " << val << endl;
+                    }
                 }, variant_val);
             }
         }
