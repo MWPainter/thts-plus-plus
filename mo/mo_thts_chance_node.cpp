@@ -23,50 +23,65 @@ namespace thts {
             local_backups(0),
             total_cnode_backups_in_subtree(0),
             total_dnode_backups_in_subtree(0),
-            solved_labelling(0)
+            solved_value(1.0)
     {
     }
 
-    int MoThtsCNode::get_solved_labelling() const {
+    int MoThtsCNode::get_solved_level() const {
         MoThtsManager& mo_thts_manager = (MoThtsManager&) *thts_manager;
-        double delta = get_solved_labelling_confidence_interval_range();
+        double delta = get_solved_value();
         double tau = mo_thts_manager.solved_labelling_tolerance;
         
         // Return 0 if not solved (delta > tau)
         if (delta > tau) {
             return 0;
         }
+
+        // If solved, return max level
+        if (delta == 0) {
+            return std::numeric_limits<int>::max();
+        }
         
-        // Find the minimum i such that delta > tau / 2^i
-        // Equivalently, the maximum i such that delta <= tau / 2^i
-        // i.e., 2^i <= tau / delta
-        // i.e., i <= log2(tau / delta)
-        int i = static_cast<int>(floor(log2(tau / delta)));
-        return max(1, i);
+        // Find the minimum i such that delta > tau / 2^(i-1)
+        // Equivalently, the maximum i such that delta <= tau / 2^(i-1)
+        // i.e., 2^(i-1) <= tau / delta
+        // i.e., i-1 <= log2(tau / delta)
+        // i.e., i <= 1 + log2(tau / delta)
+        double log_ratio = log2(tau / delta);
+        if (log_ratio >= std::numeric_limits<int>::max() - 1) {
+            return std::numeric_limits<int>::max();
+        }
+        return static_cast<int>(floor(1 + log_ratio));
     }
 
-    double MoThtsCNode::get_solved_labelling_confidence_interval_range() const {
+    double MoThtsCNode::get_solved_value() const 
+    {
+        return this->solved_value;
+    }
+
+    void MoThtsCNode::update_solved_value() const 
+    {
         MoThtsManager& mo_thts_manager = (MoThtsManager&) *thts_manager;
-        double delta = mo_thts_manager.solved_labelling_delta_fail_probability;
-        double r_max = mo_thts_manager.solved_labelling_value_scaling;
+        double delta = mo_thts_manager.solved_labelling_delta_fail_probability / 2.0;
         double n = static_cast<double>(num_visits);
         
-        // If no visits yet, return maximum range
+        // If no visits yet we are unsolved, so return 1.0
         if (n <= 0) {
-            return r_max;
+            this->solved_value = 1.0;
+            return;
         }
         
         // DKW epsilon term: 2 sqrt(log(2/delta) / (2 * n))
         double dkw_epsilon = 2.0 * sqrt(log(2.0 / delta) / (2.0 * n));
         
-        // Part 1 & 2: Compute r_seen
-        // r_seen = sum_x_seen [r(x) * (q(x) + dkw_epsilon)]
-        double r_seen = 0.0;
+        // Compute e_s_seen, and count singletons for Good Turing estimate
+        // e_s_seen = sum_x_seen [s(x) * (q(x) + dkw_epsilon)]
+        double e_s_seen = 0.0;
         int singletons = 0;  // count of outcomes seen exactly once (for Good Turing)
         
         for (const auto& pair : children) {
             MoThtsDNode& child = (MoThtsDNode&) *pair.second;
-            double r_x = child.get_solved_labelling_confidence_interval_range();
+            double s_x = child.get_solved_value();
             
             // Get empirical probability q(x) from empirical_distribution
             auto it = empirical_distribution.find(pair.first);
@@ -74,7 +89,7 @@ namespace thts {
             double q_x = static_cast<double>(count) / n;
             
             // r(x) * (q(x) + dkw_epsilon)
-            r_seen += r_x * (q_x + dkw_epsilon);
+            e_s_seen += s_x * (q_x + dkw_epsilon);
             
             // Count singletons for Good Turing estimate
             if (count == 1) {
@@ -82,15 +97,15 @@ namespace thts {
             }
         }
         
-        // Part 3: Compute r_missing using Good Turing estimate
+        // Compute e_s_missing using Good Turing estimate
         // M' = c/n where c is the number of singletons
-        // r_missing = r_max * (M' + sqrt(log(1/delta) / n))
+        // e_s_missing = e_s_max * (M' + sqrt(log(1/delta) / n))
         double M_prime = static_cast<double>(singletons) / n;
-        double missing_mass_bound = M_prime + sqrt(log(1.0 / delta) / n);
-        double r_missing = r_max * missing_mass_bound;
+        double e_s_missing = M_prime + sqrt(log(1.0 / delta) / n);
         
-        // Final confidence interval range: r = r_seen + r_missing
-        return r_seen + r_missing;
+        // Final solved value set to upper bound: e_bound =e_s_seen + e_s_missing
+        // Note that because solved value is in range [0,1], that 1.0 is a trivial upper bound
+        this->solved_value = min(e_s_seen + e_s_missing, 1.0);
     }
 
     void MoThtsCNode::visit_itfc(ThtsContext& ctx) {

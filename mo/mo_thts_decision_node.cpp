@@ -31,8 +31,7 @@ namespace thts {
             local_backups(0),
             total_cnode_backups_in_subtree(0),
             total_dnode_backups_in_subtree(0),
-            solved_labelling(0),
-            solved_labelling_confidence_interval_range(numeric_limits<double>::max())
+            solved_value(1.0)
     {
         if (eval_mo_heuristic && thts_manager->mo_heuristic_fn != nullptr
             && !thts_manager->thts_env()->is_sink_state_itfc(state, *thts_manager->get_thts_context()))
@@ -58,19 +57,19 @@ namespace thts {
         }
         
         // Find the minimum solved labelling among children
-        int min_solved_labelling = numeric_limits<int>::max();
+        int min_solved_level = numeric_limits<int>::max();
         for (const auto& pair : children) {
             MoThtsCNode& child = (MoThtsCNode&) *pair.second;
-            int child_solved_labelling = child.get_solved_labelling();
-            if (child_solved_labelling < min_solved_labelling) {
-                min_solved_labelling = child_solved_labelling;
+            int child_solved_level = child.get_solved_level();
+            if (child_solved_level < min_solved_level) {
+                min_solved_level = child_solved_level;
             }
         }
         
-        // Return only children with the minimum solved labelling
+        // Return only children with the minimum solved level
         for (const auto& pair : children) {
             MoThtsCNode& child = (MoThtsCNode&) *pair.second;
-            if (child.get_solved_labelling() == min_solved_labelling) {
+            if (child.get_solved_level() == min_solved_level) {
                 actions_to_consider.push_back(pair.first);
             }
         }
@@ -78,55 +77,62 @@ namespace thts {
         return actions_to_consider;
     }
 
-    int MoThtsDNode::get_local_solved_labelling() const {
+    int MoThtsDNode::get_solved_level() const {
         MoThtsManager& mo_thts_manager = (MoThtsManager&) *thts_manager;
-        double delta = get_local_solved_labelling_confidence_interval_range();
+        double delta = get_solved_value();
         double tau = mo_thts_manager.solved_labelling_tolerance;
         
         // Return 0 if not solved (delta > tau)
         if (delta > tau) {
             return 0;
         }
-        
-        // Find the minimum i such that delta > tau / 2^i
-        // Equivalently, the maximum i such that delta <= tau / 2^i
-        // i.e., 2^i <= tau / delta
-        // i.e., i <= log2(tau / delta)
-        int i = static_cast<int>(floor(log2(tau / delta)));
-        return max(1, i);
-    }
 
-    int MoThtsDNode::get_solved_labelling() const {
-        return solved_labelling;
-    }
-
-    double MoThtsDNode::get_solved_labelling_confidence_interval_range() const {
-        int solved_labelling = get_solved_labelling();
-        if (solved_labelling == 0) {
-            MoThtsManager& mo_thts_manager = (MoThtsManager&) *thts_manager;
-            return mo_thts_manager.solved_labelling_value_scaling;
+        // If solved, return max level
+        if (delta == 0) {
+            return std::numeric_limits<int>::max();
         }
-        return solved_labelling_confidence_interval_range;
-    }
-
-    double MoThtsDNode::get_local_solved_labelling_confidence_interval_range() const {
-        return solved_labelling_confidence_interval_range;
-    }
-
-    void MoThtsDNode::update_solved_labelling() {
-        int min_labelling = get_local_solved_labelling();
         
+        // Find the minimum i such that delta > tau / 2^(i-1)
+        // Equivalently, the maximum i such that delta <= tau / 2^(i-1)
+        // i.e., 2^(i-1) <= tau / delta
+        // i.e., i-1 <= log2(tau / delta)
+        // i.e., i <= 1 + log2(tau / delta)
+        double log_ratio = log2(tau / delta);
+        if (log_ratio >= std::numeric_limits<int>::max() - 1) {
+            return std::numeric_limits<int>::max();
+        }
+        return static_cast<int>(floor(1 + log_ratio));
+    }
+
+    double MoThtsDNode::get_solved_value() const {
+        return this->solved_value;
+    }
+
+    void MoThtsDNode::update_solved_value() {
+        // If we are a sink node, we are solved
+        if (is_sink()) {
+            this->solved_value = 0.0;
+            return;
+        }
+
+        // If there are any actions we have never taken, we are unsolved
+        size_t num_actions = thts_manager->thts_env()->get_valid_actions_itfc(
+            state, *thts_manager->get_thts_context())->size();
+        if (num_actions < children.size()) {
+            this->solved_value = 1.0;
+            return;
+        }
+
+        // Otherwise, we take the maximum solved value of our children
+        double max_solved_value = 0.0;
         for (const auto& pair : children) {
             MoThtsCNode& child = (MoThtsCNode&) *pair.second;
-            int child_labelling = child.get_solved_labelling();
-            if (child_labelling < min_labelling) {
-                min_labelling = child_labelling;
+            double child_solved_value = child.get_solved_value();
+            if (child_solved_value > max_solved_value) {
+                max_solved_value = child_solved_value;
             }
         }
-        
-        solved_labelling = min_labelling;
-
-        update_solved_labelling_confidence_interval_range();
+        this->solved_value = max_solved_value;
     }
 
     void MoThtsDNode::visit_itfc(ThtsContext& ctx) {

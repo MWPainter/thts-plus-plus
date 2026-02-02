@@ -29,7 +29,7 @@ namespace thts {
             int local_backups;
             int total_cnode_backups_in_subtree;
             int total_dnode_backups_in_subtree;
-            int solved_labelling;
+            double solved_value;
 
         public: 
             /**
@@ -51,58 +51,84 @@ namespace thts {
             virtual ~MoThtsCNode() = default;
 
             /**
-             * Returns the a label for "how solved" this node is.
-             * Let delta be the the size of a confidence interval at this node
-             * If tau is the threshold acceptible for considering this node "solved"
-             * This function return the value: min_i s.t. delta > tau / 2^i
-             * 
-             * I.e. returning a value of 0 means that this node is not solved
-             * Returning a value of 1 means that this node is solved to within a tolerance of tau
-             * Further values indicate node is solved to further and further tolerances
+             * Returns the a label for "how solved" this node and the subtree under this node is.
+             * A level of 0 means that the node is not solved
+             * A level of 1 means that the node is solved to within a tolerance of tau
+             * A level of i means that the node is solved to within a tolerance of tau / 2^(i-1)
+             *
+             * N.B. a node is solved when it's solved value is 0
+             * If a node actually achieves a solved value of 0, then it's solved level is std::numeric_limits<int>::max()
              */
-            int get_solved_labelling() const;
+            int get_solved_level() const;
 
             /**
-             * Get a confidence interval to estimate how "solved" this node is.
-             *
-             * Part 0: What we're trying to compute a bound for
-             *    Roughly we have a true distribution of outcomes, p, and we want to compute some confidence intervals
-             *    If we have some interval (range) for each outcome, r(x), then our expected range is:
-             *        r = sum_x p(x)r(x)
-             *
-             *    However, we don't have the true distribtion p, and we don't know if we have the seen all outcomes yet
-             *    So we will split this into two parts:
-             *          r = sum_x_seen p(x)r(x) + sum_x_missing p(x)r(x) = r_seen + r_missing
+             * Returns the "solved value" of this node.
+             * If a node is solved, then it's solved value is 0
+             * If a node is not solved (i.e. it has never been seen), it's solved value is 1
              * 
-             * Part 1: DKW inequality, implies bounds on the empirical distribution
-             *    With, empirical distribtuion q, true distribution p, outcome x, and prob > 1-delta:
-             *        p(x) <= q(x) + 2 sqrt(log(2/delta) / (2 * n)) 
-             *        Let q'(x_) = q(x) + 2 sqrt(log(2/delta) / (2 * n)) 
-             *
-             * Part 2: Range of confidence interval at this node:
-             *        Let r(x) be the range of the confidence interval for outcome x (from child)
-             *        Then r_seen, the range at this node (assuming we have seen all outcomes), can be bounded by:
-             *            r_seen = sum_x p(x)r(x) <= sum_x q'(x)r(x)
-             *
-             * Part 3: Missing mass
-             *  We also need to account for the mass that may be missing from the empirical distribution
-             *        (I.e. we may have not seen all possible outcomes yet)
-             *        We will use a Good Turing estimate to estimate the missing mass
-             *        Let M be the total missing mass, c be the number of outcomes seen exactly once, and n to total number of observations
-             *            M = sum_x_missing p(x)
-             *        The Good Turing estimate is then:
-             *            M' = c/n
-             *        With probability > 1-delta, we have:
-             *            M <= M' + sqrt(log(1/delta) / n)
-             *        Then r_missing, the range at this node (assuming we have not seen all outcomes), can be bounded by:
-             *            r_missing = sum_x_missing p(x)r(x) <=  r_max * (M' + sqrt(log(1/delta) / n))
-             *
-             *        Then the final confidence interval range is:
-             *            r = r_seen + r_missing 
-             *              = sum_x_seen [r(x) * (q(x) + 2 sqrt(log(2/delta) / (2 * n))) ] 
-             *                  + r_max * (M' + sqrt(log(1/delta) / n))
+             * The solved value of a chance node the expected value of it's children's solved values
+             * But this computation takes into account the "missing mass" of unseen outcomes and 
+             * the uncertainty in the empirical distribution of the children's solved values
+             * Maths for that in the update_solved_value function docstring below
              */
-            double get_solved_labelling_confidence_interval_range() const;
+            double get_solved_value() const;
+
+            /**
+             * Update the solved value of this node.
+             *
+             * Let s(x) be the solved value of child x
+             * Let q(x) be the empirical probability of outcome x
+             * Let p(x) be the true probability of outcome x
+             * 
+             * What we really want to compute here is the expected value of the children's solved values,
+             * that is:
+             *        E[s] = sum_x p(x)s(x)
+             *
+             *  Because we don't know the true distribution p, we need to use the empirical distribution q, and 
+             *  we will compute an upper bound on E[s] to use as our solved value instead
+             *
+             *  Let delta be the probability that our upper bound is violated.
+             *  That is, we will compute E_bound such that Pr(E[s] > E_bound) <= 2*delta.
+             *
+             *  We split the expected value into two parts:
+             *      E[s] = sum_(x_seen) p(x)s(x) + sum_(x_missing) p(x)s(x)
+             *          = E[s]_seen + E[s]_missing
+             *
+             *  From the DKW inequality, we can get bounds on the empirical distribution (knowing that ours is 
+             *  catagorical), with probability > 1-delta:
+             *      p(x) <= q(x) + 2 sqrt(log(2/delta) / (2 * n))
+             *      Let q'(x) = q(x) + 2 sqrt(log(2/delta) / (2 * n))
+             *
+             *  Then E[s]_seen can be bounded by:
+             *      E[s]_seen = sum_(x_seen) p(x)s(x)
+             *          <= sum_(x_seen) q'(x)s(x)
+             *
+             *  For the missing mass, we can use the Good Turing estimate. 
+             *  Let M be the total missing mass, 
+             *  Let c be the number of outcomes seen exactly once, 
+             *  Let n be the total number of observations
+             *  The Good Turing estimate is then:
+             *      M' = c/n
+             *
+             *  Given our solved values are within the range [0,1], and 1 is used for unsolved nodes, we can assign a 
+             *  value of 1 to the missing mass. I.e. for an unseen outcome x, we will use s(x) = 1
+             *
+             *  We can now bound E[s]_missing by:
+             *      E[s]_missing = sum_(x_missing) p(x)s(x)
+             *          <= sum_(x_missing) p(x)
+             *          = M
+             *          <= M' + sqrt(log(1/delta) / n)
+             *
+             *  Finally, by union bound (over the probability of failure of thw two bounds), 
+             *  we have with probability > 1-2*delta that:
+             *      E[s] <= E[s]_seen + E[s]_missing 
+             *          = E_bound
+             *          := sum_x_seen [s(x) * (q(x) + 2 sqrt(log(2/delta) / (2 * n))) ] 
+             *                  + M' + sqrt(log(1/delta) / n)
+             *
+             * As a final note, we use mo_thts_manager.solver_labelling_delta_fail_probability as the value of 2*delta
+             */
+            void update_solved_value() const;
 
             /**
              * OVerride final the old backup fn (throws error if try to call)

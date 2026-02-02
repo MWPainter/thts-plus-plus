@@ -30,7 +30,11 @@ namespace thts {
         double normalised_ctx_mean;
         double normalised_ctx_std_dev;
         double hypervolume;
+        double additive_eps_metric;
+        double sparsity_metric;
         double normalised_hypervolume;
+        double normalised_additive_eps_metric;
+        double normalised_sparsity_metric;
     };
 
     /**

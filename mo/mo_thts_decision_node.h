@@ -49,8 +49,7 @@ namespace thts {
             int local_backups;
             int total_cnode_backups_in_subtree;
             int total_dnode_backups_in_subtree;
-            int solved_labelling;
-            double solved_labelling_confidence_interval_range;
+            double solved_value;
 
         public: 
             /**
@@ -74,48 +73,38 @@ namespace thts {
             /**
              * Returns the set of actions to consider for selection.
              *
-             * If thts_manager->use_solved_labelling is true, then this set will only contain the children minimum solved_labellings
+             * If thts_manager->use_solved_labelling is true, then this set will only contain the children 
+             * with the minimum solved_levels
              */
             std::vector<std::shared_ptr<const Action>> get_actions_to_consider() const;
 
             /**
-             * Returns the a label for "how solved" this node is.
-             * Let delta be the the size of a confidence interval at this node
-             * If tau is the threshold acceptible for considering this node "solved"
-             * This function return the value: min_i s.t. delta > tau / 2^i
-             * 
-             * I.e. returning a value of 0 means that this node is not solved
-             * Returning a value of 1 means that this node is solved to within a tolerance of tau
-             * Further values indicate node is solved to further and further tolerances
-             */
-            int get_local_solved_labelling() const;
-
-            /**
-             * Returns the a label for "how solved" the subtree under this node is.
-             * That is, it returns the minimum of the local_solved_labelling and the solved_labelling all children
-             * I.e. a decision node is only solved if it is confident in its decision and all its children are solved
-             */
-            int get_solved_labelling() const;
-
-            /**
-             * Get a local confidence interval to estimate how "solved" this node is.
-             * If this node is not solved, return the maximum range. 
-             * If node is solved, then return the confidence interval range cached.
+             * Returns the a label for "how solved" this node and the subtree under this node is.
+             * A level of 0 means that the node is not solved
+             * A level of 1 means that the node is solved to within a tolerance of tau
+             * A level of i means that the node is solved to within a tolerance of tau / 2^(i-1)
              *
-             * Local is the version to use internally in the node
+             * N.B. a node is solved when it's solved value is 0
+             * If a node actually achieves a solved value of 0, then it's solved level is std::numeric_limits<int>::max()
              */
-            double get_solved_labelling_confidence_interval_range() const;
-        private:
-            double get_local_solved_labelling_confidence_interval_range() const;
-        public:
+            int get_solved_level() const;
 
             /**
-             * Update the solved labelling of this node.
-             * The confidence interval range is to be updated by the subclass.
-             * I.e. update_solved_labelling_confidence_interval_range() should update solved_labelling_confidence_interval_range
+             * Returns the "solved value" of this node.
+             * If a node is solved, then it's solved value is 0
+             * If a node is not solved (i.e. it has never been seen), it's solved value is 1
+             * 
+             * The solved value of a decision node is the maximum solved value of all its children
+             * Note that if an action has never been taken, then it's solved value is 1
              */
-            void update_solved_labelling();
-            virtual void update_solved_labelling_confidence_interval_range() = 0;
+            double get_solved_value() const;
+
+            /**
+             * Update the solved value of this node.
+             * The solved value is to be updated by the subclass.
+             * I.e. update_solved_value() should update solved_value
+             */
+            void update_solved_value();
 
             /**
              * OVerride final the old backup fn (throws error if try to call)

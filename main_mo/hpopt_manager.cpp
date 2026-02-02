@@ -395,15 +395,26 @@ namespace thts {
             avg_mo_eval_metrics.reweighted_ctx_mean *= repeats_run / (double)(repeats_run + 1);
             avg_mo_eval_metrics.normalised_ctx_mean *= repeats_run / (double)(repeats_run + 1);
             avg_mo_eval_metrics.hypervolume *= repeats_run / (double)(repeats_run + 1);
+            avg_mo_eval_metrics.additive_eps_metric *= repeats_run / (double)(repeats_run + 1);
+            avg_mo_eval_metrics.sparsity_metric *= repeats_run / (double)(repeats_run + 1);
             avg_mo_eval_metrics.normalised_hypervolume *= repeats_run / (double)(repeats_run + 1);
+            avg_mo_eval_metrics.normalised_additive_eps_metric *= repeats_run / (double)(repeats_run + 1);
+            avg_mo_eval_metrics.normalised_sparsity_metric *= repeats_run / (double)(repeats_run + 1);
 
             avg_mo_eval_metrics.ctx_mean += mo_eval_metrics.ctx_mean / (double)(repeats_run + 1);
             avg_mo_eval_metrics.reweighted_ctx_mean += mo_eval_metrics.reweighted_ctx_mean / (double)(repeats_run + 1);
             avg_mo_eval_metrics.normalised_ctx_mean += mo_eval_metrics.normalised_ctx_mean / (double)(repeats_run + 1);
             avg_mo_eval_metrics.hypervolume += mo_eval_metrics.hypervolume / (double)(repeats_run + 1);
+            avg_mo_eval_metrics.additive_eps_metric += mo_eval_metrics.additive_eps_metric / (double)(repeats_run + 1);
+            avg_mo_eval_metrics.sparsity_metric += mo_eval_metrics.sparsity_metric / (double)(repeats_run + 1);
             avg_mo_eval_metrics.normalised_hypervolume += mo_eval_metrics.normalised_hypervolume / (double)(repeats_run + 1);
-
-            double eval = mo_eval_metrics.ctx_mean;
+            avg_mo_eval_metrics.normalised_additive_eps_metric += mo_eval_metrics.normalised_additive_eps_metric / (double)(repeats_run + 1);
+            avg_mo_eval_metrics.normalised_sparsity_metric += mo_eval_metrics.normalised_sparsity_metric / (double)(repeats_run + 1);
+            
+            // Chose normalised hypervolume as eval metric
+            // This should have much lower variance than ctx_mean, as it doesn't depend on sampled outcomes that may 
+            // leave the tree and resort to following random policies
+            double eval = mo_eval_metrics.normalised_hypervolume;
             evals.push_back(eval);
             _update_statistics_(evals, mean_eval, std_eval, std_mean_eval);
             repeats_run++;
