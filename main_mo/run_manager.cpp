@@ -1093,25 +1093,27 @@ namespace thts {
             << get_num_search_threads() << ","
             << get_eval_delta() << ","
             << get_num_eval_rollouts() << ","
-            << get_num_eval_threads() << endl;
-
+            << get_num_eval_threads() << endl << endl;
+        
         // Alg level params
         string alg_id = get_alg_id();
-        fs << endl << alg_id << " params: " << endl << endl;
-        bool first_iter = true;
+        fs << "Alg params: " << endl << endl;
+        
+        // Alg level param ids
+        stringstream values_ss;
+        fs << "alg_id";
+        values_ss << get_alg_id();
         for (string alg_param_id : ALG_ID_TO_ALG_PARAM_IDS.at(alg_id))
         {
-            if (!first_iter)
-            {
-                fs << ",";
-            }
-            first_iter = false;
-            fs << alg_param_id;
+            fs << "," << alg_param_id;
+            values_ss << "," << get_config_value<double>(alg_config, alg_param_id);
         }
         fs << endl;
+        fs << values_ss.str();
+        fs << endl << endl;
 
         // Header for main body
-        fs << endl << "Evals: " << endl << endl;
+        fs << "Evals: " << endl << endl;
         fs << "run_idx,"
             << "ctx_mean,"
             << "ctx_std_dev,"

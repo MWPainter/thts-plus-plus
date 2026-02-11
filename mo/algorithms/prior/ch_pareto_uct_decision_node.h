@@ -47,14 +47,7 @@ namespace thts {
         protected:
             virtual std::string get_pretty_print_val() const override;
 
-            double compute_ucb_confidence_interval(int num_visits, int child_visits) const;
-        
-        public:
-            /**
-            * Solved labelling
-            */
-            virtual void update_solved_labelling_confidence_interval_range() override;
-        
+            double compute_ucb_confidence_interval(int num_visits, int child_visits) const;       
 
 
         /**

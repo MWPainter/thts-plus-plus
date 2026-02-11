@@ -153,11 +153,6 @@ namespace thts {
             closest_vertex->share_values_message_passing();
         }
     }
-
-    void SmDentsDNode::update_solved_labelling_confidence_interval_range()
-    {
-        throw runtime_error("Not implemented yet");
-    }
 }
 
 /**

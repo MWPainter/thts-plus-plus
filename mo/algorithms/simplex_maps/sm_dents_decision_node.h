@@ -64,14 +64,6 @@ namespace thts {
                 double& sum_action_weights, 
                 double& normalisation_term, 
                 MoThtsContext& context) const;
-        
-        public:
-            /**
-            * Solved labelling
-            */
-            virtual void update_solved_labelling_confidence_interval_range() override;
-        
-
 
         /**
          * Boilerplate function definitions. 

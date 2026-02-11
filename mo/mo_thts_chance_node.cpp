@@ -59,7 +59,7 @@ namespace thts {
         return this->solved_value;
     }
 
-    void MoThtsCNode::update_solved_value() const 
+    void MoThtsCNode::update_solved_value()
     {
         MoThtsManager& mo_thts_manager = (MoThtsManager&) *thts_manager;
         double delta = mo_thts_manager.solved_labelling_delta_fail_probability / 2.0;

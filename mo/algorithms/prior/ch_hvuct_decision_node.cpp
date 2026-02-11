@@ -34,11 +34,6 @@ namespace thts {
     {
         return "";
     }
-
-    void ChHvUctDNode::update_solved_labelling_confidence_interval_range()
-    {
-        throw runtime_error("Not implemented yet");
-    }
 }
 
 /**

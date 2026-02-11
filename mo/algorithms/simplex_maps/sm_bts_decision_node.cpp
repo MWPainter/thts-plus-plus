@@ -257,11 +257,6 @@ namespace thts {
     {
         return simplex_map.get_pretty_print_string();
     }
-
-    void SmBtsDNode::update_solved_labelling_confidence_interval_range()
-    {
-        throw runtime_error("Not implemented yet");
-    }
 }
 
 /**

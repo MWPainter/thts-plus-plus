@@ -128,7 +128,7 @@ namespace thts {
              *
              * As a final note, we use mo_thts_manager.solver_labelling_delta_fail_probability as the value of 2*delta
              */
-            void update_solved_value() const;
+            void update_solved_value();
 
             /**
              * OVerride final the old backup fn (throws error if try to call)

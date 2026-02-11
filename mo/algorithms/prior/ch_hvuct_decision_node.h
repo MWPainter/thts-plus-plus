@@ -50,14 +50,6 @@ namespace thts {
             // double compute_ucb_confidence_interval(int num_visits, int child_visits) const;
             virtual void fill_ucb_q_values(ActionDistr& ucb_q_values, MoThtsContext& ctx) const override;
             // void fill_ucb_values(ActionDistr& ucb_values, MoThtsContext& ctx) const;
-        
-        public:
-            /**
-            * Solved labelling
-            */
-            virtual void update_solved_labelling_confidence_interval_range() override;
-        
-
 
         /**
          * Boilerplate function definitions. 
