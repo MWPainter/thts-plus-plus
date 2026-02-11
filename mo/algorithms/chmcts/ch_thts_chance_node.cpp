@@ -68,6 +68,9 @@ namespace thts {
 
         // remember to incr num_backups
         num_backups++;
+
+        // and update solved value
+        update_solved_value();
     }
 
     double ChThtsCNode::get_contextual_q_value(const MoThtsContext& ctx) {

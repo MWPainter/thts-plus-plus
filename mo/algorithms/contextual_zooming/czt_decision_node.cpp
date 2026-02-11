@@ -132,10 +132,10 @@ namespace thts {
 
     shared_ptr<const Action> CztDNode::select_action(MoThtsContext& ctx) 
     {
-        shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
+        ActionVector actions = this->get_actions_to_consider(ctx);
         unordered_map<shared_ptr<const Action>,double> cz_values;
         unordered_map<shared_ptr<const Action>,shared_ptr<CzBall>> cz_balls;
-        fill_cz_values_and_ball_ptrs(*actions, cz_values, cz_balls, ctx);
+        fill_cz_values_and_ball_ptrs(actions, cz_values, cz_balls, ctx);
         shared_ptr<const Action> result_action = helper::get_max_key_break_ties_randomly(cz_values, *thts_manager);
 
         // Put action and ball in context
@@ -189,6 +189,9 @@ namespace thts {
         }
         child.ball_list.avg_return_update_ball_list(
             trial_cumulative_return_after_node, ctx.context_weight.vec, chosen_ball);
+
+        // and update solved value
+        update_solved_value();
     }
 
     string CztDNode::get_pretty_print_val() const {

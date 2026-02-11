@@ -44,18 +44,37 @@ namespace thts {
         }
     }
 
-    vector<shared_ptr<const Action>> MoThtsDNode::get_actions_to_consider() const {
-        vector<shared_ptr<const Action>> actions_to_consider;
-        MoThtsManager& mo_thts_manager = (MoThtsManager&) *thts_manager;
-        
+    vector<shared_ptr<const Action>> MoThtsDNode::get_actions_to_consider(const MoThtsContext& ctx) const {
+        MoThtsManager& mo_thts_manager = static_cast<MoThtsManager&>(*thts_manager);
+        ThtsEnv& thts_env = mo_thts_manager.thts_env();
+        shared_ptr<ActionVector> all_actions = thts_env.get_valid_actions_itfc(this->state, ctx);
+
+        // If not using solved labelling, return all actions
         if (!mo_thts_manager.use_solved_labelling) {
-            // Return all children
+            return *all_actions;
+        }
+        
+        // If num children < num actions, then we are unsolved
+        // Return the unexpanded actions + unsolved children
+        vector<shared_ptr<const Action>> actions_to_consider;
+        if (children.size() < all_actions->size()) 
+        {
+            for (const auto& action : *all_actions) {
+                if (!has_child_node_itfc(action)) {
+                    actions_to_consider.push_back(action);
+                }
+            }
             for (const auto& pair : children) {
-                actions_to_consider.push_back(pair.first);
+                MoThtsCNode& child = (MoThtsCNode&) *pair.second;
+                int child_solved_level = child.get_solved_level();
+                if (child_solved_level == 0) {
+                    actions_to_consider.push_back(pair.first);
+                }
             }
             return actions_to_consider;
         }
-        
+
+        // If we get here, there is a child for every action
         // Find the minimum solved labelling among children
         int min_solved_level = numeric_limits<int>::max();
         for (const auto& pair : children) {
@@ -66,7 +85,7 @@ namespace thts {
             }
         }
         
-        // Return only children with the minimum solved level
+        // Return only children/actions with the minimum solved level
         for (const auto& pair : children) {
             MoThtsCNode& child = (MoThtsCNode&) *pair.second;
             if (child.get_solved_level() == min_solved_level) {

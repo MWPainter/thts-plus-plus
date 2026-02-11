@@ -76,7 +76,7 @@ namespace thts {
              * If thts_manager->use_solved_labelling is true, then this set will only contain the children 
              * with the minimum solved_levels
              */
-            std::vector<std::shared_ptr<const Action>> get_actions_to_consider() const;
+            std::vector<std::shared_ptr<const Action>> get_actions_to_consider(const MoThtsContext& ctx) const;
 
             /**
              * Returns the a label for "how solved" this node and the subtree under this node is.

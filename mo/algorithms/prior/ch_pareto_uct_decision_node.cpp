@@ -49,6 +49,8 @@ namespace thts {
             return action;
         }
 
+        vector<shared_ptr<const Action>> actions_to_consider = this->get_actions_to_consider(ctx);
+
         // Compute convex hull from children with confidence interval terms
         // Keeping track of which actions could lead to each value
         unordered_map<Vec,vector<shared_ptr<const Action>>> vec_to_action_map;
@@ -56,6 +58,9 @@ namespace thts {
         ConvexHull pareto_ch;
         for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pair : children) {
             shared_ptr<const Action> action = pair.first;
+            if (!actions_to_consider.contains(action)) {
+                continue;
+            }
             ChParetoUctCNode& child = (ChParetoUctCNode&) *pair.second;
             int child_visits = child.get_num_visits(ctx);
             Eigen::ArrayXd ucb_conf_vec = Eigen::ArrayXd::Ones(manager.reward_dim) * compute_ucb_confidence_interval(local_visits, child_visits);

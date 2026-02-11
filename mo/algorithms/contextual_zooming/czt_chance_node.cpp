@@ -46,6 +46,9 @@ namespace thts {
     {  
         increment_and_update_backup_count();
         // Backup handled in decision nodes
+
+        // but still update solved value
+        update_solved_value();
     }
 
     string CztCNode::get_pretty_print_val() const 

@@ -63,7 +63,7 @@ namespace thts {
         }
 
         // Compute ucb values
-        shared_ptr<ActionVector> actions = env.get_valid_actions_itfc(state,ctx);
+        shared_ptr<ActionVector> actions = this->get_actions_to_consider(ctx);
         int local_visits = get_num_visits(ctx);
         for (shared_ptr<const Action> action : *actions) {
             if (!has_child_node_itfc(action)) {
