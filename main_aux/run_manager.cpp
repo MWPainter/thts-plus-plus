@@ -302,6 +302,7 @@ namespace thts {
         {
             UctManagerArgs manager_args(env);
             manager_args.bias = get_bias();
+            manager_args.recommend_most_visited = false;
             _add_thts_manager_params_to_args(manager_args);
             return make_shared<UctManager>(manager_args);
         }
@@ -316,6 +317,7 @@ namespace thts {
             manager_args.bias = get_bias();
             manager_args.total_budget = get_termination_bound();
             manager_args.uct_budget_threshold = get_uct_budget();
+            manager_args.recommend_most_visited = false;
             _add_thts_manager_params_to_args(manager_args);
             return make_shared<HmctsManager>(manager_args);
         }
@@ -326,6 +328,7 @@ namespace thts {
             manager_args.temp_schedule_ptr = make_shared<ConstSchedule>(get_init_temp());
             manager_args.epsilon = get_epsilon();
             manager_args.default_q_value = get_default_q_value();
+            manager_args.recommend_most_visited = false;
             _add_thts_manager_params_to_args(manager_args);
             return make_shared<MentsManager>(manager_args);
         }
@@ -336,6 +339,7 @@ namespace thts {
             manager_args.temp_schedule_ptr = make_shared<SqrtSchedule>(get_init_temp(), get_temp_decay_rate());
             manager_args.epsilon = get_epsilon();
             manager_args.default_q_value = get_default_q_value();
+            manager_args.recommend_most_visited = false;
             
             if (alg_id == ALG_ID_DENTS)
             {
@@ -590,7 +594,7 @@ namespace thts {
     void RunManager::dump_tree_log(shared_ptr<ThtsDNode> root_node, int run_idx)
     {
         ofstream tree_log_fs = get_tree_log_filestream(run_idx);
-        tree_log_fs << root_node->get_pretty_print_string(2) << endl;
+        tree_log_fs << root_node->get_pretty_print_string(4) << endl;
         tree_log_fs.close();
     }
 }

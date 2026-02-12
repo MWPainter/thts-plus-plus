@@ -91,7 +91,8 @@ INCLUDES += -I$(ANACONDA_ENVS_HOME)/$(CONDA_ENV_NAME)/include/$(PYTHON_WITH_VER)
 TEST_INCLUDES = -Iexternal/googletest/build/include
 
 # C++ flags
-CPPFLAGS = $(INCLUDES) -Wall -std=c++20 
+# -MMD -MP: generate .d dependency files so changing a .h triggers recompile of .cpp that include it
+CPPFLAGS = $(INCLUDES) -Wall -std=c++20 -MMD -MP
 CPPFLAGS += -Wpedantic -Wno-vla -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wsign-promo -Wstrict-null-sentinel -Werror -Wno-unused
 # CPPFLAGS += -Wpedantic -Wno-vla -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wsign-promo -Wstrict-null-sentinel -Wno-unused
 # Optimization flags (excluded for debug targets)
@@ -156,6 +157,12 @@ THTS_PY_LIB_FULL_NAME = thts$$(python3.12-config --extension-suffix)
 all: $(TARGET_THTS_PY_EX) $(TARGET_MO_EXPR) $(TARGET_AUX_EXPR) $(TARGET_PY_ENV_SERVER) $(TARGET_THTS_TEST) 
 
 
+
+#####
+# Header dependency tracking: include compiler-generated .d files so .cpp recompiles when included .h changes
+#####
+DEPFILES = $(OBJECTS:.o=.d) $(TEST_OBJECTS:.o=.d) $(MO_OBJECTS:.o=.d) $(PY_OBJECTS:.o=.d) $(MAIN_MO_OBJECTS:.o=.d) $(MAIN_AUX_OBJECTS:.o=.d) $(PY_MAIN_OBJ:.o=.d) $(PY_ENV_SERVER_MAIN_OBJ:.o=.d)
+-include $(DEPFILES)
 
 #####
 # (Custom) Rules to build object files

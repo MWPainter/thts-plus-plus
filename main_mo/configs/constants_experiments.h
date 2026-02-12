@@ -42,6 +42,10 @@ static const std::string XPR_PARAM_ID_EVAL_ROLLOUTS = "eval_rollouts";          
 static const std::string XPR_PARAM_ID_EVAL_THREADS = "eval_threads";                    // number of threads to use in evaluation
 static const std::string XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE = "convex_hull_max_size";    // max size of convex hull
 static const std::string XPR_PARAM_ID_CONVEX_HULL_TOLERANCE = "convex_hull_tolerance";  // tolerance controlling how close to consider points to be "equal" for convex hull
+static const std::string XPR_PARAM_ID_USE_SOLVED_LABELLING = "use_solved_labelling";    // whether to use solved labelling
+static const std::string XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE = "solved_labelling_fail_confidence";    // confidence that confidence interval fails to contain true solved value
+static const std::string XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE = "solved_labelling_tolerance";    // tolerance for when solved values when consider a node solved
+
 
 static const int NO_ENV_SIZE = -1;
 

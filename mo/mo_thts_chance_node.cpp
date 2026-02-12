@@ -3,6 +3,8 @@
 #include <cmath>
 #include <limits>
 
+#include <iostream>
+
 using namespace std;
 
 
@@ -62,7 +64,7 @@ namespace thts {
     void MoThtsCNode::update_solved_value()
     {
         MoThtsManager& mo_thts_manager = (MoThtsManager&) *thts_manager;
-        double delta = mo_thts_manager.solved_labelling_delta_fail_probability / 2.0;
+        double delta = mo_thts_manager.solved_labelling_fail_confidence / 2.0;
         double n = static_cast<double>(num_visits);
         
         // If no visits yet we are unsolved, so return 1.0

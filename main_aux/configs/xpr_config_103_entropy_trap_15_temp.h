@@ -18,8 +18,8 @@ static const std::vector<ConfigMap> CONFIG_103 =
         {XPR_PARAM_ID_RUNTIME_BOUNDED,          false},
         {XPR_PARAM_ID_TERMINATION_BOUND,        100000.0},
         {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    25},
-        {XPR_PARAM_ID_SEARCH_THREADS,           8},
-        {XPR_PARAM_ID_EVAL_DELTA,               50},
+        {XPR_PARAM_ID_SEARCH_THREADS,           16},
+        {XPR_PARAM_ID_EVAL_DELTA,               100000},
         {XPR_PARAM_ID_EVAL_ROLLOUTS,            1}, // det env
         {XPR_PARAM_ID_EVAL_THREADS,             1}, // det env
     },

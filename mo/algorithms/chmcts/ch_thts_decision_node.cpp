@@ -98,9 +98,8 @@ namespace thts {
         MoThtsContext& ctx, 
         double default_q_value) const
     {
-        ThtsEnv& env = *thts_manager->thts_env();
-        shared_ptr<ActionVector> actions = this->get_actions_to_consider(ctx);
-        for (shared_ptr<const Action> action : *actions) {
+        ActionVector actions = this->get_actions_to_consider(ctx);
+        for (shared_ptr<const Action> action : actions) {
             if (!has_child_node_itfc(action)) {
                 q_values[action] = default_q_value;
                 continue;

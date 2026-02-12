@@ -35,6 +35,7 @@
 #include "main_aux/configs/xpr_config_450_sailing_south_east.h"
 #include "main_aux/configs/xpr_config_451_sailing_south_east.h"
 #include "main_aux/configs/xpr_config_452_sailing_south_east.h"
+#include "main_aux/configs/xpr_config_999_ments_entropy_trap_debug.h"
 
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -79,4 +80,6 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     CONFIG_450,
     CONFIG_451,
     CONFIG_452,
+
+    CONFIG_999,
 };

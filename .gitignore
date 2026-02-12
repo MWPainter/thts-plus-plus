@@ -6,9 +6,9 @@ callgrind.out
 profile.png
 
 # Logs output
-aux_eval_logs/*
+aux_eval_logs*/*
 aux_hpopt_summaries/*
-mo_eval_logs/*
+mo_eval_logs*/*
 mo_hpopt_summaries/*
 old_logs/*
 

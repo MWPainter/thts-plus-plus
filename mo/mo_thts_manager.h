@@ -23,8 +23,8 @@ namespace thts {
         static constexpr double convex_hull_tolerance_default = 1e-9;
 
         static const bool use_solved_labelling_default = false;
-        static constexpr double solved_labelling_delta_fail_probability_default = 0.01;
-        static constexpr double solved_labelling_tolerance_default = 0.01;
+        static constexpr double solved_labelling_fail_confidence_default = 0.01;
+        static constexpr double solved_labelling_tolerance_default = 0.1;
         
         int reward_dim;
         MoHeuristicFnPtr mo_heuristic_fn;
@@ -36,7 +36,7 @@ namespace thts {
 
         bool use_solved_labelling;
         double solved_labelling_value_scaling;
-        double solved_labelling_delta_fail_probability;
+        double solved_labelling_fail_confidence;
         double solved_labelling_tolerance;
 
         MoThtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env) :
@@ -48,7 +48,7 @@ namespace thts {
             convex_hull_max_size(convex_hull_max_size_default),
             convex_hull_tolerance(convex_hull_tolerance_default),
             use_solved_labelling(use_solved_labelling_default),
-            solved_labelling_delta_fail_probability(solved_labelling_delta_fail_probability_default),
+            solved_labelling_fail_confidence(solved_labelling_fail_confidence_default),
             solved_labelling_tolerance(solved_labelling_tolerance_default) {}
 
         virtual ~MoThtsManagerArgs() = default;
@@ -74,7 +74,7 @@ namespace thts {
             double convex_hull_tolerance;
 
             bool use_solved_labelling;
-            double solved_labelling_delta_fail_probability;
+            double solved_labelling_fail_confidence;
             double solved_labelling_tolerance;
 
             /**

@@ -126,7 +126,7 @@ namespace thts {
              *          := sum_x_seen [s(x) * (q(x) + 2 sqrt(log(2/delta) / (2 * n))) ] 
              *                  + M' + sqrt(log(1/delta) / n)
              *
-             * As a final note, we use mo_thts_manager.solver_labelling_delta_fail_probability as the value of 2*delta
+             * As a final note, we use mo_thts_manager.solved_labelling_fail_confidence as the value of 2*delta
              */
             void update_solved_value();
 

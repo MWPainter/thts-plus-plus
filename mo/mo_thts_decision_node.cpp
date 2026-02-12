@@ -9,6 +9,8 @@
 #include <tuple>
 #include <utility>
 
+#include <iostream>
+
 using namespace std;
 
 
@@ -33,8 +35,14 @@ namespace thts {
             total_dnode_backups_in_subtree(0),
             solved_value(1.0)
     {
-        if (eval_mo_heuristic && thts_manager->mo_heuristic_fn != nullptr
-            && !thts_manager->thts_env()->is_sink_state_itfc(state, *thts_manager->get_thts_context()))
+        bool is_sink = thts_manager->thts_env()->is_sink_state_itfc(state, *thts_manager->get_thts_context());
+        
+        if (is_sink) 
+        {
+            solved_value = 0.0;
+        }
+
+        if (eval_mo_heuristic && thts_manager->mo_heuristic_fn != nullptr && !is_sink)
         {
             MoThtsEnv& mo_thts_env = (MoThtsEnv&) *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());
             mo_heuristic_value = thts_manager->mo_heuristic_fn(state, mo_thts_env, *thts_manager, decision_depth);
@@ -44,9 +52,9 @@ namespace thts {
         }
     }
 
-    vector<shared_ptr<const Action>> MoThtsDNode::get_actions_to_consider(const MoThtsContext& ctx) const {
+    vector<shared_ptr<const Action>> MoThtsDNode::get_actions_to_consider(ThtsContext& ctx) const {
         MoThtsManager& mo_thts_manager = static_cast<MoThtsManager&>(*thts_manager);
-        ThtsEnv& thts_env = mo_thts_manager.thts_env();
+        ThtsEnv& thts_env = *mo_thts_manager.thts_env();
         shared_ptr<ActionVector> all_actions = thts_env.get_valid_actions_itfc(this->state, ctx);
 
         // If not using solved labelling, return all actions
@@ -123,11 +131,13 @@ namespace thts {
         return static_cast<int>(floor(1 + log_ratio));
     }
 
-    double MoThtsDNode::get_solved_value() const {
+    double MoThtsDNode::get_solved_value() const 
+    {
         return this->solved_value;
     }
 
-    void MoThtsDNode::update_solved_value() {
+    void MoThtsDNode::update_solved_value() 
+    {
         // If we are a sink node, we are solved
         if (is_sink()) {
             this->solved_value = 0.0;
@@ -137,7 +147,7 @@ namespace thts {
         // If there are any actions we have never taken, we are unsolved
         size_t num_actions = thts_manager->thts_env()->get_valid_actions_itfc(
             state, *thts_manager->get_thts_context())->size();
-        if (num_actions < children.size()) {
+        if (num_actions > children.size()) {
             this->solved_value = 1.0;
             return;
         }

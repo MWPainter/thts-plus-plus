@@ -50,6 +50,7 @@ namespace thts {
         }
 
         vector<shared_ptr<const Action>> actions_to_consider = this->get_actions_to_consider(ctx);
+        unordered_set<shared_ptr<const Action>> actions_to_consider_set(actions_to_consider.begin(), actions_to_consider.end());
 
         // Compute convex hull from children with confidence interval terms
         // Keeping track of which actions could lead to each value
@@ -58,7 +59,7 @@ namespace thts {
         ConvexHull pareto_ch;
         for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pair : children) {
             shared_ptr<const Action> action = pair.first;
-            if (!actions_to_consider.contains(action)) {
+            if (!actions_to_consider_set.contains(action)) {
                 continue;
             }
             ChParetoUctCNode& child = (ChParetoUctCNode&) *pair.second;

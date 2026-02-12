@@ -405,6 +405,16 @@ def make_param_sens_plot(
         "tents": tents_str,
     })
 
+    # PARAM_SENS_DIFF: only care about the final results after the search (assumes all experiments run for same search time)
+    experiment_num_trials = df["num_trials"].max()
+    df = df[df["num_trials"] == experiment_num_trials]
+
+    pd.set_option('display.max_rows', None)
+    mdf = df[df["alg_id"] == ments_str]
+    mdf = mdf[mdf["temp"] > 0.1]
+    mdf = mdf[mdf["temp"] < 0.6]
+    print(mdf)
+
     # Get the set of alg ids working with
     alg_id_set = set(df["alg_id"])
     
@@ -597,21 +607,39 @@ if __name__ == "__main__":
         os.makedirs("plots")
 
     # ------------------------------------------------------------------------------------------------------------------
+    # Ments Entropy Trap Debug
+    # ------------------------------------------------------------------------------------------------------------------
+    
+    if "999" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
+        filenames = glob.glob("aux_eval_logs/999_*/**/eval_log.txt", recursive=True)
+        make_eval_plot(
+            filenames=filenames,
+            plot_filename="plots/999_debug.png",
+            # legend_loc="lower left",
+        )
+
+    # ------------------------------------------------------------------------------------------------------------------
     # DChain/EntropyTrap vs temp plots
     # ------------------------------------------------------------------------------------------------------------------
     if "100" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
         # filenames = glob.glob("results/100_supp_dchain_temp_vary_1740880779/**/eval.txt", recursive=True)
-        filenames = glob.glob("aux_eval_logs/100_supp_dchain_temp_vary_1766997947/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs_happy/100_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
             plot_filename_frmt_str="plots/100_dchain_10_vs_tempbias.png",
             seperate_plots=False,
             legend_loc="lower left",
         )
+        # make_param_sens_plot(
+        #     filenames=filenames,
+        #     plot_filename_frmt_str="plots/100_dchain_10_vs_tempbias_{alg_id}.png",
+        #     seperate_plots=True,
+        #     legend_loc="lower left",
+        # )
 
     if "101" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
         # filenames = glob.glob("results/101_supp_mod_dchain_temp_vary_1740880832/**/eval.txt", recursive=True)
-        filenames = glob.glob("aux_eval_logs/101_supp_mod_dchain_temp_vary_1766998049/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs_happy/101_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
             plot_filename_frmt_str="plots/101_mod_dchain_10_vs_tempbias.png",
@@ -620,7 +648,7 @@ if __name__ == "__main__":
         )
 
     if "102" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
-        filenames = glob.glob("aux_eval_logs/102_supp_entropy_temp_10_vary_1766998153/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs/102_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
             plot_filename_frmt_str="plots/102_entropy_trap_10_vs_tempbias.png",
@@ -629,7 +657,7 @@ if __name__ == "__main__":
         )
 
     if "103" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
-        filenames = glob.glob("aux_eval_logs/103_supp_entropy_temp_15_vary_1766998255/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs/103_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
             plot_filename_frmt_str="plots/103_entropy_trap_15_vs_tempbias.png",

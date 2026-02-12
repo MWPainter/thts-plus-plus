@@ -19,7 +19,7 @@ namespace thts {
         convex_hull_max_size(args.convex_hull_max_size),
         convex_hull_tolerance(args.convex_hull_tolerance),
         use_solved_labelling(args.use_solved_labelling),
-        solved_labelling_delta_fail_probability(args.solved_labelling_delta_fail_probability),
+        solved_labelling_fail_confidence(args.solved_labelling_fail_confidence),
         solved_labelling_tolerance(args.solved_labelling_tolerance)
     {
         MoThtsEnv& mo_thts_env = *dynamic_pointer_cast<MoThtsEnv>(thts_env()); 

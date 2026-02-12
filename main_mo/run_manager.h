@@ -103,6 +103,9 @@ namespace thts {
             int get_num_eval_threads();
             int get_convex_hull_max_size();
             double get_convex_hull_tolerance();
+            bool get_use_solved_labelling();
+            double get_solved_labelling_fail_confidence();
+            double get_solved_labelling_tolerance();
 
             /**
              * Getters - alg level config
