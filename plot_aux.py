@@ -409,11 +409,11 @@ def make_param_sens_plot(
     experiment_num_trials = df["num_trials"].max()
     df = df[df["num_trials"] == experiment_num_trials]
 
-    pd.set_option('display.max_rows', None)
-    mdf = df[df["alg_id"] == ments_str]
-    mdf = mdf[mdf["temp"] > 0.1]
-    mdf = mdf[mdf["temp"] < 0.6]
-    print(mdf)
+    # pd.set_option('display.max_rows', None)
+    # mdf = df[df["alg_id"] == ments_str]
+    # mdf = mdf[mdf["temp"] > 0.1]
+    # mdf = mdf[mdf["temp"] < 0.6]
+    # print(mdf)
 
     # Get the set of alg ids working with
     alg_id_set = set(df["alg_id"])
@@ -648,7 +648,7 @@ if __name__ == "__main__":
         )
 
     if "102" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
-        filenames = glob.glob("aux_eval_logs/102_*/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs_happy/102_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
             plot_filename_frmt_str="plots/102_entropy_trap_10_vs_tempbias.png",
@@ -657,6 +657,7 @@ if __name__ == "__main__":
         )
 
     if "103" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
+        # filenames = glob.glob("aux_eval_logs_happy/103_*/**/eval_log.txt", recursive=True)
         filenames = glob.glob("aux_eval_logs/103_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
