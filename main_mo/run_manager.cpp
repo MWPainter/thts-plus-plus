@@ -6,6 +6,7 @@
 #include "mo/algorithms/contextual_zooming/czt_manager.h"
 #include "mo/algorithms/prior/ch_hvuct_manager.h"
 #include "mo/algorithms/prior/ch_pareto_uct_manager.h"
+#include "mo/algorithms/prior/ch_cheby_manager.h"
 
 #include "mo/algorithms/chmcts/ch_czt_decision_node.h"
 #include "mo/algorithms/chmcts/ch_bts_decision_node.h"
@@ -13,6 +14,7 @@
 #include "mo/algorithms/contextual_zooming/czt_decision_node.h"
 #include "mo/algorithms/prior/ch_hvuct_decision_node.h"
 #include "mo/algorithms/prior/ch_pareto_uct_decision_node.h"
+#include "mo/algorithms/prior/ch_cheby_decision_node.h"
 
 #include "algorithms/common/decaying_temp.h"
 
@@ -122,6 +124,8 @@ namespace thts {
             ALG_ID_CH_DENTS, 
             ALG_ID_CH_HVUCT, 
             ALG_ID_CH_PARETO, 
+            ALG_ID_CH_CHEBY,
+            ALG_ID_CH_STANDARD_CHEBY,
         };
 
         if (!alg_ids.contains(alg_id))
@@ -949,6 +953,22 @@ namespace thts {
             return make_shared<ChParetoUctManager>(manager_args);
         }
 
+        else if (alg_id == ALG_ID_CH_CHEBY) {
+            ChChebyUctManagerArgs manager_args(env);
+            manager_args.bias = get_bias();
+            _add_thts_manager_params_to_args(manager_args,env);
+            return make_shared<ChChebyUctManager>(manager_args);
+        }
+
+        else if (alg_id == ALG_ID_CH_STANDARD_CHEBY) {
+            ChChebyUctManagerArgs manager_args(env);
+            manager_args.bias = get_bias();
+            manager_args.use_standard_cheby_scalarization = true;
+            manager_args.standard_cheby_reference_point = make_shared<Vec>(get_env_value_lower_bound());
+            _add_thts_manager_params_to_args(manager_args,env);
+            return make_shared<ChChebyUctManager>(manager_args);
+        }
+
         stringstream ss;
         ss << "Error in RunManager get_thts_manager for alg_id = " << alg_id;
         throw runtime_error(ss.str());
@@ -983,6 +1003,10 @@ namespace thts {
         if (alg_id == ALG_ID_CH_PARETO) {
             shared_ptr<ChParetoUctManager> chpareto_manager = static_pointer_cast<ChParetoUctManager>(manager);
             return make_shared<ChParetoUctDNode>(chpareto_manager, env->get_initial_state_itfc(), 0, 0);
+        }
+        if (alg_id == ALG_ID_CH_CHEBY || alg_id == ALG_ID_CH_STANDARD_CHEBY) {
+            shared_ptr<ChChebyUctManager> chcheby_manager = static_pointer_cast<ChChebyUctManager>(manager);
+            return make_shared<ChChebyUctDNode>(chcheby_manager, env->get_initial_state_itfc(), 0, 0);
         }
 
         stringstream ss;

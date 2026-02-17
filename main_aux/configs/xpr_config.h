@@ -11,6 +11,8 @@
 #include "main_aux/configs/xpr_config_100_dchain_temp.h"
 #include "main_aux/configs/xpr_config_101_mod_dchain_temp.h"
 #include "main_aux/configs/xpr_config_102_entropy_trap_temp.h"
+#include "main_aux/configs/xpr_config_102a_entropy_trap_temp.h"
+#include "main_aux/configs/xpr_config_102b_entropy_trap_temp.h"
 #include "main_aux/configs/xpr_config_103_entropy_trap_15_temp.h"
 #include "main_aux/configs/xpr_config_110_frozen_lake_dense_scenic_route.h"
 #include "main_aux/configs/xpr_config_111_frozen_lake_dense_scenic_route.h"
@@ -49,6 +51,8 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     CONFIG_100,
     CONFIG_101,
     CONFIG_102,
+    CONFIG_102a,
+    CONFIG_102b,
     CONFIG_103,
 
     CONFIG_110,

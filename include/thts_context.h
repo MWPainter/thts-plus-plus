@@ -29,6 +29,15 @@ namespace thts {
                virtual ~ThtsContext() = default;
 
                /**
+                * Returns if context contains a value for a given key string. (in the context map)
+                */
+               bool context_map_contains(const std::string& key) const;
+
+               /**
+                * (Const version) Returns if context contains a value for a given key string. (in the context map)
+                */
+               bool const_context_map_contains(const std::string& key) const;
+               /**
                 * Gets a value from this context for a given key string.
                 * 
                 * Args:

@@ -115,3 +115,48 @@ make clean && make && clear &&
 
 ./run_memory_limited 8G ./moexpr eval 030 &&
 ./run_memory_limited 8G ./auxexpr eval 999
+
+
+
+
+
+
+17/2/26
+
+make && clear &&
+./run_memory_limited 8G ./auxexpr eval 400 && 
+./run_memory_limited 8G ./auxexpr eval 401 && 
+./run_memory_limited 8G ./auxexpr eval 402 && 
+./run_memory_limited 8G ./auxexpr eval 410 && 
+./run_memory_limited 8G ./auxexpr eval 411 && 
+./run_memory_limited 8G ./auxexpr eval 412 && 
+./run_memory_limited 8G ./auxexpr eval 430 && 
+./run_memory_limited 8G ./auxexpr eval 431 && 
+./run_memory_limited 8G ./auxexpr eval 432 && 
+./run_memory_limited 8G ./auxexpr eval 433 && 
+./run_memory_limited 8G ./auxexpr eval 434
+
+
+
+make && clear &&
+./run_memory_limited 8G ./auxexpr eval 102b && 
+./run_memory_limited 8G ./auxexpr eval 412 && 
+./run_memory_limited 8G ./auxexpr eval 430 && 
+./run_memory_limited 8G ./auxexpr eval 431 && 
+./run_memory_limited 8G ./auxexpr eval 432 && 
+./run_memory_limited 8G ./auxexpr eval 433 && 
+./run_memory_limited 8G ./auxexpr eval 434
+
+
+
+make && clear &&
+./run_memory_limited 8G ./moexpr eval 040 && 
+./run_memory_limited 8G ./moexpr eval 041 
+
+
+
+
+
+18/2/26
+
+python plot_aux.py 102a 102b fl_dense fl_sparse fl_slippy

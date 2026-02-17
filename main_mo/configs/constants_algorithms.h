@@ -27,6 +27,8 @@ static const std::string ALG_ID_CH_BTS = "ch_bts";
 static const std::string ALG_ID_CH_DENTS = "ch_dents";
 static const std::string ALG_ID_CH_HVUCT = "ch_hvuct";
 static const std::string ALG_ID_CH_PARETO = "ch_pareto";
+static const std::string ALG_ID_CH_CHEBY = "ch_cheby";
+static const std::string ALG_ID_CH_STANDARD_CHEBY = "ch_standard_cheby";
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Constants to identify parameters used by algoirithms
@@ -108,6 +110,16 @@ static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_
         },
     },
     {ALG_ID_CH_PARETO,
+        {
+            ALG_PARAM_ID_BIAS,
+        },
+    },
+    {ALG_ID_CH_CHEBY,
+        {
+            ALG_PARAM_ID_BIAS,
+        },
+    },
+    {ALG_ID_CH_STANDARD_CHEBY,
         {
             ALG_PARAM_ID_BIAS,
         },

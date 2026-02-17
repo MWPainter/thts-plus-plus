@@ -3,6 +3,21 @@
 using namespace std;
 
 namespace thts { 
+
+    /**
+     * Returns if context contains a value for a given key string. (in the context map)
+     */
+    bool ThtsContext::context_map_contains(const string& key) const {
+        return context.contains(key);
+    }
+
+    /**
+     * (Const version) Returns if context contains a value for a given key string. (in the context map)
+     */
+    bool ThtsContext::const_context_map_contains(const string& key) const {
+        return context_const.contains(key);
+    }
+
     /**
      * Implementation of 'get_value_for_key'
      * 

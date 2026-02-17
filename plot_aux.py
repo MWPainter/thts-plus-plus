@@ -656,6 +656,24 @@ if __name__ == "__main__":
             legend_loc="lower left",
         )
 
+    if "102a" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
+        filenames = glob.glob("aux_eval_logs_happy/102a_*/**/eval_log.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename_frmt_str="plots/102a_entropy_trap_10_vs_tempbias.png",
+            seperate_plots=False,
+            legend_loc="lower left",
+        )
+
+    if "102b" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
+        filenames = glob.glob("aux_eval_logs/102b_*/**/eval_log.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename_frmt_str="plots/102b_entropy_trap_10_vs_tempbias.png",
+            seperate_plots=False,
+            legend_loc="lower left",
+        )
+
     if "103" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
         # filenames = glob.glob("aux_eval_logs_happy/103_*/**/eval_log.txt", recursive=True)
         filenames = glob.glob("aux_eval_logs/103_*/**/eval_log.txt", recursive=True)
@@ -729,7 +747,7 @@ if __name__ == "__main__":
     # Eval - Frozen Lake Dense
     # ------------------------------------------------------------------------------------------------------------------
     if "400" in sys.argv or "all" in sys.argv or "fl_dense" in sys.argv:
-        filenames = glob.glob("aux_eval_logs/400_eval_frozen_lake_dense_8x8_1767058901/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs/400_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
             plot_filename="plots/400_FL_dense_8x8.png",
@@ -737,7 +755,7 @@ if __name__ == "__main__":
         )
 
     if "401" in sys.argv or "all" in sys.argv or "fl_dense" in sys.argv:
-        filenames = glob.glob("aux_eval_logs/401_eval_frozen_lake_dense_8x16_1767060240/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs/401_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
             plot_filename="plots/401_FL_dense_8x16.png",
@@ -745,7 +763,7 @@ if __name__ == "__main__":
         )
 
     if "402" in sys.argv or "all" in sys.argv or "fl_dense" in sys.argv:
-        filenames = glob.glob("aux_eval_logs/402_eval_frozen_lake_dense_16x16_1767061119/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs/402_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
             plot_filename="plots/402_FL_dense_16x16.png",
@@ -757,7 +775,7 @@ if __name__ == "__main__":
     # Eval - Frozen Lake Sparse
     # ------------------------------------------------------------------------------------------------------------------
     if "410" in sys.argv or "all" in sys.argv or "fl_sparse" in sys.argv:
-        filenames = glob.glob("aux_eval_logs/410_eval_frozen_lake_sparse_8x8_1767062098/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs/410_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
             plot_filename="plots/410_FL_SPARSE_8x8.png",
@@ -765,7 +783,7 @@ if __name__ == "__main__":
         )
 
     if "411" in sys.argv or "all" in sys.argv or "fl_sparse" in sys.argv:
-        filenames = glob.glob("aux_eval_logs/411_eval_frozen_lake_sparse_8x16_1767063656/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs/411_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
             plot_filename="plots/411_FL_SPARSE_8x16.png",
@@ -773,7 +791,7 @@ if __name__ == "__main__":
         )
 
     if "412" in sys.argv or "all" in sys.argv or "fl_sparse" in sys.argv:
-        filenames = glob.glob("aux_eval_logs/412_eval_frozen_lake_sparse_16x16_1767065037/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs/412_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
             plot_filename="plots/412_FL_SPARSE_16x16.png",
@@ -785,7 +803,7 @@ if __name__ == "__main__":
     # Eval - Slippy Frozen Lake Sparse
     # ------------------------------------------------------------------------------------------------------------------
     if "430" in sys.argv or "all" in sys.argv or "fl_slippy" in sys.argv:
-        filenames = glob.glob("aux_eval_logs/430_eval_slippy_frozen_lake_sparse_4x4_1767066533/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs/430_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
             plot_filename="plots/430_FL_SLIPPY_4x4.png",
@@ -793,7 +811,7 @@ if __name__ == "__main__":
         )
 
     if "431" in sys.argv or "all" in sys.argv or "fl_slippy" in sys.argv:
-        filenames = glob.glob("aux_eval_logs/431_eval_slippy_frozen_lake_sparse_5x5_1767067637/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs/431_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
             plot_filename="plots/431_FL_SLIPPY_5x5.png",
@@ -801,7 +819,7 @@ if __name__ == "__main__":
         )
 
     if "432" in sys.argv or "all" in sys.argv or "fl_slippy" in sys.argv:
-        filenames = glob.glob("aux_eval_logs/432_eval_slippy_frozen_lake_sparse_6x6_1767068719/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs/432_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
             plot_filename="plots/432_FL_SLIPPY_6x6.png",
@@ -809,7 +827,7 @@ if __name__ == "__main__":
         )
 
     if "433" in sys.argv or "all" in sys.argv or "fl_slippy" in sys.argv:
-        filenames = glob.glob("aux_eval_logs/433_eval_slippy_frozen_lake_sparse_4x8_1767069850/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs/433_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
             plot_filename="plots/433_FL_SLIPPY_4x8.png",
@@ -817,7 +835,7 @@ if __name__ == "__main__":
         )
 
     if "434" in sys.argv or "all" in sys.argv or "fl_slippy" in sys.argv:
-        filenames = glob.glob("aux_eval_logs/434_eval_slippy_frozen_lake_sparse_4x12_1767070926/**/eval_log.txt", recursive=True)
+        filenames = glob.glob("aux_eval_logs/434_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
             plot_filename="plots/434_FL_SLIPPY_4x12.png",
