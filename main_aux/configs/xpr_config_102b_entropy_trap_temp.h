@@ -10,7 +10,7 @@ static const std::vector<ConfigMap> CONFIG_102b =
     // xpr params
     {
         {XPR_OR_ALG_ID_TAG,                     XPR_PARAMS_ID_TAG},
-        {XPR_PARAM_ID_NAME,                     "102n_supp_entropy_temp_10_vary"},
+        {XPR_PARAM_ID_NAME,                     "102b_supp_entropy_temp_10_vary"},
         {XPR_PARAM_ID_ENV,                      ENV_ID_ENTROPY_TRAP_10},
         {XPR_PARAM_ID_MCTS_MODE,                false},
         {XPR_PARAM_ID_GRAPH_SEARCH,             false},
