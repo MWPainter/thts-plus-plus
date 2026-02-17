@@ -139,13 +139,13 @@ make && clear &&
 
 
 make && clear &&
-./run_memory_limited 8G ./auxexpr eval 102b && 
 ./run_memory_limited 8G ./auxexpr eval 412 && 
 ./run_memory_limited 8G ./auxexpr eval 430 && 
 ./run_memory_limited 8G ./auxexpr eval 431 && 
 ./run_memory_limited 8G ./auxexpr eval 432 && 
 ./run_memory_limited 8G ./auxexpr eval 433 && 
-./run_memory_limited 8G ./auxexpr eval 434
+./run_memory_limited 8G ./auxexpr eval 434 &&
+./run_memory_limited 8G ./auxexpr eval 102b
 
 
 
