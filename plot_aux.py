@@ -37,7 +37,8 @@ def make_lineplot_df(
     alpha=1.0,
     use_legend=True,
     font_scale=1.2,
-    legend_loc=None):
+    legend_loc=None,
+    horizontal_lines=None):
     """
     General helper for plotting lineplots in our style.
     """
@@ -89,6 +90,9 @@ def make_lineplot_df(
         plt.xlabel(x_axis_lab)
     if y_axis_lab is not None:
         plt.ylabel(y_axis_lab)
+    if horizontal_lines is not None:
+        for y in horizontal_lines:
+            plt.axhline(y=y, color='k', linestyle='--')
     if vertical_lines is not None:
         for x in vertical_lines:
             plt.axvline(x=x, color='k', linestyle='--')
@@ -220,6 +224,7 @@ def make_eval_plot(
     use_legend=True,
     alpha=1.0,
     num_trials_scale=1,
+    horizontal_lines=None,
     ):
     """
     Makes an eval plot using the data in the given filenames
@@ -339,7 +344,8 @@ def make_eval_plot(
         markers=markers,
         markevery=markevery,
         use_legend=use_legend,
-        alpha=alpha)
+        alpha=alpha,
+        horizontal_lines=horizontal_lines)
 
 def make_param_sens_plot(
     filenames, 
@@ -808,6 +814,7 @@ if __name__ == "__main__":
             filenames=filenames,
             plot_filename="plots/430_FL_SLIPPY_4x4.png",
             # legend_loc="lower left",
+            horizontal_lines=[0.5223],
         )
 
     if "431" in sys.argv or "all" in sys.argv or "fl_slippy" in sys.argv:
@@ -816,6 +823,7 @@ if __name__ == "__main__":
             filenames=filenames,
             plot_filename="plots/431_FL_SLIPPY_5x5.png",
             # legend_loc="lower left",
+            horizontal_lines=[0.6116],
         )
 
     if "432" in sys.argv or "all" in sys.argv or "fl_slippy" in sys.argv:
@@ -824,6 +832,7 @@ if __name__ == "__main__":
             filenames=filenames,
             plot_filename="plots/432_FL_SLIPPY_6x6.png",
             # legend_loc="lower left",
+            horizontal_lines=[0.4928],
         )
 
     if "433" in sys.argv or "all" in sys.argv or "fl_slippy" in sys.argv:
@@ -832,6 +841,7 @@ if __name__ == "__main__":
             filenames=filenames,
             plot_filename="plots/433_FL_SLIPPY_4x8.png",
             # legend_loc="lower left",
+            horizontal_lines=[0.3522],
         )
 
     if "434" in sys.argv or "all" in sys.argv or "fl_slippy" in sys.argv:
@@ -840,6 +850,7 @@ if __name__ == "__main__":
             filenames=filenames,
             plot_filename="plots/434_FL_SLIPPY_4x12.png",
             # legend_loc="lower left",
+            horizontal_lines=[0.2969],
         )
 
 

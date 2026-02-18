@@ -160,3 +160,26 @@ make && clear &&
 18/2/26
 
 python plot_aux.py 102a 102b fl_dense fl_sparse fl_slippy
+python plot_aux.py fl_slippy
+
+
+
+
+4x4
+8x8
+6x6_no_hole
+gen_5x5
+gen_6x6
+gen_4x8
+gen_4x12
+gen_8x16
+gen_16x16
+
+
+
+
+python flvi.py --map 4x4 --slippery --init-state-only --time-bound 100 && 
+python flvi.py --map gen_5x5 --slippery --init-state-only --time-bound 100 && 
+python flvi.py --map gen_6x6 --slippery --init-state-only --time-bound 100 && 
+python flvi.py --map gen_4x8 --slippery --init-state-only --time-bound 100 && 
+python flvi.py --map gen_4x12 --slippery --init-state-only --time-bound 100

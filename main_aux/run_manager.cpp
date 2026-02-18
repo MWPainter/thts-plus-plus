@@ -251,15 +251,16 @@ namespace thts {
         if (env_id == ENV_ID_FROZEN_LAKE_D_16x16)   return make_shared<FrozenLakeEnv>(16,16,FL_GEN_16x16_MAP,false,FL_DENSE_REWARD, 0.99, this->get_max_trial_length());
         if (env_id == ENV_ID_FROZEN_LAKE_S_16x16)   return make_shared<FrozenLakeEnv>(16,16,FL_GEN_16x16_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
 
-        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_4x4) return make_shared<FrozenLakeEnv>(4,4,FL_4x4_MAP,true,FL_DENSE_REWARD, 1.0, this->get_max_trial_length());
-        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_4x4) return make_shared<FrozenLakeEnv>(4,4,FL_4x4_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
+        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_4x4) return make_shared<FrozenLakeEnv>(4,4,FL_4x4_MAP,true,FL_DENSE_REWARD, 0.99, this->get_max_trial_length());
         if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_5x5) return make_shared<FrozenLakeEnv>(5,5,FL_GEN_5x5_MAP,true,FL_DENSE_REWARD, 0.99, this->get_max_trial_length());
-        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_5x5) return make_shared<FrozenLakeEnv>(5,5,FL_GEN_5x5_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
         if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_6x6) return make_shared<FrozenLakeEnv>(6,6,FL_GEN_6x6_MAP,true,FL_DENSE_REWARD, 0.99, this->get_max_trial_length());
-        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_6x6) return make_shared<FrozenLakeEnv>(6,6,FL_GEN_6x6_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
         if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_4x8) return make_shared<FrozenLakeEnv>(4,8,FL_GEN_4x8_MAP,true,FL_DENSE_REWARD, 0.99, this->get_max_trial_length());
-        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_4x8) return make_shared<FrozenLakeEnv>(4,8,FL_GEN_4x8_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
         if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_4x12) return make_shared<FrozenLakeEnv>(4,12,FL_GEN_4x12_MAP,true,FL_DENSE_REWARD, 0.99, this->get_max_trial_length());
+        
+        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_4x4) return make_shared<FrozenLakeEnv>(4,4,FL_4x4_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
+        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_5x5) return make_shared<FrozenLakeEnv>(5,5,FL_GEN_5x5_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
+        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_6x6) return make_shared<FrozenLakeEnv>(6,6,FL_GEN_6x6_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
+        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_4x8) return make_shared<FrozenLakeEnv>(4,8,FL_GEN_4x8_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
         if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_4x12) return make_shared<FrozenLakeEnv>(4,12,FL_GEN_4x12_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
 
         if (env_id == ENV_ID_SAILING_NORTH_ID)             return make_shared<SailingEnv>(8,8,NN);
