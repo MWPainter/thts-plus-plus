@@ -194,6 +194,12 @@ namespace thts {
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         double temp = get_temp();
         soft_value = opp_coeff * temp * spmax();
+
+        if (has_heuristic_value()) 
+        {
+            soft_value *= (num_backups - thts_manager->heuristic_weight) / num_backups;
+            soft_value += thts_manager->heuristic_weight * heuristic_value / num_backups;
+        }
    }
 
     /**

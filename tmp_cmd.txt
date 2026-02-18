@@ -183,3 +183,60 @@ python flvi.py --map gen_5x5 --slippery --init-state-only --time-bound 100 &&
 python flvi.py --map gen_6x6 --slippery --init-state-only --time-bound 100 && 
 python flvi.py --map gen_4x8 --slippery --init-state-only --time-bound 100 && 
 python flvi.py --map gen_4x12 --slippery --init-state-only --time-bound 100
+
+
+
+./run_memory_limited 8G ./auxexpr eval 401
+
+
+
+
+    "SFFFFFFF",
+    "FFFFFFFF",
+    "FFF_FFFF",
+    "FFFFF_FF",
+    "FFF_FFFF",
+    "F__FFF_F",
+    "F_FF_F_F",
+    "FFF_FFFG",
+
+
+
+
+
+
+
+make && clear &&
+./run_memory_limited 8G ./auxexpr eval 400 && 
+./run_memory_limited 8G ./auxexpr eval 401 && 
+./run_memory_limited 8G ./auxexpr eval 402 && 
+./run_memory_limited 8G ./auxexpr eval 410 && 
+./run_memory_limited 8G ./auxexpr eval 411 && 
+./run_memory_limited 8G ./auxexpr eval 412 && 
+./run_memory_limited 8G ./auxexpr eval 430 && 
+./run_memory_limited 8G ./auxexpr eval 431 && 
+./run_memory_limited 8G ./auxexpr eval 432 && 
+./run_memory_limited 8G ./auxexpr eval 433 && 
+./run_memory_limited 8G ./auxexpr eval 434 &&
+./run_memory_limited 8G ./auxexpr eval 440 && 
+./run_memory_limited 8G ./auxexpr eval 441 && 
+./run_memory_limited 8G ./auxexpr eval 442 && 
+./run_memory_limited 8G ./auxexpr eval 450 && 
+./run_memory_limited 8G ./auxexpr eval 451 && 
+./run_memory_limited 8G ./auxexpr eval 452 && 
+./run_memory_limited 8G ./auxexpr eval 110 && 
+./run_memory_limited 8G ./auxexpr eval 111 && 
+./run_memory_limited 8G ./auxexpr eval 112 && 
+./run_memory_limited 8G ./auxexpr eval 120 && 
+./run_memory_limited 8G ./auxexpr eval 121 && 
+./run_memory_limited 8G ./auxexpr eval 122
+
+
+
+
+
+
+
+19/2/26
+
+python plot_aux.py dchain scenic_route fl_dense fl_sparse fl_slippy sailing_n sailing_se

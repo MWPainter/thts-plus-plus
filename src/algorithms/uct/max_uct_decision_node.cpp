@@ -53,6 +53,13 @@ namespace thts {
         }
 
         num_backups++;
+
+        // mix in heuristic value if we have one
+        if (has_heuristic_value()) 
+        {
+            avg_return *= (num_backups - thts_manager->heuristic_weight) / num_backups;
+            avg_return += thts_manager->heuristic_weight * heuristic_value / num_backups;
+        }
     }
     
     /**

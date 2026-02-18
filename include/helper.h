@@ -18,6 +18,12 @@ namespace thts::helper {
         std::shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth=0);
 
     /**
+     * A default heuristic function that returns a constant one
+     */
+    double one_heuristic_fn(
+        std::shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth=0);
+
+    /**
      * The rollout heuristic function, that returns an MC estimate of 'state' with a rollout with random policy
      */
     double rollout_heuristic_fn(

@@ -12,14 +12,12 @@ namespace thts {
         static const bool adaptive_bias_default=false;
         static const bool normalize_Q_values_in_selection_default=true;
         static constexpr double bias_default=1.0;
-        static const int heuristic_psuedo_trials_default=1;
         static const bool recommend_most_visited_default=true;
         static constexpr double epsilon_exploration_default=0.0;
 
         bool adaptive_bias;
         bool normalize_Q_values_in_selection;
         double bias;
-        int heuristic_psuedo_trials;
         bool recommend_most_visited;
         double epsilon_exploration;
 
@@ -28,7 +26,6 @@ namespace thts {
             adaptive_bias(adaptive_bias_default),
             normalize_Q_values_in_selection(normalize_Q_values_in_selection_default),
             bias(bias_default),
-            heuristic_psuedo_trials(heuristic_psuedo_trials_default),
             recommend_most_visited(recommend_most_visited_default),
             epsilon_exploration(epsilon_exploration_default) {}
 
@@ -42,10 +39,6 @@ namespace thts {
      *      bias:
      *          The bias to use in the ucb values at decision nodes. If set to 'USE_AUTO_BIAS' then an adaptive bias is
      *          used as outlined by the PROST planner (https://www.aaai.org/ocs/index.php/ICAPS/ICAPS12/paper/viewFile/4715/4721).
-     *      heuristic_psuedo_trials:
-     *          The number of 'psuedo trials' to weight the value of the heuristic functino by. Should be used to 
-     *          initialise the 'num_visits' of UCT nodes. A value of zero indicates that the heuristic function should 
-     *          be ignored entirely (bool use_heuristic_fn == (heuristic_psuedo_trials == 0)).
      *      recommend_most_visited:
      *          If true then on recommendations return the action corresponding to the child that has been visited the 
      *          most. When false, recommend the child with the best empirical average.
@@ -61,7 +54,6 @@ namespace thts {
             bool normalize_Q_values_in_selection;
             bool adaptive_bias;
             double bias;
-            int heuristic_psuedo_trials;
             bool recommend_most_visited;
             double epsilon_exploration;
 
@@ -70,7 +62,6 @@ namespace thts {
                 normalize_Q_values_in_selection(args.normalize_Q_values_in_selection),
                 adaptive_bias(args.adaptive_bias),
                 bias(args.bias),
-                heuristic_psuedo_trials(args.heuristic_psuedo_trials),
                 recommend_most_visited(args.recommend_most_visited),
                 epsilon_exploration(args.epsilon_exploration) {};
     };

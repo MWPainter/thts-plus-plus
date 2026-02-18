@@ -34,6 +34,7 @@ namespace thts {
         static const int num_envs_default = 1;
         static const int max_depth_default = std::numeric_limits<int>::max();
         // static const HeuristicFnPtr heuristic_fn_default = helper::zero_heuristic_fn;
+        static constexpr double heuristic_weight_default = 1.0;
         // static const PriorFnPtr prior_fn_default = nullptr;
 
         static const bool mcts_mode_default = true;
@@ -48,6 +49,7 @@ namespace thts {
         int num_envs;
         int max_depth;
         HeuristicFnPtr heuristic_fn;
+        double heuristic_weight;
         PriorFnPtr prior_fn;
 
         bool mcts_mode;
@@ -63,6 +65,7 @@ namespace thts {
             num_envs(num_envs_default),
             max_depth(max_depth_default),
             heuristic_fn(helper::zero_heuristic_fn),
+            heuristic_weight(heuristic_weight_default),
             prior_fn(nullptr),
             mcts_mode(mcts_mode_default),
             is_two_player_game(is_two_player_game_default),
@@ -209,6 +212,10 @@ namespace thts {
      *          The maximum depth that we want to allow our thts to search to.
      *      heuristic_fn:
      *          A pointer to the heuristic function to use. Defaults to return a constant zero value.
+     *      heuristic_weight:
+     *          The weight or number of 'psuedo trials' to weight the value of the heuristic functino by. Should be used to 
+     *          initialise the 'num_visits' to a node. A value of zero indicates that the heuristic function should 
+     *          be ignored entirely once a backup is performed (bool use_heuristic_fn == (heuristic_psuedo_trials == 0)).
      *      prior_fn:
      *          A pointer to the prior function, that returns a map representing a policy. Defaults to nullptr to 
      *          indicate no prior. Prior may be able to be unormalised depending on the algorithm being used.
@@ -256,6 +263,7 @@ namespace thts {
             int num_envs;
             int max_depth;
             HeuristicFnPtr heuristic_fn;
+            double heuristic_weight;
             PriorFnPtr prior_fn;
 
             bool mcts_mode;

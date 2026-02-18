@@ -104,7 +104,7 @@ namespace thts {
             /**
              * Returns and instance of ThtsManager to use for this run
             */
-            void _add_thts_manager_params_to_args(ThtsManagerArgs& manager_args);
+            void _add_thts_manager_params_to_args(ThtsManagerArgs& manager_args, std::string env_id);
             std::shared_ptr<ThtsManager> get_thts_manager(std::shared_ptr<ThtsEnv> env);
 
             /**

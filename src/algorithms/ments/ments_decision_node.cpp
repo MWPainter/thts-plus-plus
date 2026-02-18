@@ -36,6 +36,7 @@ namespace thts {
             psuedo_q_value_offset(0.0)
     {
         if (thts_manager->heuristic_fn != nullptr) {
+            num_backups = thts_manager->heuristic_weight;
             soft_value = heuristic_value;
         }
 
@@ -120,6 +121,19 @@ namespace thts {
     }
 
     /**
+     * Fills a map of actions to q-values for the actions in the action vector.
+     */
+    void MentsDNode::fill_soft_q_values(
+        unordered_map<shared_ptr<const Action>,double>& q_values,
+        double opp_coeff,
+        bool for_backup) const
+    {
+        for (shared_ptr<const Action> action : *actions) {
+            q_values[action] = get_soft_q_value(action, opp_coeff);
+        }
+    }
+
+    /**
      * Compute action weights.
      * 
      * Performs the following:
@@ -152,9 +166,7 @@ namespace thts {
 
         // Get current q values
         unordered_map<shared_ptr<const Action>,double> q_values;
-        for (shared_ptr<const Action> action : *actions) {
-            q_values[action] = get_soft_q_value(action,opp_coeff);
-        }
+        fill_soft_q_values(q_values, opp_coeff, for_backup);
 
         // optionally normalise q values (for action selection)
         MentsManager& manager = (MentsManager&) *thts_manager;
@@ -357,6 +369,12 @@ namespace thts {
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         double temp = get_temp();
         soft_value = opp_coeff * temp * (log(sum_weights) + normalisation_term);
+
+        if (has_heuristic_value()) 
+        {
+            soft_value *= (num_backups - thts_manager->heuristic_weight) / num_backups;
+            soft_value += thts_manager->heuristic_weight * heuristic_value / num_backups;
+        }
     }
 
     /**

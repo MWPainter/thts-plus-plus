@@ -58,7 +58,13 @@ namespace thts {
      * accidentally erase heuristic values that we wanted to use in concurrent settings (which is why this line was 
      * added originally).
      */
-    void DPDNode::backup_dp_impl(DPCNodeChildMap& children, bool is_opponent) {
+    void DPDNode::backup_dp_impl(
+        DPCNodeChildMap& children, 
+        bool has_heuristic_value,
+        double heuristic_weight,
+        double heuristic_value,
+        bool is_opponent) 
+    {
         double opp_coeff = is_opponent ? -1.0 : 1.0;
         dp_value = opp_coeff * -numeric_limits<double>::infinity();
 
@@ -71,5 +77,11 @@ namespace thts {
         }
 
         num_backups++;
+
+        if (has_heuristic_value) 
+        {
+            dp_value *= (num_backups - heuristic_weight) / num_backups;
+            dp_value += heuristic_weight * heuristic_value / num_backups;
+        }
     }
 }

@@ -17,6 +17,15 @@ namespace thts::helper {
     }
 
     /**
+     * Implementation of constant one heuristic function.
+     */
+    double one_heuristic_fn(
+        shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth) 
+    {
+        return 1.0;
+    }
+
+    /**
      * Implementation of the rollout heuristic function.
      */
     double rollout_heuristic_fn(

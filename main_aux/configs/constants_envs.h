@@ -76,3 +76,21 @@ static const std::unordered_set<std::string> GYM_ENVS =
     ENV_ID_TAXI_GYM,
 };
 
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Environments which use one for the heuristic function
+// ---------------------------------------------------------------------------------------------------------------------
+
+static const std::unordered_set<std::string> ONE_HEURISTIC_ENVS =
+{
+    ENV_ID_FROZEN_LAKE_S_8x8,
+    ENV_ID_FROZEN_LAKE_S_8x16,
+    ENV_ID_FROZEN_LAKE_S_16x16,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_4x4,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_5x5,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_6x6,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_4x8,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_4x12,
+};
+

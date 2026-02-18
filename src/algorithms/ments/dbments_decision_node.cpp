@@ -65,7 +65,8 @@ namespace thts {
         ThtsContext& ctx) 
     {
         backup_soft(ctx);
-        backup_dp<DBMentsCNode>(children, is_opponent()); 
+        backup_dp<DBMentsCNode>(
+            children, has_heuristic_value(), thts_manager->heuristic_weight, heuristic_value, is_opponent()); 
     }
 
     /**

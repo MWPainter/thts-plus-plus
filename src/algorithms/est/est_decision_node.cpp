@@ -36,6 +36,19 @@ namespace thts {
     }
 
     /**
+     * BTS doesn't need to do any DENTS schenanigans
+     */
+    void EstDNode::fill_soft_q_values(
+        unordered_map<shared_ptr<const Action>,double>& q_values,
+        double opp_coeff,
+        bool for_backup) const
+    {
+        for (shared_ptr<const Action> action : *actions) {
+            q_values[action] = get_soft_q_value(action, opp_coeff);
+        }
+    }
+
+    /**
      * Calls both the ments soft backup and dp backup
      * 
      * Recall that the dp backup needs to be passed the type of the child nodes (so can keep dp logic in dp node)
@@ -52,7 +65,7 @@ namespace thts {
         // value backup
         DentsManager& manager = (DentsManager&) *thts_manager;
         if (manager.use_dp_value) {
-            backup_dp<DentsCNode>(children, is_opponent());
+            backup_dp<DentsCNode>(children, has_heuristic_value(), thts_manager->heuristic_weight, heuristic_value, is_opponent());
         } else {
             backup_emp(trial_cumulative_return_after_node);
         }

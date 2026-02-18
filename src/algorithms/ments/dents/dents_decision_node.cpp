@@ -4,6 +4,8 @@
 
 using namespace std; 
 
+static double EPS = 1e-16;
+
 namespace thts {
     DentsDNode::DentsDNode(
         shared_ptr<DentsManager> thts_manager,
@@ -32,23 +34,107 @@ namespace thts {
     }
 
     /**
+     * Get the raw q value of a child node
+     */
+    double DentsDNode::get_q_value(std::shared_ptr<const Action> action, double opp_coeff) const {
+        if (!has_child_node(action)) {
+            // returns the heuristic value
+            return MentsDNode::get_soft_q_value(action, opp_coeff);
+        }
+
+        DentsManager& manager = (DentsManager&) *thts_manager;
+        DentsCNode& child = (DentsCNode&) *get_child_node(action);
+        if (!manager.use_dp_value) 
+        {
+            return child.avg_return;
+        }
+        return child.dp_value;
+    }
+
+    /**
+     * Get the raw entropy q value of a child node
+     */
+    double DentsDNode::get_entropy_q_value_term(std::shared_ptr<const Action> action) const {
+        if (!has_child_node(action)) {
+            return 0.0;
+        }
+
+        DentsManager& manager = (DentsManager&) *thts_manager;
+        DentsCNode& child = (DentsCNode&) *get_child_node(action);
+        return child.subtree_entropy;
+    }
+
+    /**
+     * In DENTS, soft q values are computed as V + value_temp * H, where V is the dp value of the child,
+     * H is the subtree entropy of the child and value_temp is the decayed temperature to weight entropy.
+     *
+     * To make value temp scale insensitive, we optionally normalise the q values and entropies before 
+     * combinding them into a soft q value
+     *
+     * Old docstring for get_soft_q_value (now unused):
      * Gets the soft q value of a child node (as considered by this current node).
      * 
      * These values are of the form V + temp_decayed * H. Note that the 'temp_decayed' used is the decayed temperature 
      * for *this* node, not the child node, and the soft value returned != child.soft_value.
      * 
      * Other cases are suitably handled by the implementation in MentsDNode, so just call that
-    */
-    double DentsDNode::get_soft_q_value(std::shared_ptr<const Action> action, double opp_coeff) const {
-        if (!has_child_node(action)) {
-            return MentsDNode::get_soft_q_value(action, opp_coeff);
+     */
+    void DentsDNode::fill_soft_q_values(
+        unordered_map<shared_ptr<const Action>,double>& soft_q_values,
+        double opp_coeff,
+        bool for_backup) const
+    {
+        DentsManager& manager = (DentsManager&) *ThtsDNode::thts_manager;
+
+        // Get current q values
+        unordered_map<shared_ptr<const Action>,double> q_values;
+        for (shared_ptr<const Action> action : *actions) {
+            q_values[action] = get_q_value(action, opp_coeff);
         }
 
-        DentsManager& manager = (DentsManager&) *thts_manager;
-        DentsCNode& child = (DentsCNode&) *get_child_node(action);
-        double val_estimate = child.dp_value;
-        if (!manager.use_dp_value) val_estimate = child.avg_return;
-        return opp_coeff * (val_estimate + get_entropy_coeff() * child.subtree_entropy);
+        // Normalise Q values
+        if (!for_backup && manager.double_normalise_q_values) {
+            double min_q_value = numeric_limits<double>::max();
+            double max_q_value = numeric_limits<double>::lowest();
+            for (pair<shared_ptr<const Action>,double> pr : q_values) {
+                double q_value = pr.second;
+                if (q_value < min_q_value) min_q_value = q_value;
+                if (q_value > max_q_value) max_q_value = q_value;
+            }
+            for (pair<shared_ptr<const Action>,double> pr : q_values) {
+                shared_ptr<const Action> action = pr.first;
+                double q_value = pr.second;
+                q_values[action] = (q_value - min_q_value) / (max_q_value - min_q_value + EPS);
+            }
+        }
+
+        // Get entropy terms
+        unordered_map<shared_ptr<const Action>,double> entropy_terms;
+        for (shared_ptr<const Action> action : *actions) {
+            entropy_terms[action] = get_entropy_q_value_term(action);
+        }
+
+        // Normalise entropy terms
+        if (!for_backup && manager.double_normalise_q_values) {
+            double min_entropy_term = numeric_limits<double>::max();
+            double max_entropy_term = numeric_limits<double>::lowest();
+            for (pair<shared_ptr<const Action>,double> pr : entropy_terms) {
+                double entropy_term = pr.second;
+                if (entropy_term < min_entropy_term) min_entropy_term = entropy_term;
+                if (entropy_term > max_entropy_term) max_entropy_term = entropy_term;
+            }
+            for (pair<shared_ptr<const Action>,double> pr : entropy_terms) {
+                shared_ptr<const Action> action = pr.first;
+                double entropy_term = pr.second;
+                entropy_terms[action] = (entropy_term - min_entropy_term) / (max_entropy_term - min_entropy_term + EPS);
+            }
+        }
+
+        // Combine q values and entropy terms to fill in soft q values
+        double entropy_coeff = get_entropy_coeff();
+        for (shared_ptr<const Action> action : *actions) {
+            soft_q_values[action] = q_values[action] + entropy_coeff * entropy_terms[action] * entropy_coeff;
+        }
     }
 
     /**
@@ -102,7 +188,7 @@ namespace thts {
         double val_estimate;
         DentsManager& manager = (DentsManager&) *thts_manager;
         if (manager.use_dp_value) {
-            backup_dp<DentsCNode>(children, is_opponent());
+            backup_dp<DentsCNode>(children, has_heuristic_value(), thts_manager->heuristic_weight, heuristic_value, is_opponent());
             val_estimate = dp_value;
         } else {
             backup_emp(trial_cumulative_return_after_node);

@@ -83,7 +83,12 @@ namespace thts {
              *      children: The children map for this node
              *      is_opponent: True if this node is acting as an opponent in a two player game.
              */
-            void backup_dp_impl(DPCNodeChildMap& children, bool is_opponent);
+            void backup_dp_impl(
+                DPCNodeChildMap& children, 
+                bool has_heuristic_value,
+                double heuristic_weight,
+                double heuristic_value, 
+                bool is_opponent);
 
             /**
              * Helper to convert children maps into children maps for DP Nodes.
@@ -156,9 +161,20 @@ namespace thts {
              *      is_opponent: True if this node is acting as an opponent in a two player game.
              */
             template <typename T>
-            void backup_dp(const CNodeChildMap& children, bool is_opponent=false) {
+            void backup_dp(
+                const CNodeChildMap& children, 
+                bool has_heuristic_value, 
+                double heuristic_weight, 
+                double heuristic_value, 
+                bool is_opponent=false) 
+            {
                 std::shared_ptr<DPCNodeChildMap> dp_children = convert_child_map<T>(children);
-                backup_dp_impl(*dp_children, is_opponent);
+                backup_dp_impl(
+                    *dp_children, 
+                    has_heuristic_value, 
+                    heuristic_weight, 
+                    heuristic_value, 
+                    is_opponent);
             }
     };
 }

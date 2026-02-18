@@ -278,12 +278,24 @@ namespace thts {
     /**
      * Helper to add params to a manager args object for ThtsManager level params
      */
-    void RunManager::_add_thts_manager_params_to_args(ThtsManagerArgs& manager_args)
+    void RunManager::_add_thts_manager_params_to_args(ThtsManagerArgs& manager_args, string env_id)
     {
         manager_args.num_threads = get_num_search_threads();
         manager_args.num_envs = std::max(get_num_search_threads(), get_num_eval_threads());
         manager_args.max_depth = get_max_trial_length();
-        manager_args.heuristic_fn = (get_mcts_mode()) ? helper::rollout_heuristic_fn : helper::zero_heuristic_fn;
+        bool mcts_mode = get_mcts_mode();
+        if (mcts_mode) 
+        {
+            manager_args.heuristic_fn = helper::rollout_heuristic_fn;
+        }
+        else if (ONE_HEURISTIC_ENVS.contains(env_id))
+        {
+            manager_args.heuristic_fn = helper::one_heuristic_fn;
+        }
+        else
+        {
+            manager_args.heuristic_fn = helper::zero_heuristic_fn;
+        }
         manager_args.mcts_mode = get_mcts_mode();
         manager_args.graph_search = get_graph_search();
         manager_args.first_visit = true;
@@ -304,7 +316,7 @@ namespace thts {
             UctManagerArgs manager_args(env);
             manager_args.bias = get_bias();
             manager_args.recommend_most_visited = false;
-            _add_thts_manager_params_to_args(manager_args);
+            _add_thts_manager_params_to_args(manager_args, get_env_id());
             return make_shared<UctManager>(manager_args);
         }
 
@@ -319,7 +331,7 @@ namespace thts {
             manager_args.total_budget = get_termination_bound();
             manager_args.uct_budget_threshold = get_uct_budget();
             manager_args.recommend_most_visited = false;
-            _add_thts_manager_params_to_args(manager_args);
+            _add_thts_manager_params_to_args(manager_args, get_env_id());
             return make_shared<HmctsManager>(manager_args);
         }
 
@@ -330,7 +342,7 @@ namespace thts {
             manager_args.epsilon = get_epsilon();
             manager_args.default_q_value = get_default_q_value();
             manager_args.recommend_most_visited = false;
-            _add_thts_manager_params_to_args(manager_args);
+            _add_thts_manager_params_to_args(manager_args, get_env_id());
             return make_shared<MentsManager>(manager_args);
         }
 
@@ -347,7 +359,7 @@ namespace thts {
                 manager_args.entropy_coeff_schedule_ptr = make_shared<LinearSchedule>(get_init_entropy_coeff(), get_entropy_zero_at());
             }
 
-            _add_thts_manager_params_to_args(manager_args);
+            _add_thts_manager_params_to_args(manager_args, get_env_id());
 
             return make_shared<DentsManager>(manager_args);
         }

@@ -15,6 +15,7 @@ namespace thts {
         num_envs(args.num_envs),
         max_depth(args.max_depth),
         heuristic_fn(args.heuristic_fn),
+        heuristic_weight(args.heuristic_weight),
         prior_fn(args.prior_fn),
         mcts_mode(args.mcts_mode), 
         graph_search(args.graph_search), 

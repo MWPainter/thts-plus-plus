@@ -38,8 +38,8 @@ namespace thts {
         if (thts_manager->heuristic_fn != nullptr 
             && !thts_manager->thts_env()->is_sink_state_itfc(state,*thts_manager->get_thts_context())) 
         {
-            num_visits = thts_manager->heuristic_psuedo_trials;
-            num_backups = thts_manager->heuristic_psuedo_trials;
+            num_visits = thts_manager->heuristic_weight;
+            num_backups = thts_manager->heuristic_weight;
             avg_return = heuristic_value; 
         } 
 
@@ -286,7 +286,7 @@ namespace thts {
 
         if (has_heuristic_value()) {
             avg_return = heuristic_value;
-            sum_child_visits += manager.heuristic_psuedo_trials;
+            sum_child_visits += manager.heuristic_weight;
         }
 
         for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pr : children) {
