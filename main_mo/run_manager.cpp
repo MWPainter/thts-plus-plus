@@ -858,7 +858,7 @@ namespace thts {
         manager_args.reward_dim = env->get_reward_dim();
         // MoThtsManager will load correct zero heuristic function based on reward dim if not set
         if (get_mcts_mode()) {
-            manager_args.mo_heuristic_fn = helper::mo_rollout_heuristic_fn;
+            manager_args.mo_heuristic_fn = make_shared<MoRolloutHeuristicFn>();
             manager_args.heuristic_psuedo_trials = 1;
         }
         manager_args.use_vector_visit_counts = get_vector_visit_counts();

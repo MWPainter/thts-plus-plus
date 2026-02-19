@@ -6,29 +6,43 @@
 
 using namespace std;
 
-namespace thts::helper {
+namespace thts {
+    /**
+     * Implementation of const heuristic function
+     */
+    ConstHeuristicFn::ConstHeuristicFn(double value) : value(value)
+    {
+    }
+
+    double ConstHeuristicFn::operator()(
+        shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth) 
+    {
+        return this->value;
+    }
+
     /**
      * Implementation of the default zero heuristic function.
      */
-    double zero_heuristic_fn(
-        shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth) 
+    ZeroHeuristicFn::ZeroHeuristicFn() : ConstHeuristicFn(0.0)
     {
-        return 0.0;
     }
 
     /**
      * Implementation of constant one heuristic function.
      */
-    double one_heuristic_fn(
-        shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth) 
+    OneHeuristicFn::OneHeuristicFn() : ConstHeuristicFn(1.0)
     {
-        return 1.0;
     }
 
     /**
      * Implementation of the rollout heuristic function.
+     * TODO: move adding env + manager to constructor when working on v1.0
      */
-    double rollout_heuristic_fn(
+    RolloutHeuristicFn::RolloutHeuristicFn()
+    {
+    }
+
+    double RolloutHeuristicFn::operator()(
         shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth) 
     {
         ThtsContext& ctx = *manager.get_thts_context();
@@ -45,6 +59,12 @@ namespace thts::helper {
         
         return rollout_reward;
     }
+}
+
+namespace thts::helper {
+    std::shared_ptr<HeuristicFn> rollout_heuristic_fn = std::make_shared<RolloutHeuristicFn>();
+    std::shared_ptr<HeuristicFn> zero_heuristic_fn = std::make_shared<ZeroHeuristicFn>();
+    std::shared_ptr<HeuristicFn> one_heuristic_fn = std::make_shared<OneHeuristicFn>();
 
     /**
      * String split function, adapted from stack overflow comment:

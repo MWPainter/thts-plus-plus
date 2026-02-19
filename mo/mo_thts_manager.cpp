@@ -34,47 +34,7 @@ namespace thts {
         }
     }
 
-    MoHeuristicFnPtr MoThtsManager::get_default_mo_zero_heuristic_fn() {
-        switch (reward_dim) {
-            case 2: 
-                return helper::mo_zero_heuristic_fn<2>;
-            case 3: 
-                return helper::mo_zero_heuristic_fn<3>;
-            case 4: 
-                return helper::mo_zero_heuristic_fn<4>;
-            case 5: 
-                return helper::mo_zero_heuristic_fn<5>;
-            case 6: 
-                return helper::mo_zero_heuristic_fn<6>;
-            case 7: 
-                return helper::mo_zero_heuristic_fn<7>;
-            case 8: 
-                return helper::mo_zero_heuristic_fn<8>;
-            case 9: 
-                return helper::mo_zero_heuristic_fn<9>;
-            case 10: 
-                return helper::mo_zero_heuristic_fn<10>;
-            case 16: 
-                return helper::mo_zero_heuristic_fn<16>;
-            case 32: 
-                return helper::mo_zero_heuristic_fn<32>;
-            case 64: 
-                return helper::mo_zero_heuristic_fn<64>;
-            case 128: 
-                return helper::mo_zero_heuristic_fn<128>;
-            case 256: 
-                return helper::mo_zero_heuristic_fn<256>;
-            case 512: 
-                return helper::mo_zero_heuristic_fn<512>;
-            case 1024: 
-                return helper::mo_zero_heuristic_fn<1024>;
-            default: 
-                stringstream ss;
-                ss << "get_default_mo_zero_heuristic_fn doesnt contain the reward dimension (" << reward_dim << ") "
-                    << "you're trying to use in include/multi_objective/mo_thts_manager, add a case to the switch "
-                    << "block so the compiler will generate the zero heuristic function with appropriate dimension you "
-                    << "are trying to use.";
-                throw runtime_error(ss.str());
-        }
+    std::shared_ptr<MoHeuristicFn> MoThtsManager::get_default_mo_zero_heuristic_fn() {
+        return make_shared<MoZeroHeuristicFn>(reward_dim);
     }
 }

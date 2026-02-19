@@ -83,6 +83,7 @@ namespace thts {
              * Returns:
              *      A map from actions to their corresponding ucb values
              */
+            virtual void fill_q_values(std::unordered_map<std::shared_ptr<const Action>,double>& q_values) const;
             virtual void fill_ucb_values(
                 std::unordered_map<std::shared_ptr<const Action>,double>& ucb_values, ThtsContext& ctx) const;
 

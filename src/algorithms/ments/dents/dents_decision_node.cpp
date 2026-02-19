@@ -36,10 +36,10 @@ namespace thts {
     /**
      * Get the raw q value of a child node
      */
-    double DentsDNode::get_q_value(std::shared_ptr<const Action> action, double opp_coeff) const {
+    double DentsDNode::get_q_value(std::shared_ptr<const Action> action, double opp_coeff, bool for_search) const {
         if (!has_child_node(action)) {
             // returns the heuristic value
-            return MentsDNode::get_soft_q_value(action, opp_coeff);
+            return MentsDNode::get_soft_q_value(action, opp_coeff, for_search);
         }
 
         DentsManager& manager = (DentsManager&) *thts_manager;
@@ -47,6 +47,9 @@ namespace thts {
         if (!manager.use_dp_value) 
         {
             return child.avg_return;
+        }
+        if (for_search) {
+            return child.dp_value_for_search;
         }
         return child.dp_value;
     }
@@ -82,14 +85,15 @@ namespace thts {
     void DentsDNode::fill_soft_q_values(
         unordered_map<shared_ptr<const Action>,double>& soft_q_values,
         double opp_coeff,
-        bool for_backup) const
+        bool for_backup,
+        bool for_search) const
     {
         DentsManager& manager = (DentsManager&) *ThtsDNode::thts_manager;
 
         // Get current q values
         unordered_map<shared_ptr<const Action>,double> q_values;
         for (shared_ptr<const Action> action : *actions) {
-            q_values[action] = get_q_value(action, opp_coeff);
+            q_values[action] = get_q_value(action, opp_coeff, for_search);
         }
 
         // Normalise Q values
@@ -186,17 +190,21 @@ namespace thts {
 
         // value backup
         double val_estimate;
+        double val_estimate_for_search;
         DentsManager& manager = (DentsManager&) *thts_manager;
         if (manager.use_dp_value) {
             backup_dp<DentsCNode>(children, has_heuristic_value(), thts_manager->heuristic_weight, heuristic_value, is_opponent());
             val_estimate = dp_value;
+            val_estimate_for_search = dp_value_for_search;
         } else {
             backup_emp(trial_cumulative_return_after_node);
             val_estimate = avg_return;
+            val_estimate_for_search = avg_return;
         }
     
         // update local soft_value so that value is sensible / for pretty printing
         soft_value = val_estimate + get_entropy_coeff() * subtree_entropy;
+        soft_value_for_search = val_estimate_for_search + get_entropy_coeff() * subtree_entropy;
     }
 
     /**

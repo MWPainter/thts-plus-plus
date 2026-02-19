@@ -57,6 +57,7 @@ namespace thts {
         protected:
             int num_backups;
             double soft_value;
+            double soft_value_for_search;
             std::shared_ptr<ActionVector> actions;
             std::shared_ptr<ActionPrior> policy_prior;
             double psuedo_q_value_offset;
@@ -98,11 +99,15 @@ namespace thts {
              *          A value of -1.0 or 1.0 for if we are acting as the opponent in a two player game or not 
              *          respectively
              */
-            virtual double get_soft_q_value(std::shared_ptr<const Action> action, double opponent_coeff) const;
+            virtual double get_soft_q_value(
+                std::shared_ptr<const Action> action, 
+                double opponent_coeff, 
+                bool for_search) const;
             virtual void fill_soft_q_values(
                 std::unordered_map<std::shared_ptr<const Action>,double>& q_values,
                 double opponent_coeff,
-                bool for_backup) const;
+                bool for_backup,
+                bool for_search) const;
 
             /**
              * Computes the weights for each action.
@@ -127,7 +132,8 @@ namespace thts {
                 double& sum_action_weights, 
                 double& normalisation_term, 
                 ThtsContext& context,
-                bool for_backup) const;
+                bool for_backup,
+                bool for_search) const;
 
             /**
              * Computes the action distribution for each action. (Including probability mass from epsilon exploration).

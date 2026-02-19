@@ -43,14 +43,12 @@ namespace thts::helper {
     Eigen::ArrayXd project(const Eigen::ArrayXd& direction, const Eigen::ArrayXd& x);
     double dist(const Eigen::ArrayXd& p1, const Eigen::ArrayXd& p2);
     double dot(const Eigen::ArrayXd& p1, const Eigen::ArrayXd& p2);
-
-    struct ConstHeuristicFn {
-        Eigen::ArrayXd const_val;
-        ConstHeuristicFn(Eigen::ArrayXd& const_val);
-        Eigen::ArrayXd heuristic_fn(std::shared_ptr<const State> s, MoThtsEnv& env, MoThtsManager& manager, int depth);
-    };
         
     Eigen::ArrayXd sample_uniform_random_simplex_vector(RandManager& manager, int dim);
+
+    //v1TODO: helper functions
+    string well_spaced_points_filename(int num_points, int dim, bool is_simplex);
+    void ensure_well_spaced_points_generated(int num_points, int dim, bool is_simplex);
 
     /**
      * Generate well spaced points
@@ -61,20 +59,58 @@ namespace thts::helper {
     std::vector<Eigen::ArrayXd> get_well_spaced_points(size_t num_points, size_t dim, bool is_simplex=false);
     std::vector<Eigen::ArrayXd> get_well_spaced_hyperphere_points(size_t num_points, size_t dim);
     std::vector<Eigen::ArrayXd> get_well_spaced_simplex_points(size_t num_points, size_t dim);
+}
+
+namespace thts {
+    /**
+     * Abstract base class for multi objective heuristic functions
+     */
+    struct MoHeuristicFn {
+        public:
+            virtual Eigen::ArrayXd operator()(
+                std::shared_ptr<const State> state, 
+                MoThtsEnv& env, 
+                MoThtsManager& manager, 
+                int depth=0) = 0;
+            virtual ~MoHeuristicFn() = default;
+    };
+
+    /**
+     * A heuristic function that returns a constant value
+     */
+    struct ConstMoHeuristicFn : public MoHeuristicFn {
+        public:
+            ConstMoHeuristicFn(Eigen::ArrayXd const_val);
+            Eigen::ArrayXd operator()(
+                std::shared_ptr<const State> s, 
+                MoThtsEnv& env, 
+                MoThtsManager& manager, 
+                int depth) override;
+            virtual ~ConstMoHeuristicFn() = default;
+        private:
+            Eigen::ArrayXd const_val;
+    };
+
+    /**
+     * A default heuristic function that returns a constant zero vector
+     */
+    struct MoZeroHeuristicFn : public ConstMoHeuristicFn {
+        public:
+            MoZeroHeuristicFn(int dim);
+            virtual ~MoZeroHeuristicFn() = default;
+    };
 
     /**
      * The multi objective rollout heuristic function, that returns an MC estimate of 'state' with a rollout with random policy
      */
-    Eigen::ArrayXd mo_rollout_heuristic_fn(
-        std::shared_ptr<const State> state, MoThtsEnv& env, MoThtsManager& manager, int depth);
-
-
-
-
-
-
-
-    //v1TODO: helper functions
-    string well_spaced_points_filename(int num_points, int dim, bool is_simplex);
-    void ensure_well_spaced_points_generated(int num_points, int dim, bool is_simplex);
+    struct MoRolloutHeuristicFn : public MoHeuristicFn {
+        public:
+            MoRolloutHeuristicFn();
+            Eigen::ArrayXd operator()(
+                std::shared_ptr<const State> s, 
+                MoThtsEnv& env, 
+                MoThtsManager& manager, 
+                int depth) override;
+            virtual ~MoRolloutHeuristicFn() = default;
+    };
 }

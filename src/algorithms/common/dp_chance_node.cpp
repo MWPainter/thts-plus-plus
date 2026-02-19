@@ -38,6 +38,19 @@ namespace thts {
             dp_value += child_n_selections * child.dp_value / sum_child_n_selections;
         }
         dp_value += local_reward; // +R(s,a)
+        
+        dp_value_for_search = 0.0;
+        sum_child_n_selections = 0;
+        for (pair<shared_ptr<const Observation>,shared_ptr<DPDNode>> pr : children) {
+            shared_ptr<const Observation> observation = pr.first;
+            DPDNode& child = (DPDNode&) *pr.second;
+            double child_n_selections = empirical_distribution[observation];
+            if (child_n_selections == 0) continue;
+            sum_child_n_selections += child_n_selections;
+            dp_value_for_search *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+            dp_value_for_search += child_n_selections * child.dp_value_for_search / sum_child_n_selections;
+        }
+        dp_value_for_search += local_reward; // +R(s,a)
 
         num_backups++;
     }

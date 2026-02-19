@@ -22,6 +22,9 @@ namespace thts {
         // Allow UctDNode access to private members
         friend MaxUctDNode;
 
+        protected:
+            double avg_return_for_search;
+
         /**
          * Core ThtsCNode implementation functions. Implement in .cpp and add any docstrings.
          */

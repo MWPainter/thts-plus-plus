@@ -33,7 +33,7 @@ namespace thts {
         static const int num_threads_default = 1;
         static const int num_envs_default = 1;
         static const int max_depth_default = std::numeric_limits<int>::max();
-        // static const HeuristicFnPtr heuristic_fn_default = helper::zero_heuristic_fn;
+        // static const HeuristicFn heuristic_fn_default = helper::ZeroHeuristicFn();
         static constexpr double heuristic_weight_default = 1.0;
         // static const PriorFnPtr prior_fn_default = nullptr;
 
@@ -48,7 +48,7 @@ namespace thts {
         int num_threads;
         int num_envs;
         int max_depth;
-        HeuristicFnPtr heuristic_fn;
+        std::shared_ptr<HeuristicFn> heuristic_fn;
         double heuristic_weight;
         PriorFnPtr prior_fn;
 
@@ -64,7 +64,7 @@ namespace thts {
             num_threads(num_threads_default),
             num_envs(num_envs_default),
             max_depth(max_depth_default),
-            heuristic_fn(helper::zero_heuristic_fn),
+            heuristic_fn(std::make_shared<ZeroHeuristicFn>()),
             heuristic_weight(heuristic_weight_default),
             prior_fn(nullptr),
             mcts_mode(mcts_mode_default),
@@ -262,7 +262,7 @@ namespace thts {
             int num_threads;
             int num_envs;
             int max_depth;
-            HeuristicFnPtr heuristic_fn;
+            std::shared_ptr<HeuristicFn> heuristic_fn;
             double heuristic_weight;
             PriorFnPtr prior_fn;
 

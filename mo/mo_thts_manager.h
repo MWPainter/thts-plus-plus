@@ -1,6 +1,7 @@
 #pragma once
 
 #include "thts_manager.h"
+#include "mo/mo_helper.h"
 #include "mo/mo_helper_templates.h"
 #include "mo/mo_thts_env.h"
 #include "mo/mo_thts_types.h"
@@ -27,7 +28,7 @@ namespace thts {
         static constexpr double solved_labelling_tolerance_default = 0.1;
         
         int reward_dim;
-        MoHeuristicFnPtr mo_heuristic_fn;
+        std::shared_ptr<MoHeuristicFn> mo_heuristic_fn;
         int heuristic_psuedo_trials;
         bool use_vector_visit_counts;
 
@@ -66,7 +67,7 @@ namespace thts {
     class MoThtsManager : public ThtsManager {
         public:
             int reward_dim;
-            MoHeuristicFnPtr mo_heuristic_fn;
+            std::shared_ptr<MoHeuristicFn> mo_heuristic_fn;
             int heuristic_psuedo_trials;
             bool use_vector_visit_counts;
 
@@ -98,6 +99,6 @@ namespace thts {
              * Work around to get a default heuristic using a dynamic value (as template parameters need to be 
              * specified at compile time).
             */
-            MoHeuristicFnPtr get_default_mo_zero_heuristic_fn();
+            std::shared_ptr<MoHeuristicFn> get_default_mo_zero_heuristic_fn();
     };
 }

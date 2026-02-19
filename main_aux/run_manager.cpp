@@ -286,15 +286,15 @@ namespace thts {
         bool mcts_mode = get_mcts_mode();
         if (mcts_mode) 
         {
-            manager_args.heuristic_fn = helper::rollout_heuristic_fn;
+            manager_args.heuristic_fn = make_shared<RolloutHeuristicFn>();
         }
         else if (ONE_HEURISTIC_ENVS.contains(env_id))
         {
-            manager_args.heuristic_fn = helper::one_heuristic_fn;
+            manager_args.heuristic_fn = make_shared<OneHeuristicFn>();
         }
         else
         {
-            manager_args.heuristic_fn = helper::zero_heuristic_fn;
+            manager_args.heuristic_fn = make_shared<ZeroHeuristicFn>();
         }
         manager_args.mcts_mode = get_mcts_mode();
         manager_args.graph_search = get_graph_search();

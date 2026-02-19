@@ -45,7 +45,8 @@ namespace thts {
         if (eval_mo_heuristic && thts_manager->mo_heuristic_fn != nullptr && !is_sink)
         {
             MoThtsEnv& mo_thts_env = (MoThtsEnv&) *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());
-            mo_heuristic_value = thts_manager->mo_heuristic_fn(state, mo_thts_env, *thts_manager, decision_depth);
+            MoHeuristicFn& mo_heuristic_fn = *thts_manager->mo_heuristic_fn;
+            mo_heuristic_value = mo_heuristic_fn(state, mo_thts_env, *thts_manager, decision_depth);
             vector_visit_count = Vec(thts_manager->reward_dim, thts_manager->heuristic_psuedo_trials);
             num_visits = thts_manager->heuristic_psuedo_trials;
             local_backups = thts_manager->heuristic_psuedo_trials;

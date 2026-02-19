@@ -168,13 +168,13 @@ namespace thts {
 
 
 
-    /**
-     * Typedef for heuristic function pointers
-     * First used in thts_decision_node.h and thts_chance_node.h
-     * N.B. The & here is to get address as we want function pointers
-     */  
-    double _DummyHeuristicFn(std::shared_ptr<const State> s, ThtsEnv& env, ThtsManager& manager, int depth);
-    typedef decltype(&_DummyHeuristicFn) HeuristicFnPtr;
+    // /**
+    //  * Typedef for heuristic function pointers
+    //  * First used in thts_decision_node.h and thts_chance_node.h
+    //  * N.B. The & here is to get address as we want function pointers
+    //  */  
+    // double _DummyHeuristicFn(std::shared_ptr<const State> s, ThtsEnv& env, ThtsManager& manager, int depth);
+    // typedef decltype(&_DummyHeuristicFn) HeuristicFnPtr;
 
     /**
      * Typedef for (action) prior function pointers

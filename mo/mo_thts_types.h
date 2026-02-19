@@ -39,13 +39,13 @@ namespace thts {
 
 
 
-    /**
-     * Typedef for heuristic function pointers
-     * First used in thts_decision_node.h and thts_chance_node.h
-     * N.B. The & here is to get address as we want function pointers
-     */  
-    Eigen::ArrayXd _DummyMoHeuristicFn(std::shared_ptr<const State> s, MoThtsEnv& env, MoThtsManager& manager, int depth);
-    typedef decltype(&_DummyMoHeuristicFn) MoHeuristicFnPtr;
+    // /**
+    //  * Typedef for heuristic function pointers
+    //  * First used in thts_decision_node.h and thts_chance_node.h
+    //  * N.B. The & here is to get address as we want function pointers
+    //  */  
+    // Eigen::ArrayXd _DummyMoHeuristicFn(std::shared_ptr<const State> s, MoThtsEnv& env, MoThtsManager& manager, int depth);
+    // typedef decltype(&_DummyMoHeuristicFn) MoHeuristicFnPtr;
 
 
 

@@ -53,17 +53,21 @@ namespace thts {
 
         // value backup
         double val_estimate;
+        double val_estimate_for_search;
         DentsManager& manager = (DentsManager&) *thts_manager;
         if (manager.use_dp_value) {
             backup_dp<DentsDNode>(children, empirical_distribution, local_reward, is_opponent());
             val_estimate = dp_value;
+            val_estimate_for_search = dp_value_for_search;
         } else {
             backup_emp(trial_cumulative_return_after_node);
             val_estimate = avg_return;
+            val_estimate_for_search = avg_return;
         }
     
         // update local soft_value so that value is sensible / for pretty printing
         soft_value = val_estimate + get_entropy_coeff() * subtree_entropy;
+        soft_value_for_search = val_estimate_for_search + get_entropy_coeff() * subtree_entropy;
     }
 
     /**

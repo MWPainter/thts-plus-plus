@@ -76,12 +76,22 @@ namespace thts {
             }
         }
 
+        dp_value_for_search = opp_coeff * -numeric_limits<double>::infinity();
+
+        for (pair<shared_ptr<const Action>,shared_ptr<DPCNode>> pr : children) {
+            DPCNode& child = *pr.second;
+            if (child.num_backups == 0) continue;
+            if (opp_coeff * child.dp_value_for_search > opp_coeff * dp_value_for_search) {
+                dp_value_for_search = child.dp_value_for_search;
+            }
+        }
+
         num_backups++;
 
         if (has_heuristic_value) 
         {
-            dp_value *= (num_backups - heuristic_weight) / num_backups;
-            dp_value += heuristic_weight * heuristic_value / num_backups;
+            dp_value_for_search *= (num_backups - heuristic_weight) / num_backups;
+            dp_value_for_search += heuristic_weight * heuristic_value / num_backups;
         }
     }
 }

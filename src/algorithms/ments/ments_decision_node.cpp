@@ -99,10 +99,14 @@ namespace thts {
      * Handle numerical instability for the prior_prob=0 case
      * log
      */
-    double MentsDNode::get_soft_q_value(std::shared_ptr<const Action> action, double opp_coeff) const {
+    double MentsDNode::get_soft_q_value(std::shared_ptr<const Action> action, double opp_coeff, bool for_search) const {
         if (has_child_node(action)) {
             MentsCNode& child = (MentsCNode&) *get_child_node(action);
-            return child.soft_value * opp_coeff;
+            if (for_search) {
+                return child.soft_value_for_search * opp_coeff;
+            } else {
+                return child.soft_value * opp_coeff;
+            }
         } 
 
         if (has_prior()) {
@@ -126,10 +130,11 @@ namespace thts {
     void MentsDNode::fill_soft_q_values(
         unordered_map<shared_ptr<const Action>,double>& q_values,
         double opp_coeff,
-        bool for_backup) const
+        bool for_backup,
+        bool for_search) const
     {
         for (shared_ptr<const Action> action : *actions) {
-            q_values[action] = get_soft_q_value(action, opp_coeff);
+            q_values[action] = get_soft_q_value(action, opp_coeff, for_search);
         }
     }
 
@@ -158,7 +163,8 @@ namespace thts {
         double& sum_action_weights, 
         double& normalisation_term, 
         ThtsContext& context,
-        bool for_backup) const
+        bool for_backup,
+        bool for_search) const
     {
         // get temp
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
@@ -166,7 +172,7 @@ namespace thts {
 
         // Get current q values
         unordered_map<shared_ptr<const Action>,double> q_values;
-        fill_soft_q_values(q_values, opp_coeff, for_backup);
+        fill_soft_q_values(q_values, opp_coeff, for_backup, for_search);
 
         // optionally normalise q values (for action selection)
         MentsManager& manager = (MentsManager&) *thts_manager;
@@ -227,7 +233,7 @@ namespace thts {
         // compute boltzmann weights
         double sum_weights;
         double _normalisation_term;
-        compute_action_weights(action_distr, sum_weights, _normalisation_term, context, false);
+        compute_action_weights(action_distr, sum_weights, _normalisation_term, context, false, true);
 
         // compute lambda
         MentsManager& manager = (MentsManager&) *thts_manager;
@@ -297,7 +303,7 @@ namespace thts {
         unordered_map<shared_ptr<const Action>, double> soft_values;
 
         for (shared_ptr<const Action> action : *actions) {
-            double q_value = get_soft_q_value(action, opp_coeff);
+            double q_value = get_soft_q_value(action, opp_coeff, false);
             if (has_child_node(action) && get_child_node(action)->num_visits >= manager.recommend_visit_threshold) {
                 soft_values_thresholded[action] = q_value;
             } else {
@@ -361,19 +367,29 @@ namespace thts {
     void MentsDNode::backup_soft(ThtsContext& ctx) {
         num_backups++;
 
+        double opp_coeff = is_opponent() ? -1.0 : 1.0;
+        double temp = get_temp();
+
         ActionDistr action_weights;
         double sum_weights;
         double normalisation_term;
-        compute_action_weights(action_weights, sum_weights, normalisation_term, ctx, true);
+        compute_action_weights(action_weights, sum_weights, normalisation_term, ctx, true, false);
 
-        double opp_coeff = is_opponent() ? -1.0 : 1.0;
-        double temp = get_temp();
         soft_value = opp_coeff * temp * (log(sum_weights) + normalisation_term);
+
+
+
+        ActionDistr action_weights_for_search;
+        double sum_weights_for_search;
+        double normalisation_term_for_search;
+        compute_action_weights(action_weights_for_search, sum_weights_for_search, normalisation_term_for_search, ctx, true, true);
+
+        soft_value_for_search = opp_coeff * temp * (log(sum_weights_for_search) + normalisation_term_for_search);
 
         if (has_heuristic_value()) 
         {
-            soft_value *= (num_backups - thts_manager->heuristic_weight) / num_backups;
-            soft_value += thts_manager->heuristic_weight * heuristic_value / num_backups;
+            soft_value_for_search *= (num_backups - thts_manager->heuristic_weight) / num_backups;
+            soft_value_for_search += thts_manager->heuristic_weight * heuristic_value / num_backups;
         }
     }
 

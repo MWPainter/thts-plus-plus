@@ -75,6 +75,15 @@ namespace thts {
     }
 
     /**
+     * Fill q values to use for search
+     */
+    void UctDNode::fill_q_values(unordered_map<shared_ptr<const Action>,double>& q_values) const {
+        for (shared_ptr<const Action> action : *actions) {
+            q_values[action] = get_child_node(action)->avg_return;
+        }
+    }
+
+    /**
      * Helper to compute ucb values
      * 
      * Iterates through all possible actions, and compute ucb values for them. This function assumes that we want a 

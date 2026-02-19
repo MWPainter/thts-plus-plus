@@ -66,16 +66,6 @@ namespace thts::helper {
         return (p1 * p2).sum();
     }
 
-    
-    ConstHeuristicFn::ConstHeuristicFn(Eigen::ArrayXd& const_val) : const_val(const_val)
-    {
-    };
-    
-    Eigen::ArrayXd ConstHeuristicFn::heuristic_fn(std::shared_ptr<const State> s, MoThtsEnv& env, MoThtsManager& manager, int depth) 
-    {
-        return const_val;
-    }
-
     /**
      * https://cs.stackexchange.com/questions/3227/uniform-sampling-from-a-simplex
      */
@@ -208,11 +198,39 @@ namespace thts::helper {
     vector<Eigen::ArrayXd> get_well_spaced_simplex_points(size_t num_points, size_t dim) {
         return get_well_spaced_points(num_points, dim, true);
     }
+}
+
+namespace thts {
+    /**
+     * Implementation of const heuristic function
+     */
+    ConstMoHeuristicFn::ConstMoHeuristicFn(Eigen::ArrayXd const_val) : const_val(const_val)
+    {
+    };
+    
+    Eigen::ArrayXd ConstMoHeuristicFn::operator()(std::shared_ptr<const State> s, MoThtsEnv& env, MoThtsManager& manager, int depth) 
+    {
+        return this->const_val;
+    }
+
+    /**
+     * Implementation of the default zero heuristic function.
+     */
+    MoZeroHeuristicFn::MoZeroHeuristicFn(int dim) : ConstMoHeuristicFn(Eigen::ArrayXd::Zero(dim))
+    {
+    };
 
     /**
      * Implementation of the rollout heuristic function.
      */
-    Eigen::ArrayXd mo_rollout_heuristic_fn(
+    MoRolloutHeuristicFn::MoRolloutHeuristicFn()
+    {
+    };
+
+    /**
+     * Implementation of the rollout heuristic function.
+     */
+    Eigen::ArrayXd MoRolloutHeuristicFn::operator()(
         shared_ptr<const State> state, MoThtsEnv& env, MoThtsManager& manager, int depth) 
     {
         ThtsContext& ctx = *manager.get_thts_context();

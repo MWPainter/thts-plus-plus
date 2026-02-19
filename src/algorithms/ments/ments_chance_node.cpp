@@ -90,6 +90,19 @@ namespace thts {
             soft_value += child_n_selections * child.soft_value / sum_child_n_selections;
         }
         soft_value += local_reward; // +R(s,a)
+
+        soft_value_for_search = 0.0;
+        sum_child_n_selections = 0;
+        for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
+            shared_ptr<const Observation> observation = pr.first;
+            MentsDNode& child = (MentsDNode&) *pr.second;
+            double child_n_selections = empirical_distribution[observation];
+            if (child_n_selections == 0) continue;
+            sum_child_n_selections += child_n_selections;
+            soft_value_for_search *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+            soft_value_for_search += child_n_selections * child.soft_value_for_search / sum_child_n_selections;
+        }
+        soft_value_for_search += local_reward; // +R(s,a)
     }
 
     /**

@@ -51,11 +51,12 @@ namespace thts {
              *          A value of -1.0 or 1.0 for if we are acting as the opponent in a two player game or not 
              *          respectively
              */
-            virtual double get_soft_q_value(std::shared_ptr<const Action> action, double opponent_coeff) const override;
+            virtual double get_soft_q_value(std::shared_ptr<const Action> action, double opponent_coeff, bool for_search) const override;
             virtual void fill_soft_q_values(
                 std::unordered_map<std::shared_ptr<const Action>,double>& q_values,
                 double opponent_coeff,
-                bool for_backup) const override;
+                bool for_backup,
+                bool for_search) const override;
 
             /**
              * Calls both the entropy backup and dp backup from DPDNode

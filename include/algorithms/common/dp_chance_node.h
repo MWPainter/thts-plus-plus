@@ -30,11 +30,12 @@ namespace thts {
         protected:
             int num_backups;
             double dp_value;
+            double dp_value_for_search;
 
             /**
              * Constructor 
              */
-            DPCNode() : num_backups(0), dp_value(0.0){};
+            DPCNode() : num_backups(0), dp_value(0.0), dp_value_for_search(dp_value) {};
 
             /**
              * Destructor

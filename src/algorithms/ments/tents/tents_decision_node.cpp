@@ -31,9 +31,12 @@ namespace thts {
                 static_pointer_cast<const MentsCNode>(parent))
     {
         for (shared_ptr<const Action> action : *actions) {
-            double qval = get_soft_q_value_over_temp(action);
+            double qval = get_soft_q_value_over_temp(action, false);
             qval_to_act.insert(make_pair(qval, action));
             act_to_qval.insert_or_assign(action, qval);
+            double qval_for_search = get_soft_q_value_over_temp(action, true);
+            qval_to_act_for_search.insert(make_pair(qval_for_search, action));
+            act_to_qval_for_search.insert_or_assign(action, qval_for_search);
         }
 
         stringstream ss;
@@ -44,27 +47,43 @@ namespace thts {
     /**
      * Get the value of Q(s,a)/temp from the best available source (see ments get_soft_q_value, tries child, then prior)
     */
-    double TentsDNode::get_soft_q_value_over_temp(shared_ptr<const Action> action) const {
+    double TentsDNode::get_soft_q_value_over_temp(shared_ptr<const Action> action, bool for_search) const {
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
-        double qval = get_soft_q_value(action, opp_coeff);
+        double qval = get_soft_q_value(action, opp_coeff, for_search);
         return qval / get_temp();
     }
 
     /**
      * Updates the tents mapping for 'action' to/from 'neq_q_value'
     */
-    void TentsDNode::update_maps(shared_ptr<const Action> action, double new_q_value) {
-        double old_q_value = act_to_qval[action];
-        act_to_qval.erase(action);
-        for (auto it=qval_to_act.find(old_q_value); it != qval_to_act.end(); it++) {
-            if (it->first != old_q_value) throw runtime_error("Error in updating Tents maps.");
+    void TentsDNode::update_maps(shared_ptr<const Action> action, double new_q_value, bool for_search) {
+        if (!for_search) {
+            double old_q_value = act_to_qval[action];
+            act_to_qval.erase(action);
+            for (auto it=qval_to_act.find(old_q_value); it != qval_to_act.end(); it++) {
+                if (it->first != old_q_value) throw runtime_error("Error in updating Tents maps.");
+                if (it->second != action) continue;
+                qval_to_act.erase(it);
+                break;
+            }
+
+            act_to_qval.insert_or_assign(action, new_q_value);
+            qval_to_act.insert(make_pair(new_q_value, action));
+
+            return;
+        }
+
+        double old_q_value_for_search = act_to_qval_for_search[action];
+        act_to_qval_for_search.erase(action);
+        for (auto it=qval_to_act_for_search.find(old_q_value_for_search); it != qval_to_act_for_search.end(); it++) {
+            if (it->first != old_q_value_for_search) throw runtime_error("Error in updating Tents maps.");
             if (it->second != action) continue;
-            qval_to_act.erase(it);
+            qval_to_act_for_search.erase(it);
             break;
         }
 
-        act_to_qval.insert_or_assign(action, new_q_value);
-        qval_to_act.insert(make_pair(new_q_value, action));
+        act_to_qval_for_search.insert_or_assign(action, new_q_value);
+        qval_to_act_for_search.insert(make_pair(new_q_value, action));
     }
 
     /**
@@ -75,11 +94,28 @@ namespace thts {
      * It is important the the values of Q(s,a)/temp are iterated over from the highest to lowest values (which the 
      * reverse iterator over the multimap will do)
     */
-    unique_ptr<ActionVector> TentsDNode::get_sparse_action_set() const {
+    unique_ptr<ActionVector> TentsDNode::get_sparse_action_set(bool for_search) const {
+        if (!for_search) {
+            unique_ptr<ActionVector> sparse_action_set = make_unique<ActionVector>();
+            double i = 0;
+            double sum_values = 0.0;
+            for (auto it=qval_to_act.rbegin(); it != qval_to_act.rend(); it++) {
+                double value = it->first;
+                shared_ptr<const Action> action = it->second;
+                sum_values += value;
+                if (1.0 + (i+1.0)*value > sum_values) {
+                    sparse_action_set->push_back(action);
+                }
+                i++;
+            }
+            return sparse_action_set;
+        }
+
+
         unique_ptr<ActionVector> sparse_action_set = make_unique<ActionVector>();
         double i = 0;
         double sum_values = 0.0;
-        for (auto it=qval_to_act.rbegin(); it != qval_to_act.rend(); it++) {
+        for (auto it=qval_to_act_for_search.rbegin(); it != qval_to_act_for_search.rend(); it++) {
             double value = it->first;
             shared_ptr<const Action> action = it->second;
             sum_values += value;
@@ -96,19 +132,32 @@ namespace thts {
      * http://proceedings.mlr.press/v139/dam21a/dam21a.pdf
      * This just computes the spmax equation given in the paper
     */
-    double TentsDNode::spmax() const {
-        unique_ptr<ActionVector> sparse_action_set = get_sparse_action_set();
+    double TentsDNode::spmax(bool for_search) const {
+        unique_ptr<ActionVector> sparse_action_set = get_sparse_action_set(for_search);
 
         double sum_sparse_values = 0.0;
-        for (shared_ptr<const Action> action : *sparse_action_set) {
-            sum_sparse_values += act_to_qval.at(action);
+        if (!for_search) {
+            for (shared_ptr<const Action> action : *sparse_action_set) {
+                    sum_sparse_values += act_to_qval.at(action);
+            }
+        } else {
+            for (shared_ptr<const Action> action : *sparse_action_set) {
+                sum_sparse_values += act_to_qval_for_search.at(action);
+            }
         }
 
         double spmax_common_term = 0.5 * pow(sum_sparse_values-1.0, 2.0) / pow(sparse_action_set->size(), 2.0);
         double spmax = 0.5;
-        for (shared_ptr<const Action> action : *sparse_action_set) {
-            double action_val = act_to_qval.at(action);
-            spmax += pow(action_val, 2.0) / 2.0 - spmax_common_term;
+        if (!for_search) {
+            for (shared_ptr<const Action> action : *sparse_action_set) {
+                double action_val = act_to_qval.at(action);
+                spmax += pow(action_val, 2.0) / 2.0 - spmax_common_term;
+            }
+        } else {
+            for (shared_ptr<const Action> action : *sparse_action_set) {
+                double action_val = act_to_qval_for_search.at(action);
+                spmax += pow(action_val, 2.0) / 2.0 - spmax_common_term;
+            }
         }
 
         return spmax;
@@ -128,22 +177,24 @@ namespace thts {
         ActionDistr& action_weights, 
         double& sum_action_weights, 
         double& normalisation_term, 
-        ThtsContext& context) const
+        ThtsContext& context,
+        bool for_backup,
+        bool for_search) const
     {
         sum_action_weights = 0.0;
         normalisation_term = 0.0;
 
         // compute the common term
-        unique_ptr<ActionVector> sparse_action_set = get_sparse_action_set();
+        unique_ptr<ActionVector> sparse_action_set = get_sparse_action_set(for_search);
         double sum_sparse_values = 0.0;
         for (shared_ptr<const Action> action : *sparse_action_set) {
-            sum_sparse_values += get_soft_q_value_over_temp(action);
+            sum_sparse_values += get_soft_q_value_over_temp(action, for_search);
         }
         double common_term = (sum_sparse_values - 1.0) / sparse_action_set->size();
 
         // compute weights and store
         for (shared_ptr<const Action> action : *actions) {
-            double weight = get_soft_q_value_over_temp(action) - common_term;
+            double weight = get_soft_q_value_over_temp(action, for_search) - common_term;
             if (weight < 0.0) weight = 0.0;
             action_weights[action] = weight;
             sum_action_weights += weight;
@@ -176,8 +227,10 @@ namespace thts {
     */
    void TentsDNode::backup_update_map(ThtsContext& ctx) {
         shared_ptr<const Action> selected_action = ctx.get_value_ptr_const<Action>(_selected_action_key);
-        double new_q_value = get_soft_q_value_over_temp(selected_action);
-        update_maps(selected_action, new_q_value);
+        double new_q_value = get_soft_q_value_over_temp(selected_action, false);
+        update_maps(selected_action, new_q_value, false);
+        new_q_value = get_soft_q_value_over_temp(selected_action, true);
+        update_maps(selected_action, new_q_value, true);
    }
 
     /**
@@ -193,12 +246,13 @@ namespace thts {
 
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         double temp = get_temp();
-        soft_value = opp_coeff * temp * spmax();
+        soft_value = opp_coeff * temp * spmax(false);
+        soft_value_for_search = opp_coeff * temp * spmax(true);
 
         if (has_heuristic_value()) 
         {
-            soft_value *= (num_backups - thts_manager->heuristic_weight) / num_backups;
-            soft_value += thts_manager->heuristic_weight * heuristic_value / num_backups;
+            soft_value_for_search *= (num_backups - thts_manager->heuristic_weight) / num_backups;
+            soft_value_for_search += thts_manager->heuristic_weight * heuristic_value / num_backups;
         }
    }
 

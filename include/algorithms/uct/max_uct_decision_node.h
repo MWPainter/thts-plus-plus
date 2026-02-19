@@ -23,6 +23,8 @@ namespace thts {
     class MaxUctDNode : public UctDNode {
         friend MaxUctCNode;
 
+        protected:
+            double avg_return_for_search;
 
 
         /**
@@ -38,6 +40,11 @@ namespace thts {
                 int decision_depth,
                 int decision_timestep,
                 std::shared_ptr<const MaxUctCNode> parent=nullptr); 
+
+            /**
+             * Override fill q values to use for search - to include heuristic value
+             */
+            virtual void fill_q_values(std::unordered_map<std::shared_ptr<const Action>,double>& q_values) const override;
             
             /**
              * Implements the thts backup function for the node

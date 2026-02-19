@@ -240,3 +240,12 @@ make && clear &&
 19/2/26
 
 python plot_aux.py dchain scenic_route fl_dense fl_sparse fl_slippy sailing_n sailing_se
+
+make && clear &&
+./run_memory_limited 8G ./auxexpr opt 300 && 
+./run_memory_limited 8G ./auxexpr opt 301 && 
+./run_memory_limited 8G ./auxexpr opt 310 && 
+./run_memory_limited 8G ./auxexpr opt 311 && 
+./run_memory_limited 8G ./auxexpr opt 330 && 
+./run_memory_limited 8G ./auxexpr opt 340 && 
+./run_memory_limited 8G ./auxexpr opt 350

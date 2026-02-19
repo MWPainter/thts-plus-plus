@@ -79,7 +79,9 @@ namespace thts {
         ActionDistr& action_weights, 
         double& sum_action_weights, 
         double& normalisation_term, 
-        ThtsContext& context) const
+        ThtsContext& context,
+        bool for_backup,
+        bool for_search) const
     {
         // get temp
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
@@ -87,13 +89,11 @@ namespace thts {
 
         // Get current q values
         unordered_map<shared_ptr<const Action>,double> q_values;
-        for (shared_ptr<const Action> action : *actions) {
-            q_values[action] = get_soft_q_value(action,opp_coeff);
-        }
+        fill_soft_q_values(q_values, opp_coeff, for_backup, for_search);
 
         // optionally normalise q values
         MentsManager& manager = (MentsManager&) *thts_manager;
-        if (manager.normalise_q_values) {
+        if (!for_backup && manager.normalise_q_values) {
             double min_q_value = numeric_limits<double>::max();
             double max_q_value = numeric_limits<double>::lowest();
 

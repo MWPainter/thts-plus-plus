@@ -21,34 +21,42 @@ namespace thts {
                 action,
                 decision_depth,
                 decision_timestep,
-                static_pointer_cast<const UctDNode>(parent))
+                static_pointer_cast<const UctDNode>(parent)),
+            avg_return_for_search(0.0)
     {  
     }
 
-    // void MaxUctCNode::backup(
-    //     const vector<double>& trial_rewards_before_node, 
-    //     const vector<double>& trial_rewards_after_node, 
-    //     const double trial_cumulative_return_after_node, 
-    //     const double trial_cumulative_return,
-    //     ThtsContext& ctx) 
-    // {
-    //     avg_return = 0.0;
-    //     double sum_child_n_selections = 0;
-    //     lock_all_children();
-    //     for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
-    //         shared_ptr<const Observation> observation = pr.first;
-    //         MaxUctDNode& child = (MaxUctDNode&) *pr.second;
-    //         double child_n_selections = empirical_distribution[observation];
-    //         if (child_n_selections == 0) continue;
-    //         sum_child_n_selections += child_n_selections   ;
-    //         avg_return *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
-    //         avg_return += child_n_selections * child.avg_return / sum_child_n_selections;
-    //     }
-    //     unlock_all_children();
-    //     avg_return += local_reward; // +R(s,a)
+    /**
+     * Calls the running average return backup function.
+     */
+    void MaxUctCNode::backup(
+        const vector<double>& trial_rewards_before_node, 
+        const vector<double>& trial_rewards_after_node, 
+        const double trial_cumulative_return_after_node, 
+        const double trial_cumulative_return,
+        ThtsContext& ctx) 
+    {
+        // backup_average_return(trial_cumulative_return_after_node);
+        
+        avg_return = 0.0;
+        avg_return_for_search = 0.0;
+        double sum_child_n_selections = 0;
+        for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
+            shared_ptr<const Observation> observation = pr.first;
+            MaxUctDNode& child = (MaxUctDNode&) *pr.second;
+            double child_n_selections = empirical_distribution[observation];
+            if (child_n_selections == 0) continue;
+            sum_child_n_selections += child_n_selections;
+            avg_return *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+            avg_return += child_n_selections * child.avg_return / sum_child_n_selections;
+            avg_return_for_search *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+            avg_return_for_search += child_n_selections * child.avg_return_for_search / sum_child_n_selections;
+        }
+        avg_return += local_reward; // +R(s,a)
+        avg_return_for_search += local_reward; // +R(s,a)
 
-    //     num_backups++;
-    // }
+        num_backups++;
+    }
 
     shared_ptr<MaxUctDNode> MaxUctCNode::create_child_node_helper(shared_ptr<const State> observation) const
     {

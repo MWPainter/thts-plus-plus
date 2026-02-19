@@ -104,7 +104,9 @@ namespace thts {
                 ActionDistr& action_weights, 
                 double& sum_action_weights, 
                 double& normalisation_term, 
-                ThtsContext& context) const;
+                ThtsContext& context,
+                bool for_backup,
+                bool for_search) const override;
 
             /**
              * Implements select_action for rents.
