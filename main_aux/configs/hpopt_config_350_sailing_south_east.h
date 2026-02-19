@@ -33,11 +33,13 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_350 =
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
         {ALG_PARAM_ID_BIAS, std::make_pair(1.0e-4,  1.0e4)},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  std::make_pair(-100.0,  100.0)},
     },
     // max uct params
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT},
         {ALG_PARAM_ID_BIAS, std::make_pair(1.0e-4,  1.0e4)},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  std::make_pair(-100.0,  100.0)},
     },
     // hmcts params
     {
@@ -51,7 +53,7 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_350 =
         {ALG_PARAM_ID_INIT_TEMP,        std::make_pair(1.0e-4,  1.0e4)},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  std::make_pair(1.0e-4,  1.0e4)},
         {ALG_PARAM_ID_EPSILON,          std::make_pair(1.0e-6,  1.0e0)},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  std::make_pair(-100.0,  0.0)},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  std::make_pair(-100.0,  100.0)},
     },
     // rents params
     {
@@ -59,7 +61,7 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_350 =
         {ALG_PARAM_ID_INIT_TEMP,        std::make_pair(1.0e-4,  1.0e4)},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  std::make_pair(1.0e-4,  1.0e4)},
         {ALG_PARAM_ID_EPSILON,          std::make_pair(1.0e-6,  1.0e0)},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  std::make_pair(-100.0,  0.0)},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  std::make_pair(-100.0,  100.0)},
     },
     // tents params
     {
@@ -75,7 +77,7 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_350 =
         {ALG_PARAM_ID_INIT_TEMP,        std::make_pair(1.0e-4,  1.0e4)},
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  std::make_pair(1.0e-6,  1.0e4)},
         {ALG_PARAM_ID_EPSILON,          std::make_pair(1.0e-6,  1.0e0)},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  std::make_pair(-100.0,  0.0)},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  std::make_pair(-100.0,  100.0)},
     },
     // dents params
     {
@@ -83,7 +85,7 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_350 =
         {ALG_PARAM_ID_INIT_TEMP,                std::make_pair(1.0e-4,  1.0e4)},
         {ALG_PARAM_ID_TEMP_DECAY_RATE,          std::make_pair(1.0e-6,  1.0e4)},
         {ALG_PARAM_ID_EPSILON,                  std::make_pair(1.0e-6,  1.0e0)},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,          std::make_pair(-100.0,  0.0)},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,          std::make_pair(-100.0,  100.0)},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       std::make_pair(1.0e-4,  1.0e4)},
         {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    std::make_pair(1.0e0,  1.0e4)},
     },

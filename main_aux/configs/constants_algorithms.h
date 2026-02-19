@@ -36,7 +36,7 @@ static const std::string ALG_PARAM_ID_TEMP_DECAY_RATE= "temp_decay_rate";       
 static const std::string ALG_PARAM_ID_INIT_ENTROPY_COEFF = "entropy_coeff";                 // initial entropy coeff (dents)
 static const std::string ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT = "entropy_zero_at";            // number of trials after which entropy_coeff linearly decays to zero (dents)
 static const std::string ALG_PARAM_ID_EPSILON = "epsilon";                                  // exploration param (boltzmann algorithms)
-static const std::string ALG_PARAM_ID_DEFAULT_Q_VALUE = "default_q_value";                  // default value of Q(s,a) for unseen state action pairs (boltzmann algorithms)
+static const std::string ALG_PARAM_ID_HEURISTIC_VALUE = "heuristic_value";                  // default (constant) value to use for a heuristic
 
 // ---------------------------------------------------------------------------------------------------------------------
 // A map specifying the relevant parameters for each algorithm (all the params that should be specified)
@@ -47,17 +47,20 @@ static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_
     {ALG_ID_UCT,
         {
             ALG_PARAM_ID_BIAS,
+            ALG_PARAM_ID_HEURISTIC_VALUE,
         },
     },
     {ALG_ID_MAX_UCT,
         {
             ALG_PARAM_ID_BIAS,
+            ALG_PARAM_ID_HEURISTIC_VALUE,
         },
     },
     {ALG_ID_HMCTS,
         {
             ALG_PARAM_ID_BIAS,
             ALG_PARAM_ID_UCT_BUDGET,
+            ALG_PARAM_ID_HEURISTIC_VALUE,
         },
     },
     {ALG_ID_MENTS,
@@ -65,7 +68,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_
             ALG_PARAM_ID_INIT_TEMP,
             // ALG_PARAM_ID_TEMP_DECAY_RATE,
             ALG_PARAM_ID_EPSILON,
-            ALG_PARAM_ID_DEFAULT_Q_VALUE,
+            ALG_PARAM_ID_HEURISTIC_VALUE,
         },
     },
     {ALG_ID_RENTS,
@@ -73,7 +76,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_
             ALG_PARAM_ID_INIT_TEMP,
             // ALG_PARAM_ID_TEMP_DECAY_RATE,
             ALG_PARAM_ID_EPSILON,
-            ALG_PARAM_ID_DEFAULT_Q_VALUE,
+            ALG_PARAM_ID_HEURISTIC_VALUE,
         },
     },
     {ALG_ID_TENTS,
@@ -81,7 +84,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_
             ALG_PARAM_ID_INIT_TEMP,
             // ALG_PARAM_ID_TEMP_DECAY_RATE,
             ALG_PARAM_ID_EPSILON,
-            ALG_PARAM_ID_DEFAULT_Q_VALUE,
+            ALG_PARAM_ID_HEURISTIC_VALUE,
         },
     },
     {ALG_ID_BTS,
@@ -89,7 +92,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_
             ALG_PARAM_ID_INIT_TEMP,
             ALG_PARAM_ID_TEMP_DECAY_RATE,
             ALG_PARAM_ID_EPSILON,
-            ALG_PARAM_ID_DEFAULT_Q_VALUE,
+            ALG_PARAM_ID_HEURISTIC_VALUE,
         },
     },
     {ALG_ID_DENTS,
@@ -99,7 +102,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_
             ALG_PARAM_ID_INIT_ENTROPY_COEFF,
             ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,
             ALG_PARAM_ID_EPSILON,
-            ALG_PARAM_ID_DEFAULT_Q_VALUE,
+            ALG_PARAM_ID_HEURISTIC_VALUE,
         },
     },
 };

@@ -89,7 +89,7 @@ namespace thts {
             double get_init_entropy_coeff();
             double get_entropy_zero_at();
             double get_epsilon();
-            double get_default_q_value();
+            double get_heuristic_value();
 
             /**
              * Returns if the env we are using is a python env

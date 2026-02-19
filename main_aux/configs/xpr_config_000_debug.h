@@ -108,5 +108,6 @@ static const std::vector<ConfigMap> CONFIG_000 =
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT},
         {ALG_PARAM_ID_BIAS, 2.46939},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
 };

@@ -28,6 +28,6 @@ static const std::vector<ConfigMap> CONFIG_999 =
         {ALG_PARAM_ID_INIT_TEMP,        100.0},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.01},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
 };

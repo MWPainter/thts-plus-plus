@@ -27,17 +27,20 @@ static const std::vector<ConfigMap> CONFIG_411 =
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
         {ALG_PARAM_ID_BIAS, 3.10925},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
     // max uct params: 0.794887
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT},
         {ALG_PARAM_ID_BIAS, 1.42329},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
     // hmcts params: 0.83045
     {
         {XPR_OR_ALG_ID_TAG,         ALG_ID_HMCTS},
         {ALG_PARAM_ID_BIAS,         3.16228},
         {ALG_PARAM_ID_UCT_BUDGET,   5},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
     // ments params: 0.827363
     {
@@ -45,7 +48,7 @@ static const std::vector<ConfigMap> CONFIG_411 =
         {ALG_PARAM_ID_INIT_TEMP,        0.0026165},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.00284344},
         {ALG_PARAM_ID_EPSILON,          1.0},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
     // rents params: 0.824824
     {
@@ -53,7 +56,7 @@ static const std::vector<ConfigMap> CONFIG_411 =
         {ALG_PARAM_ID_INIT_TEMP,        0.000141045},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.00010024},
         {ALG_PARAM_ID_EPSILON,          1.0},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
     // tents params: 0.830534
     {
@@ -61,7 +64,7 @@ static const std::vector<ConfigMap> CONFIG_411 =
         {ALG_PARAM_ID_INIT_TEMP,        0.00151683},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0001},
         {ALG_PARAM_ID_EPSILON,          1.0},      
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
 
     },
     // bts params: 0.830997
@@ -70,7 +73,7 @@ static const std::vector<ConfigMap> CONFIG_411 =
         {ALG_PARAM_ID_INIT_TEMP,        0.540259},
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.00843341},
         {ALG_PARAM_ID_EPSILON,          0.999823},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,  0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
     // dents params: 0.839783
     {
@@ -78,7 +81,7 @@ static const std::vector<ConfigMap> CONFIG_411 =
         {ALG_PARAM_ID_INIT_TEMP,                0.897669,},
         {ALG_PARAM_ID_TEMP_DECAY_RATE,          0.000339204},
         {ALG_PARAM_ID_EPSILON,                  0.999702},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,          0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,          0.0},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.00114433},
         {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    82.446},
     },

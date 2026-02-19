@@ -33,16 +33,19 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_301 =
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
         {ALG_PARAM_ID_BIAS, std::make_pair(1.0e-4,  1.0e4)},
+        {ALG_PARAM_ID_HEURISTIC_VALUE, std::make_pair(-100.0,  100.0)},
     },
     // max uct params
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT},
         {ALG_PARAM_ID_BIAS, std::make_pair(1.0e-4,  1.0e4)},
+        {ALG_PARAM_ID_HEURISTIC_VALUE, std::make_pair(-100.0,  100.0)},
     },
     // hmcts params
     {
         {XPR_OR_ALG_ID_TAG,         ALG_ID_HMCTS},
         {ALG_PARAM_ID_BIAS,         std::make_pair(1.0e-4,  1.0e4)},
         {ALG_PARAM_ID_UCT_BUDGET,   std::make_pair(1.0,     5000.0)},
+        {ALG_PARAM_ID_HEURISTIC_VALUE, std::make_pair(-100.0,  100.0)},
     },
 };

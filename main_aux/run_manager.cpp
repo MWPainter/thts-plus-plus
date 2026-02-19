@@ -211,7 +211,7 @@ namespace thts {
     double RunManager::get_init_entropy_coeff() { return get_config_value<double>(alg_config, ALG_PARAM_ID_INIT_ENTROPY_COEFF); }
     double RunManager::get_entropy_zero_at()    { return get_config_value<double>(alg_config, ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT); }
     double RunManager::get_epsilon()            { return get_config_value<double>(alg_config, ALG_PARAM_ID_EPSILON); }
-    double RunManager::get_default_q_value()    { return get_config_value<double>(alg_config, ALG_PARAM_ID_DEFAULT_Q_VALUE); }
+    double RunManager::get_heuristic_value()    { return get_config_value<double>(alg_config, ALG_PARAM_ID_HEURISTIC_VALUE); }
 
 
     /**
@@ -288,13 +288,9 @@ namespace thts {
         {
             manager_args.heuristic_fn = make_shared<RolloutHeuristicFn>();
         }
-        else if (ONE_HEURISTIC_ENVS.contains(env_id))
+        else 
         {
-            manager_args.heuristic_fn = make_shared<OneHeuristicFn>();
-        }
-        else
-        {
-            manager_args.heuristic_fn = make_shared<ZeroHeuristicFn>();
+            manager_args.heuristic_fn = make_shared<ConstHeuristicFn>(get_heuristic_value());
         }
         manager_args.mcts_mode = get_mcts_mode();
         manager_args.graph_search = get_graph_search();
@@ -340,7 +336,7 @@ namespace thts {
             MentsManagerArgs manager_args(env);
             manager_args.temp_schedule_ptr = make_shared<ConstSchedule>(get_init_temp());
             manager_args.epsilon = get_epsilon();
-            manager_args.default_q_value = get_default_q_value();
+            manager_args.default_q_value = get_heuristic_value();
             manager_args.recommend_most_visited = false;
             _add_thts_manager_params_to_args(manager_args, get_env_id());
             return make_shared<MentsManager>(manager_args);
@@ -351,7 +347,7 @@ namespace thts {
             DentsManagerArgs manager_args(env);
             manager_args.temp_schedule_ptr = make_shared<SqrtSchedule>(get_init_temp(), get_temp_decay_rate());
             manager_args.epsilon = get_epsilon();
-            manager_args.default_q_value = get_default_q_value();
+            manager_args.default_q_value = get_heuristic_value();
             manager_args.recommend_most_visited = false;
             
             if (alg_id == ALG_ID_DENTS)
