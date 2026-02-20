@@ -13,7 +13,7 @@ static const std::vector<ConfigMap> CONFIG_402 =
         {XPR_PARAM_ID_NAME,                     "402_eval_frozen_lake_dense_16x16"},
         {XPR_PARAM_ID_ENV,                      ENV_ID_FROZEN_LAKE_D_16x16},
         {XPR_PARAM_ID_MCTS_MODE,                false},
-        {XPR_PARAM_ID_GRAPH_SEARCH,             true},
+        {XPR_PARAM_ID_GRAPH_SEARCH,             false},
         {XPR_PARAM_ID_MAX_TRIAL_LENGTH,         100},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,          false},
         {XPR_PARAM_ID_TERMINATION_BOUND,        250000},
@@ -69,7 +69,7 @@ static const std::vector<ConfigMap> CONFIG_402 =
     // bts params: -15
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_BTS},
-        {ALG_PARAM_ID_INIT_TEMP,                0.999911},
+        {ALG_PARAM_ID_INIT_TEMP,                0.001},
         {ALG_PARAM_ID_TEMP_DECAY_RATE,          0.351609},
         // {ALG_PARAM_ID_INIT_TEMP,        98.2299},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  779.454},
@@ -79,11 +79,14 @@ static const std::vector<ConfigMap> CONFIG_402 =
     // dents params: -15
     {
         {XPR_OR_ALG_ID_TAG,                     ALG_ID_DENTS},
-        {ALG_PARAM_ID_INIT_TEMP,                0.999911},
+        {ALG_PARAM_ID_INIT_TEMP,                0.001},
         {ALG_PARAM_ID_TEMP_DECAY_RATE,          0.351609},
+        // {ALG_PARAM_ID_INIT_TEMP,                0.999911},
+        // {ALG_PARAM_ID_TEMP_DECAY_RATE,          0.351609},
         {ALG_PARAM_ID_EPSILON,                  1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,          0.0},
-        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.000365626},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.0365626},
+        // {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.000365626},
         {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    10000.0},
     },
 };

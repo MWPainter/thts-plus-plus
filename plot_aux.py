@@ -13,6 +13,25 @@ import sys
 
 import glob
 
+
+# This function is vibe coded, pretty sure there is a cleaner way to do continuous hue
+def _param_to_colour(base_colour, t, lighten_frac=0.2):
+    """
+    Map a normalised parameter t in [0, 1] to a colour that goes from
+    a lighter version of base_colour (t=0) to black (t=1).
+    Keeps the algorithm-to-colour mapping while varying shade by parameter.
+    lighten_frac: how much to mix base with white for the "low" end (0 = no lighten, 1 = white).
+    """
+    rgb = np.array(mpl.colors.to_rgb(base_colour))
+    white = np.array([1.0, 1.0, 1.0])
+    light_rgb = (1 - lighten_frac) * rgb + lighten_frac * white
+    black = np.array([0.0, 0.0, 0.0])
+    # t=0 -> rgb, t=1 -> black
+    blend = (1 - t) * rgb + t * black
+    blend = np.clip(blend, 0, 1)
+    return mpl.colors.to_hex(blend)
+
+
 def make_lineplot_df(
     df, 
     x_axis_key, 
@@ -138,6 +157,8 @@ def read_eval_file_to_df(filename,num_trials_scale):
     alg_id = None
     temp = None
     bias = None
+    heuristic_value = None
+    entropy_coeff = None
     with open(filename) as f:
         
         # first two lines are for human readability
@@ -165,11 +186,19 @@ def read_eval_file_to_df(filename,num_trials_scale):
                 temp = float(val)
             elif param_id == "bias":
                 bias = float(val)
+            elif param_id == "heuristic_value":
+                heuristic_value = float(val)
+            elif param_id == "entropy_coeff":
+                entropy_coeff = float(val)
 
     df = pd.read_csv(filepath_or_buffer=filename, header=12, index_col=False, skip_blank_lines=False)
     df["alg_id"] = alg_id
     df["temp"] = temp
     df["bias"] = bias
+    if heuristic_value is not None:
+        df["heuristic_value"] = heuristic_value
+    if entropy_coeff is not None:
+        df["entropy_coeff"] = entropy_coeff
     df["num_trials"] /= num_trials_scale
 
     df = df.rename(columns={
@@ -219,16 +248,22 @@ def make_eval_plot(
     y_scale_transform_forward=None,
     y_scale_transform_inverse=None,
     y_axis_range=None,
-    # add_markers=False,
+    add_markers=False,
     markevery=1,
     use_legend=True,
     alpha=1.0,
     num_trials_scale=1,
     horizontal_lines=None,
+    continuous_hue=False,
+    continuous_hue_key_is_logarithmic=False,
+    add_dashes=False,
     ):
     """
     Makes an eval plot using the data in the given filenames
-    Can make a non eum plot by specifying y_axis_key
+    Can make a non eum plot by specifying y_axis_key.
+    If continuous_hue is set (e.g. "heuristic_value"), line colour varies smoothly
+    from a lighter version of the algorithm colour (low param) to black (high param).
+    If continuous_hue_key_is_logarithmic is True, the parameter is normalised on a log scale for the palette.
     """
 
     # Default params
@@ -301,14 +336,17 @@ def make_eval_plot(
 
     # Define line styles - dashes (currently unused, but dont want del setup)
     # "Dashes are specified as in matplotlib: a tuple of (segment, gap) lengths, or an empty string to draw a solid line."
-    dashes = {}
-    for alg_id in alg_id_set:
-        dashes[alg_id] = ""
-        # dashes[alg_id] = (4,2)
+    dashes = None
+    if add_dashes:
+        for alg_id in alg_id_set:
+            dashes[alg_id] = ""
+            # dashes[alg_id] = (4,2)
 
     # Define line styles - markers (currently unused, but dont want del setup)
     # N.B. see following for valid values: https://matplotlib.org/stable/api/markers_api.html
     markers = None
+    if add_markers:
+        pass
     # if add_markers:
     #     markers = {}
     #     for alg_id in alg_set:
@@ -323,6 +361,24 @@ def make_eval_plot(
     # Truncate x_axis if want
     if x_axis_truncate is not None:
         df = df[df[x_axis_key] <= x_axis_truncate]
+
+    # Continuous hue: one line per value of hue_key, colour from light(alg) to black
+    if continuous_hue:
+        # check only one alg id is in the data
+        if len(df["alg_id"].unique()) > 1:
+            raise ValueError("Continuous hue is only supported for single-alg data")
+        
+        # create a new palette for the continuous hue
+        alg_base_colour = palette[df["alg_id"].unique()[0]]
+        param_vals = df[hue_key].dropna().unique()
+        pmin, pmax = float(np.nanmin(param_vals)), float(np.nanmax(param_vals))
+        if continuous_hue_key_is_logarithmic and pmin > 0 and pmax > 0:
+            log_min, log_max = np.log(pmin), np.log(pmax)
+            log_span = (log_max - log_min) if log_max > log_min else 1.0
+            palette = {v: _param_to_colour(alg_base_colour, (np.log(float(v)) - log_min) / log_span) for v in param_vals}
+        else:
+            span = (pmax - pmin) if pmax > pmin else 1.0
+            palette = {v: _param_to_colour(alg_base_colour, (float(v) - pmin) / span) for v in param_vals}
 
     # Call our actual make plot function
     make_lineplot_df(
@@ -617,6 +673,7 @@ if __name__ == "__main__":
     # ------------------------------------------------------------------------------------------------------------------
     
     if "999" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
+        print("Plotting: ", "999")
         filenames = glob.glob("aux_eval_logs/999_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -628,6 +685,7 @@ if __name__ == "__main__":
     # DChain/EntropyTrap vs temp plots
     # ------------------------------------------------------------------------------------------------------------------
     if "100" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
+        print("Plotting: ", "100")
         # filenames = glob.glob("results/100_supp_dchain_temp_vary_1740880779/**/eval.txt", recursive=True)
         filenames = glob.glob("aux_eval_logs_happy/100_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
@@ -644,6 +702,7 @@ if __name__ == "__main__":
         # )
 
     if "101" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
+        print("Plotting: ", "101")
         # filenames = glob.glob("results/101_supp_mod_dchain_temp_vary_1740880832/**/eval.txt", recursive=True)
         filenames = glob.glob("aux_eval_logs_happy/101_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
@@ -654,6 +713,7 @@ if __name__ == "__main__":
         )
 
     if "102" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
+        print("Plotting: ", "102")
         filenames = glob.glob("aux_eval_logs_happy/102_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
@@ -663,6 +723,7 @@ if __name__ == "__main__":
         )
 
     if "102a" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
+        print("Plotting: ", "102a")
         filenames = glob.glob("aux_eval_logs_happy/102a_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
@@ -672,6 +733,7 @@ if __name__ == "__main__":
         )
 
     if "102b" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
+        print("Plotting: ", "102b")
         filenames = glob.glob("aux_eval_logs/102b_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
@@ -681,6 +743,7 @@ if __name__ == "__main__":
         )
 
     if "103" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
+        print("Plotting: ", "103")
         # filenames = glob.glob("aux_eval_logs_happy/103_*/**/eval_log.txt", recursive=True)
         filenames = glob.glob("aux_eval_logs/103_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
@@ -695,6 +758,7 @@ if __name__ == "__main__":
     # Frozen Lake Scenic Route
     # ------------------------------------------------------------------------------------------------------------------
     if "110" in sys.argv or "all" in sys.argv or "scenic_route" in sys.argv:
+        print("Plotting: ", "110")
         filenames = glob.glob("aux_eval_logs/110_supp_frozen_lake_dense_scenic_route_8x8_1767177529/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
@@ -704,6 +768,7 @@ if __name__ == "__main__":
         )
 
     if "111" in sys.argv or "all" in sys.argv or "scenic_route" in sys.argv:
+        print("Plotting: ", "111")
         filenames = glob.glob("aux_eval_logs/111_supp_frozen_lake_dense_scenic_route_8x16_1767196367/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
@@ -713,6 +778,7 @@ if __name__ == "__main__":
         )
 
     if "112" in sys.argv or "all" in sys.argv or "scenic_route" in sys.argv:
+        print("Plotting: ", "112")
         filenames = glob.glob("aux_eval_logs/112_supp_frozen_lake_dense_scenic_route_16x16_1767218799/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
@@ -722,6 +788,7 @@ if __name__ == "__main__":
         )
 
     if "120" in sys.argv or "all" in sys.argv or "scenic_route" in sys.argv:
+        print("Plotting: ", "120")
         filenames = glob.glob("aux_eval_logs/120_supp_frozen_lake_sparse_scenic_route_8x8_1767085584/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
@@ -731,6 +798,7 @@ if __name__ == "__main__":
         )
 
     if "121" in sys.argv or "all" in sys.argv or "scenic_route" in sys.argv:
+        print("Plotting: ", "121")
         filenames = glob.glob("aux_eval_logs/121_supp_frozen_lake_sparse_scenic_route_8x16_1767116486/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
@@ -740,6 +808,7 @@ if __name__ == "__main__":
         )
 
     if "122" in sys.argv or "all" in sys.argv or "scenic_route" in sys.argv:
+        print("Plotting: ", "122")
         filenames = glob.glob("aux_eval_logs/122_supp_frozen_lake_sparse_scenic_route_16x16_1767145327/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
@@ -753,6 +822,7 @@ if __name__ == "__main__":
     # Eval - Frozen Lake Dense
     # ------------------------------------------------------------------------------------------------------------------
     if "400" in sys.argv or "all" in sys.argv or "fl_dense" in sys.argv:
+        print("Plotting: ", "400")
         filenames = glob.glob("aux_eval_logs/400_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -761,6 +831,7 @@ if __name__ == "__main__":
         )
 
     if "401" in sys.argv or "all" in sys.argv or "fl_dense" in sys.argv:
+        print("Plotting: ", "401")
         filenames = glob.glob("aux_eval_logs/401_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -769,6 +840,7 @@ if __name__ == "__main__":
         )
 
     if "402" in sys.argv or "all" in sys.argv or "fl_dense" in sys.argv:
+        print("Plotting: ", "402")
         filenames = glob.glob("aux_eval_logs/402_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -778,9 +850,74 @@ if __name__ == "__main__":
 
 
     # ------------------------------------------------------------------------------------------------------------------
+    # Eval - Frozen Lake Dense
+    # ------------------------------------------------------------------------------------------------------------------
+    if "401a" in sys.argv or "all" in sys.argv or "fl_dense_xtra" in sys.argv:
+        print("Plotting: ", "401a")
+        filenames = glob.glob("aux_eval_logs/401a_*/**/eval_log.txt", recursive=True)
+        make_eval_plot(
+            filenames=filenames,
+            plot_filename="plots/401a_FL_dense_8x16_uct.png",
+            hue_key="bias",
+            continuous_hue=True,
+            continuous_hue_key_is_logarithmic=True,
+            # legend_loc="lower left",
+        )
+
+    if "401b" in sys.argv or "all" in sys.argv or "fl_dense_xtra" in sys.argv:
+        print("Plotting: ", "401b")
+        filenames = glob.glob("aux_eval_logs/401b_*/**/eval_log.txt", recursive=True)
+        make_eval_plot(
+            filenames=filenames,
+            plot_filename="plots/401b_FL_dense_8x16_ments.png",
+            hue_key="temp",
+            continuous_hue=True,
+            continuous_hue_key_is_logarithmic=True,
+            # legend_loc="lower left",
+        )
+
+    if "401c" in sys.argv or "all" in sys.argv or "fl_dense_xtra" in sys.argv:
+        print("Plotting: ", "401c")
+        filenames = glob.glob("aux_eval_logs/401c_*/**/eval_log.txt", recursive=True)
+        make_eval_plot(
+            filenames=filenames,
+            plot_filename="plots/401c_FL_dense_8x16_rents.png",
+            hue_key="temp",
+            continuous_hue=True,
+            continuous_hue_key_is_logarithmic=True,
+            # legend_loc="lower left",
+        )
+
+    if "401d" in sys.argv or "all" in sys.argv or "fl_dense_xtra" in sys.argv:
+        print("Plotting: ", "401d")
+        filenames = glob.glob("aux_eval_logs/401d_*/**/eval_log.txt", recursive=True)
+        make_eval_plot(
+            filenames=filenames,
+            plot_filename="plots/401d_FL_dense_8x16_tents.png",
+            hue_key="temp",
+            continuous_hue=True,
+            continuous_hue_key_is_logarithmic=True,
+            # legend_loc="lower left",
+        )
+
+    if "401e" in sys.argv or "all" in sys.argv or "fl_dense_xtra" in sys.argv:
+        print("Plotting: ", "401e")
+        filenames = glob.glob("aux_eval_logs/401e_*/**/eval_log.txt", recursive=True)
+        make_eval_plot(
+            filenames=filenames,
+            plot_filename="plots/401e_FL_dense_8x16_dents.png",
+            hue_key="entropy_coeff",
+            continuous_hue=True,
+            continuous_hue_key_is_logarithmic=True,
+            # legend_loc="lower left",
+        )
+
+
+    # ------------------------------------------------------------------------------------------------------------------
     # Eval - Frozen Lake Sparse
     # ------------------------------------------------------------------------------------------------------------------
     if "410" in sys.argv or "all" in sys.argv or "fl_sparse" in sys.argv:
+        print("Plotting: ", "410")
         filenames = glob.glob("aux_eval_logs/410_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -789,6 +926,7 @@ if __name__ == "__main__":
         )
 
     if "411" in sys.argv or "all" in sys.argv or "fl_sparse" in sys.argv:
+        print("Plotting: ", "411")
         filenames = glob.glob("aux_eval_logs/411_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -797,6 +935,7 @@ if __name__ == "__main__":
         )
 
     if "412" in sys.argv or "all" in sys.argv or "fl_sparse" in sys.argv:
+        print("Plotting: ", "412")
         filenames = glob.glob("aux_eval_logs/412_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -809,6 +948,7 @@ if __name__ == "__main__":
     # Eval - Slippy Frozen Lake Sparse
     # ------------------------------------------------------------------------------------------------------------------
     if "430" in sys.argv or "all" in sys.argv or "fl_slippy" in sys.argv:
+        print("Plotting: ", "430")
         filenames = glob.glob("aux_eval_logs/430_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -818,6 +958,7 @@ if __name__ == "__main__":
         )
 
     if "431" in sys.argv or "all" in sys.argv or "fl_slippy" in sys.argv:
+        print("Plotting: ", "431")
         filenames = glob.glob("aux_eval_logs/431_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -827,6 +968,7 @@ if __name__ == "__main__":
         )
 
     if "432" in sys.argv or "all" in sys.argv or "fl_slippy" in sys.argv:
+        print("Plotting: ", "432")
         filenames = glob.glob("aux_eval_logs/432_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -836,6 +978,7 @@ if __name__ == "__main__":
         )
 
     if "433" in sys.argv or "all" in sys.argv or "fl_slippy" in sys.argv:
+        print("Plotting: ", "433")
         filenames = glob.glob("aux_eval_logs/433_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -845,6 +988,7 @@ if __name__ == "__main__":
         )
 
     if "434" in sys.argv or "all" in sys.argv or "fl_slippy" in sys.argv:
+        print("Plotting: ", "434")
         filenames = glob.glob("aux_eval_logs/434_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -858,6 +1002,7 @@ if __name__ == "__main__":
     # Eval - Sailing (North)
     # ------------------------------------------------------------------------------------------------------------------
     if "440" in sys.argv or "all" in sys.argv or "sailing_n" in sys.argv:
+        print("Plotting: ", "440")
         filenames = glob.glob("aux_eval_logs/440_eval_sailing_north_8x8_1767072325/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -866,6 +1011,7 @@ if __name__ == "__main__":
         )
 
     if "441" in sys.argv or "all" in sys.argv or "sailing_n" in sys.argv:
+        print("Plotting: ", "441")
         filenames = glob.glob("aux_eval_logs/441_eval_sailing_north_8x16_1767282517/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -874,6 +1020,7 @@ if __name__ == "__main__":
         )
 
     if "442" in sys.argv or "all" in sys.argv or "sailing_n" in sys.argv:
+        print("Plotting: ", "442")
         filenames = glob.glob("aux_eval_logs/442_eval_sailing_north_16x16_1767285588/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -886,6 +1033,7 @@ if __name__ == "__main__":
     # Eval - Sailing (South East)
     # ------------------------------------------------------------------------------------------------------------------
     if "450" in sys.argv or "all" in sys.argv or "sailing_se" in sys.argv:
+        print("Plotting: ", "450")
         filenames = glob.glob("aux_eval_logs/450_eval_sailing_south_east_8x8_1767078921/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -894,6 +1042,7 @@ if __name__ == "__main__":
         )
 
     if "451" in sys.argv or "all" in sys.argv or "sailing_se" in sys.argv:
+        print("Plotting: ", "451")
         filenames = glob.glob("aux_eval_logs/451_eval_sailing_south_east_8x16_1767288640/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
@@ -902,6 +1051,7 @@ if __name__ == "__main__":
         )
 
     if "452" in sys.argv or "all" in sys.argv or "sailing_se" in sys.argv:
+        print("Plotting: ", "452")
         filenames = glob.glob("aux_eval_logs/452_eval_sailing_south_east_16x16_1767291659/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,

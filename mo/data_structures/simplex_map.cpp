@@ -21,6 +21,11 @@ using namespace std;
 const double E = exp(1.0);
 static double EPS = 1e-12;
 
+// Clean implementation
+namespace thts {
+    
+}
+
 
 namespace thts {
 

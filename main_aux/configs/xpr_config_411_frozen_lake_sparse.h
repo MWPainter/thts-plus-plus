@@ -23,66 +23,66 @@ static const std::vector<ConfigMap> CONFIG_411 =
         {XPR_PARAM_ID_EVAL_ROLLOUTS,            512},
         {XPR_PARAM_ID_EVAL_THREADS,             16},
     },
-    // uct params - 0.835016
+    // uct params - 0.85501
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
-        {ALG_PARAM_ID_BIAS, 3.10925},
-        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_BIAS, 4.89981},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
-    // max uct params: 0.794887
+    // max uct params: 0.823429
     {
         {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_BIAS, 1.42329},
-        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_BIAS, 2.08546},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
-    // hmcts params: 0.83045
+    // hmcts params: 0.837212
     {
         {XPR_OR_ALG_ID_TAG,         ALG_ID_HMCTS},
-        {ALG_PARAM_ID_BIAS,         3.16228},
-        {ALG_PARAM_ID_UCT_BUDGET,   5},
-        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_BIAS,         0.573555},
+        {ALG_PARAM_ID_UCT_BUDGET,   4999},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
-    // ments params: 0.827363
+    // ments params: 0.208079
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
-        {ALG_PARAM_ID_INIT_TEMP,        0.0026165},
+        {ALG_PARAM_ID_INIT_TEMP,        0.00143526},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.00284344},
         {ALG_PARAM_ID_EPSILON,          1.0},
-        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
-    // rents params: 0.824824
+    // rents params: 0.854326
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
-        {ALG_PARAM_ID_INIT_TEMP,        0.000141045},
+        {ALG_PARAM_ID_INIT_TEMP,        0.0142845},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.00010024},
         {ALG_PARAM_ID_EPSILON,          1.0},
-        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
-    // tents params: 0.830534
+    // tents params: 0.13828
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
-        {ALG_PARAM_ID_INIT_TEMP,        0.00151683},
+        {ALG_PARAM_ID_INIT_TEMP,        0.00662414},
         // {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0001},
         {ALG_PARAM_ID_EPSILON,          1.0},      
-        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
 
     },
-    // bts params: 0.830997
+    // bts params: 0.832193
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_BTS},
-        {ALG_PARAM_ID_INIT_TEMP,        0.540259},
-        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.00843341},
-        {ALG_PARAM_ID_EPSILON,          0.999823},
-        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_INIT_TEMP,        0.0100064},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0843341},
+        {ALG_PARAM_ID_EPSILON,          1.0},   
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
-    // dents params: 0.839783
+    // dents params: 0.805079
     {
         {XPR_OR_ALG_ID_TAG,                     ALG_ID_DENTS},
-        {ALG_PARAM_ID_INIT_TEMP,                0.897669,},
-        {ALG_PARAM_ID_TEMP_DECAY_RATE,          0.000339204},
-        {ALG_PARAM_ID_EPSILON,                  0.999702},
-        {ALG_PARAM_ID_HEURISTIC_VALUE,          0.0},
-        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.00114433},
-        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    82.446},
+        {ALG_PARAM_ID_INIT_TEMP,        0.0100064},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0843341},
+        {ALG_PARAM_ID_EPSILON,          1.0},   
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.051004},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    100.043},
     },
 };

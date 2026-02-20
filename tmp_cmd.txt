@@ -1,323 +1,124 @@
+--------------------------------------------------------------------------------
+hp opt
+--------------------------------------------------------------------------------
 
 
-make clean && make &&
+
+make && clear &&
 ./run_memory_limited 8G ./auxexpr opt 300 && 
 ./run_memory_limited 8G ./auxexpr opt 301 && 
 ./run_memory_limited 8G ./auxexpr opt 310 && 
 ./run_memory_limited 8G ./auxexpr opt 311 && 
 ./run_memory_limited 8G ./auxexpr opt 330 && 
 ./run_memory_limited 8G ./auxexpr opt 340 && 
-./run_memory_limited 8G ./auxexpr opt 350 && 
-./run_memory_limited 8G ./auxexpr eval 100 && 
-./run_memory_limited 8G ./auxexpr eval 101 && 
-./run_memory_limited 8G ./auxexpr eval 102 && 
-./run_memory_limited 8G ./auxexpr eval 103 
+./run_memory_limited 8G ./auxexpr opt 350
+
+
+TODO: look at hpopt summaries + copy over tuned params
+TODO: leave tombstones for params that didn't really get tuned (e.g. if epsilon=1.0 => any temp solves)
+TODO: decide what algorithms need to be in 300a / 310a / etc to tune remaining params
+
+TODO: run a variant hpopts
+
+TODO: copy final hyperparams to eval configs (400's)
 
 
 
+--------------------------------------------------------------------------------
+scenic route
+--------------------------------------------------------------------------------
 
-
-
-make clean && make &&
-./run_memory_limited 8G ./auxexpr eval 400 && 
-./run_memory_limited 8G ./auxexpr eval 401 && 
-./run_memory_limited 8G ./auxexpr eval 402 && 
-./run_memory_limited 8G ./auxexpr eval 410 && 
-./run_memory_limited 8G ./auxexpr eval 411 && 
-./run_memory_limited 8G ./auxexpr eval 412 && 
-./run_memory_limited 8G ./auxexpr eval 430 && 
-./run_memory_limited 8G ./auxexpr eval 431 && 
-./run_memory_limited 8G ./auxexpr eval 432 && 
-./run_memory_limited 8G ./auxexpr eval 433 && 
-./run_memory_limited 8G ./auxexpr eval 434 && 
-./run_memory_limited 8G ./auxexpr eval 440 && 
-./run_memory_limited 8G ./auxexpr eval 441 && 
-./run_memory_limited 8G ./auxexpr eval 442 && 
-./run_memory_limited 8G ./auxexpr eval 450 && 
-./run_memory_limited 8G ./auxexpr eval 451 && 
-./run_memory_limited 8G ./auxexpr eval 452 && 
-./run_memory_limited 8G ./auxexpr eval 120 && 
-./run_memory_limited 8G ./auxexpr eval 121 && 
-./run_memory_limited 8G ./auxexpr eval 122 && 
-./run_memory_limited 8G ./auxexpr eval 110 && 
-./run_memory_limited 8G ./auxexpr eval 111 && 
-./run_memory_limited 8G ./auxexpr eval 112
-
-
-
-
-
-
-make clean && make auxexpr &&
-./run_memory_limited 8G ./auxexpr eval 441 && 
-./run_memory_limited 8G ./auxexpr eval 442 && 
-./run_memory_limited 8G ./auxexpr eval 451 && 
-./run_memory_limited 8G ./auxexpr eval 452
-
-
-
-
-./run_memory_limited 8G ./moexpr opt 001 &&
-./run_memory_limited 8G ./moexpr eval 000 &&
-./run_memory_limited 8G ./moexpr eval 001
-
-
-
-./run_memory_limited 8G ./moexpr eval 000 ;
-./run_memory_limited 8G ./moexpr eval 001 ;
-./run_memory_limited 8G ./moexpr opt 001 ;
-./run_memory_limited 8G ./moexpr eval 002
-
-
-
-
-
-
-
-
-make clean && make && clear &&
-./run_memory_limited 8G ./moexpr eval 006 &&
-./run_memory_limited 8G ./moexpr eval 007 &&
-./run_memory_limited 8G ./moexpr eval 008 &&
-./run_memory_limited 8G ./moexpr eval 009 &&
-./run_memory_limited 8G ./moexpr eval 004 &&
-./run_memory_limited 8G ./moexpr eval 005 
-
-
-
-
-make clean && make && clear &&
-./run_memory_limited 8G ./moexpr eval 010 &&
-./run_memory_limited 8G ./moexpr eval 011 &&
-./run_memory_limited 8G ./moexpr eval 012 &&
-./run_memory_limited 8G ./moexpr eval 013 &&
-./run_memory_limited 8G ./moexpr eval 014 &&
-./run_memory_limited 8G ./moexpr eval 015 &&
-./run_memory_limited 8G ./moexpr eval 016 &&
-./run_memory_limited 8G ./moexpr eval 020 &&
-./run_memory_limited 8G ./moexpr eval 021
-
-
-
-
-make clean && make && clear &&
-./run_memory_limited 8G ./moexpr eval 020 &&
-./run_memory_limited 8G ./moexpr eval 021 &&
-./run_memory_limited 8G ./moexpr eval 010 &&
-./run_memory_limited 8G ./moexpr eval 011 &&
-./run_memory_limited 8G ./moexpr eval 012 &&
-./run_memory_limited 8G ./moexpr eval 013 &&
-./run_memory_limited 8G ./moexpr eval 014 &&
-./run_memory_limited 8G ./moexpr eval 015 &&
-./run_memory_limited 8G ./moexpr eval 016
-
-
-
-./run_memory_limited 8G ./moexpr eval 030 &&
-./run_memory_limited 8G ./auxexpr eval 999
-
-
-
-
-
-
-17/2/26
+TODO: tuned everything using graph mode, for lack of trials available
+TODO: if necessary, move some of the envs to not graph mode now have many more trials available
 
 make && clear &&
-./run_memory_limited 8G ./auxexpr eval 400 && 
-./run_memory_limited 8G ./auxexpr eval 401 && 
-./run_memory_limited 8G ./auxexpr eval 402 && 
-./run_memory_limited 8G ./auxexpr eval 410 && 
-./run_memory_limited 8G ./auxexpr eval 411 && 
-./run_memory_limited 8G ./auxexpr eval 412 && 
-./run_memory_limited 8G ./auxexpr eval 430 && 
-./run_memory_limited 8G ./auxexpr eval 431 && 
-./run_memory_limited 8G ./auxexpr eval 432 && 
-./run_memory_limited 8G ./auxexpr eval 433 && 
+./run_memory_limited 8G ./auxexpr eval 600 &&
+./run_memory_limited 8G ./auxexpr eval 601 &&
+./run_memory_limited 8G ./auxexpr eval 602 &&
+./run_memory_limited 8G ./auxexpr eval 700 &&
+./run_memory_limited 8G ./auxexpr eval 701 &&
+./run_memory_limited 8G ./auxexpr eval 702 &&
+./run_memory_limited 8G ./auxexpr eval 800 &&
+./run_memory_limited 8G ./auxexpr eval 801 &&
+./run_memory_limited 8G ./auxexpr eval 802 &&
+
+TODO: decide if epsilon = 0.5 / epsilon = 1.0 is required/necessary
+TODO: decide where finer resolution is required
+TODO: decide if temp decay = 0 in BTS/DENTS ok?
+TODO: decide if what did with temp == entropy coeff in DENTS ok?
+TODO: run fixing evals (should be able to pass an argument to add more results to a eval log folder)
+
+
+
+--------------------------------------------------------------------------------
+more scenic route?
+--------------------------------------------------------------------------------
+
+TODO: make 61X / 62X / 71X / 72X / 81X / 82X configs
+(_1_ => epsilon = 0.5)
+(_2_ => epsilon = 1.0)
+
+make && clear &&
+./run_memory_limited 8G ./auxexpr eval 610 &&
+./run_memory_limited 8G ./auxexpr eval 611 &&
+./run_memory_limited 8G ./auxexpr eval 612 &&
+
+./run_memory_limited 8G ./auxexpr eval 620 &&
+./run_memory_limited 8G ./auxexpr eval 621 &&
+./run_memory_limited 8G ./auxexpr eval 622 &&
+
+./run_memory_limited 8G ./auxexpr eval 710 &&
+./run_memory_limited 8G ./auxexpr eval 711 &&
+./run_memory_limited 8G ./auxexpr eval 712 &&
+
+./run_memory_limited 8G ./auxexpr eval 720 &&
+./run_memory_limited 8G ./auxexpr eval 721 &&
+./run_memory_limited 8G ./auxexpr eval 722 &&
+
+./run_memory_limited 8G ./auxexpr eval 810 &&
+./run_memory_limited 8G ./auxexpr eval 811 &&
+./run_memory_limited 8G ./auxexpr eval 812 &&
+
+./run_memory_limited 8G ./auxexpr eval 820 &&
+./run_memory_limited 8G ./auxexpr eval 821 &&
+./run_memory_limited 8G ./auxexpr eval 822
+
+
+
+
+--------------------------------------------------------------------------------
+run evals
+--------------------------------------------------------------------------------
+
+TODO: double check that xpr level config corresponds to what we want
+- always used graph search in tuning for speed
+- FL Dense - want tree search to make it a bit harder, no mcts mode
+- FL Sparse - want graph + no mcts mode
+- FL Slippy - want graph + no mcts mode
+- Sailing - want graph + mcts mode
+TODO: make sure copied over best hyperparams found in hpopt
+
+TODO: tuned everything using graph mode, for lack of trials available
+TODO: if necessary, move some of the envs to not graph mode now have many more trials available
+
+make && clear &&
+./run_memory_limited 8G ./auxexpr eval 400 &&
+./run_memory_limited 8G ./auxexpr eval 401 &&
+./run_memory_limited 8G ./auxexpr eval 402 &&
+./run_memory_limited 8G ./auxexpr eval 410 &&
+./run_memory_limited 8G ./auxexpr eval 411 &&
+./run_memory_limited 8G ./auxexpr eval 412 &&
+./run_memory_limited 8G ./auxexpr eval 430 &&
+./run_memory_limited 8G ./auxexpr eval 431 &&
+./run_memory_limited 8G ./auxexpr eval 432 &&
+./run_memory_limited 8G ./auxexpr eval 433 &&
 ./run_memory_limited 8G ./auxexpr eval 434
 
+TODO: compare eval plots to scenic route plots
+TODO: if found a better set of hyperparams in scenic route, then replace the hpopt values and re-run eval
 
+TODO: any additional plots for story
 
-make && clear &&
-./run_memory_limited 8G ./auxexpr eval 412 && 
-./run_memory_limited 8G ./auxexpr eval 430 && 
-./run_memory_limited 8G ./auxexpr eval 431 && 
-./run_memory_limited 8G ./auxexpr eval 432 && 
-./run_memory_limited 8G ./auxexpr eval 433 && 
-./run_memory_limited 8G ./auxexpr eval 434 &&
-./run_memory_limited 8G ./auxexpr eval 102b
 
 
 
-make && clear &&
-./run_memory_limited 8G ./moexpr eval 040 && 
-./run_memory_limited 8G ./moexpr eval 041 
-
-
-
-
-
-18/2/26
-
-python plot_aux.py 102a 102b fl_dense fl_sparse fl_slippy
-python plot_aux.py fl_slippy
-
-
-
-
-4x4
-8x8
-6x6_no_hole
-gen_5x5
-gen_6x6
-gen_4x8
-gen_4x12
-gen_8x16
-gen_16x16
-
-
-
-
-python flvi.py --map 4x4 --slippery --init-state-only --time-bound 100 && 
-python flvi.py --map gen_5x5 --slippery --init-state-only --time-bound 100 && 
-python flvi.py --map gen_6x6 --slippery --init-state-only --time-bound 100 && 
-python flvi.py --map gen_4x8 --slippery --init-state-only --time-bound 100 && 
-python flvi.py --map gen_4x12 --slippery --init-state-only --time-bound 100
-
-
-
-./run_memory_limited 8G ./auxexpr eval 401
-
-
-
-
-    "SFFFFFFF",
-    "FFFFFFFF",
-    "FFF_FFFF",
-    "FFFFF_FF",
-    "FFF_FFFF",
-    "F__FFF_F",
-    "F_FF_F_F",
-    "FFF_FFFG",
-
-
-
-
-
-
-
-make && clear &&
-./run_memory_limited 8G ./auxexpr eval 400 && 
-./run_memory_limited 8G ./auxexpr eval 401 && 
-./run_memory_limited 8G ./auxexpr eval 402 && 
-./run_memory_limited 8G ./auxexpr eval 410 && 
-./run_memory_limited 8G ./auxexpr eval 411 && 
-./run_memory_limited 8G ./auxexpr eval 412 && 
-./run_memory_limited 8G ./auxexpr eval 430 && 
-./run_memory_limited 8G ./auxexpr eval 431 && 
-./run_memory_limited 8G ./auxexpr eval 432 && 
-./run_memory_limited 8G ./auxexpr eval 433 && 
-./run_memory_limited 8G ./auxexpr eval 434 &&
-./run_memory_limited 8G ./auxexpr eval 440 && 
-./run_memory_limited 8G ./auxexpr eval 441 && 
-./run_memory_limited 8G ./auxexpr eval 442 && 
-./run_memory_limited 8G ./auxexpr eval 450 && 
-./run_memory_limited 8G ./auxexpr eval 451 && 
-./run_memory_limited 8G ./auxexpr eval 452 && 
-./run_memory_limited 8G ./auxexpr eval 110 && 
-./run_memory_limited 8G ./auxexpr eval 111 && 
-./run_memory_limited 8G ./auxexpr eval 112 && 
-./run_memory_limited 8G ./auxexpr eval 120 && 
-./run_memory_limited 8G ./auxexpr eval 121 && 
-./run_memory_limited 8G ./auxexpr eval 122
-
-
-
-
-
-
-
-19/2/26
-
-
-
-make && clear &&
-./run_memory_limited 8G ./auxexpr opt 300 && 
-./run_memory_limited 8G ./auxexpr opt 301
-
-
-update hyperparams
-
-
-make && clear &&
-./run_memory_limited 8G ./auxexpr eval 400 && 
-./run_memory_limited 8G ./auxexpr eval 401 && 
-./run_memory_limited 8G ./auxexpr eval 402
-
-python plot_aux.py fl_dense 
-
-make && clear &&
-./run_memory_limited 8G ./auxexpr opt 310 && 
-./run_memory_limited 8G ./auxexpr opt 311 && 
-
-
-make && clear &&
-./run_memory_limited 8G ./auxexpr opt 330 && 
-./run_memory_limited 8G ./auxexpr opt 340 && 
-./run_memory_limited 8G ./auxexpr opt 350 && 
-./run_memory_limited 8G ./auxexpr eval 401a && 
-./run_memory_limited 8G ./auxexpr eval 401b && 
-./run_memory_limited 8G ./auxexpr eval 401c && 
-./run_memory_limited 8G ./auxexpr eval 401d && 
-./run_memory_limited 8G ./auxexpr eval 401e
-
-
-update hyperparams
-
-
-
-
-
-
-
-
-
-
-
-
-20/2/26
-
-
-update hyperparams
-
-make fl_dense_xtra plots
-python plot_aux.py fl_dense_xtra
-
-make && clear &&
-./run_memory_limited 8G ./auxexpr eval 400 && 
-./run_memory_limited 8G ./auxexpr eval 401 && 
-./run_memory_limited 8G ./auxexpr eval 402 && 
-./run_memory_limited 8G ./auxexpr eval 410 && 
-./run_memory_limited 8G ./auxexpr eval 411 && 
-./run_memory_limited 8G ./auxexpr eval 412 && 
-./run_memory_limited 8G ./auxexpr eval 430 && 
-./run_memory_limited 8G ./auxexpr eval 431 && 
-./run_memory_limited 8G ./auxexpr eval 432 && 
-./run_memory_limited 8G ./auxexpr eval 433 && 
-./run_memory_limited 8G ./auxexpr eval 434 &&
-./run_memory_limited 8G ./auxexpr eval 440 && 
-./run_memory_limited 8G ./auxexpr eval 441 && 
-./run_memory_limited 8G ./auxexpr eval 442 && 
-./run_memory_limited 8G ./auxexpr eval 450 && 
-./run_memory_limited 8G ./auxexpr eval 451 && 
-./run_memory_limited 8G ./auxexpr eval 452 && 
-./run_memory_limited 8G ./auxexpr eval 110 && 
-./run_memory_limited 8G ./auxexpr eval 111 && 
-./run_memory_limited 8G ./auxexpr eval 112 && 
-./run_memory_limited 8G ./auxexpr eval 120 && 
-./run_memory_limited 8G ./auxexpr eval 121 && 
-./run_memory_limited 8G ./auxexpr eval 122
-
-
-
-python plot_aux.py dchain scenic_route fl_sparse fl_slippy sailing_n sailing_se

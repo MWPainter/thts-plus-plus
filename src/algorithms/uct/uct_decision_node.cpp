@@ -123,9 +123,7 @@ namespace thts {
 
         // Compute Q values to use
         unordered_map<shared_ptr<const Action>,double> q_values;
-        for (shared_ptr<const Action> action : *actions) {
-            q_values[action] = get_child_node(action)->avg_return;
-        }
+        fill_q_values(q_values);
         if (manager->normalize_Q_values_in_selection) {
             thts::helper::linearly_normalise_values<shared_ptr<const Action>>(q_values);
         }

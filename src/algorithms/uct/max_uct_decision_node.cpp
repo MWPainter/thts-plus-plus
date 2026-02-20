@@ -29,7 +29,12 @@ namespace thts {
                 decision_timestep,
                 static_pointer_cast<const UctCNode>(parent)),
             avg_return_for_search(0.0)
-    {   
+    {  
+        if (thts_manager->heuristic_fn != nullptr 
+            && !thts_manager->thts_env()->is_sink_state_itfc(state,*thts_manager->get_thts_context())) 
+        {
+            avg_return_for_search = heuristic_value; 
+        }  
     }
 
     /**
