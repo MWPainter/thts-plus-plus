@@ -402,22 +402,138 @@ namespace thts {
     /**
      * SimplexMap
      * 
-     * Not thread safe, classes using this should protect use of this simplex map and any datastructures they get from 
-     * it (i.e. TN, NGV)
-     * 
-     * TODO: would like to make unordered_set_vector and replace n_graph_vertices and n_graph_vertex_set with this
-     *      - i.e. can index like a vector
-     *      - can check contains in O(1) from the set etc
-     * 
-     * Args:
-     *      dim:
-     *          The reward dimension we're working with
-     *      root_node:
-     *          Root node of the tree of simplices in the simplex map
-     *      n_graph_vertices:
-     *          The set of all NGV vertices forming the neighbourhood graph
-     *      lse_map:
-     *          A map from NGV pair's to the LSE edge that the vertices lie on
+     * Not thread safe, classes using this should protect use of this datastructure themselves
+
+    Some notes (written in a rush and stream of consciousness, more to make sure its descriptive rather than well written or super clear) on this:
+
+    We will start with a unit simplex, and then iteratively refine it by performing bisections
+    Bisections will always be along the longest edge of the simplex
+    Ties are NOT broken randomly, but by the first edge encountered
+
+    Each bisection will create two new simplices, and so we end up with a binary tree of simplices
+
+    Bisection using the longest edge takes care of a couple potential issues, in literature, 
+    this is usually talked about some sort of smoothness or regularity of simplices. If 
+    the minimum interior angle in the initial "mesh" is alpha, then iterative bisections will 
+    lead to a mesh where all interior angles are at least alpha/2. This ensures that all 
+    triangles are "not too thin" etc. In our case, because all interior angles (or triangular faces) 
+    are 60 degrees, this leads to all possible angles being in the set {30,45,60,90,120}. And 
+    means there is only a finite number of similar simplices we will make use off.
+
+    A second consideration, which we will be considering in more detail is "conformity". 
+    Two (n-d) simplices are conforming iff they share exactly a face of dimension <= n-1. 
+    It's clearer in 2d with triangles, or 3d with tetrahedra. 
+    In 2d, triangles are conforming iff they have no points in common, share exactly one vertex in common, or share an entire edge in common.
+    In 3d, tetrahedra can be conforming if they share a triangular face in common.
+
+    It is worth noting that with our subdivision, it is sufficient to only look for non-conformity along edges. 
+    As non-conformity along a face will imply non-conformity along at least one edge.
+    I think this results from the mesh being a partition of the simplex.
+
+    Below we will talk about the binary tree of simplices and the "mesh". In the example below,
+    the triangle ACD is part of the simplex map and binary tree, but is not part of the mesh.
+    The mesh consists of the triangles ABC, AFE, FEC, CED.
+
+                             A
+                            /|\
+                           / | \
+                          / G|  \
+                         /   |   \
+                        /   F|____\E
+                       /     |   / \
+                      /      |  /   \
+                     /       | /     \
+                    /________|/_______\
+                    B       C         D
+
+    Typically in mesh refinement, algorithms are designed to ensure the mech is conforming. However, in our 
+    applicaiton we will be refining many meshes. It will be helpful for the meshes to conform (described later).
+    We will be using an "eventually-conforming" algorithm, where we keep track of edges that are 
+    non-conforming and refine them gradually, WITHOUT requiring a lot of computation on every operation we perform on the simplex map.
+
+    Each vertex corresponds to an objective weight w. And will store a value estimate for that weigting.
+
+    Simplices will be bisected when the value estimates at the vertices of a simplex differ, indicating 
+    that values within the simplex are non uniform and can benefit from refinement of the mesh.
+
+    All edge and vertex information will be stored in hashmap objects to ensure no duplicates are created.
+
+    So we have three objectives with this data structure:
+    1. given arbitrary weight vector, quickly find the closest vertex (of a simplex in the map) to the vector
+    2. maintain a graph of vertices to allow for message passing (sharing good value estimates to closeby vertices)
+    3. focus the mesh refinement on most important parts of the simplex
+    4. refine simplex mesh which will be "eventually conforming"
+
+    #1:
+    During the refinement process, we will produce a binary tree of simplices. 
+    In the example, ABD is refined to ABC + ACD, ACD to ACE + CED, and so on.
+    Each simplex will be stored in a SMSimplex object, which will keep track of the binary tree.
+    Note that in the example, ACD is a simplex in the tree, but is not part of the current mesh.
+    Finally, finding the "closest" vertex is a bit approximate, and also assumes that the mesh is conforming.
+
+    #2:
+    Each vertex will be stored in a SMVertex object.
+    These vertices will maintain a graph of their neighbours along the current mesh edges.
+    Message passing will use these edges to share value estimates.
+    In the example, vertex A will currently have neighbours B, E, and F.
+
+    #3:
+    Each simplex will only only be subdivided when the value estimates at the vertices are different.
+    We will thesholds for how different the value estimates need to be, and for how many "visits" to the MCTS node 
+        hitting this simplex before splitting.
+    This way, if the multi-objective values within a simplex are uniform, we will not unnecessarily divide it.
+    Contrarily, when values are different, this is an interesting region of the simplex and we will split.
+
+    #4:
+    Refining the mesh will require keeping track of the current mesh, and the non-conforming simplices in the mesh.
+    We will store a bipartite graph between edges (SMEdge objects) and simplices (SMSimplex objects) in an SMMesh 
+        object.
+    Each SMSimplex object (in the mesh) will have pointers to each SMEdge that is incident to it.
+    Each SMEdge object will have pointers to each SMSimplex that is incident to it.
+    Additionally, we will keep track of which simplices are non-conforming.
+    We can tell if a simplex is non-conforming if it is adjacent to an edge which has an end vertex that is not on the 
+        simplex
+    In the example, ABC is non conforming, because the edge AF has an end vertex F that is not on ABC
+    Note that edge AC is NOT part of the mesh, because it was split into AF and FC
+    In the example we will have the following connections in the graph:
+    triangle ABC -> edges { AB, BC, AF, FC }
+    edge AF -> triangles { ABC, AEF }
+    Finally, SMMesh will keep track of all non-conforming simplices, keeping track of the binary tree depth of the 
+        simplices, so that the most "coarse" simplices can be refined first.
+    
+    Suppose to added the line GE to the mesh (splitting triangle AFE into AGE and GFE)
+    (note that this is ignoring the rule to split along the longest edge, but is just for example)
+    Then the following connections related to AF will be updated in the graph to:
+    - (removed) edge AF -> triangles { ABC, AEF }
+    - (added) edge AG -> triangles { ABC, AGE }
+    - (added) edge GF -> triangles { ABC, GFE }
+    - (removed AF, added AG, GF) triangle ABC -> edges { AB, BC, FC, AG, GF } 
+    - (removed) triangle AEF -> edges { AE, EF, FA }
+    - (added) triangle AGE -> edges { AG, GE, AE }
+    - (added) triangle GFE -> edges { GF, FE, GE }
+
+    Some miscellaneous notes:
+    - on each operation on the simplex map that may lead to a subdivision, we will check if there are any 
+        non-conforming simplices
+    -- if there are, we will always bisect that simplex and update the mesh (graph) accordingly
+
+    Finally, here is a summary of the data structures that will make up the simplex map:
+    - SMVertex: vertices of the mesh (containing value estimates and edges to neighbours for sharing)
+    - SMSimplex: simplices used in the binary tree and mesh (contains pointers to binary tree children and if it is 
+        non-conforming)
+    - SMMesh: bipartite graph storing connections between SMSimplex's and SMEdge's 
+    - SMEdge: edges of the mesh (only used in the SMMesh graph)
+
+    When an MCTS node wants to use a simplex map, generally it will do the following:
+    -- (optionally) sample a random vertex, for example to pick a weight vector to use for a trial
+    - look up SMSimplex in the mesh, USING the binary tree to find it
+    - find closest SMVertex to the current context weight
+    - update value estimate at that vertex
+    - share value estimates with neighbouring vertices
+    -- (optionally) share value estimates to a greater radius
+    -- (optionally) pick a random vertex to try push its value estimates
+    - maybe subdivide the SMSimplex (and update the SMMesh / graph)
+    -- if there are any non-conforming simplices, subdivide one of them (and update the SMMesh / graph)
     */
     class SimplexMap {
         friend SmThtsCNode;
