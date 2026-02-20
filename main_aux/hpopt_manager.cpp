@@ -369,6 +369,7 @@ namespace thts {
         // get run manager with params corresponding to this query
         shared_ptr<RunManager> sampled_run_manager = get_run_manager_for_query(query);
 
+        cout << get_alg_id() << " | ";
         cout << "hp_opt_iter:" << hp_opt_iter << ", query_vector:" << query << endl;
         cout << "sampled_params:" << sampled_run_manager->get_params_string_helper() << endl;
 
@@ -380,7 +381,8 @@ namespace thts {
             evals.push_back(eval);
             _update_statistics_(evals, mean_eval, std_eval, std_mean_eval);
             repeats_run++;
-
+            
+            cout << get_alg_id() << " | ";
             cout << "Run#=" << repeats_run 
                 << ", mean_eval=" << mean_eval 
                 << ", std_mean_eval=" << std_mean_eval << " >? " << estimate_confidence_threshold << endl;
@@ -468,6 +470,12 @@ namespace thts {
             pair<double,double> min_max = std::get<pair<double,double>>(value_range);
             double min = min_max.first;
             double max = min_max.second;
+
+            if (min == max)
+            {
+                query_alg_config[config_key] = min;
+                continue;
+            }
 
             bool log_scaling = HPOPT_LOG_SCALE_ALG_PARAM_IDS.contains(config_key);
             bool int_param = HPOPT_INT_ALG_PARAM_IDS.contains(config_key);

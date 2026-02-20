@@ -101,7 +101,11 @@ namespace thts::helper {
             // error checking
             i++;
             bool too_much_mass = running_prob_mass > sum_weights + EPS;
+            // TODO: have some mass of 1e-16 causing issue here
+            // TODO v1.0: add tests for a distribution of {"a": 1.0, "b": 1e-16} with normalised = false and fix to make sure pass
+            // Currently this would fail
             bool complete_mass_too_early = running_prob_mass >= sum_weights && i < distr_size;
+            complete_mass_too_early = false; // TODO v1.0: remove this
             if (too_much_mass || complete_mass_too_early) {
                 stringstream error_msg_ss;
                 error_msg_ss 

@@ -22,6 +22,11 @@
 #include "main_aux/configs/xpr_config_122_frozen_lake_sparse_scenic_route.h"
 #include "main_aux/configs/xpr_config_400_frozen_lake_dense.h"
 #include "main_aux/configs/xpr_config_401_frozen_lake_dense.h"
+#include "main_aux/configs/xpr_config_401a_frozen_lake_dense.h"
+#include "main_aux/configs/xpr_config_401b_frozen_lake_dense.h"
+#include "main_aux/configs/xpr_config_401c_frozen_lake_dense.h"
+#include "main_aux/configs/xpr_config_401d_frozen_lake_dense.h"
+#include "main_aux/configs/xpr_config_401e_frozen_lake_dense.h"
 #include "main_aux/configs/xpr_config_402_frozen_lake_dense.h"
 #include "main_aux/configs/xpr_config_410_frozen_lake_sparse.h"
 #include "main_aux/configs/xpr_config_411_frozen_lake_sparse.h"
@@ -66,6 +71,12 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     CONFIG_400,
     CONFIG_401,
     CONFIG_402,
+
+    CONFIG_401a,
+    CONFIG_401b,
+    CONFIG_401c,
+    CONFIG_401d,
+    CONFIG_401e,
 
     CONFIG_410,
     CONFIG_411,

@@ -50,7 +50,11 @@ namespace thts {
     double TentsDNode::get_soft_q_value_over_temp(shared_ptr<const Action> action, bool for_search) const {
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         double qval = get_soft_q_value(action, opp_coeff, for_search);
-        return qval / get_temp();
+        double temp = get_temp();
+        if (temp <= 0.0 || !std::isfinite(temp)) {
+            temp = EPS;
+        }
+        return qval / temp;
     }
 
     /**
@@ -101,6 +105,7 @@ namespace thts {
             double sum_values = 0.0;
             for (auto it=qval_to_act.rbegin(); it != qval_to_act.rend(); it++) {
                 double value = it->first;
+                if (!std::isfinite(value)) continue;
                 shared_ptr<const Action> action = it->second;
                 sum_values += value;
                 if (1.0 + (i+1.0)*value > sum_values) {
@@ -117,6 +122,7 @@ namespace thts {
         double sum_values = 0.0;
         for (auto it=qval_to_act_for_search.rbegin(); it != qval_to_act_for_search.rend(); it++) {
             double value = it->first;
+            if (!std::isfinite(value)) continue;
             shared_ptr<const Action> action = it->second;
             sum_values += value;
             if (1.0 + (i+1.0)*value > sum_values) {
@@ -146,7 +152,11 @@ namespace thts {
             }
         }
 
-        double spmax_common_term = 0.5 * pow(sum_sparse_values-1.0, 2.0) / pow(sparse_action_set->size(), 2.0);
+        size_t sparse_size = sparse_action_set->size();
+        if (sparse_size == 0) {
+            return 0.5;
+        }
+        double spmax_common_term = 0.5 * pow(sum_sparse_values-1.0, 2.0) / pow(static_cast<double>(sparse_size), 2.0);
         double spmax = 0.5;
         if (!for_search) {
             for (shared_ptr<const Action> action : *sparse_action_set) {
@@ -184,25 +194,48 @@ namespace thts {
         sum_action_weights = 0.0;
         normalisation_term = 0.0;
 
-        // compute the common term
+        // compute the common term (guard empty sparse set to avoid division by zero → NaN)
         unique_ptr<ActionVector> sparse_action_set = get_sparse_action_set(for_search);
+        if (sparse_action_set->empty()) {
+            size_t n_actions = actions->size();
+            if (n_actions == 0) {
+                return;
+            }
+            double uniform_weight = 1.0 / static_cast<double>(n_actions);
+            for (shared_ptr<const Action> action : *actions) {
+                action_weights[action] = uniform_weight;
+            }
+            sum_action_weights = 1.0;
+            return;
+        }
+
         double sum_sparse_values = 0.0;
         for (shared_ptr<const Action> action : *sparse_action_set) {
-            sum_sparse_values += get_soft_q_value_over_temp(action, for_search);
+            double q_over_t = get_soft_q_value_over_temp(action, for_search);
+            if (std::isfinite(q_over_t)) {
+                sum_sparse_values += q_over_t;
+            }
         }
-        double common_term = (sum_sparse_values - 1.0) / sparse_action_set->size();
+        double common_term = (sum_sparse_values - 1.0) / static_cast<double>(sparse_action_set->size());
 
-        // compute weights and store
+        // compute weights and store (skip non-finite to avoid propagating NaN)
         for (shared_ptr<const Action> action : *actions) {
-            double weight = get_soft_q_value_over_temp(action, for_search) - common_term;
+            double q_over_t = get_soft_q_value_over_temp(action, for_search);
+            if (!std::isfinite(q_over_t)) continue;
+            double weight = q_over_t - common_term;
             if (weight < 0.0) weight = 0.0;
             action_weights[action] = weight;
             sum_action_weights += weight;
         }
         
-        // If all action weights extremely small, then just make it uniform random, for numerical stability
+        // If all action weights extremely small or none valid, fall back to uniform for numerical stability
         if (sum_action_weights < EPS) {
-            double uniform_weight = 1.0 / actions->size();
+            size_t n_actions = actions->size();
+            if (n_actions == 0) {
+                sum_action_weights = 1.0;
+                return;
+            }
+            double uniform_weight = 1.0 / static_cast<double>(n_actions);
             for (shared_ptr<const Action> action : *actions) {
                 action_weights[action] = uniform_weight;
             }

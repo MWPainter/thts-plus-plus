@@ -128,7 +128,9 @@ namespace thts {
         for (pair<shared_ptr<const Action>,double> pr : q_values) {
             shared_ptr<const Action> action = pr.first;
             double soft_q_value = pr.second;
+            if (!std::isfinite(soft_q_value)) continue;
             double action_weight = exp((soft_q_value/temp) - normalisation_term);
+            if (!std::isfinite(action_weight)) continue;
             action_weight *= get_parent_action_prob(parent_distr, action);
             action_weights[action] = action_weight;
             sum_action_weights += action_weight;

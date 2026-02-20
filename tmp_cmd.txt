@@ -239,13 +239,85 @@ make && clear &&
 
 19/2/26
 
-python plot_aux.py dchain scenic_route fl_dense fl_sparse fl_slippy sailing_n sailing_se
+
 
 make && clear &&
 ./run_memory_limited 8G ./auxexpr opt 300 && 
-./run_memory_limited 8G ./auxexpr opt 301 && 
+./run_memory_limited 8G ./auxexpr opt 301
+
+
+update hyperparams
+
+
+make && clear &&
+./run_memory_limited 8G ./auxexpr eval 400 && 
+./run_memory_limited 8G ./auxexpr eval 401 && 
+./run_memory_limited 8G ./auxexpr eval 402
+
+python plot_aux.py fl_dense 
+
+make && clear &&
 ./run_memory_limited 8G ./auxexpr opt 310 && 
 ./run_memory_limited 8G ./auxexpr opt 311 && 
+
+
+make && clear &&
 ./run_memory_limited 8G ./auxexpr opt 330 && 
 ./run_memory_limited 8G ./auxexpr opt 340 && 
-./run_memory_limited 8G ./auxexpr opt 350
+./run_memory_limited 8G ./auxexpr opt 350 && 
+./run_memory_limited 8G ./auxexpr eval 401a && 
+./run_memory_limited 8G ./auxexpr eval 401b && 
+./run_memory_limited 8G ./auxexpr eval 401c && 
+./run_memory_limited 8G ./auxexpr eval 401d && 
+./run_memory_limited 8G ./auxexpr eval 401e
+
+
+update hyperparams
+
+
+
+
+
+
+
+
+
+
+
+
+20/2/26
+
+
+update hyperparams
+
+make fl_dense_xtra plots
+python plot_aux.py fl_dense_xtra
+
+make && clear &&
+./run_memory_limited 8G ./auxexpr eval 400 && 
+./run_memory_limited 8G ./auxexpr eval 401 && 
+./run_memory_limited 8G ./auxexpr eval 402 && 
+./run_memory_limited 8G ./auxexpr eval 410 && 
+./run_memory_limited 8G ./auxexpr eval 411 && 
+./run_memory_limited 8G ./auxexpr eval 412 && 
+./run_memory_limited 8G ./auxexpr eval 430 && 
+./run_memory_limited 8G ./auxexpr eval 431 && 
+./run_memory_limited 8G ./auxexpr eval 432 && 
+./run_memory_limited 8G ./auxexpr eval 433 && 
+./run_memory_limited 8G ./auxexpr eval 434 &&
+./run_memory_limited 8G ./auxexpr eval 440 && 
+./run_memory_limited 8G ./auxexpr eval 441 && 
+./run_memory_limited 8G ./auxexpr eval 442 && 
+./run_memory_limited 8G ./auxexpr eval 450 && 
+./run_memory_limited 8G ./auxexpr eval 451 && 
+./run_memory_limited 8G ./auxexpr eval 452 && 
+./run_memory_limited 8G ./auxexpr eval 110 && 
+./run_memory_limited 8G ./auxexpr eval 111 && 
+./run_memory_limited 8G ./auxexpr eval 112 && 
+./run_memory_limited 8G ./auxexpr eval 120 && 
+./run_memory_limited 8G ./auxexpr eval 121 && 
+./run_memory_limited 8G ./auxexpr eval 122
+
+
+
+python plot_aux.py dchain scenic_route fl_sparse fl_slippy sailing_n sailing_se

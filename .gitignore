@@ -40,7 +40,7 @@ hp_opt_mo
 slurm/slurm_output
 
 # Hidden files
-.vscode
+# .vscode
 .DS_Store
 external/.DS_Store
 

@@ -53,14 +53,14 @@ namespace thts::helper {
      * Args:
      *      distribution: A mapping from the support (discrete categories) to their weights
      *      rand_manager: An instance of RandManager, so we can use our wrappers around random number generation
-     *      normalised: true iff the weights sum to 1.0
+     *      normalised: true iff 100% sure the weights sum to 1.0 (floating point can be hard)
      * 
      * Returns:
      *      An item sampled from the distribution
      */
     template <typename T>
     T sample_from_distribution(
-        std::unordered_map<T,double>& distribution, RandManager& rand_manager, bool normalised=true);
+        std::unordered_map<T,double>& distribution, RandManager& rand_manager, bool normalised=false);
 
     /**
      * Helper function to linearly normalise (Q) values, in place. 
