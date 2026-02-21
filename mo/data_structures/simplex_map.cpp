@@ -21,9 +21,156 @@ using namespace std;
 const double E = exp(1.0);
 static double EPS = 1e-12;
 
-// Clean implementation
+// ------------------------------------------------------------
+// SMVertex
+// ------------------------------------------------------------
 namespace thts {
+
+    /**
+    * Constructor
+    */
+    SMVertex::SMVertex(const Vec& weight, const Vec& value_estimate, double entropy_estimate) : 
+        weight(weight),
+        value_estimate(value_estimate),
+        entropy_estimate(entropy_estimate),
+        shareable_value(false),
+        neighbours(make_shared<unordered_set<weak_ptr<SMVertex>>>())
+    {
+    };
+
+    /**
+    * Constructor as midpoint of two other vertices
+    */
+    SMVertex::SMVertex(shared_ptr<SMVertex> v0, shared_ptr<SMVertex> v1, double ratio) : 
+        weight(ratio * v0.weight + (1.0-ratio) * v1.weight),
+        value_estimate(v0.value_estimate),
+        entropy_estimate(v0.entropy_estimate),
+        shareable_value(v0.shareable_value),
+        neighbours(make_shared<unordered_set<weak_ptr<SMVertex>>>())
+    {
+        if (v1.value_estimate.dot(this->weight) > v0.value_estimate.dot(this->weight)) {
+            this->value_estimate = v1.value_estimate;
+            this->entropy_estimate = v1.entropy_estimate;
+            this->shareable_value = v1.shareable_value;
+        }
+
+        // Cannot call shared_from_this() from constructor, so need to do this manually
+        // this->neighbours->insert(v0);
+        // this->neighbours->insert(v1);
+        // v0->neighbours->insert(shared_from_this());
+        // v1->neighbours->insert(shared_from_this());
+    };
+
+    /**
+     * Hash / compare
+     */
+    size_t SMVertex::hash() const 
+    {
+        return std::hash<Vec>()(weight);
+    };
+
+    bool SMVertex::equals(const SMVertex& other) const 
+    {
+        return weight.equals(other.weight);
+    };
+
+    bool SMVertex::operator==(const SMVertex& other) const 
+    {
+        return equals(other);
+    };
+
+    bool NGV::operator!=(const NGV& other) const 
+    {
+        return !equals(other);
+    };
     
+    /**
+    * Message passing
+    */
+    void SMVertex::share_values_message_passing() 
+    {
+        share_values_message_passing_push();
+        share_values_message_passing_pull();
+    }
+    
+    void SMVertex::share_values_message_passing_push() 
+    {
+        for (shared_ptr<SMVertex> other_ptr : *neighbours) {
+            share_values_message_passing_helper_push(*other_ptr);
+        }
+    }
+    
+    void SMVertex::share_values_message_passing_pull() 
+    {
+        for (shared_ptr<SMVertex> other_ptr : *neighbours) {
+            share_values_message_passing_helper_pull(*other_ptr);
+        }
+    }
+
+    /**
+    * Old docstring about why we need shareable_value parameter
+    *
+     * Just copying docstring here to highlight that we only try to push/pull backed up values, and avoid copying 
+     * heuristic value estimates. (This lead to problems when I was developing, but cant remember at time of writing).
+     * 
+     * The need for value_esimtate_from_backup comes from not wanting to share heuristic values. Consider a case for 
+     * example where the heuristic is the zero vector [0,0], and all of your rewards are negative. So the values are 
+     * [-a -b], for some a,b >= 0. In this case, the message passing will keep the heuristic values always, rather than 
+     * the more accurate dp estimates. So we mark if the value estimate is from a backup, so we can avoid pulling 
+     * innacurate heuristic values.
+     */
+    void SMVertex::share_values_message_passing_helper_push(SMVertex& other) 
+    {
+        if (shareable_value 
+            && this->value_estimate.dot(other.weight) > other.value_estimate.dot(other.weight)) 
+        {
+            other.value_estimate = value_estimate;
+            other.entropy_estimate = entropy_estimate;
+            other.shareable_value = shareable_value;
+        }
+    }
+
+    /**
+     * See '*_push' docstring
+     */
+    void SMVertex::share_values_message_passing_helper_pull(SMVertex& other) 
+    {
+        if (other.shareable_value
+            && other.value_estimate.dot(this->weight) > this->value_estimate.dot(this->weight))
+        {
+            this->value_estimate = other.value_estimate;
+            this->entropy_estimate = other.entropy_estimate;
+            this->shareable_value = other.shareable_value;
+        }
+    }
+
+    /**
+    * Graph connections
+     */
+    void SMVertex::add_connection(shared_ptr<SMVertex> other)
+    {
+        neighbours->insert(other);
+        other->neighbours->insert(shared_from_this());
+    }
+
+    void SMVertex::erase_connection(shared_ptr<SMVertex> other)
+    {
+        neighbours->erase(other);
+        other->neighbours->erase(shared_from_this());
+    }
+
+    /**
+    * Reading out linear value estimates from node
+     */
+    double SMVertex::contextual_value_estimate(double entropy_coeff=0.0) const
+    {
+        return this->value_estimate.dot(this->weight) + entropy_coeff * this->entropy_estimate;
+    }
+
+    double SMVertex::contextual_value_estimate(const Vec& ctx_weight, double entropy_coeff=0.0) const
+    {
+        return this->value_estimate.dot(ctx_weight) + entropy_coeff * this->entropy_estimate;
+    }
 }
 
 
@@ -44,141 +191,6 @@ namespace thts {
      * 
      * 
     */
-
-    NGV::NGV(Eigen::ArrayXd weight, Eigen::ArrayXd init_val_estimate, double init_entr_estimate) : 
-        value_estimate(init_val_estimate), 
-        entropy(init_entr_estimate),
-        pure_backup_value_estimate(false),
-        weight(weight),
-        neighbours(make_shared<unordered_set<shared_ptr<NGV>>>())
-    {
-    };
-
-    NGV::NGV(NGV& v0, NGV& v1, double ratio) :
-        value_estimate(),
-        entropy(),
-        pure_backup_value_estimate(false),
-        weight(),
-        neighbours(make_shared<unordered_set<shared_ptr<NGV>>>())
-    {
-        // Weight interpolated
-        weight = ratio * v0.weight + (1.0-ratio) * v1.weight;
-
-        // Take the best value estimate from the two endpoints
-        double ctx_val_v0 = thts::helper::dot(weight,v0.value_estimate);
-        double ctx_val_v1 = thts::helper::dot(weight,v1.value_estimate);
-        if (ctx_val_v0 >= ctx_val_v1) {
-            value_estimate = v0.value_estimate;
-            entropy = v0.entropy;
-            pure_backup_value_estimate = v0.pure_backup_value_estimate;
-        } else {
-            value_estimate = v1.value_estimate;
-            entropy = v1.entropy;
-            pure_backup_value_estimate = v1.pure_backup_value_estimate;
-        }
-
-        // NOTE: we can't upsed the neighbourhood graph here because we cant call 'shared_from_this' from constructor
-        // Also this should be done from LSE::insert anyway, because we dont necessarily know that v0 and v1 are still 
-        // connected (i.e. there could be another point on the LSE between v0 and v1)
-    };
-
-
-    size_t NGV::hash() const 
-    {
-        return std::hash<Eigen::ArrayXd>()(weight);
-    };
-
-    bool NGV::equals(const NGV& other) const 
-    {
-        return (weight == other.weight).all();
-    };
-
-    bool NGV::operator==(const NGV& other) const 
-    {
-        return equals(other);
-    };
-
-    bool NGV::operator!=(const NGV& other) const 
-    {
-        return !equals(other);
-    };
-    
-    void NGV::share_values_message_passing() 
-    {
-        share_values_message_passing_push();
-        share_values_message_passing_pull();
-    }
-    
-    void NGV::share_values_message_passing_push() 
-    {
-        for (shared_ptr<NGV> other_ptr : *neighbours) {
-            share_values_message_passing_helper_push(*other_ptr);
-        }
-    }
-    
-    void NGV::share_values_message_passing_pull() 
-    {
-        for (shared_ptr<NGV> other_ptr : *neighbours) {
-            share_values_message_passing_helper_pull(*other_ptr);
-        }
-    }
-
-    /**
-     * Just copying docstring here to highlight that we only try to push/pull backed up values, and avoid copying 
-     * heuristic value estimates. (This lead to problems when I was developing, but cant remember at time of writing).
-     * 
-     * The need for value_esimtate_from_backup comes from not wanting to share heuristic values. Consider a case for 
-     * example where the heuristic is the zero vector [0,0], and all of your rewards are negative. So the values are 
-     * [-a -b], for some a,b >= 0. In this case, the message passing will keep the heuristic values always, rather than 
-     * the more accurate dp estimates. So we mark if the value estimate is from a backup, so we can avoid pulling 
-     * innacurate heuristic values.
-     */
-    void NGV::share_values_message_passing_helper_push(NGV& other) 
-    {
-        if (pure_backup_value_estimate 
-            && thts::helper::dot(other.weight,value_estimate) > thts::helper::dot(other.weight,other.value_estimate)) 
-        {
-            other.value_estimate = value_estimate;
-            other.entropy = entropy;
-            other.pure_backup_value_estimate = pure_backup_value_estimate;
-        }
-    }
-
-    /**
-     * See '*_push' docstring
-     */
-    void NGV::share_values_message_passing_helper_pull(NGV& other) 
-    {
-        if (other.pure_backup_value_estimate
-            && thts::helper::dot(weight,other.value_estimate) > thts::helper::dot(weight,value_estimate)) 
-        {
-            value_estimate = other.value_estimate;
-            entropy = other.entropy;
-            pure_backup_value_estimate = other.pure_backup_value_estimate;
-        }
-    }
-
-    void NGV::add_connection(shared_ptr<NGV> other)
-    {
-        neighbours->insert(other);
-        other->neighbours->insert(shared_from_this());
-    }
-
-    void NGV::erase_connection(shared_ptr<NGV> other)
-    {
-        neighbours->erase(other);
-        other->neighbours->erase(shared_from_this());
-    }
-
-    double NGV::contextual_value_estimate() 
-    {
-        return thts::helper::dot(weight, value_estimate);
-    }
-
-    double NGV::contextual_value_estimate(Eigen::ArrayXd& ctx) 
-    {
-        return thts::helper::dot(ctx, value_estimate);
-    }
     
     /**
      * 

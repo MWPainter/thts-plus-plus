@@ -10,7 +10,7 @@ static const std::vector<ConfigMap> CONFIG_801 =
     // xpr params
     {
         {XPR_OR_ALG_ID_TAG,                     XPR_PARAMS_ID_TAG},
-        {XPR_PARAM_ID_NAME,                     "801_supp_frozen_lake_slippy_scenic_route_4x8"},
+        {XPR_PARAM_ID_NAME,                     "801_supp_frozen_lake_slippy_scenic_route_5x5"},
         {XPR_PARAM_ID_ENV,                      ENV_ID_SLIPPY_FROZEN_LAKE_S_5x5},
         {XPR_PARAM_ID_MCTS_MODE,                false},
         {XPR_PARAM_ID_GRAPH_SEARCH,             true},

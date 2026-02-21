@@ -42,9 +42,30 @@
 #include "main_aux/configs/xpr_config_600_frozen_lake_dense_scenic_route.h"
 #include "main_aux/configs/xpr_config_601_frozen_lake_dense_scenic_route.h"
 #include "main_aux/configs/xpr_config_602_frozen_lake_dense_scenic_route.h"
+#include "main_aux/configs/xpr_config_610_frozen_lake_dense_scenic_route.h"
+#include "main_aux/configs/xpr_config_611_frozen_lake_dense_scenic_route.h"
+#include "main_aux/configs/xpr_config_612_frozen_lake_dense_scenic_route.h"
+#include "main_aux/configs/xpr_config_620_frozen_lake_dense_scenic_route.h"
+#include "main_aux/configs/xpr_config_621_frozen_lake_dense_scenic_route.h"
+#include "main_aux/configs/xpr_config_622_frozen_lake_dense_scenic_route.h"
 #include "main_aux/configs/xpr_config_700_frozen_lake_sparse_scenic_route.h"
 #include "main_aux/configs/xpr_config_701_frozen_lake_sparse_scenic_route.h"
 #include "main_aux/configs/xpr_config_702_frozen_lake_sparse_scenic_route.h"
+#include "main_aux/configs/xpr_config_710_frozen_lake_sparse_scenic_route.h"
+#include "main_aux/configs/xpr_config_711_frozen_lake_sparse_scenic_route.h"
+#include "main_aux/configs/xpr_config_712_frozen_lake_sparse_scenic_route.h"
+#include "main_aux/configs/xpr_config_720_frozen_lake_sparse_scenic_route.h"
+#include "main_aux/configs/xpr_config_721_frozen_lake_sparse_scenic_route.h"
+#include "main_aux/configs/xpr_config_722_frozen_lake_sparse_scenic_route.h"
+#include "main_aux/configs/xpr_config_800_frozen_lake_slippy_scenic_route.h"
+#include "main_aux/configs/xpr_config_801_frozen_lake_slippy_scenic_route.h"
+#include "main_aux/configs/xpr_config_802_frozen_lake_slippy_scenic_route.h"
+#include "main_aux/configs/xpr_config_810_frozen_lake_slippy_scenic_route.h"
+#include "main_aux/configs/xpr_config_811_frozen_lake_slippy_scenic_route.h"
+#include "main_aux/configs/xpr_config_812_frozen_lake_slippy_scenic_route.h"
+#include "main_aux/configs/xpr_config_820_frozen_lake_slippy_scenic_route.h"
+#include "main_aux/configs/xpr_config_821_frozen_lake_slippy_scenic_route.h"
+#include "main_aux/configs/xpr_config_822_frozen_lake_slippy_scenic_route.h"
 #include "main_aux/configs/xpr_config_999_ments_entropy_trap_debug.h"
 
 
@@ -98,9 +119,37 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     CONFIG_601,
     CONFIG_602,
 
+    CONFIG_610,
+    CONFIG_611,
+    CONFIG_612,
+
+    CONFIG_620,
+    CONFIG_621,
+    CONFIG_622,
+
     CONFIG_700,
     CONFIG_701,
     CONFIG_702,
+
+    CONFIG_710,
+    CONFIG_711,
+    CONFIG_712,
+
+    CONFIG_720,
+    CONFIG_721,
+    CONFIG_722,
+
+    CONFIG_800,
+    CONFIG_801,
+    CONFIG_802,
+
+    CONFIG_810,
+    CONFIG_811,
+    CONFIG_812,
+
+    CONFIG_820,
+    CONFIG_821,
+    CONFIG_822,
 
     CONFIG_999,
 };

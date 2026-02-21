@@ -41,12 +41,23 @@ make && clear &&
 ./run_memory_limited 8G ./auxexpr eval 800 &&
 ./run_memory_limited 8G ./auxexpr eval 801 &&
 ./run_memory_limited 8G ./auxexpr eval 802 &&
+./run_memory_limited 8G ./auxexpr eval 620 &&
+./run_memory_limited 8G ./auxexpr eval 621 &&
+./run_memory_limited 8G ./auxexpr eval 622 &&
+./run_memory_limited 8G ./auxexpr eval 720 &&
+./run_memory_limited 8G ./auxexpr eval 721 &&
+./run_memory_limited 8G ./auxexpr eval 722 &&
+./run_memory_limited 8G ./auxexpr eval 820 &&
+./run_memory_limited 8G ./auxexpr eval 821 &&
+./run_memory_limited 8G ./auxexpr eval 822 
 
 TODO: decide if epsilon = 0.5 / epsilon = 1.0 is required/necessary
 TODO: decide where finer resolution is required
 TODO: decide if temp decay = 0 in BTS/DENTS ok?
 TODO: decide if what did with temp == entropy coeff in DENTS ok?
 TODO: run fixing evals (should be able to pass an argument to add more results to a eval log folder)
+
+TODO: copy non epsilon algorithms to _1_ and _2_ experiments
 
 
 
@@ -55,33 +66,18 @@ more scenic route?
 --------------------------------------------------------------------------------
 
 TODO: make 61X / 62X / 71X / 72X / 81X / 82X configs
-(_1_ => epsilon = 0.5)
 (_2_ => epsilon = 1.0)
 
 make && clear &&
 ./run_memory_limited 8G ./auxexpr eval 610 &&
 ./run_memory_limited 8G ./auxexpr eval 611 &&
 ./run_memory_limited 8G ./auxexpr eval 612 &&
-
-./run_memory_limited 8G ./auxexpr eval 620 &&
-./run_memory_limited 8G ./auxexpr eval 621 &&
-./run_memory_limited 8G ./auxexpr eval 622 &&
-
 ./run_memory_limited 8G ./auxexpr eval 710 &&
 ./run_memory_limited 8G ./auxexpr eval 711 &&
 ./run_memory_limited 8G ./auxexpr eval 712 &&
-
-./run_memory_limited 8G ./auxexpr eval 720 &&
-./run_memory_limited 8G ./auxexpr eval 721 &&
-./run_memory_limited 8G ./auxexpr eval 722 &&
-
 ./run_memory_limited 8G ./auxexpr eval 810 &&
 ./run_memory_limited 8G ./auxexpr eval 811 &&
-./run_memory_limited 8G ./auxexpr eval 812 &&
-
-./run_memory_limited 8G ./auxexpr eval 820 &&
-./run_memory_limited 8G ./auxexpr eval 821 &&
-./run_memory_limited 8G ./auxexpr eval 822
+./run_memory_limited 8G ./auxexpr eval 812
 
 
 
