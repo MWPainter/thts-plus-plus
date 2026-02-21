@@ -25,7 +25,7 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_340 =
         {XPR_PARAM_ID_EVAL_THREADS,                     16},
         {HPOPT_PARAM_ID_MIN_REPEATS,                    10},
         {HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD,  0.5},
-        {HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES,         200},
+        {HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES,         50},
         {HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES,     10},
         {HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ,          20},
     },

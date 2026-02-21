@@ -96,7 +96,7 @@ CPPFLAGS = $(INCLUDES) -Wall -std=c++20 -MMD -MP
 CPPFLAGS += -Wpedantic -Wno-vla -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wsign-promo -Wstrict-null-sentinel -Werror -Wno-unused
 # CPPFLAGS += -Wpedantic -Wno-vla -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wsign-promo -Wstrict-null-sentinel -Wno-unused
 # Optimization flags (excluded for debug targets)
-OPTIMIZATION_FLAGS = -O3 --param max-gcse-memory=1048576 # 1GB for gcse optimization
+OPTIMIZATION_FLAGS = -O3 --param max-gcse-memory=4194304 # 4GB for gcse (large TUs e.g. hpopt_manager.cpp)
 # OPTIMIZATION_FLAGS = -O2 --param max-gcse-memory=1048576 # 1GB for gcse optimization
 CPPFLAGS += $(OPTIMIZATION_FLAGS)
 
