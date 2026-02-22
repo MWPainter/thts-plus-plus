@@ -29,12 +29,13 @@ namespace thts {
     /**
     * Constructor
     */
-    SMVertex::SMVertex(const Vec& weight, const Vec& value_estimate, double entropy_estimate) : 
+    SMVertex::SMVertex(const Vec& weight, const Vec& heuristic_value_estimate, double entropy_estimate) : 
         weight(weight),
-        value_estimate(value_estimate),
+        num_updates(0),
+        value_estimate(Vec(weight.size(), 0.0)),
+        value_estimate_for_search(heuristic_value_estimate),
         entropy_estimate(entropy_estimate),
-        shareable_value(false),
-        neighbours(make_shared<unordered_set<weak_ptr<SMVertex>>>())
+        neighbours(make_shared<unordered_set<shared_ptr<SMVertex>>>())
     {
     };
 
@@ -43,15 +44,16 @@ namespace thts {
     */
     SMVertex::SMVertex(shared_ptr<SMVertex> v0, shared_ptr<SMVertex> v1, double ratio) : 
         weight(ratio * v0.weight + (1.0-ratio) * v1.weight),
+        num_updates(0),
         value_estimate(v0.value_estimate),
+        value_estimate_for_search(v0.value_estimate_for_search),
         entropy_estimate(v0.entropy_estimate),
-        shareable_value(v0.shareable_value),
-        neighbours(make_shared<unordered_set<weak_ptr<SMVertex>>>())
+        neighbours(make_shared<unordered_set<shared_ptr<SMVertex>>>())
     {
         if (v1.value_estimate.dot(this->weight) > v0.value_estimate.dot(this->weight)) {
             this->value_estimate = v1.value_estimate;
+            this->value_estimate_for_search = v1.value_estimate_for_search;
             this->entropy_estimate = v1.entropy_estimate;
-            this->shareable_value = v1.shareable_value;
         }
 
         // Cannot call shared_from_this() from constructor, so need to do this manually
@@ -79,31 +81,39 @@ namespace thts {
         return equals(other);
     };
 
-    bool NGV::operator!=(const NGV& other) const 
+    bool SMVertex::operator!=(const NGV& other) const 
     {
         return !equals(other);
     };
     
     /**
-    * Message passing
+    * Message passing (BFS)
     */
-    void SMVertex::share_values_message_passing() 
-    {
-        share_values_message_passing_push();
-        share_values_message_passing_pull();
-    }
-    
-    void SMVertex::share_values_message_passing_push() 
-    {
-        for (shared_ptr<SMVertex> other_ptr : *neighbours) {
-            share_values_message_passing_helper_push(*other_ptr);
-        }
-    }
-    
-    void SMVertex::share_values_message_passing_pull() 
-    {
-        for (shared_ptr<SMVertex> other_ptr : *neighbours) {
-            share_values_message_passing_helper_pull(*other_ptr);
+    void SMVertex::share_values_message_passing(int max_push_radius=1) 
+    {  
+        int current_push_radius = 0;
+        queue<shared_ptr<SMVertex>> vertex_queue;
+        queue<shared_ptr<SMVertex>> next_vertex_queue;
+        unordered_set<shared_ptr<SMVertex>> visited_vertices;
+        vertex_queue.push(shared_from_this());
+        visited_vertices.insert(shared_from_this());
+
+        while (!vertex_queue.empty() && current_push_radius < max_push_radius) {
+            shared_ptr<SMVertex> current_vertex = vertex_queue.front();
+            vertex_queue.pop();
+            for (shared_ptr<SMVertex> neighbour_ptr : *current_vertex->neighbours) {
+                if (visited_vertices.contains(neighbour_ptr)) continue;
+                visited_vertices.insert(neighbour_ptr);
+                bool success = share_values_message_passing_helper_push(*current_vertex, *neighbour_ptr);
+                if (success && !visited_vertices.contains(neighbour_ptr)) {
+                    next_vertex_queue.push(neighbour_ptr);
+                }
+            }
+            if (vertex_queue.empty()) {
+                current_push_radius++;
+                vertex_queue = next_vertex_queue;
+                next_vertex_queue.clear();
+            }
         }
     }
 
@@ -119,381 +129,139 @@ namespace thts {
      * the more accurate dp estimates. So we mark if the value estimate is from a backup, so we can avoid pulling 
      * innacurate heuristic values.
      */
-    void SMVertex::share_values_message_passing_helper_push(SMVertex& other) 
-    {
-        if (shareable_value 
-            && this->value_estimate.dot(other.weight) > other.value_estimate.dot(other.weight)) 
+    bool SMVertex::share_values_message_passing_helper(SMVertex& from_vertex, SMVertex& to_vertex) 
+    {  
+        if (from_vertex.num_updates <= 0)
         {
-            other.value_estimate = value_estimate;
-            other.entropy_estimate = entropy_estimate;
-            other.shareable_value = shareable_value;
+            return false;
         }
-    }
-
-    /**
-     * See '*_push' docstring
-     */
-    void SMVertex::share_values_message_passing_helper_pull(SMVertex& other) 
-    {
-        if (other.shareable_value
-            && other.value_estimate.dot(this->weight) > this->value_estimate.dot(this->weight))
+        if (from_vertex.value_estimate.dot(to_vertex.weight) > to_vertex.value_estimate.dot(to_vertex.weight)) 
         {
-            this->value_estimate = other.value_estimate;
-            this->entropy_estimate = other.entropy_estimate;
-            this->shareable_value = other.shareable_value;
+            to_vertex.num_updates = from_vertex.num_updates;
+            to_vertex.value_estimate = from_vertex.value_estimate;
+            to_vertex.value_estimate_for_search = from_vertex.value_estimate_for_search;
+            to_vertex.entropy_estimate = from_vertex.entropy_estimate;
+            return true;
         }
+        return false;
     }
 
     /**
     * Graph connections
      */
-    void SMVertex::add_connection(shared_ptr<SMVertex> other)
+    void SMVertex::add_bidirectional_connection(shared_ptr<SMVertex> other)
     {
-        neighbours->insert(other);
+        this->neighbours->insert(other);
         other->neighbours->insert(shared_from_this());
     }
 
-    void SMVertex::erase_connection(shared_ptr<SMVertex> other)
+    void SMVertex::erase_bidirectional_connection(shared_ptr<SMVertex> other)
     {
-        neighbours->erase(other);
+        this->neighbours->erase(other);
         other->neighbours->erase(shared_from_this());
-    }
-
-    /**
-    * Reading out linear value estimates from node
-     */
-    double SMVertex::contextual_value_estimate(double entropy_coeff=0.0) const
-    {
-        return this->value_estimate.dot(this->weight) + entropy_coeff * this->entropy_estimate;
-    }
-
-    double SMVertex::contextual_value_estimate(const Vec& ctx_weight, double entropy_coeff=0.0) const
-    {
-        return this->value_estimate.dot(ctx_weight) + entropy_coeff * this->entropy_estimate;
     }
 }
 
 
+
+
+// ------------------------------------------------------------
+// SMSimplex
+// ------------------------------------------------------------
+
+
 namespace thts {
 
-    /**
-     * Helper for numerical instability
-    */
-    bool is_approx_zero(double x) {
-        return -EPS < x && x < EPS;
-    }
-    
-    /**
-     * 
-     * 
-     * NGV
-     * 
-     * 
-     * 
-    */
-    
-    /**
-     * 
-     * 
-     * LSE
-     * 
-     * 
-     * 
-    */
-
-    LSE::LSE(shared_ptr<NGV> v0, shared_ptr<NGV> v1) : 
-        v0(v0), 
-        v1(v1), 
-        ratios(), 
-        interpolated_vertices()
+    SMSimplex::SMSimplex(int dim, std::vector<std::shared_ptr<SMVertex>>& vertices, int depth) :
+        dim(dim),
+        vertices(vertices),
+        vertices_set(vertices),
+        split_counter(0),
+        longest_edge(std::make_pair(nullptr, nullptr)), // set in constructor
+        split_vertex(nullptr), // initialised when splitting
+        splitting_hyperplane_normal(nullptr), // initialised when splitting
+        depth(depth),
+        radius(0.0), // set in constructor
+        normal_child(nullptr), // initialised when splitting
+        opposite_child(nullptr), // initialised when splitting
+        is_non_conforming(false) // assume conforming, SMMesh will update if we are non-conforming
     {
-        ratios[v0] = 0.0;
-        ratios[v1] = 1.0;
-        interpolated_vertices[0.0] = v0;
-        interpolated_vertices[1.0] = v1;
-    };
-    
-    size_t LSE::hash() const
-    {
-        return thts::helper::unordered_hash(v0,v1);
-    };
-
-    bool LSE::equals(const LSE& other) const 
-    {
-        return ((v0->equals(*other.v0) && v1->equals(*other.v1))
-                || (v0->equals(*other.v1) && v1->equals(*other.v0)));
-    };
-
-    bool LSE::operator==(const LSE& other) const 
-    {
-        return equals(other);
-    };
-
-    bool LSE::operator!=(const LSE& other) const 
-    {
-        return !equals(other);
-    };
-
-    /**
-     * lower_bound gets the element "not less" than the given key
-     */
-    map<double,shared_ptr<NGV>>::iterator LSE::left_vertex(double ratio) 
-    {
-        map<double,shared_ptr<NGV>>::iterator ngv_it = interpolated_vertices.lower_bound(ratio);
-        if (ngv_it == interpolated_vertices.begin()) {
-            return interpolated_vertices.end();
-        }
-        return --ngv_it;
-    };
-
-    /**
-     * lower_bound gets the element "not less" than the given key
-     * 
-     * if ngv exists, then push the iterator one more right
-     */
-    map<double,shared_ptr<NGV>>::iterator LSE::right_vertex(double ratio) 
-    {
-        map<double,shared_ptr<NGV>>::iterator ngv_it = interpolated_vertices.lower_bound(ratio);
-        if (ngv_it->first == ratio) {
-            ngv_it++;
-        }
-        if (ngv_it == interpolated_vertices.end()) {
-            return interpolated_vertices.end();
-        }
-        return ngv_it;
-    };
-
-    /**
-     * Getting the closest ngv to a point can be done by projecting the point onto the line, and picking the closest 
-     * point on the line
-     */
-    shared_ptr<NGV> LSE::get_closest_ngv(const Eigen::ArrayXd& w) 
-    {
-        Eigen::ArrayXd v0_to_v1 = v1->weight - v0->weight;
-        Eigen::ArrayXd projected_w = thts::helper::project(v0_to_v1, w-v0->weight);
-        double ratio = thts::helper::norm(projected_w) / thts::helper::norm(v0_to_v1);
-
-        std::map<double,std::shared_ptr<NGV>>::iterator left_ngv = left_vertex(ratio);
-        std::map<double,std::shared_ptr<NGV>>::iterator right_ngv = right_vertex(ratio);
-
-        if (left_ngv == interpolated_vertices.end()) {
-            return right_ngv->second;
-        } else if (right_ngv == interpolated_vertices.end()) {
-            return left_ngv->second;
-        }
-
-        // left_ratio <= ratio <= right_ratio
-        // if dist_to_left == ratio - left_ratio < right_ratio - ratio == dist_to_right return left_ngv
-        double left_ratio = left_ngv->first;
-        double right_ratio = right_ngv->first;
-        if (right_ratio - ratio > ratio - left_ratio) {
-            return left_ngv->second;
-        } else {
-            return right_ngv->second;
-        }
-    }
-
-    
-
-    /**
-     * TODO: be more efficient in not creating nodes before actually using them
-     * 
-     * If we call this function, then we are probably creating children TN's.
-     * In such case, we will be making simplices with edges (x0,v) and (v,x1)
-     * We want this edge to be returned when looking up the LSE for the (x0,v) and (v,x1) unordered pairs
-     * 
-     * We need to update the neighbourhood graph to account for the new vertex on this edge
-     * (note that there may be other NGV's between x0 and x1)
-     * This is what we use the binary tree for (to efficiently keep the vertices in order along this edge and to 
-     * efficiently find the left and right neightbours of the new vertex along the edge)
-    */
-    void LSE::insert(shared_ptr<NGV> v, shared_ptr<NGV> x0, shared_ptr<NGV> x1, double r, SimplexMap& simplex_map) 
-    {
-        double x0_ratio = ratios.at(x0);
-        double x1_ratio = ratios.at(x1);
-        
-        // Assert x0_ratio < x1_ratio
-        if (x0_ratio > x1_ratio) {
-            return insert(v, x1, x0, 1.0-r, simplex_map);
-        }
-
-        // ratio between v0 and v1 (endpoints of the LSE)
-        double v_ratio = x0_ratio + (x1_ratio-x0_ratio) * r;
-
-        // Insert into the maps
-        ratios[v] = v_ratio;
-        interpolated_vertices[v_ratio] = v;
-
-        // Get vertices to the left and right of new node
-        shared_ptr<NGV> lvertex = left_vertex(v_ratio)->second;
-        shared_ptr<NGV> rvertex = right_vertex(v_ratio)->second;
-
-        // Update the neighbourhood graph
-        lvertex->erase_connection(rvertex);
-        lvertex->add_connection(v);
-        rvertex->add_connection(v);
-
-        // Register the new pairs of vertices with this LSE
-        shared_ptr<LSE> this_lse = shared_from_this();
-        simplex_map.register_vertices_with_lse(x0, v, this_lse);
-        simplex_map.register_vertices_with_lse(v, x1, this_lse);
-    }
-    
-    /**
-     * 
-     * 
-     * Triangulation
-     * 
-     * 
-     * 
-    */
-
-    vector<string> split_string(string s, string delimiter) {
-        vector<string> vec;;
-        size_t last = 0; 
-        size_t next = 0; 
-        while ((next = s.find(delimiter, last)) != string::npos) { 
-            vec.push_back(s.substr(last, next-last));
-            last = next+1;
-        } 
-        vec.push_back(s.substr(last));
-        return vec;
-    }
-
-    /**
-     * TODO: do some more robust file stuff? Feels a bit off having hard coded dir from root dir
-    */
-    Triangulation::Triangulation(int dim) : d(dim), e(dim * (dim-1) / 2), edge_points(), simplices()
-    {
-        // If passed zero, then not using triangulation
-        if (dim == 0) {
+        // If 2D, then we want to make sure that the vertices are in the correct order in longest_edge
+        if (is_2d()) 
+        {
+            Vec v0 = this->vertices[0]->weight;
+            Vec v1 = this->vertices[1]->weight;
+            if (v0[0] > v1[0]) 
+            {
+                this->longest_edge = std::make_pair(v1, v0);
+            }
+            else
+            {
+                this->longest_edge = std::make_pair(v0, v1);
+            }
+            this->radius = v0.dist(v1);
             return;
         }
 
-        // Filename for this triangulation
-        stringstream ss;
-        ss << "mo/.cache/" << dim << "_triangulation.txt";
-        ifstream file(ss.str());
-        if (!file.is_open()) {
-            throw runtime_error("Error opening precomputed triangulation text file");
-        }
-
-        // read num vertices line
-        string line;
-        getline(file, line);
-        int num_vertices = stoi(line);
-        if (num_vertices != d+e) {
-            throw runtime_error("Unexpected number of vertices in the triangulation file");
-        }
-
-        // read num simplices line
-        getline(file, line);
-        int num_simplices = stoi(line);
-
-        // skip through d lines that will read 0\n1\n...(d-1)\n
-        for (int i=0; i<d; i++) {
-            getline(file, line);
-        }
-
-        // read in the e lines that define the edge points
-        for (int i=0; i<e; i++) {
-            getline(file, line);
-            vector<string> edge_point_info = split_string(line, " ");
-            int index0 = stoi(edge_point_info[1]);
-            int index1 = stoi(edge_point_info[2]);
-            double ratio = stod(edge_point_info[3]);
-            edge_points.push_back(tuple<int,int,double>(index0, index1, ratio));
-        }
-
-        // read in the lists of vertices that form the simplices
-        for (int i=0; i<num_simplices; i++) {
-            getline(file, line);
-            vector<string> simplex_indices = split_string(line, " ");
-            simplices.push_back(vector<int>());
-            for (string& index_str : simplex_indices) {
-                simplices[i].push_back(stoi(index_str));
-            }
-        }
-
-        // close file as finished
-        file.close();
-    };
-
-
-    /**
-     * 
-     * 
-     * TN
-     * 
-     * 
-     * 
-    */
-    TN::TN(SimplexMap& simplex_map, int dim, int depth, shared_ptr<vector<shared_ptr<NGV>>> simplex_vertices) :
-        simplex_map(simplex_map),
-        dim(dim),
-        depth(depth),
-        centroid(Eigen::ArrayXd::Zero(dim)),
-        l_inf_norm(0.0),
-        split_counter(0),
-        simplex_vertices(simplex_vertices),
-        hyperplane_normals(make_shared<unordered_map<shared_ptr<NGV>,Eigen::ArrayXd>>()),
-        children(make_shared<unordered_set<shared_ptr<TN>>>()),
-        splitting_edge_normal_side_vertex(),
-        splitting_edge_opposite_side_vertex(),
-        splitting_edge_new_vertex(),
-        splitting_hyperplane_normal(Eigen::ArrayXd::Zero(dim)),
-        normal_side_child(),
-        opposite_side_child()
-    {
-        // Compute centroid
-        for (shared_ptr<NGV> vertex : *simplex_vertices) {
-            centroid += vertex->weight;
-        }
-        centroid /= simplex_vertices->size();
-
-        // Compute l_inf_norm
-        for (size_t i=0; i<simplex_vertices->size(); i++) {
-            for (size_t j=i+1; j<simplex_vertices->size(); j++) {
-                Eigen::ArrayXd diff = simplex_vertices->at(i)->weight - simplex_vertices->at(j)->weight;
-                double diff_l_inf_norm = diff.abs().maxCoeff();
-                if (diff_l_inf_norm > l_inf_norm) {
-                    l_inf_norm = diff_l_inf_norm;
+        // Compute radius and longest edge
+        for (size_t i=0; i<vertices.size(); i++) {
+            for (size_t j=i+1; j<vertices.size(); j++) {
+                Vec diff = vertices.at(i)->weight - vertices.at(j)->weight;
+                double dist = diff.norm();
+                if (dist > radius) {
+                    this->radius = dist;
+                    this->longest_edge = std::make_pair(vertices.at(i), vertices.at(j));
                 }
             }
         }
-
-        // Ensure neighbourhood graph is actually connected=
-        _ensure_neighbourhood_graph_connected();
     }
 
-    void TN::_ensure_neighbourhood_graph_connected() 
+    SMSimplex::is_2d() const
     {
-        for (size_t i=0; i<simplex_vertices->size(); i++) {
-            for (size_t j=i+1; j<simplex_vertices->size(); j++) {
-                simplex_vertices->at(i)->add_connection(simplex_vertices->at(j));
-            }
-        }
+        return this->dim == 2;
+    }
+
+    bool SMSimplex::contains_vertex(shared_ptr<SMVertex> vertex) const
+    {
+        return this->vertices_set.contains(vertex);
     }
 
     /**
-     * TODO: move relevant docstring from 'lazy_compute_hyperplane_noamrls' to here
+        Mashed together old docstrings from previous implementation
+
+     * This is a bit complex, so I'll write some comments about this
+     * We are working in D dimensions (with D rewards)
+     * That means we're using a D-1 simplex (with D points)
+     * This D-1 simplex lies in a D-1 dimensional hyperplane of the D dimensional plane
+     * (1,1,1,...,1) is the normal to this D-1 dimensional hyperplane
      * 
-     * hyperplane_points contains 'dim-1' many points defining a 'dim-2' hyperplane
+     * Now, suppose we have k points v1,...,vk that lie on a k-1 hyperplane in kd space, how do we compute the normal?
+     * As v1 + c * (vi - v1) lies in the plane, we have the plane extending in the direction (vi-v1)
+     * So consider the matrix M with collumn vectors ((v2-v1) (v3-v1) ... (vk-v1)), which is a (k,k-1) matrix
+     * The normal vector to the plane is the null space of this matrix
+     * So we can compute the SVD of M, and consider the vector corresponding to the singular (eigen) value of zero
      * 
-     * TODO: #hyperplane points > 1 should be unecessary, as only do this for 3D+. All this code needs a bit of cleaning really
+     We are assuming that the hyperplane_points are not colinear
+     * 
+     * NOTE: this could probably be implemented a bit more efficiently by actually projecting into the D-1 space and 
+     *  working directly in that dimension. But the above is how my brain thought about it, and I just want something 
+     *  that works for now.
+
+     TO make use of eigen SVD, we will read out the underlying Eigen arrays to fill the matrix, and convert back to Vec 
+     at the end
     */
-    Eigen::ArrayXd TN::compute_hyperplane_normal(vector<shared_ptr<NGV>>& hyperplane_points) const
+    Vec SMSimplex::compute_hyperplane_normal(vector<shared_ptr<SMVertex>>& hyperplane_points) const
     {
         // Construct the (D,D-1) matrix we want to SVD
         // Fill the first collumn with 1's (as described in above comment)
-        // Fill remaining collumns with the D-2 values of opposing_face_vertices[i] - oppositing_face_vertices[0]
+        // Fill remaining collumns with the D-2 values of hyperplane_points[i] - hyperplane_points[0]
         Eigen::MatrixXd hyperplane_matrix(dim,dim-1);
         hyperplane_matrix.col(0).setOnes();
         hyperplane_matrix.col(0) /= dim;
         if (hyperplane_points.size() > 1) {
-            Eigen::VectorXd v_0 = hyperplane_points[0]->weight.matrix();
+            Eigen::VectorXd v_0 = hyperplane_points[0]->weight.vec.matrix();
             for (size_t i=1; i<hyperplane_points.size(); i++) {
-                Eigen::VectorXd v_i = hyperplane_points[i]->weight.matrix();
+                Eigen::VectorXd v_i = hyperplane_points[i]->weight.vec.matrix();
                 hyperplane_matrix.col(i) = v_i - v_0;
             }
         }
@@ -503,566 +271,439 @@ namespace thts {
 
         // If SVD is M=USV^T, then we want U.col(d-1), so read that out
         // Note that S(i,i) >= S(i+1,i+1), as singular values computed in order from largest to smallest
-        // Also convert back to ArrayXd type, done doing lin alg stuff
-        return svd.matrixU().col(dim-1).array();
+        // Also convert back to Vec type, done doing lin alg stuff
+        return Vec(svd.matrixU().col(dim-1).array());
     }
 
     /**
-     * This is a bit complex, so I'll write some comments about this
-     * We are working in D dimensions (with D rewards)
-     * That means we're using a D-1 simplex (with D points)
-     * This D-1 simplex lies in a D-1 dimensional hyperplane of the D dimensional plane
-     * (1,1,1,...,1) is the normal to this D-1 dimensional hyperplane
-     * The D-1 simplex has D many D-2 faces (which defines a D-2 hyperplane)
-     * 
-     * For each v in simplex_vertices, hyperplane_normals[v] is normal to the D-2 face opposing v
-     * (For example in 2dimensions (with 3 rewards) the hyperplane is the line opposite the point) 
-     * 
-     * For each normal we compute, we compute the normal to D-1 hyperplane that coincides with the D-2 face of the 
-     * simplex. The additional dimension of this D-1 hyperplane extends out from the D-1 simplex
-     * - to visualise this, consider the triangle (2-simplex) in 3d space, and we're computing the planes that 
-     *      intersect the lines of the triangle
-     * 
-     * Now, suppose we have k points v1,...,vk that lie on a k-1 hyperplane in kd space, how do we compute the normal?
-     * As v1 + c * (vi - v1) lies in the plane, we have the plane extending in the direction (vi-v1)
-     * So consider the matrix M with collumn vectors ((v2-v1) (v3-v1) ... (vk-v1)), which is a (k,k-1) matrix
-     * The normal vector to the plane is the null space of this matrix
-     * So we can compute the SVD of M, and consider the vector corresponding to the singular (eigen) value of zero
-     * 
-     * Returning to the problem at hand, we get the points v1,...,v(D-1) from simplex_vertices - {v} 
-     * (recall v is the simplex vertex that opposes the face we are currently considering)
-     * These D-1 points define the D-2 hyperplane we want
-     * We let vD = v1 + 1, so get D points defining a D-1 hyperplane
-     * And note that if vD = v1 + 1, then vD - v1 = 1
-     * 
-     * NOTE: this could probably be implemented a bit more efficiently by actually projecting into the D-1 space and 
-     *  working directly in that dimension. But the above is how my brain thought about it, and I just want something 
-     *  that works for now.
+     * Get the closest vertex to a weight from the points in this simplex
     */
-    void TN::lazy_compute_hyperplane_normals() const 
+    shared_ptr<SMVertex> SMSimplex::get_closest_vertex(const Vec& weight) const
     {
-        // If already computed or working in 2d, do nothing
-        if (dim == 2 || hyperplane_normals->size() > 0) {
-            return;
-        }
-
-        for (shared_ptr<NGV> opposing_vertex : *simplex_vertices) {
-            // Get D-1 opposing face vertices
-            vector<shared_ptr<NGV>> opposing_face_vertices;
-            for (shared_ptr<NGV> vertex : *simplex_vertices) {
-                if (vertex == opposing_vertex) {
-                    continue;
-                }
-                opposing_face_vertices.push_back(vertex);
-            }
-
-            // Compute hyperplane normal
-            Eigen::ArrayXd normal = compute_hyperplane_normal(opposing_face_vertices);
-
-            // Make sure that normal points towards centroid
-            if (thts::helper::dot(centroid - opposing_face_vertices[0]->weight, normal) < 0.0) {
-                normal *= -1.0;
-            }
-
-            // Insert
-            hyperplane_normals->insert_or_assign(opposing_vertex, normal);
-        }
-    }
-
-    // size_t TN::hash() const 
-    // {
-    //     return hash<Eigen::ArrayXd>()(centroid);
-    // };
-
-    // bool TN::equals(const NGV& other) const 
-    // {
-    //     return (centroid == other.centroid).all();
-    // };
-
-    // bool TN::operator==(const NGV& other) const 
-    // {
-    //     return equals(other);
-    // };
-
-    // bool TN::operator!=(const NGV& other) const 
-    // {
-    //     return !equals(other);
-    // };
-
-    bool TN::has_children() const 
-    {  
-        return children->size() > 0 || normal_side_child != nullptr;
-    }
-
-    void TN::create_children(SmThtsManager& sm_manager) 
-    {
-        // triangulation option is only option that doesn't lead to binary tree of TN's
-        if (sm_manager.simplex_map_splitting_option == SPLIT_triangulation) {
-            return create_children_triangulation(sm_manager);
-        }
-
-        // Compute 'splitting_Edge_normal_side_vertex' and 'splitting_edge_opposite_side_vertex'
-        // This will be selected differently based 
-        if (sm_manager.simplex_map_splitting_option == SPLIT_ordered) 
-        {
-            for (size_t i=0; i<simplex_vertices->size(); i++) {
-                if (splitting_edge_normal_side_vertex != nullptr) {
-                    break;
-                }
-                for (size_t j=i+1; j<simplex_vertices->size(); j++) {
-                    Eigen::ArrayXd diff = simplex_vertices->at(i)->weight - simplex_vertices->at(j)->weight;
-                    double diff_l_inf_norm = diff.abs().maxCoeff();
-                    if (diff_l_inf_norm == l_inf_norm) {
-                        splitting_edge_normal_side_vertex = simplex_vertices->at(i);
-                        splitting_edge_opposite_side_vertex = simplex_vertices->at(j);
-                        break;
-                    }
-                }
-            }
-        }
-        else if (sm_manager.simplex_map_splitting_option == SPLIT_smallest_edge_randomly) 
-        {
-            vector<UnorderedNGVPair> shortest_edges;
-            for (size_t i=0; i<simplex_vertices->size(); i++) {
-                for (size_t j=i+1; j<simplex_vertices->size(); j++) {
-                    Eigen::ArrayXd diff = simplex_vertices->at(i)->weight - simplex_vertices->at(j)->weight;
-                    double diff_l_inf_norm = diff.abs().maxCoeff();
-                    if (is_approx_zero(l_inf_norm - diff_l_inf_norm)) {
-                        shortest_edges.push_back(UnorderedNGVPair(simplex_vertices->at(i),simplex_vertices->at(j)));
-                    }
-                }
-            }
-            int rand_idx = sm_manager.get_rand_int(0,shortest_edges.size());
-            UnorderedNGVPair selected_edge = shortest_edges[rand_idx];
-            splitting_edge_normal_side_vertex = selected_edge.first;
-            splitting_edge_opposite_side_vertex = selected_edge.second;
-        } 
-        else if (sm_manager.simplex_map_splitting_option == SPLIT_random) 
-        {
-            vector<UnorderedNGVPair> splittable_edges;
-            for (size_t i=0; i<simplex_vertices->size(); i++) {
-                for (size_t j=i+1; j<simplex_vertices->size(); j++) {
-                    Eigen::ArrayXd diff = simplex_vertices->at(i)->weight - simplex_vertices->at(j)->weight;
-                    double diff_l_inf_norm = diff.abs().maxCoeff();
-                    if (diff_l_inf_norm > sm_manager.simplex_node_l_inf_thresh) {
-                        splittable_edges.push_back(UnorderedNGVPair(simplex_vertices->at(i),simplex_vertices->at(j)));
-                    }
-                }
-            }
-            int rand_idx = sm_manager.get_rand_int(0,splittable_edges.size());
-            UnorderedNGVPair selected_edge = splittable_edges[rand_idx];
-            splitting_edge_normal_side_vertex = selected_edge.first;
-            splitting_edge_opposite_side_vertex = selected_edge.second;
-        }
-        else if (sm_manager.simplex_map_splitting_option == SPLIT_value_diff) 
-        {
-            double max_val_diff_norm = -1.0;
-            for (size_t i=0; i<simplex_vertices->size(); i++) {
-                for (size_t j=i+1; j<simplex_vertices->size(); j++) {
-                    Eigen::ArrayXd weight_diff = simplex_vertices->at(i)->weight - simplex_vertices->at(j)->weight;
-                    double weight_inf_norm = weight_diff.abs().maxCoeff();
-
-                    Eigen::ArrayXd val_diff = simplex_vertices->at(i)->value_estimate - simplex_vertices->at(j)->value_estimate;
-                    double val_diff_norm = thts::helper::dot(val_diff,val_diff);
-
-                    if (val_diff_norm > max_val_diff_norm && weight_inf_norm > sm_manager.simplex_node_l_inf_thresh) {
-                        max_val_diff_norm = val_diff_norm;
-                        splitting_edge_normal_side_vertex = simplex_vertices->at(i);
-                        splitting_edge_opposite_side_vertex = simplex_vertices->at(j);
-                    }
-                }
-            }
-        }
-        
-        // Creates binary tree
-        // Assumes 'splitting_edge_xxx_side_vertex' variables are set to elements of 'simplex_vertices'
-        // But once those are set, creating a binary tree will always be the same (so this is the shared logic)
-        return create_children_binary_tree();
-    }
-    
-    /**
-     * TODO: document a bit better generally
-     * TODO: 
-    */
-    void TN::create_children_binary_tree() 
-    {
-        // create the new vertex on the splitting edge (halfway between the two)
-        // avoid making a duplicate vertex, and add it to simplex map structures if made a novel vertex
-        // And insert it on the LSE if we are making a new vertex
-        splitting_edge_new_vertex = make_shared<NGV>(
-            *splitting_edge_normal_side_vertex, *splitting_edge_opposite_side_vertex, 0.5);
-        if (simplex_map.n_graph_vertex_set->contains(splitting_edge_new_vertex)) {
-            splitting_edge_new_vertex = *simplex_map.n_graph_vertex_set->find(splitting_edge_new_vertex);
-        } else {
-            simplex_map.n_graph_vertices->push_back(splitting_edge_new_vertex);
-            simplex_map.n_graph_vertex_set->insert(splitting_edge_new_vertex);
-            shared_ptr<LSE> simplex_edge = simplex_map.get_or_create_lse(
-                splitting_edge_normal_side_vertex, splitting_edge_opposite_side_vertex);
-            simplex_edge->insert(
-                splitting_edge_new_vertex, 
-                splitting_edge_normal_side_vertex, 
-                splitting_edge_opposite_side_vertex,
-                0.5,
-                simplex_map);
-        }
-        
-        // Create vector of all vertices common to both children
-        vector<shared_ptr<NGV>> child_common_simplex_vertices;
-        for (shared_ptr<NGV> simplex_vertex : *simplex_vertices) {
-            if ((*simplex_vertex != *splitting_edge_normal_side_vertex) 
-                && (*simplex_vertex != *splitting_edge_opposite_side_vertex))
-            {
-                child_common_simplex_vertices.push_back(simplex_vertex);
-            }
-        }
-        child_common_simplex_vertices.push_back(splitting_edge_new_vertex);
-
-        // Normal side child simplex
-        shared_ptr<vector<shared_ptr<NGV>>> normal_side_child_vertices = make_shared<vector<shared_ptr<NGV>>>(
-            child_common_simplex_vertices);
-        normal_side_child_vertices->push_back(splitting_edge_normal_side_vertex);
-        normal_side_child = make_shared<TN>(simplex_map, dim, depth+1, normal_side_child_vertices);
-
-        // Opposite side child simplex
-        shared_ptr<vector<shared_ptr<NGV>>> opposite_side_child_vertices = make_shared<vector<shared_ptr<NGV>>>(
-            child_common_simplex_vertices);
-        opposite_side_child_vertices->push_back(splitting_edge_opposite_side_vertex);
-        opposite_side_child = make_shared<TN>(simplex_map, dim, depth+1, opposite_side_child_vertices);
-
-        // Compute normal (using the dim-1 many common points of the child simplices)
-        splitting_hyperplane_normal = compute_hyperplane_normal(child_common_simplex_vertices);
-
-        // and make sure that the normal points towards the normal side child
-        Eigen::ArrayXd splitting_edge_normal_dir = (splitting_edge_normal_side_vertex->weight 
-                                                    - splitting_edge_new_vertex->weight);
-        if (thts::helper::dot(splitting_edge_normal_dir, splitting_hyperplane_normal) < 0.0) {
-            splitting_hyperplane_normal *= -1.0;
-        }
-    }
-
-    /**
-     * We perform the following steps:
-     * 0. In the following we will have D+E points that we triangulate over
-     * 0.1. The first 0,...,D-1 vertices are copies from 'simplex_vertices'
-     * 0.2. The next D,...,D+E-1 vertices are created along the edges of the simplex
-     * 1. For each LSE of the simplex, we add a new NGV along it
-     * 1.1. This NGV needs to be inserted into the LSE
-     * 1.2. Note that LSE.insert will update the neightbourhood graph and register the lse with the new 'subedges' 
-     *      being created
-     * 2. For each simplex (list of vertices) make a new TN
-     * 2.1. The TN constructor will ensure that the vertices are connected
-     * 
-     * Note that we need to take care to not make any duplicate vertices in the neighbourhood graph
-    */
-    void TN::create_children_triangulation(SmThtsManager& sm_manager) 
-    {
-        // 0+1: make the list of vertices to triangulate over
-        vector<shared_ptr<NGV>> vertices(*simplex_vertices);
-        for (tuple<int,int,double>& edge_point_spec : sm_manager.triangulation_ptr->edge_points) {
-            shared_ptr<NGV> v0 = vertices[get<0>(edge_point_spec)];
-            shared_ptr<NGV> v1 = vertices[get<1>(edge_point_spec)];
-            double ratio = get<2>(edge_point_spec);
-
-            shared_ptr<NGV> new_vertex = make_shared<NGV>(*v0, *v1, ratio);
-            if (simplex_map.n_graph_vertex_set->contains(new_vertex)) {
-                new_vertex = *simplex_map.n_graph_vertex_set->find(new_vertex);
-            } else {
-                simplex_map.n_graph_vertices->push_back(new_vertex);
-                simplex_map.n_graph_vertex_set->insert(new_vertex);
-            }
-            vertices.push_back(new_vertex);
-
-            shared_ptr<LSE> simplex_edge = simplex_map.get_or_create_lse(v0,v1);
-            simplex_edge->insert(new_vertex, v0, v1, ratio, simplex_map);
-        }
-
-        // 2: make child simplices
-        for (vector<int>& simplex_indices : sm_manager.triangulation_ptr->simplices) {
-            shared_ptr<vector<shared_ptr<NGV>>> child_simplex_vertices = make_shared<vector<shared_ptr<NGV>>>();
-            for (int& i : simplex_indices) {
-                child_simplex_vertices->push_back(vertices[i]);
-            }
-            shared_ptr<TN> child_tn = make_shared<TN>(simplex_map, dim, depth+1, child_simplex_vertices);
-            children->insert(child_tn);
-        }
-    }
-
-    /**
-     * We can tell if this TN node is a binary tree or used triangulation depending on if any of the following 
-     * pointers are nullptr or not:
-     * - splitting_edge_new_vertex
-     * - normal_side_child
-     * - opposite_side_child
-    */
-    shared_ptr<TN> TN::get_child(const Eigen::ArrayXd& weight) const
-    {
-        if (normal_side_child == nullptr) {
-            return get_child_triangulation(weight);
-        } else {
-            return get_child_binary_tree(weight);
-        }
-    }
-
-    shared_ptr<TN> TN::get_child_binary_tree(const Eigen::ArrayXd& weight) const 
-    {
-        // if (dim == 2) {
-        //     if (normal_side_child->contains_weight_2d(weight)) {
-        //         return normal_side_child;
-        //     } else {
-        //         return opposite_side_child;
-        //     }
-        // }
-
-        if (halfplane_check(splitting_edge_new_vertex->weight, splitting_hyperplane_normal, weight)) {
-            return normal_side_child;
-        } else {
-            return opposite_side_child;
-        }
-    }
-
-    shared_ptr<TN> TN::get_child_triangulation(const Eigen::ArrayXd& weight) const
-    {  
-        for (shared_ptr<TN> child : *children) {
-            if (child->contains_weight(weight)) {
-                return child;
-            }
-        }
-        cout << weight << endl;
-        throw runtime_error("Either called get child without children, or probably called with weight with vals not "
-            "summing to one");
-    }
-
-    /**
-     * Only called by triangulation version of the code at the moment
-     * But chould generally 
-    */
-    bool TN::contains_weight(const Eigen::ArrayXd& weight, bool debug) const 
-    {
-        if (dim == 2) {
-            return contains_weight_2d(weight);
-        }
-
-        // Ensure hyperplane normals are computed
-        lazy_compute_hyperplane_normals();
-
-        // Perform halfplane checks
-        // if we fail any halfplane check, then 'weight' isnt in this simplex
-        for (size_t i=0; i<simplex_vertices->size(); i++) {
-            Eigen::ArrayXd halfplane_normal = hyperplane_normals->at(simplex_vertices->at(i));
-            Eigen::ArrayXd halfplane_point = simplex_vertices->at(0)->weight;
-            if (i==0) halfplane_point = simplex_vertices->at(1)->weight;
-            if (!halfplane_check(halfplane_point, halfplane_normal, weight)) {
-                return false;
-            }
-        }
-
-        // If get here, passed all halfplane checks
-        return true;
-    }
-
-    /**
-     * For 2d case using hyperplanes and the same logic is a little overkill
-     * Can just use the first dimension of the weight to check contains
-     * As a 1d simplex is just a line
-    */
-    bool TN::contains_weight_2d(const Eigen::ArrayXd& weight) const 
-    {
-        shared_ptr<NGV> beg = simplex_vertices->at(0);
-        shared_ptr<NGV> end = simplex_vertices->at(1);
-        if (beg->weight[0] > end->weight[0]) {
-            std::swap(beg,end);
-        }
-        return beg->weight[0] <= weight[0] && weight[0] <= end->weight[0];
-    }
-    
-    /**
-     * return true if point is in plane (i.e. if wegith-halfplane_point dot halfplane_normal == 0)
-     * use approx == 0 for numerical errors
-     * aprox== 0 will only be satisfied if plane is in point, shouldn't really be getting to simplices so small that 
-     *      values below abs(EPS) are relevant
-     * 
-     * Note that we ensured while computing hyperplane normals that the normal points towards the centroid
-    */
-    bool TN::halfplane_check(
-        const Eigen::ArrayXd& halfplane_point, 
-        const Eigen::ArrayXd& halfplane_normal, 
-        const Eigen::ArrayXd& weight) const 
-    {
-        double dot_prod = thts::helper::dot(weight-halfplane_point, halfplane_normal);
-        return dot_prod >= 0; // || is_approx_zero(dot_prod);
-    }
-
-    shared_ptr<NGV> TN::get_closest_ngv_vertex(const Eigen::ArrayXd& ctx) const
-    {
-        vector<shared_ptr<NGV>> potential_closest_vertices;
-        potential_closest_vertices.reserve(simplex_vertices->size() * (simplex_vertices->size()-1) / 2);
-        for (size_t i=0; i<simplex_vertices->size(); i++) {
-            for (size_t j=i+1; j<simplex_vertices->size(); j++) {
-                shared_ptr<LSE> long_simplex_edge = simplex_map.get_or_create_lse(
-                    simplex_vertices->at(i), simplex_vertices->at(j));
-                potential_closest_vertices.push_back(long_simplex_edge->get_closest_ngv(ctx));
-            }
-        }
-
         double closest_dist = std::numeric_limits<double>::max();
-        shared_ptr<NGV> closest_vertex;
-        for (shared_ptr<NGV> vertex : potential_closest_vertices) {
-            double l2_dist = thts::helper::dist(vertex->weight, ctx);
-            if (l2_dist < closest_dist) {
-                closest_dist = l2_dist;
+        shared_ptr<SMVertex> closest_vertex;
+        for (shared_ptr<SMVertex> vertex : vertices) {
+            double dist = vertex->weight.dist(weight);
+            if (dist < closest_dist) {
+                closest_dist = dist;
                 closest_vertex = vertex;
             }
-        }
-        
-        if (closest_vertex == nullptr) {
-            throw runtime_error("Error in indexing simplex map");
         }
         return closest_vertex;
     }
 
-    shared_ptr<NGV> TN::operator[](const Eigen::ArrayXd& ctx) const
+    /**
+     * Get the closest vertex to a weight from the points in this simplex
+    */
+    shared_ptr<SMVertex> SMSimplex::operator[](const Vec& weight) const
     {
-        return get_closest_ngv_vertex(ctx);
+        return this->get_closest_vertex(weight);
     }
 
     /**
-     * Getting value from this TN using simplex neighbourhood
+     * See inline comments
     */
-    Eigen::ArrayXd TN::get_best_value_estimate(const Eigen::ArrayXd& ctx) const 
+    void SMSimplex::create_children(SMRegistry& registry) 
     {
-        double max_ctx_val = numeric_limits<double>::lowest();
-        Eigen::ArrayXd max_val;
-        for (shared_ptr<NGV> ngv_ptr : *simplex_vertices) {
-            double ctx_val = thts::helper::dot(ctx, ngv_ptr->value_estimate);
-            if (ctx_val > max_ctx_val) {
-                max_ctx_val = ctx_val;
-                max_val = ngv_ptr->value_estimate;
+        // create the new vertex on the longest edge (halfway between the two)
+        shared_ptr<SMVertex> opposite_vertex = longest_edge.first;
+        shared_ptr<SMVertex> normal_vertex = longest_edge.second;
+        this->split_vertex = registry.get_or_create_vertex(*normal_vertex, *opposite_vertex, 0.5);
+
+        // In 2D, we can just make the children directly, all simplices are line segments (and have same normal)
+        // Additionally, we can just point the normal from the split vertex to the normal vertex
+        if (is_2d())
+        {
+            this->normal_child = make_shared<SMSimplex>(
+                dim, vector<shared_ptr<SMVertex>>{this->split_vertex, normal_vertex}, depth+1);
+            this->opposite_child = make_shared<SMSimplex>(
+                dim, vector<shared_ptr<SMVertex>>{this->split_vertex, opposite_vertex}, depth+1);
+            Vec opposite_to_normal = normal_vertex->weight - opposite_vertex->weight;
+            this->splitting_hyperplane_normal = make_shared<Vec>(opposite_to_normal.normalised());
+            return;
+        }
+         
+        // Create vector of all vertices common to both children
+        vector<shared_ptr<SMVertex>> common_vertices;
+        common_vertices.push_back(this->split_vertex);
+        for (shared_ptr<SMVertex> vertex : vertices) {
+            if ((*vertex != *normal_vertex) && (*vertex != *opposite_vertex))
+            {
+                common_vertices.push_back(vertex);
             }
         }
-        return max_val;
+
+        // Compute normal (using the dim-1 many common points of the child simplices)
+        this->splitting_hyperplane_normal = this->compute_hyperplane_normal(child_common_simplex_vertices);
+
+        // and make sure that the normal points towards the normal side child
+        Vec splitting_edge_normal_dir = (normal_vertex->weight - opposite_vertex->weight);
+        if (splitting_edge_normal_dir.dot(this->splitting_hyperplane_normal) < 0.0) {
+            this->splitting_hyperplane_normal *= -1.0;
+        }
+
+        // Normal side child simplex
+        shared_ptr<vector<shared_ptr<SMVertex>>> normal_side_child_vertices = make_shared<vector<shared_ptr<SMVertex>>>(
+            common_vertices);
+        normal_side_child_vertices->push_back(normal_vertex);
+        this->normal_child = make_shared<SMSimplex>(dim, normal_side_child_vertices, depth+1);
+
+        // Opposite side child simplex
+        shared_ptr<vector<shared_ptr<SMVertex>>> opposite_side_child_vertices = make_shared<vector<shared_ptr<SMVertex>>>(
+            common_vertices);
+        opposite_side_child_vertices->push_back(opposite_vertex);
+        this->opposite_child = make_shared<SMSimplex>(dim, opposite_side_child_vertices, depth+1);
+    }
+    /**
+     * return true if point is on normal side of the plane defined by halfplane_point and halfplane_normal 
+     (i.e. if wegith-halfplane_point dot halfplane_normal == 0)
+    */
+    bool SMSimplex::halfplane_check(
+        const Vec& halfplane_point, 
+        const Vec& halfplane_normal, 
+        const Vec& weight) const 
+    {
+        Vec diff = weight - halfplane_point;
+        return diff.dot(halfplane_normal) >= 0;
     }
 
-    void TN::maybe_subdivide(SmThtsManager& sm_manager)
+    /**
+     * Travers this node to child node
+     */
+    shared_ptr<SMSimplex> SMSimplex::traverse(const Vec& weight) const 
+    {
+        if (this->halfplane_check(this->split_vertex->weight, this->splitting_hyperplane_normal, weight)) {
+            return this->normal_child;
+        } else {
+            return this->opposite_child;
+        }
+    }
+
+    /**
+     * If this node is a leaf in the binary tree
+     */
+    bool SMSimplex::is_leaf() const 
+    {
+        return this->normal_child == nullptr && this->opposite_child == nullptr;
+    }
+
+    /**
+     * Checks if simplex is potentially worth subdividing
+     */
+    bool SMSimplex::vertexes_contain_multiple_unique_values() const
+    {
+        for (shared_ptr<SMVertex> vertex : vertices) {
+            if (vertex->value_estimate != vertices[0]->value_estimate) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool SMSimplex::allowed_to_subdivide(double min_radius, int max_depth, int split_counter_threshold) const
+    {
+        if (depth >= max_depth) {
+            return false;
+        }
+        if (radius <= min_radius) {
+            return false;
+        }
+        return true;
+    }
+
+    bool SMSimplex::should_subdivide(double min_radius, int max_depth, int split_counter_threshold) const
     {
         // If already subdivided, no need
-        if (has_children()) {
-            return;
+        if (!is_leaf()) {
+            return false;
         }
 
-        // If past a threshold, then we should forever remain a leaf node
-        if (depth >= sm_manager.simplex_node_max_depth) {
-            return;
-        }
-        if (l_inf_norm <= sm_manager.simplex_node_l_inf_thresh) {
-            return;
+        // If not allowed to subdivide, return false
+        if (!allowed_to_subdivide(min_radius, max_depth)) {
+            return false;
         }
 
-        // We might want to split if we get here
-        // Check if any value estimates in our simplex are different
-        bool non_uniform_value = false;
-        Eigen::ArrayXd& ref_val_estimate = simplex_vertices->at(0)->value_estimate;
-        for (size_t i=1; i<simplex_vertices->size(); i++) {
-            if ((ref_val_estimate != simplex_vertices->at(i)->value_estimate).any()) {
-                non_uniform_value = true;
-                break;
-            }
-        }
-
-        // update counter, any maybe split
-        if (non_uniform_value) {
-            split_counter++;
-        } else {
+        // If vertexes all share same value estimate, reset counter and no need to subdivide
+        if (!vertexes_contain_multiple_unique_values()) {
             split_counter = 0;
+            return false;
         }
 
-        if (split_counter >= sm_manager.simplex_node_split_visit_thresh) {
-            create_children(sm_manager);
-        }
+        // increment counter
+        split_counter++;
+
+        // if counter is greater than threshold, then we should subdivide
+        return split_counter >= split_counter_threshold;
     }
+}
 
 
-    /**
-     * 
-     * 
-     * SimplexMap
-     * 
-     * 
-     * 
-    */
+// ------------------------------------------------------------
+// SMEdge
+// ------------------------------------------------------------
 
-    SimplexMap::SimplexMap(int reward_dim, Eigen::ArrayXd default_val) :
-        dim(reward_dim),
-        root_node(),
-        n_graph_vertices(make_shared<vector<shared_ptr<NGV>>>()),
-        n_graph_vertex_set(make_shared<unordered_set<shared_ptr<NGV>>>()),
-        lse_map()
+
+namespace thts {
+
+    SMEdge::SMEdge(shared_ptr<SMVertex> v0, shared_ptr<SMVertex> v1) : 
+        v0(v0), 
+        v1(v1),
+        midpoint(nullptr),
+        child_edge_0(nullptr),
+        child_edge_1(nullptr)
     {
-        // Make neighbourhood graph vertices for unit basis vectors (unit simplex)
-        // Register in n_graph_vertices
-        shared_ptr<vector<shared_ptr<NGV>>> unit_simplex_vertices = make_shared<vector<shared_ptr<NGV>>>();
-        for (int i=0; i<dim; i++) {
-            Eigen::ArrayXd basis_vector = Eigen::ArrayXd::Zero(dim);
-            basis_vector[i] = 1.0;
-            shared_ptr<NGV> simplex_vertex = make_shared<NGV>(basis_vector, default_val, 0.0);
-            n_graph_vertices->push_back(simplex_vertex);
-            n_graph_vertex_set->insert(simplex_vertex);
-            unit_simplex_vertices->push_back(simplex_vertex);
-        }    
+    }
 
-        // Make root TN node with unit simplex
-        root_node = make_shared<TN>(*this, dim, 0, unit_simplex_vertices);
+    size_t SMEdge::hash() const
+    {
+        return thts::helper::unordered_hash(*v0,*v1);
+    }
+
+    bool SMEdge::equals(const SMEdge& other) const
+    {
+        return ((v0->equals(*other.v0) && v1->equals(*other.v1))
+            || (v0->equals(*other.v1) && v1->equals(*other.v0)));
+    }
+
+    bool SMEdge::operator==(const SMEdge& other) const
+    {
+        return equals(other);
+    }
+
+    bool SMEdge::operator!=(const SMEdge& other) const
+    {
+        return !equals(other);
+    }
+
+    void SMEdge::split(SMRegistry& registry)
+    {
+        this->midpoint = registry.get_or_create_vertex(v0, v1, 0.5);
+        this->child_edge_0 = registry.get_or_create_edge(v0, this->midpoint);
+        this->child_edge_1 = registry.get_or_create_edge(this->midpoint, v1);
+    }
+
+    shared_ptr<unordered_set<shared_ptr<SMEdge>>> SMEdge::get_edge_partition() const
+    {
+        shared_ptr<unordered_set<shared_ptr<SMEdge>>> partition = make_shared<unordered_set<shared_ptr<SMEdge>>>();
+        get_edge_partition_helper(shared_from_this(), *partition);
+        return partition;
+    }
+
+    void SMEdge::get_edge_partition_helper(std::shared_ptr<SMEdge> edge, std::unordered_set<std::shared_ptr<SMEdge>>& partition) const
+    {
+        if (edge->child_edge_0 != nullptr && edge->child_edge_1 != nullptr) 
+        {
+            get_edge_partition_helper(edge->child_edge_0, partition);
+            get_edge_partition_helper(edge->child_edge_1, partition);
+            return;
+        }
+        partition.insert(edge);
+    }
+}
+
+
+
+
+// ------------------------------------------------------------
+// SMRegistry
+// ------------------------------------------------------------
+
+namespace thts {
+
+    shared_ptr<SMVertex> SMRegistry::get_or_create_vertex(const Vec& weight, const Vec& value_estimate, double entropy_estimate=0.0)
+    {  
+        // Create a new vertex and lookup the unique version of it
+        shared_ptr<SMVertex> vertex = make_shared<SMVertex>(weight, value_estimate, entropy_estimate);
+        return this->lookup_unique_vertex(vertex);
+    }
+
+    shared_ptr<SMVertex> SMRegistry::get_or_create_vertex(shared_ptr<SMVertex> v0, shared_ptr<SMVertex> v1, double ratio=0.5)
+    {
+        // Create a new vertex and lookup the unique version of it
+        shared_ptr<SMVertex> vertex = make_shared<SMVertex>(v0, v1, ratio);
+        return this->lookup_unique_vertex(vertex);
+    }
+
+    shared_ptr<SMEdge> SMRegistry::get_or_create_edge(shared_ptr<SMVertex> v0, shared_ptr<SMVertex> v1)
+    {
+        // Create a new edge and lookup the unique version of it
+        shared_ptr<SMEdge> edge = make_shared<SMEdge>(v0, v1);
+        return this->lookup_unique_edge(edge);
+    }
+
+    shared_ptr<SMVertex> SMRegistry::lookup_unique_vertex(shared_ptr<SMVertex> vertex)
+    {
+        if (vertex_map.contains(vertex)) {
+            return vertex_map.at(vertex);
+        }
+        // new vertex, add to map and return it
+        vertex_map[vertex] = vertex;
+        return vertex;
+    }
+
+    shared_ptr<SMEdge> SMRegistry::lookup_unique_edge(shared_ptr<SMEdge> edge)
+    {
+        if (edge_map.contains(edge)) {
+            return edge_map.at(edge);
+        }
+        // new edge, add to map and return it
+        edge_map[edge] = edge;
+        return edge;
+    }
+}
+
+
+
+
+// ------------------------------------------------------------
+// SMMesh
+// ------------------------------------------------------------
+
+namespace thts {
+
+    // Constructor
+    SMMesh::SMMesh(int dim) : 
+        dim(dim), 
+        registry(), 
+        root_simplex(nullptr), 
+        all_vertices_set(),
+        all_vertices_vector(),
+        simplex_to_edge_map(),
+        edge_to_simplex_map(),
+        non_conforming_simplices(), 
+        non_conforming_simplices_by_depth()
+    {
     }
 
     /**
-     * Destructor needs to make sure that the NGV graph gets cleaned up 
-     * We can do this by iterating through all of the NGV's and calling reset on their neighbour maps
+     * Destructor needs to make sure that the SMVertex graph gets cleaned up 
+     Worth noting that it is a graph of shared pointers
+     So if we dont explicitly call reset on the neighbour maps, then the memory will not be freed
      */
-    SimplexMap::~SimplexMap() 
+    SMMesh::~SMMesh() 
     {
-        for (shared_ptr<NGV> vertex : * n_graph_vertices) {
+        for (shared_ptr<SMVertex> vertex : this->all_vertices_vector) {
             vertex->neighbours.reset();
         }
     }
-    
-    shared_ptr<LSE> SimplexMap::get_or_create_lse(shared_ptr<NGV> v0, shared_ptr<NGV> v1) 
+
+    // Initialise the mesh
+    void SMMesh::initialise_mesh(Vec& heuristic_value_estimate)
     {
-        UnorderedNGVPair lse_map_key = UnorderedNGVPair(v0,v1);
-        if (!lse_map.contains(lse_map_key)) {
-            lse_map[lse_map_key] = make_shared<LSE>(v0,v1);
+        // Initialise the root simplex as the unit simplex
+        vector<shared_ptr<SMVertex>> unit_simplex_vertices;
+        for (int i=0; i<dim; i++) {
+            Vec basis_vector = Vec(dim, 0.0);
+            basis_vector.vec[i] = 1.0;
+            shared_ptr<SMVertex> simplex_vertex = registry.get_or_create_vertex(basis_vector, heuristic_value_estimate, 0.0);
+            unit_simplex_vertices.push_back(simplex_vertex);
         }
-        return lse_map[lse_map_key];
-    }
-    
-    void SimplexMap::register_vertices_with_lse(shared_ptr<NGV> v0, shared_ptr<NGV> v1, shared_ptr<LSE> edge) 
-    {
-        UnorderedNGVPair lse_map_key = UnorderedNGVPair(v0,v1);
-        lse_map[lse_map_key] = edge;
+        this->root_simplex = make_shared<SMSimplex>(dim, unit_simplex_vertices, 0);
+
+        // Initialise the all_vertices_set and all_vertices_vector
+        for (shared_ptr<SMVertex> vertex : unit_simplex_vertices) {
+            this->all_vertices_set.insert(vertex);
+            this->all_vertices_vector.push_back(vertex);
+        }
+
+        // In 2D we don't need to worry about non-conforming simplices or the mesh graph, so we are done
+        if (is_2d()) {
+            return;
+        }
+
+        // Create an SMEdge for each pair of vertices
+        // Add them to the mesh graph, mapping to and from the root simplex
+        // And connect the SMVertices to each other
+        for (size_t i=0; i<unit_simplex_vertices.size(); i++) {
+            for (size_t j=i+1; j<unit_simplex_vertices.size(); j++) {
+                shared_ptr<SMEdge> edge = registry.get_or_create_edge(
+                    unit_simplex_vertices[i], unit_simplex_vertices[j]);
+                this->edge_to_simplex_map[edge].insert(this->root_simplex);
+                this->simplex_to_edge_map[this->root_simplex].insert(edge);
+                unit_simplex_vertices[i]->add_bidirectional_connection(unit_simplex_vertices[j]);
+            }
+        }
     }
 
-    shared_ptr<TN> SimplexMap::get_leaf_tn_node(const Eigen::ArrayXd& ctx) const 
+    shared_ptr<SMVertex> SMMesh::sample_random_vertex() const
     {
-        shared_ptr<TN> cur = root_node;
-        while (cur->has_children()) {
-            cur = cur->get_child(ctx);
+        int rand_index = rand_manager.get_rand_int(0, this->all_vertices_vector.size());
+        return this->all_vertices_vector.at(rand_index);
+    }
+
+    shared_ptr<SMSimplex> SMMesh::get_simplex(const Vec& weight) const
+    {
+        shared_ptr<SMSimplex> cur = this->root_simplex;
+        while (!cur->is_leaf()) {
+            cur = cur->traverse(weight);
         }
         return cur;
     }
-    
-    shared_ptr<TN> SimplexMap::operator[](const Eigen::ArrayXd& ctx) const
+
+    shared_ptr<SMVertex> SMMesh::get_closest_vertex(const Vec& weight) const
     {
-        return get_leaf_tn_node(ctx);
+        shared_ptr<SMSimplex> simplex = get_simplex(weight);
+        return this->get_closest_vertex(simplex, weight);
     }
 
-    shared_ptr<NGV> SimplexMap::sample_random_ngv_vertex(RandManager& rand_manager) const
+    shared_ptr<SMVertex> SMMesh::get_closest_vertex(shared_ptr<SMSimplex> simplex, const Vec& weight) const
     {
-        int rand_index = rand_manager.get_rand_int(0,n_graph_vertices->size());
-        return n_graph_vertices->at(rand_index);
+        return simplex->get_closest_vertex(weight);
     }
 
-    /**
-     * Prett print
-    */
-    std::string SimplexMap::get_pretty_print_string() const
+    int SMMesh::get_num_updates(shared_ptr<SMVertex> vertex) const
+    {
+        return vertex->num_updates;
+    }
+
+    Vec SMMesh::get_value_estimate(shared_ptr<SMVertex> vertex) const
+    {
+        return vertex->value_estimate;
+    }
+
+    Vec SMMesh::get_value_estimate_for_search(shared_ptr<SMVertex> vertex) const
+    {
+        return vertex->value_estimate_for_search;
+    }
+
+    double SMMesh::get_entropy_estimate(shared_ptr<SMVertex> vertex) const
+    {
+        return vertex->entropy_estimate;
+    }
+
+    void SMMesh::update_vertex_values_and_share(
+        shared_ptr<SMVertex> vertex, 
+        int max_push_radius, 
+        const Vec& value_estimate, 
+        const Vec& value_estimate_for_search, 
+        double entropy_estimate)
+    {
+        vertex->num_updates++;
+        vertex->value_estimate = value_estimate;
+        vertex->value_estimate_for_search = value_estimate_for_search;
+        vertex->entropy_estimate = entropy_estimate;
+
+        vertex->share_values_message_passing(max_push_radius);
+    }
+
+    void SMMesh::maybe_subdivide(shared_ptr<SMSimplex> simplex)
+    {
+        // Perform the subdivision if needed
+        if (simplex->should_subdivide(min_radius, max_depth, split_counter_threshold)) {
+            this->subdivide_simplex(simplex);
+        }
+
+        // We are done if there are no non-conforming simplices
+        if (this->non_conforming_simplices.empty()) {
+            return;
+        }
+
+        // Get the lowest depth non-conforming simplex
+        shared_ptr<SMSimplex> lowest_depth_non_conforming_simplex = this->pop_lowest_depth_non_conforming_simplex();
+        this->subdivide_simplex(lowest_depth_non_conforming_simplex);
+    }
+
+    std::string SMMesh::get_pretty_print_string() const
     {
         stringstream ss;
         ss << "Simplex map pretty print: {" << endl;
@@ -1082,57 +723,358 @@ namespace thts {
         return ss.str();
     }
 
-    /**
-     * Gets an approximate convex hull from this ball list
-     */
-    ConvexHull SimplexMap::get_approximate_convex_hull() const 
+    ConvexHull SMMesh::get_approximate_convex_hull() const
     {
-        throw runtime_error("Approximate convex hull from simplex map not written yet");
-        return ConvexHull();
+        unordered_set<Vec> ch_points;
+        for (shared_ptr<SMVertex> vertex : this->all_vertices_vector) {
+            ch_points.insert(vertex->value_estimate);
+        }
+        return ConvexHull(ch_points);
+    }
+
+    bool SMMesh::is_2d() const
+    {
+        return this->dim == 2;
+    }
+
+    // Helper to get the lowest depth non-conforming simplex
+    // Non conforming simplices are stored in a map by depth, so we can just get the first one
+    shared_ptr<SMSimplex> SMMesh::pop_lowest_depth_non_conforming_simplex()
+    {
+        shared_ptr<SMSimplex> non_conforming_simplex = (*this->non_conforming_simplices_by_depth.begin()).second.pop();
+        this->non_conforming_simplices.erase(non_conforming_simplex);
+    }
+
+    void SMMesh::subdivide_simplex(shared_ptr<SMSimplex> simplex)
+    {
+        // First get the simplex to create its children
+        simplex->create_children(this->registry);
+
+        // If 2d, then we are actually done
+        if (is_2d()) {
+            return;
+        }
+
+        // Get the edge corresponding to the longest edge of the simplex
+        shared_ptr<SMVertex> longest_edge_vertex_0 = simplex->longest_edge.first;
+        shared_ptr<SMVertex> longest_edge_vertex_1 = simplex->longest_edge.second;
+        shared_ptr<SMEdge> longest_edge = this->registry.get_or_create_edge(
+            longest_edge_vertex_0, longest_edge_vertex_1);
+
+        // Check if this edge is currently in the mesh graph
+        // If it is not, then it has already been split by a previous subdivision
+        if (this->edge_to_simplex_map.contains(longest_edge)) 
+        {
+            // Split the edge to create two child edges
+            longest_edge->split(this->registry);
+            shared_ptr<SMEdge> child_edge_0 = longest_edge->child_edge_0;
+            shared_ptr<SMEdge> child_edge_1 = longest_edge->child_edge_1;
+
+            // insert these new edges into the mesh graph, by inheriting connections from the parent edge
+            this->inherit_parent_edge_connections(child_edge_0, longest_edge);
+            this->inherit_parent_edge_connections(child_edge_1, longest_edge);
+
+            // Remove the parent edge from the mesh graph
+            this->remove_edge_from_mesh(longest_edge);
+
+            // Update the graph of vertices for the new edges and removal of the parent edge
+            shared_ptr<SMVertex> longest_edge_v0 = longest_edge->v0;
+            shared_ptr<SMVertex> longest_edge_v1 = longest_edge->v1;
+            shared_ptr<SMVertex> longest_edge_midpoint = longest_edge->midpoint;
+
+            longest_edge_v0->erase_bidirectional_connection(longest_edge_v1);
+            longest_edge_midpoint->add_bidirectional_connection(longest_edge_v0);
+            longest_edge_midpoint->add_bidirectional_connection(longest_edge_v1);
+
+            // Update non-conformity for the new edges
+            this->update_non_conformity_for_new_edge(child_edge_0);
+            this->update_non_conformity_for_new_edge(child_edge_1);
+        }
+
+        // Now remove the parent simplex from the mesh graph
+        // And add the children simplices to the mesh graph
+        this->remove_simplex_from_mesh_graph(simplex);
+        this->add_new_simplex_to_mesh_graph(simplex->normal_child);
+        this->add_new_simplex_to_mesh_graph(simplex->opposite_child);
+    }
+
+    void SMMesh::inherit_parent_edge_connections(shared_ptr<SMEdge> new_edge, shared_ptr<SMEdge> parent_edge)
+    {
+        unordered_set<shared_ptr<SMSimplex>> adjacent_simplices = this->edge_to_simplex_map.at(parent_edge);
+        this->edge_to_simplex_map[new_edge] = adjacent_simplices;
+    }
+
+    void SMMesh::update_non_conformity_for_new_edge(shared_ptr<SMEdge> new_edge)
+    {
+        unordered_set<shared_ptr<SMSimplex>> adjacent_simplices = this->edge_to_simplex_map.at(new_edge);
+        for (shared_ptr<SMSimplex> simplex : adjacent_simplices) {
+            if (!simplex->contains_vertex(new_edge->v0) || !simplex->contains_vertex(new_edge->v1)) {
+                simplex->is_non_conforming = true;
+                this->non_conforming_simplices.insert(simplex);
+                this->non_conforming_simplices_by_depth[simplex->depth].push(simplex);
+            }
+        }
+    }
+
+    void SMMesh::remove_edge_from_mesh_graph(shared_ptr<SMEdge> edge)
+    {
+        // Remove pointers to this edge
+        for (shared_ptr<SMSimplex> simplex : this->edge_to_simplex_map.at(edge)) 
+        {  
+            // Removes the edge from the simplex's set of edges
+            this->simplex_to_edge_map.at(simplex).erase(edge);
+        }
+        // And then remove this edge (remove the entire entry from edge, so the entire set of simplices is removed)
+        this->edge_to_simplex_map.erase(edge);
+    }
+
+    void SMMesh::remove_simplex_from_mesh_graph(shared_ptr<SMSimplex> simplex)
+    {
+        // Remove pointers to this simplex
+        for (shared_ptr<SMEdge> edge : this->simplex_to_edge_map.at(simplex)) 
+        {
+            // Removes the simplex from the edge's set of simplices
+            this->edge_to_simplex_map.at(edge).erase(simplex);
+        }
+        // And then remove this simplex (remove the entire entry from simplex, so the entire set of edges is removed)
+        this->simplex_to_edge_map.erase(simplex);
+    }
+
+    void SMMesh::add_new_simplex_to_mesh_graph(shared_ptr<SMSimplex> simplex)
+    {
+        // Get edges of simplex
+        unordered_set<shared_ptr<SMEdge>> edges;
+        for (size_t i=0; i<simplex->vertices.size(); i++) {
+            for (size_t j=i+1; j<simplex->vertices.size(); j++) {
+                shared_ptr<SMEdge> edge = this->registry.get_or_create_edge(simplex->vertices[i], simplex->vertices[j]);
+                edges.insert(edge);
+            }
+        }
+
+        // Get edges in mesh graph along the same lines as simplex
+        unordered_set<shared_ptr<SMEdge>> mesh_graph_edges;
+        for (shared_ptr<SMEdge> edge : edges) {
+            unordered_set<shared_ptr<SMEdge>> edge_partition = edge->get_edge_partition();
+            for (shared_ptr<SMEdge> edge_partition_edge : edge_partition) {
+                mesh_graph_edges.insert(edge_partition_edge);
+            }
+        }
+
+        // Update non-conformity for the new simplex
+        // This new simplex is only conforming if all of its edges are in the mesh graph
+        // Because mesh graph should not contain any overlapping edges, we can just compare the sizes
+        if (edges.size() != mesh_graph_edges.size()) {
+            simplex->is_non_conforming = true;
+            this->non_conforming_simplices.insert(simplex);
+            this->non_conforming_simplices_by_depth[simplex->depth].push(simplex);
+        }
+
+        // For each mesh edge, add pointers to this simplex
+        for (shared_ptr<SMEdge> edge : mesh_graph_edges) {
+            this->edge_to_simplex_map[edge].insert(simplex);
+        }
+
+        // And add the pointers to mesh edges from this simplex
+        this->simplex_to_edge_map[simplex] = mesh_graph_edges;
     }
 }
 
 
-/**
- * haash
-*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    void TN::_ensure_neighbourhood_graph_connected() 
+    {
+        for (size_t i=0; i<simplex_vertices->size(); i++) {
+            for (size_t j=i+1; j<simplex_vertices->size(); j++) {
+                simplex_vertices->at(i)->add_connection(simplex_vertices->at(j));
+            }
+        }
+    }
+    
+    
+    
+    
+
+
+
+    shared_ptr<TN> SimplexMap::get_leaf_tn_node(const Eigen::ArrayXd& ctx) const 
+    {
+        shared_ptr<TN> cur = root_node;
+        while (cur->has_children()) {
+            cur = cur->get_child(ctx);
+        }
+        return cur;
+    }
+
+    shared_ptr<NGV> SimplexMap::sample_random_ngv_vertex(RandManager& rand_manager) const
+    {
+        int rand_index = rand_manager.get_rand_int(0,n_graph_vertices->size());
+        return n_graph_vertices->at(rand_index);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+// ------------------------------------------------------------
+// Allowing structs to be used in unordered_set and unordered_map
+// ------------------------------------------------------------
 namespace std {
     using namespace thts;
 
-    size_t hash<shared_ptr<NGV>>::operator()(const shared_ptr<NGV>& v) const 
+    // SMVertex
+    size_t hash<SMVertex>::operator()(const SMVertex& v) const 
+    {
+        return v.hash();
+    }
+
+    size_t equal_to<SMVertex>::operator()(const SMVertex& v0, const SMVertex& v1) const 
+    {
+        return v0.equals(v1);
+    }
+
+    template<>
+    bool operator==(const SMVertex& v0, const SMVertex& v1) 
+    {
+        return v0.equals(v1);
+    }
+
+    // shared_ptr<SMVertex>
+    size_t hash<shared_ptr<SMVertex>>::operator()(const shared_ptr<SMVertex>& v) const 
     {
         return v->hash();
     }
 
-    size_t equal_to<shared_ptr<NGV>>::operator()(const shared_ptr<NGV>& v0, const shared_ptr<NGV>& v1) const 
+    size_t equal_to<shared_ptr<SMVertex>>::operator()(const shared_ptr<SMVertex>& v0, const shared_ptr<SMVertex>& v1) const 
     {
         return v0->equals(*v1);
     }
 
     template<>
-    bool operator==(const shared_ptr<NGV>& v0, const shared_ptr<NGV>& v1) 
+    bool operator==(const shared_ptr<SMVertex>& v0, const shared_ptr<SMVertex>& v1) 
     {
         return v0->equals(*v1);
     }
 
-    size_t hash<shared_ptr<LSE>>::operator()(const shared_ptr<LSE>& e) const 
+    // SMEdge
+    size_t hash<SMEdge>::operator()(const SMEdge& e) const
+    {
+        return e.hash();
+    }
+
+    size_t equal_to<SMEdge>::operator()(const SMEdge& e0, const SMEdge& e1) const
+    {
+        return e0.equals(e1);
+    }
+
+    template<>
+    bool operator==(const SMEdge& e0, const SMEdge& e1) 
+    {
+        return e0.equals(e1);
+    }
+
+    // shared_ptr<SMEdge>
+    size_t hash<shared_ptr<SMEdge>>::operator()(const shared_ptr<SMEdge>& e) const 
     {
         return e->hash();
     }
-
-    size_t equal_to<shared_ptr<LSE>>::operator()(const shared_ptr<LSE>& e0, const shared_ptr<LSE>& e1) const 
+    
+    size_t equal_to<shared_ptr<SMEdge>>::operator()(const shared_ptr<SMEdge>& e0, const shared_ptr<SMEdge>& e1) const 
     {
         return e0->equals(*e1);
     }
 
-    size_t hash<UnorderedNGVPair>::operator()(const UnorderedNGVPair& p) const
+    template<>
+    bool operator==(const shared_ptr<SMEdge>& e0, const shared_ptr<SMEdge>& e1) 
     {
-        return thts::helper::unordered_hash(p.first,p.second);
-    }
-
-    size_t equal_to<UnorderedNGVPair>::operator()(const UnorderedNGVPair& p0, const UnorderedNGVPair& p1) const
-    {
-        return ((p0.first->equals(*p1.first) && p0.second->equals(*p1.second))
-            || (p0.first->equals(*p1.second) && p0.second->equals(*p1.first)));
+        return e0->equals(*e1);
     }
 }

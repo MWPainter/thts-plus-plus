@@ -159,84 +159,21 @@
 
 
 namespace thts {
-    
-
-    /**
-     * SMVertex
-     * represents vertices of the mesh
-    */
-    struct SMVertex : public std::enable_shared_from_this<SMVertex> {
-        Vec weight;
-
-        Vec value_estimate;
-        double entropy_estimate;
-
-        std::shared_ptr<std::unordered_set<std::weak_ptr<SMVertex>>> neighbours;
-
-        /**
-         * Constructor
-         */
-        SMVertex(const Vec& weight, const Vec& value_estimate, double entropy_estimate=0.0);
-
-        /**
-         * Constructor as midpoint of two other vertices
-         */
-        SMVertex(std::shared_ptr<SMVertex> v0, std::shared_ptr<SMVertex> v1, double ratio=0.5);
-        
-        /**
-         * Allow vertices to be hashed and compared
-         */
-        size_t hash() const;
-        bool equals(const NGV& other) const;
-        bool operator==(const NGV& other) const;
-        bool operator!=(const NGV& other) const;
-        
-        /**
-         * Message passing
-        */
-        void share_values_message_passing();
-        void share_values_message_passing_push();
-        void share_values_message_passing_pull();
-        void share_values_message_passing_helper_push(NGV& other);
-        void share_values_message_passing_helper_pull(NGV& other);
-
-        /**
-         * Editing neighbourhood graph
-        */
-        void add_connection(std::shared_ptr<NGV> other);
-        void erase_connection(std::shared_ptr<NGV> other);
-
-        /**
-         * Get the contextual value of weighting 'ctx' from this node (or with ctx=weight)
-        */
-        double contextual_value_estimate(double entropy_coeff=0.0) const;
-        double contextual_value_estimate(const Vec& ctx_weight, double entropy_coeff=0.0) const;
-    };
-
-}
-
-
-
-
-// Forward declare namespace
-namespace thts {
-    // Forward declare types
-    struct NGV;
-    struct LSE;
-
-    /**
-     * Helper typedef
-     * - points out that the pair will be hashed in an unordered way
-    */
-    typedef std::pair<std::shared_ptr<NGV>,std::shared_ptr<NGV>> UnorderedNGVPair;
+    // Forward declare types (so we can define all connections before defining the class)
+    struct SMVertex;
+    struct SMSimplex;
+    struct SMEdge;
+    struct SMRegistry;
+    struct SMMesh;
 };
+
 
 /**
  * Hash overrides
  * (think this needs to be declared before types are used in unordered_set and unordered_maps)
- * 
- * TODO long term: put PF + CH and all this simplex map stuff in a mo/structs folder, and split this file up into 
- *      something like simplex_map_types.h and simplex_map.h. Theres just a lot of classes defined here
+
+ Point to the class implementations
+ And override hash/equals for shared_ptr versions so we can use pointers in the same way
  * 
  * Note, implemented at the end of simplex_map.cpp
 */
@@ -244,263 +181,230 @@ namespace std {
     using namespace thts;
 
     template<>
-    struct hash<shared_ptr<NGV>> {
-        size_t operator()(const shared_ptr<NGV>&) const;
+    struct hash<SMVertex> {
+        size_t operator()(const SMVertex&) const;
     };
     template<>
-    struct equal_to<shared_ptr<NGV>> {
-        size_t operator()(const shared_ptr<NGV>&, const shared_ptr<NGV>&) const;
+    struct equal_to<SMVertex> {
+        size_t operator()(const SMVertex&, const SMVertex&) const;
     };
     template<>
-    bool operator==(const shared_ptr<NGV>& v0, const shared_ptr<NGV>& v1);
-
-    template<> 
-    struct hash<shared_ptr<LSE>> {
-        size_t operator()(const shared_ptr<LSE>&) const;
-    };
-    template<> 
-    struct equal_to<shared_ptr<LSE>> {
-        size_t operator()(const shared_ptr<LSE>&, const shared_ptr<LSE>&) const;
-    };
+    bool operator==(const SMVertex& v0, const SMVertex& v1);
 
     template<>
-    struct hash<UnorderedNGVPair> {
-        size_t operator()(const UnorderedNGVPair&) const;
+    struct hash<shared_ptr<SMVertex>> {
+        size_t operator()(const shared_ptr<SMVertex>&) const;
     };
     template<>
-    struct equal_to<UnorderedNGVPair> {
-        size_t operator()(const UnorderedNGVPair&, const UnorderedNGVPair&) const;
+    struct equal_to<shared_ptr<SMVertex>> {
+        size_t operator()(const shared_ptr<SMVertex>&, const shared_ptr<SMVertex>&) const;
     };
+    template<>
+    bool operator==(const shared_ptr<SMVertex>& v0, const shared_ptr<SMVertex>& v1);
+
+
+
+    template<>
+    struct hash<SMEdge> {
+        size_t operator()(const SMEdge&) const;
+    };
+
+    template<>
+    struct equal_to<SMEdge> {
+        size_t operator()(const SMEdge&, const SMEdge&) const;
+    };
+
+    template<>
+    bool operator==(const SMEdge& e0, const SMEdge& e1);
+
+    template<>
+    struct hash<shared_ptr<SMEdge>> {
+        size_t operator()(const shared_ptr<SMEdge>&) const;
+    };
+
+    template<>
+    struct equal_to<shared_ptr<SMEdge>> {
+        size_t operator()(const shared_ptr<SMEdge>&, const shared_ptr<SMEdge>&) const;
+    };
+
+    template<>
+    bool operator==(const shared_ptr<SMEdge>& e0, const shared_ptr<SMEdge>& e1);
 }
 
-
 namespace thts {
-    // Forward declare mcts classes using these classes
-    class SmThtsCNode;
-    class SmThtsDNode;
-    class SmBtsCNode;
-    class SmBtsDNode;
-
-    // Forward declare simplex map so NGV and LSE can use it
-    class SimplexMap;
-
-
+    
 
     /**
-     * (Long) Simplex Edge
-     * 
-     * Represents an edge of a simplex
-     * If the edge of a simplex coincides with a larger edge from a parent edge, we *dont* make a new one
-     * 
-     * Args:
-     *      v0: 
-     *          One NGV end of the edge
-     *      v1: 
-     *          One NGV end of the edge
-     *      ratios: 
-     *          A map from NGV to ratios. If r = ratios[ngv] then ngv = r * v0 + (1-r) * v1
-     *      interpolated_vertex_tree:
-     *          A tree of interpolated vertices
+     * SMVertex
+     * represents vertices of the mesh
+     * Shareable value is used to mark if the value estimate can be shared with neighbours
+     * - we might not want to share the value estimate if it is from an optimistic heuristic
+     * - if we shared in that case, we may end up with a loop of sharing the same heuristic 
+            value rather than updating the values properly from backups
+    * 
+    These objects need to be unique, so we will use a registry to keep track of them + construct them
+    And make the constructor private so that only the registry can construct them
     */
-    struct LSE : public std::enable_shared_from_this<LSE> {
-        std::shared_ptr<NGV> v0;
-        std::shared_ptr<NGV> v1;
-        std::unordered_map<std::shared_ptr<NGV>,double> ratios;
-        std::map<double,std::shared_ptr<NGV>> interpolated_vertices;
+    struct SMVertex : public std::enable_shared_from_this<SMVertex> {
+        friend SMRegistry;
 
-        LSE(std::shared_ptr<NGV> v0, std::shared_ptr<NGV> v1);
+        Vec weight;
 
+        int num_updates;
+        Vec value_estimate;
+        Vec value_estimate_for_search;
+        double entropy_estimate;
+
+        std::shared_ptr<std::unordered_set<std::shared_ptr<SMVertex>>> neighbours;
+
+    private:
+        /**
+         * Constructor
+         */
+        SMVertex(const Vec& weight, const Vec& heuristic_value_estimate, double entropy_estimate=0.0);
+
+        /**
+         * Constructor as midpoint of two other vertices
+         */
+        SMVertex(std::shared_ptr<SMVertex> v0, std::shared_ptr<SMVertex> v1, double ratio=0.5);
+
+
+    public:
+        
+        /**
+         * Allow vertices to be hashed and compared
+         */
         size_t hash() const;
-        bool equals(const LSE& other) const;
-        bool operator==(const LSE& other) const;
-        bool operator!=(const LSE& other) const;
-
+        bool equals(const SMVertex& other) const;
+        bool operator==(const SMVertex& other) const;
+        bool operator!=(const SMVertex& other) const;
+        
         /**
-         * Returns the ngv with maximum ratio r such that r<'ratio'
-         * I.e. the node left of a "node" at 'ratio' (n.b. the "node" doesnt have to exist) 
-         */
-        std::map<double,std::shared_ptr<NGV>>::iterator left_vertex(double ratio);
-
-        /**
-         * Returns the ngv with minimum ratio r such that r>'ratio'
-         * I.e. the node left of a "node" at 'ratio' (n.b. the "node" doesnt have to exist) 
-         */
-        std::map<double,std::shared_ptr<NGV>>::iterator right_vertex(double ratio);
-
-        /**
-         * Get the closest NGV lying on this edge 
-         */
-        std::shared_ptr<NGV> get_closest_ngv(const Eigen::ArrayXd& w);
-
-        /**
-         * Inserts an NGV between two NGVs that are on this edge
-         * 
-         * Assumes the x0 and x1 already exist on this edge
-         * v is an NGV that has already been created
-         * v = r * x0 + (1-r) * x1
-         * 
-         * Important: updates the neighbours of vertices in the neighbourhood graph for the insertion
+         * Message passing
+         Pushes value estimates to neighbours in a BFS manner
+         Helper function performs the actual pushing and returns is to_vertex was updated
         */
-        void insert(
-            std::shared_ptr<NGV> v, 
-            std::shared_ptr<NGV> x0, 
-            std::shared_ptr<NGV> x1, 
-            double r, 
-            SimplexMap& simplex_map);
+        void share_values_message_passing(int max_push_radius=1);
+        bool share_values_message_passing_helper(SMVertex& from_vertex, SMVertex& to_vertex);
+
+        /**
+         * Editing neighbourhood graph
+        */
+        void add_bidirectional_connection(std::shared_ptr<SMVertex> other);
+        void erase_bidirectional_connection(std::shared_ptr<SMVertex> other);
     };
 
-    /**
-     * Triangulation
-     * 
-     * A struct containing the data for a triangulation of a simplex
-     * 
-     * Constructor reads in the data from the precomputed triangulation computed from the python script 
-     * 'compute_triangulations.py'
-     * 
-     * Args:
-     *      d: 
-     *          The number of vertices in a simplex (and the number of rewards were working with)
-     *      e: 
-     *          The number of edges (e=0.5*d*(d-1)) in the simplex (and the number of vertices that will be added on 
-     *          the edges)
-     *      edge_points:
-     *          A list of (i,j,r) tuples, where 0<=i,j<d are indices into the vertex points, and r specifies to add a 
-     *          point at r*i + (1-r)*j
-     *      simplices:
-     *          A list of lists of points. Each list of points forms a simplex in the triangulation
-    */
-    struct Triangulation {
-        int d;
-        int e;
-        std::vector<std::tuple<int,int,double>> edge_points;
-        std::vector<std::vector<int>> simplices;
 
-        Triangulation(int dim);
-    };
 
     /**
-     * Tree Node
-     * - each tree node is synonomous with a simplex
+     * SMSimplex
+
      * - if we are working in D dim space (i.e. D rewards), then we are making a "D-1 simplex" using D points
      * - this D-1 simplex lies in a D-1 subspace, and the vector (1,1,...,1) is normal to this D-1 subspace
-     * 
-     * TODO: renamde this to a simplex node (SN)
-     * 
-     * Args:
-     *      dim:
-     *          The dimension we are working in (dimension of the reward)
-     *      depth: 
-     *          The depth of this node in the simplex map tree
-     *      centroid: 
-     *          The centroid of this simplex
-     *      l_inf_norm:
-     *          The infi{nity norm of this simplex. This infinity norm is given by: 
-     *              max_{w0,w1 \in simplex_vertices} ||w0-w1||_inf
-     *      split_counter:
-     *          A counter that keeps track of how many times 'maybe_subdivide' is called 
-     *      simplex_vertices: 
-     *          The NGV's that form the simplex 
-     *      hyperplane_normals:
-     *          hyperplane_normals[v] is the normal to the hyperplane containing the points simplex_vertices - {v} 
-     *      children: 
-     *          Child nodes
-     * 
-     * If sm_manager.use_triangulation == false, then we build a binary tree:
-     *      splitting_edge_normal_side_vertex:
-     *          The vertex at the end of the splitting edge which is the side that the normal vertex points
-     *      splitting_edge_opposite_side_vertex:
-     *          The vertex at the end of the splitting edge which is oppositve the side that the normal vertex points
-     *      splitting_edge_new_vertex:
-     *          The new vertex added to split this simplex into two child simplices
-     *      splitting_hyperplane_normal:
-     *          The normal to the hyperplane that splits the simplex in two
-     *      normal_side_child:
-     *          The TN child on the normal side of the splitting hyperplane
-     *      opposite_side_child:
-     *          The TN child on the opposite side of the splitting hyperplane
-     * 
-     * Some notes when revising this. 
-     * 'splitting_edge' refers to the edge of the simplex that is split by the two children of this node
-     * 'splitting_hyperplane_normal' is the normal to the seperating hyperplane between the two children
-     * 'splitting_edge_normal_side_vertex' and 'splitting_edge_opposite_side_vertex' are the vertices at the ends of 
-     *      the 'splitting_edge'
-     * 'splitting_edge_new_vertex' is the new NGV created as a result of splitting this simplex
+
+     Used for any simplex in the simplex map data structure
+
+     For simplex:
+     - dim: dimension we are working in
+     - vertices: the vertices of the simplex
+
+     For splitting:
+     - split_counter: counter to keep track of how many times 'vertexes_have_different_value_estimates' has been true 
+        from should_subdivide calls in a row.
+     - longest_edge: a pair of vertices that are the endpoints of the longest edge of the simplex
+     - split_vertex: the vertex added to split the longest edge
+     - splitting_hyperplane_normal: the normal to the hyperplane that splits the simplex in two (passes through 
+        the split_vertex and if longest_edge is (v0,v1) then the normal points towards v1)
+    
+     For binary tree:
+     - depth: depth of this simplex in the binary tree
+     - radius: the radius of the simplex (the maximum distance between any two vertices)
+     - normal_child: the child simplex on the normal side of the splitting hyperplane
+     - opposite_child: the child simplex on the opposite side of the splitting hyperplane
+
+     For mesh:
+     - is_non_conforming: if the simplex is non-conforming in the SMMesh graph
+
+     Notes,
+     the splitting hyperplane is a D-2 dimensional hyperplane
+     the splitting hyperplane is defined by the D-2 following points: vertices + split_vertex - longest_edge
+        (D-1 points + 1 point - 2 points = D-2 points)
+     if longest_edge is (v0,v1) then we compute the normal to the hyperplane to point towards v1
+
+     With is_non_conforming, it is worth noting that the simplex will progress through three potential states:
+     - conforming (is_non_conforming is false)
+     - non-conforming (is_non_conforming is true)
+     - subdivided (is_non_conforming is irrelevant, as the simplex has been split, and is only part of the binary tree, 
+        not the mesh graph)
+
+     For the special case of 2D rewards, we can ignore a bunch of the geometry
+     The 2D weighting, w, between the rewards is uniquely defined by the scalar value in the first dim w[0]
+     In 2D weights, with w[0] varying from (left) 0 to 1 (right).
+     With respect to the scalar w[0], this code will assume that the "normal" direction is always right
     */
-    struct TN {
-        SimplexMap& simplex_map;
+    struct SMSimplex {
         int dim;
-        int depth;
-        Eigen::ArrayXd centroid;
-        double l_inf_norm;
+        std::vector<std::shared_ptr<SMVertex>> vertices;
+        std::unordered_set<std::shared_ptr<SMVertex>> vertices_set;
+
         int split_counter;
-        mutable std::shared_ptr<std::vector<std::shared_ptr<NGV>>> simplex_vertices;
-        std::shared_ptr<std::unordered_map<std::shared_ptr<NGV>,Eigen::ArrayXd>> hyperplane_normals;
-        std::shared_ptr<std::unordered_set<std::shared_ptr<TN>>> children;
+        std::pair<std::shared_ptr<SMVertex>,std::shared_ptr<SMVertex>> longest_edge;
+        std::shared_ptr<SMVertex> split_vertex; // null if leaf node
+        std::shared_ptr<Vec> splitting_hyperplane_normal; // null if leaf node
 
-        std::shared_ptr<NGV> splitting_edge_normal_side_vertex;
-        std::shared_ptr<NGV> splitting_edge_opposite_side_vertex;
-        std::shared_ptr<NGV> splitting_edge_new_vertex;
-        Eigen::ArrayXd splitting_hyperplane_normal;
-        std::shared_ptr<TN> normal_side_child;
-        std::shared_ptr<TN> opposite_side_child;
+        int depth;
+        double radius;
+        std::shared_ptr<SMSimplex> normal_child; // null if leaf node
+        std::shared_ptr<SMSimplex> opposite_child; // null if leaf node
 
-        TN(SimplexMap& simplex_map, int dim, int depth, std::shared_ptr<std::vector<std::shared_ptr<NGV>>> simplex_vertices);
+        bool is_non_conforming;
 
         /**
-         * On construction want to ensure that all of the simplex_vertices are (fully) connected 
-        */
-        void _ensure_neighbourhood_graph_connected();
+         * Constructor
+         */
+        SMSimplex(int dim, std::vector<std::shared_ptr<SMVertex>>& vertices, int depth);
+
+        /**
+         * Helper to check for 2D special case
+         */
+        bool is_2d() const;
+
+        /**
+         * Helper to check if a vertex is in this simplex
+         */
+        bool contains_vertex(std::shared_ptr<SMVertex> vertex) const;
 
         /**
          * Helper to compute a normal to a set of hyperplane points
         */
-        Eigen::ArrayXd compute_hyperplane_normal(std::vector<std::shared_ptr<NGV>>& hyperplane_points) const;
+        Vec compute_hyperplane_normal(std::vector<std::shared_ptr<SMVertex>>& hyperplane_points) const;
 
         /**
-         * Lazy init hyperplane normals
-         * (Lazy part of construction)
+         * Get the closest vertex to a weight from the points in this simplex
         */
-        void lazy_compute_hyperplane_normals() const;
-
-        // size_t hash() const;
-        // bool equals(const NGV& other) const;
-        // bool operator==(const NGV& other) const;
-        // bool operator!=(const NGV& other) const;
+        std::shared_ptr<SMVertex> get_closest_vertex(const Vec& weight) const;
+        std::shared_ptr<SMVertex> operator[](const Vec& weight) const;
 
         /**
-         * If this node has any children
-        */
-        bool has_children() const;
-
+         * Function to create children and add them to the binary tree
+         */
+        void create_children(SMRegistry& registry);
+        
         /**
-         * Create child TN's using the triangulation
-        */
-        void create_children(SmThtsManager& sm_manager);
-        void create_children_binary_tree();
-        void create_children_triangulation(SmThtsManager& sm_manager);
+         * return true if point is on normal side of the plane defined by halfplane_point and halfplane_normal 
+            (i.e. if wegith-halfplane_point dot halfplane_normal == 0)
 
-        /**
-         * Get child
-         * 
-         * Returns a child node (simplex) that contains 'weight'
-        */
-        std::shared_ptr<TN> get_child(const Eigen::ArrayXd& weight) const;
-        std::shared_ptr<TN> get_child_binary_tree(const Eigen::ArrayXd& weight) const;
-        std::shared_ptr<TN> get_child_triangulation(const Eigen::ArrayXd& weight) const;
+            halfplane_check
+            if D dims, then working in D-1 dim simplex
+            plane is a D-2 dim hyperplane
+            the "halfplane" refers to the D-1 half plane, on the normal side of the D-2 dim plane
 
-        /**
-         * Returns true if 'weight' is contained in this simplex
-         * 
-         * 'weight' is inside the (D-1) simplex iff it is the same side of the (D-2) plane defined by each of the D 
-         * many (D-2) face's as 'centroid'
-        */
-        // bool contains_weight(const Eigen::ArrayXd& weight) const;
-        bool contains_weight(const Eigen::ArrayXd& weight, bool debug=false) const;
-        bool contains_weight_2d(const Eigen::ArrayXd& weight) const;
+            more simply
+            plane will be the dividing hyperplane of the children simplices
+            plane_point will be a point in the plane (i.e. the split_vertex)
+            plane_normal will be the normal to the plane (i.e. the splitting_hyperplane_normal)
+            this checks if weight is on the normal side of the plane
 
-        /**
-         * Returns if 'weight' is the same side of the hyperplane (defined by a point in the halfplane and the normal 
-         * to the halfplane) as the 'centroid' of the simplex
          * 
          * halfplane_point:
          *      a point in the halfplane
@@ -512,102 +416,234 @@ namespace thts {
          * Returns if 'weight' is on the normal side of the halfplane
         */
         bool halfplane_check(
-            const Eigen::ArrayXd& halfplane_point, 
-            const Eigen::ArrayXd& halfplane_normal, 
-            const Eigen::ArrayXd& weight) const;
+            const Vec& plane_point, 
+            const Vec& plane_normal, 
+            const Vec& weight) const;
 
         /**
-         * Get the closest vertex in the neighbourhood graph
-        */
-        std::shared_ptr<NGV> get_closest_ngv_vertex(const Eigen::ArrayXd& ctx) const;
-        std::shared_ptr<NGV> operator[](const Eigen::ArrayXd& ctx) const;
+         * Assuming weight is inside this simplex, return the child simplex that contains it
+         */
+        std::shared_ptr<SMSimplex> traverse(const Vec& weight) const;
 
         /**
-         * Getting value from this TN using simplex vertices
-         * If we have children, then we would get a better estimate by using this function in the child where 
-         * 'child.contains(ctx)' is true
-        */
-        Eigen::ArrayXd get_best_value_estimate(const Eigen::ArrayXd& ctx) const;
-
+         * If this node is a leaf in the binary tree
+         */
+        bool is_leaf() const;
+        
         /**
-         * Maybe split node
-         * Needs information from the simplex map and a triangulation object to do so though
-         * This can come from the thts node and manager object respectively though
-         * 
-         * l_inf_thresh is the threshold of l_inf_norm below which we stop bothering to make any more children
-         * visit_thresh is the threshold for how many times we need to visit this node (with any of or adjactent NGV 
-         *      value_estimate's being different) to allow for a split
-         * max_depth is the threshold for the maximum depth of the TN tree
-        */
-        void maybe_subdivide(SmThtsManager& sm_manager);
+         * Checks if simplex is worth subdividing
+
+         Never subdivide if radius is less than min_radius
+         Will return false if already subdivided
+         Wont subdivide if depth is greater than max_depth
+
+         After these checks,
+         Should subdivide will check if vertexes_have_different_value_estimates is true, 
+         and increment split counter
+         if split counter is greater than threshold, then we should subdivide
+
+         does not actually call 'create_children'
+
+         */
+        bool vertexes_contain_multiple_unique_values() const;
+        bool allowed_to_subdivide(double min_radius, int max_depth) const;
+        bool should_subdivide(double min_radius, int max_depth, int split_counter_threshold) const;
+    }
+
+    /**
+     * SMEdge
+
+     Data structure for edges of simplices
+     Main point is to facilitate the mesh bipartite graph to identify non-conforming simplices
+     And use to link vertexes in their graph
+
+     This is basically an unordered pair of SMVertex pointers
+
+     We will also keep track of edges that formed from splitting this edge (in another binary tree)
+     So that when we need to refine the mesh, we can use this edge to lookup the relevant edges that are currently in 
+        the mesh graph
+
+    These objects need to be unique, so we will use a registry to keep track of them + construct them
+    And make the constructor private so that only the registry can construct them
+     */
+    struct SMEdge {
+        friend SMRegistry;
+
+        std::shared_ptr<SMVertex> v0;
+        std::shared_ptr<SMVertex> v1;
+        std::shared_ptr<SMVertex> midpoint;
+        std::shared_ptr<SMEdge> child_edge_0;
+        std::shared_ptr<SMEdge> child_edge_1;
+    
+    private:
+        // Private constructore to force use of registry constructor
+        SMEdge(std::shared_ptr<SMVertex> v0, std::shared_ptr<SMVertex> v1);
+    
+    public:
+        // Allow edge to be hashed and compared
+        size_t hash() const;
+        bool equals(const SMEdge& other) const;
+        bool operator==(const SMEdge& other) const;
+        bool operator!=(const SMEdge& other) const;
+
+        // Split this edge
+        void split(SMRegistry& registry);
+
+        // Get the set of smallest edges that partition this edge
+        std::shared_ptr<std::unordered_set<std::shared_ptr<SMEdge>>> get_edge_partition() const;
+        void get_edge_partition_helper(std::shared_ptr<SMEdge> edge, std::unordered_set<std::shared_ptr<SMEdge>>& partition) const;
     };
 
-    class SimplexMap {
-        friend SmThtsCNode;
-        friend SmThtsDNode;
-        friend SmBtsCNode;
-        friend SmBtsDNode;
+    /**
+    SMRegistry
 
-        friend NGV;
-        friend LSE;
-        friend TN;
+    Used to keep track of data structures that need to be unique and it is a non-trivial task to ensure this
+     */
+    struct SMRegistry {
+        
+        std::unordered_map<std::shared_ptr<SMVertex>, std::shared_ptr<SMVertex>> vertex_map;
+        std::unordered_map<std::shared_ptr<SMEdge>, std::shared_ptr<SMEdge>> edge_map;
 
-        // TODO: change this back to protected after debugging stuff
-        // protected:
-        public:
-            int dim;
-            std::shared_ptr<TN> root_node;
-            std::shared_ptr<std::vector<std::shared_ptr<NGV>>> n_graph_vertices;
-            std::shared_ptr<std::unordered_set<std::shared_ptr<NGV>>> n_graph_vertex_set;
-            std::unordered_map<UnorderedNGVPair,std::shared_ptr<LSE>> lse_map;
+        SMRegistry() = default;
+        virtual ~SMRegistry() = default;
 
-        public:
-            /**
-             * Constructor
-             * 
-             * Default val is the initial value to use for each Neighbourhood Graph Vertex
-            */
-            SimplexMap(int reward_dim, Eigen::ArrayXd default_val);
+        // Public interface for SMVertex construction
+        std::shared_ptr<SMVertex> get_or_create_vertex(const Vec& weight, const Vec& value_estimate, double entropy_estimate=0.0);
+        std::shared_ptr<SMVertex> get_or_create_vertex(std::shared_ptr<SMVertex> v0, std::shared_ptr<SMVertex> v1, double ratio=0.5);
 
-            /**
-             * Destructor
-             * 
-             * The graph of NGV's will have pointers to each other that will keep ref counts > 0 and never get freed, 
-             * unless we explicitly clean it up.
-             */
-            ~SimplexMap();
+        // Public interface for SMEdge construction
+        std::shared_ptr<SMEdge> get_or_create_edge(std::shared_ptr<SMVertex> v0, std::shared_ptr<SMVertex> v1);
 
-            /**
-             * Gets the LSE that v0 and v1 lie on (from 'lse_map')
-             * If an LSE for these vertices doesnt exist, it makes it and adds to 'lse_map' 
-            */
-            std::shared_ptr<LSE> get_or_create_lse(std::shared_ptr<NGV> v0, std::shared_ptr<NGV> v1);
-
-            /**
-             * Register a pair of NGVs with an LSE in the lse_map
-            */
-            void register_vertices_with_lse(
-                std::shared_ptr<NGV> v0, std::shared_ptr<NGV> v1, std::shared_ptr<LSE> edge);
-
-            /**
-             * Get the leaf TN node containing a given context
-            */
-            std::shared_ptr<TN> get_leaf_tn_node(const Eigen::ArrayXd& ctx) const;
-            std::shared_ptr<TN> operator[](const Eigen::ArrayXd& ctx) const;
-
-            /**
-             * Sample a random weight (vertex) from the neighbourhood graph
-            */
-            std::shared_ptr<NGV> sample_random_ngv_vertex(RandManager& rand_manager) const;
-
-            /**
-             * Prett print
-            */
-            std::string get_pretty_print_string() const;
-
-            /**
-             * Return a convex hull approximation
-             */
-            ConvexHull get_approximate_convex_hull() const;
+    private:
+        // Helper functions to lookup the unique version of a vertex or edge
+        std::shared_ptr<SMVertex> lookup_unique_vertex(std::shared_ptr<SMVertex> vertex);
+        std::shared_ptr<SMEdge> lookup_unique_edge(std::shared_ptr<SMEdge> edge);
     };
+
+    /**
+    SMMesh
+
+    In general, this class is in charge of maintaining all of the geometry of the simplex map.
+    Explicitly, it is in charge of orchestrating the creation and maintenance of SMSimplex, SMEdge and SMVertex objects
+
+    Keeps track of the mesh of simplices
+    And maintains the graph of simplices along the edges of the simplices
+
+    Maintains a bipartite graph of simplices and edges to maintain the mesh
+    Keeps track of all simplices and edges currently forming the mesh
+    And keeps track of all non-conforming simplices, from what depth of the binary tree they are at
+
+    A bit more specifically, we are keeping track of simplices with the following properties:
+    - they are non-conforming
+    - they meet all conditions (apart from non having uniform value estimates) to be able to be refined
+    - they are part of the mesh graph
+
+    Note that a simplex is part of the mesh graph iff it is a leaf in the binary tree
+
+    Additionally, 2D rewards will be an edge case. 
+    This is because all simplices are 1D line segments, which makes the use of SMEdge unnecessary
+    Moreover, 1D simplices will always be conforming
+    Hence, when rewards are 2D, we will ignore all mesh graph logic and just use the binary tree 
+
+    */
+    struct SMMesh {
+        int dim;
+        SMRegistry registry;
+        std::shared_ptr<SMSimplex> root_simplex; // binary tree of simplices
+        std::unordered_set<std::shared_ptr<SMVertex>> all_vertices_set;
+        std::vector<std::shared_ptr<SMVertex>> all_vertices_vector;
+
+        // Mesh graph variables
+        std::unordered_map<std::shared_ptr<SMSimplex>, std::unordered_set<std::shared_ptr<SMEdge>>> simplex_to_edge_map;
+        std::unordered_map<std::shared_ptr<SMEdge>, std::unordered_set<std::shared_ptr<SMSimplex>>> edge_to_simplex_map;
+        std::unordered_set<std::shared_ptr<SMSimplex>> non_conforming_simplices;
+        std::map<int,std::queue<std::shared_ptr<SMSimplex>>> non_conforming_simplices_by_depth;
+
+        // Constructore
+        SMMesh(int dim);
+
+        // Desstructor
+        // Needs to make sure that the SMVertex graph gets cleaned up (circular references of shared_ptr could lead to 
+        // memory leaks)
+        virtual ~SMMesh();
+
+        // Initialise the mesh with a root simplex
+        void initialise_mesh(Vec& heuristic_value_estimate);
+
+        // Sample a random vertex from the mesh
+        std::shared_ptr<SMVertex> sample_random_vertex(RandManager& rand_manager) const;
+
+        // Get the (smallest) simplex (leaf node in binary tree) containing a given weight
+        std::shared_ptr<SMSimplex> get_simplex(const Vec& weight) const;
+
+        // Get the closest vertex to a given weight (from the simplex containing the weight)
+        std::shared_ptr<SMVertex> get_closest_vertex(const Vec& weight) const;
+        std::shared_ptr<SMVertex> get_closest_vertex(const Vec& weight, std::shared_ptr<SMSimplex> simplex) const;
+
+        // Reading from a vertex
+        int get_num_updates(std::shared_ptr<SMVertex> vertex) const;
+        Vec get_value_estimate(std::shared_ptr<SMVertex> vertex) const;
+        Vec get_value_estimate_for_search(std::shared_ptr<SMVertex> vertex) const;
+        double get_entropy_estimate(std::shared_ptr<SMVertex> vertex) const;
+
+        // Update a value estimate for a vertex
+        void update_vertex_values_and_share(
+            std::shared_ptr<SMVertex> vertex, 
+            int max_push_radius, 
+            const Vec& value_estimate, 
+            const Vec& value_estimate_for_search, 
+            double entropy_estimate=0.0);
+
+        // Maybe subdivide a simplex, if it meets the conditions to warrent it
+        // Additionally, if there are any non-conforming simplices, the lowest depth one will be subdivided
+        void maybe_subdivide(std::shared_ptr<SMSimplex> simplex);
+
+        // Pretty print the mesh
+        std::string get_pretty_print_string() const;
+
+        // Return a convex hull approximation
+        ConvexHull get_approximate_convex_hull() const;
+
+        // We will keep helper functions private to keep a clean interface
+    private:
+        // Sometimes 2D reward will be an edge case
+        bool is_2d() const;
+
+        // Get the lowest depth non-conforming simplex
+        std::shared_ptr<SMSimplex> pop_lowest_depth_non_conforming_simplex();
+
+        // Helper to orchestrate the subdivision of a simplex
+        // Add children to binary tree
+        // Adds children to mesh graph
+        // Removes parent from mesh graph
+        // Adds split edges to mesh graph
+        // Updates non-conforming simplices
+        void subdivide_simplex(std::shared_ptr<SMSimplex> simplex);
+
+        // Helper to maybe add a new edge to the graph, and inherit connections (to simplices) from the parent edge
+        void inherit_parent_edge_connections(std::shared_ptr<SMEdge> new_edge, std::shared_ptr<SMEdge> parent_edge);
+
+        // Helper to update simplices that may now be non-conforming, checking simplices that are adjacent to the edge
+        void update_non_conformity_for_new_edge(std::shared_ptr<SMEdge> new_edge);
+
+        // Helper to remove an edge from the mesh graph
+        void remove_edge_from_mesh_graph(std::shared_ptr<SMEdge> edge);
+
+        // Helper to remove simplex from the mesh graph
+        void remove_simplex_from_mesh_graph(std::shared_ptr<SMSimplex> simplex);
+
+        // Helper to add new simplices to the mesh graph
+        void add_new_simplex_to_mesh_graph(std::shared_ptr<SMSimplex> simplex);
+    };
+
+
+    /**
+    So, as I was implementing it, it turned out that SMMesh was basically the SimplexMap
+    Maybe I could have seperated the logic somehow, but SimplexMap would have been a very thin wrapper around SMMesh
+    I still want to use "SimplexMap" as the name for the class in algorithms.
+    But I am also attached to SMMesh, because that class does maintain the mesh.
+    So, I will typedef :)
+    */
+    typedef SMMesh SimplexMap;
 }
+
