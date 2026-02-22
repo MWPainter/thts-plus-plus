@@ -28,57 +28,57 @@ static const std::vector<ConfigMap> CONFIG_702 =
     // range of uct params
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        0.001},
+        {ALG_PARAM_ID_BIAS,        0.001},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        0.003},
+        {ALG_PARAM_ID_BIAS,        0.003},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        0.01},
+        {ALG_PARAM_ID_BIAS,        0.01},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        0.03},
+        {ALG_PARAM_ID_BIAS,        0.03},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        0.1},
+        {ALG_PARAM_ID_BIAS,        0.1},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        0.3},
+        {ALG_PARAM_ID_BIAS,        0.3},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        0.001},
+        {ALG_PARAM_ID_BIAS,        0.001},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        1.0},
+        {ALG_PARAM_ID_BIAS,        1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        3.0},
+        {ALG_PARAM_ID_BIAS,        3.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        10.0},
+        {ALG_PARAM_ID_BIAS,        10.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        100.0},
+        {ALG_PARAM_ID_BIAS,        100.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
 
@@ -87,57 +87,57 @@ static const std::vector<ConfigMap> CONFIG_702 =
     // range of maxuct params
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        0.001},
+        {ALG_PARAM_ID_BIAS,        0.001},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        0.003},
+        {ALG_PARAM_ID_BIAS,        0.003},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        0.01},
+        {ALG_PARAM_ID_BIAS,        0.01},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        0.03},
+        {ALG_PARAM_ID_BIAS,        0.03},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        0.1},
+        {ALG_PARAM_ID_BIAS,        0.1},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        0.3},
+        {ALG_PARAM_ID_BIAS,        0.3},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        0.001},
+        {ALG_PARAM_ID_BIAS,        0.001},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        1.0},
+        {ALG_PARAM_ID_BIAS,        1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        3.0},
+        {ALG_PARAM_ID_BIAS,        3.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        10.0},
+        {ALG_PARAM_ID_BIAS,        10.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_INIT_TEMP,        100.0},
+        {ALG_PARAM_ID_BIAS,        100.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
 

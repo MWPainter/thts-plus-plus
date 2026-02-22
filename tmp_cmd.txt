@@ -32,24 +32,26 @@ TODO: tuned everything using graph mode, for lack of trials available
 TODO: if necessary, move some of the envs to not graph mode now have many more trials available
 
 make && clear &&
-./run_memory_limited 8G ./auxexpr eval 600 &&
-./run_memory_limited 8G ./auxexpr eval 601 &&
-./run_memory_limited 8G ./auxexpr eval 602 &&
-./run_memory_limited 8G ./auxexpr eval 700 &&
-./run_memory_limited 8G ./auxexpr eval 701 &&
-./run_memory_limited 8G ./auxexpr eval 702 &&
-./run_memory_limited 8G ./auxexpr eval 800 &&
-./run_memory_limited 8G ./auxexpr eval 801 &&
-./run_memory_limited 8G ./auxexpr eval 802 &&
-./run_memory_limited 8G ./auxexpr eval 620 &&
-./run_memory_limited 8G ./auxexpr eval 621 &&
-./run_memory_limited 8G ./auxexpr eval 622 &&
-./run_memory_limited 8G ./auxexpr eval 720 &&
-./run_memory_limited 8G ./auxexpr eval 721 &&
-./run_memory_limited 8G ./auxexpr eval 722 &&
-./run_memory_limited 8G ./auxexpr eval 820 &&
-./run_memory_limited 8G ./auxexpr eval 821 &&
-./run_memory_limited 8G ./auxexpr eval 822 
+./run_memory_limited 16G ./auxexpr eval 600 &&
+./run_memory_limited 16G ./auxexpr eval 601 &&
+./run_memory_limited 16G ./auxexpr eval 602 &&
+./run_memory_limited 16G ./auxexpr eval 700 &&
+./run_memory_limited 16G ./auxexpr eval 701 &&
+./run_memory_limited 16G ./auxexpr eval 702 &&
+./run_memory_limited 16G ./auxexpr eval 800 &&
+./run_memory_limited 16G ./auxexpr eval 801 &&
+./run_memory_limited 16G ./auxexpr eval 802 &&
+./run_memory_limited 16G ./auxexpr eval 620 &&
+./run_memory_limited 16G ./auxexpr eval 621 &&
+./run_memory_limited 16G ./auxexpr eval 622 &&
+./run_memory_limited 16G ./auxexpr eval 720 &&
+./run_memory_limited 16G ./auxexpr eval 721 &&
+./run_memory_limited 16G ./auxexpr eval 722 &&
+./run_memory_limited 16G ./auxexpr eval 820 &&
+./run_memory_limited 16G ./auxexpr eval 821 &&
+./run_memory_limited 16G ./auxexpr eval 822 && 
+./run_memory_limited 16G ./auxexpr opt 340 && 
+./run_memory_limited 16G ./auxexpr opt 350 
 
 TODO: decide if epsilon = 0.5 / epsilon = 1.0 is required/necessary
 TODO: decide where finer resolution is required
