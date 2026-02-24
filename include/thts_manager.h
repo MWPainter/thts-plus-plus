@@ -162,6 +162,13 @@ namespace thts {
                 std::lock_guard<std::mutex> lg(rng_lock);
                 return exp_distr(exp_gen);
             }
+
+            /**
+             * Get a reerence to the random device
+             */
+            std::random_device& get_random_device() {
+                return rd;
+            }
     };
     
     /**

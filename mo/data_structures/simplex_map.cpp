@@ -3,6 +3,7 @@
 #include "helper_templates.h"
 #include "mo/mo_helper.h"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -89,32 +90,26 @@ namespace thts {
     /**
     * Message passing (BFS)
     */
-    void SMVertex::share_values_message_passing(int max_push_radius=1) 
+    void SMVertex::share_values_message_passing(RandManager& rand_manager, int max_neighbours_to_push_to=-1) 
     {  
-        int current_push_radius = 0;
-        queue<shared_ptr<SMVertex>> vertex_queue;
-        queue<shared_ptr<SMVertex>> next_vertex_queue;
-        unordered_set<shared_ptr<SMVertex>> visited_vertices;
-        vertex_queue.push(shared_from_this());
-        visited_vertices.insert(shared_from_this());
-
-        while (!vertex_queue.empty() && current_push_radius < max_push_radius) {
-            shared_ptr<SMVertex> current_vertex = vertex_queue.front();
-            vertex_queue.pop();
-            for (shared_ptr<SMVertex> neighbour_ptr : *current_vertex->neighbours) {
-                if (visited_vertices.contains(neighbour_ptr)) continue;
-                visited_vertices.insert(neighbour_ptr);
-                bool success = share_values_message_passing_helper_push(*current_vertex, *neighbour_ptr);
-                if (success && !visited_vertices.contains(neighbour_ptr)) {
-                    next_vertex_queue.push(neighbour_ptr);
-                }
-            }
-            if (vertex_queue.empty()) {
-                current_push_radius++;
-                vertex_queue = next_vertex_queue;
-                next_vertex_queue.clear();
-            }
+        unordered_set<shared_ptr<SMVertex>>& vertices_to_push_to = neighbours;
+        unique_ptr<unordered_set<shared_ptr<SMVertex>>> subsample_vertices;
+        if (max_neighbours_to_push_to > 0 && max_neighbours_to_push_to < neighbours->size()) {
+            subsample_vertices = make_unique<unordered_set<shared_ptr<SMVertex>>>();
+            subsample_vertices->reserve(max_neighbours_to_push_to);
+            std::sample(
+                neighbours->begin(), 
+                neighbours->end(), 
+                subsample_vertices->begin(), 
+                max_neighbours_to_push_to, 
+                rand_manager.get_random_device());
+            vertices_to_push_to = *subsample_vertices;
         }
+
+        for (shared_ptr<SMVertex> vertex : vertices_to_push_to) {
+            share_values_message_passing_helper(*this, *vertex);
+        }
+
     }
 
     /**
@@ -499,6 +494,31 @@ namespace thts {
         }
         partition.insert(edge);
     }
+
+    Vec SMEdge::find_closest_point_on_edge(const Vec& point) const
+    {
+        double ratio = this->find_closest_point_on_edge_ratio(point);
+        return this->v0->weight * ratio + this->v1->weight * (1.0 - ratio);
+    }
+
+    // Projects v0->point onto v0->v1 and returns the ratio of the projection
+    // This gives the value of t for the closest point on the edge
+    // u = v0 + t * (v1 - v0)
+    double SMEdge::find_closest_point_on_edge_ratio(const Vec& point) const
+    {
+        Vec v0_to_point = point - this->v0->weight;
+        Vec v0_to_v1 = this->v1->weight - this->v0->weight;
+        double ratio = v0_to_point.dot(v0_to_v1) / v0_to_v1.dot(v0_to_v1);
+        if (ratio < 0.0)
+        {
+            return 0.0;
+        }
+        if (ratio > 1.0)
+        {
+            return 1.0;
+        }
+        return ratio;
+    }
 }
 
 
@@ -562,8 +582,10 @@ namespace thts {
 namespace thts {
 
     // Constructor
-    SMMesh::SMMesh(int dim) : 
+    SMMesh::SMMesh(int dim, bool find_exact_closest_vertex, bool eventually_conforming_mesh) : 
         dim(dim), 
+        find_exact_closest_vertex(find_exact_closest_vertex),
+        eventually_conforming_mesh(eventually_conforming_mesh),
         registry(), 
         root_simplex(nullptr), 
         all_vertices_set(),
@@ -573,6 +595,9 @@ namespace thts {
         non_conforming_simplices(), 
         non_conforming_simplices_by_depth()
     {
+        if (find_exact_closest_vertex && !eventually_conforming_mesh) {
+            throw std::invalid_argument("find_exact_closest_vertex=true implementation assumes that eventually_conforming_mesh is true");
+        }
     }
 
     /**
@@ -607,7 +632,8 @@ namespace thts {
         }
 
         // In 2D we don't need to worry about non-conforming simplices or the mesh graph, so we are done
-        if (is_2d()) {
+        // And optionally we can turn this logic off, by setting eventually_conforming_mesh to false
+        if (is_2d() || !eventually_conforming_mesh) {
             return;
         }
 
@@ -648,7 +674,42 @@ namespace thts {
 
     shared_ptr<SMVertex> SMMesh::get_closest_vertex(shared_ptr<SMSimplex> simplex, const Vec& weight) const
     {
-        return simplex->get_closest_vertex(weight);
+        Vec closest_point = simplex->get_closest_vertex(weight);
+        if (!this->find_exact_closest_vertex) {
+            return closest_point;
+        }
+        
+        // Get a list of vertices that are in simplices adjacent to the given simplex
+        vector<shared_ptr<SMVertex>> adjacent_vertices;
+        unordered_set<shared_ptr<SMSimplex>> adjacent_simplices;
+        adjacent_simplices.insert(simplex);
+
+        // Loop through edges of simplex
+        for (shared_ptr<SMEdge> edge : this->simplex_to_edge_map.at(simplex)) {
+            // Then simplices adjacent to this edge
+            for (shared_ptr<SMSimplex> adjacent_simplex : this->edge_to_simplex_map.at(edge)) {
+                // If already seen this simplex, then skip
+                if (adjacent_simplices.contains(adjacent_simplex)) {
+                    continue;
+                }
+                adjacent_simplices.insert(adjacent_simplex);
+                // Then add all vertices of this simplex to the list
+                for (shared_ptr<SMVertex> vertex : adjacent_simplex->vertices) {
+                    adjacent_vertices.push_back(vertex);
+                }
+            }   
+        }
+
+        // Find the closest vertex from these points (we can initialise with the one we already found)
+        double closest_dist = closest_point.dist(weight);
+        for (shared_ptr<SMVertex> vertex : adjacent_vertices) {
+            double dist = vertex->weight.dist(weight);
+            if (dist < closest_dist) {
+                closest_dist = dist;
+                closest_vertex = vertex;
+            }
+        }
+        return closest_vertex;
     }
 
     int SMMesh::get_num_updates(shared_ptr<SMVertex> vertex) const
@@ -672,8 +733,9 @@ namespace thts {
     }
 
     void SMMesh::update_vertex_values_and_share(
+        RandManager& rand_manager,
         shared_ptr<SMVertex> vertex, 
-        int max_push_radius, 
+        int max_neighbours_to_push_to, 
         const Vec& value_estimate, 
         const Vec& value_estimate_for_search, 
         double entropy_estimate)
@@ -683,7 +745,7 @@ namespace thts {
         vertex->value_estimate_for_search = value_estimate_for_search;
         vertex->entropy_estimate = entropy_estimate;
 
-        vertex->share_values_message_passing(max_push_radius);
+        vertex->share_values_message_passing(rand_manager, max_neighbours_to_push_to);
     }
 
     void SMMesh::maybe_subdivide(shared_ptr<SMSimplex> simplex)
@@ -694,7 +756,8 @@ namespace thts {
         }
 
         // We are done if there are no non-conforming simplices
-        if (this->non_conforming_simplices.empty()) {
+        // Or if we are not enforcing conformity
+        if (this->non_conforming_simplices.empty() || !eventually_conforming_mesh) {
             return;
         }
 
@@ -736,6 +799,8 @@ namespace thts {
     {
         return this->dim == 2;
     }
+
+    // 
 
     // Helper to get the lowest depth non-conforming simplex
     // Non conforming simplices are stored in a map by depth, so we can just get the first one
@@ -878,127 +943,6 @@ namespace thts {
         this->simplex_to_edge_map[simplex] = mesh_graph_edges;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    void TN::_ensure_neighbourhood_graph_connected() 
-    {
-        for (size_t i=0; i<simplex_vertices->size(); i++) {
-            for (size_t j=i+1; j<simplex_vertices->size(); j++) {
-                simplex_vertices->at(i)->add_connection(simplex_vertices->at(j));
-            }
-        }
-    }
-    
-    
-    
-    
-
-
-
-    shared_ptr<TN> SimplexMap::get_leaf_tn_node(const Eigen::ArrayXd& ctx) const 
-    {
-        shared_ptr<TN> cur = root_node;
-        while (cur->has_children()) {
-            cur = cur->get_child(ctx);
-        }
-        return cur;
-    }
-
-    shared_ptr<NGV> SimplexMap::sample_random_ngv_vertex(RandManager& rand_manager) const
-    {
-        int rand_index = rand_manager.get_rand_int(0,n_graph_vertices->size());
-        return n_graph_vertices->at(rand_index);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
 
 
 

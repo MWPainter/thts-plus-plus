@@ -133,6 +133,19 @@
     - (added) triangle AGE -> edges { AG, GE, AE }
     - (added) triangle GFE -> edges { GF, FE, GE }
 
+
+    Some additoinal issues, which will write up at a later date:
+    - SMVertex can have exponential number of neightbours - solve with param to limit number of neighbours in message passing
+    - Nearest SMVertex in lookup in SMSimplex doesn't have to be in the simplex (think point next to border of a thin 
+        tall triangle and short stumpy triangle (the oppositing edge of the short stumpy tirangle can be closest)) 
+        - solve with option whether to accept closest SMVertex from a SMSimplex, rather than checking all neighbouring SMSimplex's 
+    - SMSimplex can also have exponential number of neighbours, this means the SMMesh graph can be exponential in size 
+        - solve by providing an option whether to enforce conformity
+
+
+
+    Longer unfinished notes on these issues:
+
     Some miscellaneous notes:
     - on each operation on the simplex map that may lead to a subdivision, we will check if there are any 
         non-conforming simplices
@@ -284,7 +297,7 @@ namespace thts {
          Pushes value estimates to neighbours in a BFS manner
          Helper function performs the actual pushing and returns is to_vertex was updated
         */
-        void share_values_message_passing(int max_push_radius=1);
+        void share_values_message_passing(int max_neighbours_to_push_to=-1);
         bool share_values_message_passing_helper(SMVertex& from_vertex, SMVertex& to_vertex);
 
         /**
@@ -341,7 +354,7 @@ namespace thts {
      The 2D weighting, w, between the rewards is uniquely defined by the scalar value in the first dim w[0]
      In 2D weights, with w[0] varying from (left) 0 to 1 (right).
      With respect to the scalar w[0], this code will assume that the "normal" direction is always right
-    */
+     */
     struct SMSimplex {
         int dim;
         std::vector<std::shared_ptr<SMVertex>> vertices;
@@ -492,6 +505,10 @@ namespace thts {
         // Get the set of smallest edges that partition this edge
         std::shared_ptr<std::unordered_set<std::shared_ptr<SMEdge>>> get_edge_partition() const;
         void get_edge_partition_helper(std::shared_ptr<SMEdge> edge, std::unordered_set<std::shared_ptr<SMEdge>>& partition) const;
+
+        // Find closest point on the edge to a given point
+        Vec find_closest_point_on_edge(const Vec& point) const;
+        double find_closest_point_on_edge_ratio(const Vec& point) const;
     };
 
     /**
@@ -548,6 +565,8 @@ namespace thts {
     */
     struct SMMesh {
         int dim;
+        bool find_exact_closest_vertex;
+        bool eventually_conforming_mesh;
         SMRegistry registry;
         std::shared_ptr<SMSimplex> root_simplex; // binary tree of simplices
         std::unordered_set<std::shared_ptr<SMVertex>> all_vertices_set;
@@ -560,7 +579,7 @@ namespace thts {
         std::map<int,std::queue<std::shared_ptr<SMSimplex>>> non_conforming_simplices_by_depth;
 
         // Constructore
-        SMMesh(int dim);
+        SMMesh(int dim, bool find_exact_closest_vertex=true, bool eventually_conforming_mesh=true);
 
         // Desstructor
         // Needs to make sure that the SMVertex graph gets cleaned up (circular references of shared_ptr could lead to 
@@ -588,8 +607,9 @@ namespace thts {
 
         // Update a value estimate for a vertex
         void update_vertex_values_and_share(
+            RandManager& rand_manager,
             std::shared_ptr<SMVertex> vertex, 
-            int max_push_radius, 
+            int max_neighbours_to_push_to, 
             const Vec& value_estimate, 
             const Vec& value_estimate_for_search, 
             double entropy_estimate=0.0);
@@ -631,6 +651,9 @@ namespace thts {
 
         // Helper to remove simplex from the mesh graph
         void remove_simplex_from_mesh_graph(std::shared_ptr<SMSimplex> simplex);
+
+        // Get the set of SMEdges that are adjacent to a given simplex
+        std::unordered_set<std::shared_ptr<SMEdge>> get_edges_adjacent_to_simplex(std::shared_ptr<SMSimplex> simplex) const;
 
         // Helper to add new simplices to the mesh graph
         void add_new_simplex_to_mesh_graph(std::shared_ptr<SMSimplex> simplex);
