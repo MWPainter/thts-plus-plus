@@ -297,8 +297,11 @@ namespace thts {
          Pushes value estimates to neighbours in a BFS manner
          Helper function performs the actual pushing and returns is to_vertex was updated
         */
-        void share_values_message_passing(int max_neighbours_to_push_to=-1);
+        void share_values_message_passing(RandManager& rand_manager, int max_push_radius=1, int max_neighbours_to_push_to=-1);
+    private:
+        void share_values_message_passing_subset(RandManager& rand_manager, int max_neighbours_to_push_to);
         bool share_values_message_passing_helper(SMVertex& from_vertex, SMVertex& to_vertex);
+    public:
 
         /**
          * Editing neighbourhood graph

@@ -90,11 +90,11 @@ namespace thts {
     /**
     * Message passing (BFS)
     */
-    void SMVertex::share_values_message_passing(RandManager& rand_manager, int max_neighbours_to_push_to=-1) 
+    void SMVertex::share_values_message_passing(RandManager& rand_manager, int max_push_radius, int max_neighbours_to_push_to=-1) 
     {  
         unordered_set<shared_ptr<SMVertex>>& vertices_to_push_to = neighbours;
         unique_ptr<unordered_set<shared_ptr<SMVertex>>> subsample_vertices;
-        if (max_neighbours_to_push_to > 0 && max_neighbours_to_push_to < neighbours->size()) {
+        if (max_neighbours_to_push_to != -1 && max_neighbours_to_push_to < neighbours->size()) {
             subsample_vertices = make_unique<unordered_set<shared_ptr<SMVertex>>>();
             subsample_vertices->reserve(max_neighbours_to_push_to);
             std::sample(
@@ -104,12 +104,50 @@ namespace thts {
                 max_neighbours_to_push_to, 
                 rand_manager.get_random_device());
             vertices_to_push_to = *subsample_vertices;
+
+            for (shared_ptr<SMVertex> vertex : vertices_to_push_to) {
+                share_values_message_passing_helper(*this, *vertex);
+            }
+        }
+    }
+
+    void SMVertex::share_values_message_passing(RandManager& rand_manager, int max_push_radius, int max_neighbours_to_push_to) 
+    {  
+        if (max_push_radius != 1 && max_neighbours_to_push_to != -1) {""
+            throw std::invalid_argument("max_push_radius != 1 is not supported unless max_neighbours_to_push_to is set "
+                "to -1 (push to all neighbours). I.e. you can only push to a subset of neighbours, or, push in a wider "
+                "radius, but not both");
         }
 
-        for (shared_ptr<SMVertex> vertex : vertices_to_push_to) {
-            share_values_message_passing_helper(*this, *vertex);
+        if (max_neighbours_to_push_to != -1)
+        {
+            return  this->share_values_message_passing_subset(max_push_radius);
         }
 
+        int current_push_radius = 0;
+        queue<shared_ptr<SMVertex>> vertex_queue;
+        queue<shared_ptr<SMVertex>> next_vertex_queue;
+        unordered_set<shared_ptr<SMVertex>> visited_vertices;
+        vertex_queue.push(shared_from_this());
+        visited_vertices.insert(shared_from_this());
+
+        while (!vertex_queue.empty() && current_push_radius < max_push_radius) {
+            shared_ptr<SMVertex> current_vertex = vertex_queue.front();
+            vertex_queue.pop();
+            for (shared_ptr<SMVertex> neighbour_ptr : *current_vertex->neighbours) {
+                if (visited_vertices.contains(neighbour_ptr)) continue;
+                visited_vertices.insert(neighbour_ptr);
+                bool success = share_values_message_passing_helper_push(*current_vertex, *neighbour_ptr);
+                if (success && !visited_vertices.contains(neighbour_ptr)) {
+                    next_vertex_queue.push(neighbour_ptr);
+                }
+            }
+            if (vertex_queue.empty()) {
+                current_push_radius++;
+                vertex_queue = next_vertex_queue;
+                next_vertex_queue.clear();
+            }
+        }
     }
 
     /**
