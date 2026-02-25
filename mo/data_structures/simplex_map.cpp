@@ -32,7 +32,8 @@ namespace thts {
     */
     SMVertex::SMVertex(const Vec& weight, const Vec& heuristic_value_estimate, double entropy_estimate) : 
         weight(weight),
-        num_updates(0),
+        num_direct_updates(0),
+        num_updates(0), 
         value_estimate(Vec(weight.size(), 0.0)),
         value_estimate_for_search(heuristic_value_estimate),
         entropy_estimate(entropy_estimate),
@@ -45,7 +46,8 @@ namespace thts {
     */
     SMVertex::SMVertex(shared_ptr<SMVertex> v0, shared_ptr<SMVertex> v1, double ratio) : 
         weight(ratio * v0.weight + (1.0-ratio) * v1.weight),
-        num_updates(0),
+        num_direct_updates(0),
+        num_updates(1), // count this initialisation as a message passing update
         value_estimate(v0.value_estimate),
         value_estimate_for_search(v0.value_estimate_for_search),
         entropy_estimate(v0.entropy_estimate),
@@ -137,7 +139,7 @@ namespace thts {
             for (shared_ptr<SMVertex> neighbour_ptr : *current_vertex->neighbours) {
                 if (visited_vertices.contains(neighbour_ptr)) continue;
                 visited_vertices.insert(neighbour_ptr);
-                bool success = share_values_message_passing_helper_push(*current_vertex, *neighbour_ptr);
+                bool success = share_values_message_passing_helper(*current_vertex, *neighbour_ptr);
                 if (success && !visited_vertices.contains(neighbour_ptr)) {
                     next_vertex_queue.push(neighbour_ptr);
                 }
@@ -164,13 +166,18 @@ namespace thts {
      */
     bool SMVertex::share_values_message_passing_helper(SMVertex& from_vertex, SMVertex& to_vertex) 
     {  
+        // Dont propogate fictitious values from heuristics
         if (from_vertex.num_updates <= 0)
         {
             return false;
         }
+
+        // we are attempting to update to_vertex, so increment the number of updates
+        to_vertex.num_updates += 1;
+
+        // But only update values if it is actually an improvement
         if (from_vertex.value_estimate.dot(to_vertex.weight) > to_vertex.value_estimate.dot(to_vertex.weight)) 
         {
-            to_vertex.num_updates = from_vertex.num_updates;
             to_vertex.value_estimate = from_vertex.value_estimate;
             to_vertex.value_estimate_for_search = from_vertex.value_estimate_for_search;
             to_vertex.entropy_estimate = from_vertex.entropy_estimate;
@@ -778,6 +785,7 @@ namespace thts {
         const Vec& value_estimate_for_search, 
         double entropy_estimate)
     {
+        vertex->num_direct_updates++;
         vertex->num_updates++;
         vertex->value_estimate = value_estimate;
         vertex->value_estimate_for_search = value_estimate_for_search;
@@ -824,10 +832,18 @@ namespace thts {
         return ss.str();
     }
 
+    /**
+     * Get convex hull from value estimates in this map
+     But don't include vertices that haven't been updated from their heuristic value estimate
+     */
     ConvexHull SMMesh::get_approximate_convex_hull() const
     {
         unordered_set<Vec> ch_points;
         for (shared_ptr<SMVertex> vertex : this->all_vertices_vector) {
+            if (vertex->num_updates <= 0) 
+            {
+                continue;
+            }
             ch_points.insert(vertex->value_estimate);
         }
         return ConvexHull(ch_points);

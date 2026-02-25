@@ -257,12 +257,17 @@ namespace thts {
     * 
     These objects need to be unique, so we will use a registry to keep track of them + construct them
     And make the constructor private so that only the registry can construct them
+
+    Num updates refers to how many times the value estimate has been updated
+    This include a "failed" update, where the value estimate did not change
+    Num direct updates refers to how many times the value estimate has been updated directly, without any message passing
     */
     struct SMVertex : public std::enable_shared_from_this<SMVertex> {
         friend SMRegistry;
 
         Vec weight;
 
+        int num_direct_updates;
         int num_updates;
         Vec value_estimate;
         Vec value_estimate_for_search;
@@ -612,10 +617,11 @@ namespace thts {
         void update_vertex_values_and_share(
             RandManager& rand_manager,
             std::shared_ptr<SMVertex> vertex, 
-            int max_neighbours_to_push_to, 
+            int max_push_radius,
+            int max_neighbours_to_push_to
             const Vec& value_estimate, 
             const Vec& value_estimate_for_search, 
-            double entropy_estimate=0.0);
+            double entropy_estimate=0.0,);
 
         // Maybe subdivide a simplex, if it meets the conditions to warrent it
         // Additionally, if there are any non-conforming simplices, the lowest depth one will be subdivided
