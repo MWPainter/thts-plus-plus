@@ -575,6 +575,7 @@ namespace thts {
         int dim;
         bool find_exact_closest_vertex;
         bool eventually_conforming_mesh;
+        bool always_allow_non_conforming_simplex_to_split;
         SMRegistry registry;
         std::shared_ptr<SMSimplex> root_simplex; // binary tree of simplices
         std::unordered_set<std::shared_ptr<SMVertex>> all_vertices_set;
@@ -587,7 +588,7 @@ namespace thts {
         std::map<int,std::queue<std::shared_ptr<SMSimplex>>> non_conforming_simplices_by_depth;
 
         // Constructore
-        SMMesh(int dim, bool find_exact_closest_vertex=true, bool eventually_conforming_mesh=true);
+        SMMesh(int dim, bool find_exact_closest_vertex=true, bool eventually_conforming_mesh=true, bool always_allow_non_conforming_simplex_to_split=true);
 
         // Desstructor
         // Needs to make sure that the SMVertex graph gets cleaned up (circular references of shared_ptr could lead to 
@@ -625,7 +626,11 @@ namespace thts {
 
         // Maybe subdivide a simplex, if it meets the conditions to warrent it
         // Additionally, if there are any non-conforming simplices, the lowest depth one will be subdivided
-        void maybe_subdivide(std::shared_ptr<SMSimplex> simplex);
+        void maybe_subdivide(
+            std::shared_ptr<SMSimplex> simplex, 
+            double min_radius, 
+            int max_depth, 
+            int split_counter_threshold);
 
         // Pretty print the mesh
         std::string get_pretty_print_string() const;
@@ -647,13 +652,21 @@ namespace thts {
         // Removes parent from mesh graph
         // Adds split edges to mesh graph
         // Updates non-conforming simplices
-        void subdivide_simplex(std::shared_ptr<SMSimplex> simplex);
+        void subdivide_simplex(
+            std::shared_ptr<SMSimplex> simplex, 
+            double min_radius, 
+            int max_depth, 
+            int split_counter_threshold);
 
         // Helper to maybe add a new edge to the graph, and inherit connections (to simplices) from the parent edge
         void inherit_parent_edge_connections(std::shared_ptr<SMEdge> new_edge, std::shared_ptr<SMEdge> parent_edge);
 
         // Helper to update simplices that may now be non-conforming, checking simplices that are adjacent to the edge
-        void update_non_conformity_for_new_edge(std::shared_ptr<SMEdge> new_edge);
+        void update_non_conformity_for_new_edge(
+            std::shared_ptr<SMEdge> new_edge
+            double min_radius, 
+            int max_depth, 
+            int split_counter_threshold);
 
         // Helper to remove an edge from the mesh graph
         void remove_edge_from_mesh_graph(std::shared_ptr<SMEdge> edge);
@@ -665,7 +678,11 @@ namespace thts {
         std::unordered_set<std::shared_ptr<SMEdge>> get_edges_adjacent_to_simplex(std::shared_ptr<SMSimplex> simplex) const;
 
         // Helper to add new simplices to the mesh graph
-        void add_new_simplex_to_mesh_graph(std::shared_ptr<SMSimplex> simplex);
+        void add_new_simplex_to_mesh_graph(
+            std::shared_ptr<SMSimplex> simplex, 
+            double min_radius, 
+            int max_depth, 
+            int split_counter_threshold);
     };
 
 

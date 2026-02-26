@@ -4,6 +4,22 @@
 #include "algorithms/common/decaying_temp.h"
 
 
+
+
+
+
+
+        // DENTS params
+        static constexpr double default_init_entropy_coeff=1.0;
+        static constexpr double default_entropy_coeff_decay_rate=1.0;
+
+        std::shared_ptr<Schedule> entropy_coeff_schedule_ptr;
+        bool normalise_entropy_before_adding;
+
+
+
+
+
 namespace thts {
     
     // Forward declare
@@ -15,12 +31,15 @@ namespace thts {
     struct SmDentsManagerArgs : public SmBtsManagerArgs {
         static constexpr double default_init_entropy_coeff=1.0;
         static constexpr double default_entropy_coeff_decay_rate=1.0;
+        static const bool normalise_entropy_before_adding_default=true;
 
         std::shared_ptr<Schedule> entropy_coeff_schedule_ptr;
+        bool normalise_entropy_before_adding;
 
         SmDentsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env, Eigen::ArrayXd default_q_value) :
             SmBtsManagerArgs(thts_env, default_q_value),
-            entropy_coeff_schedule_ptr(std::make_shared<SqrtSchedule>(default_init_entropy_coeff,default_entropy_coeff_decay_rate))
+            entropy_coeff_schedule_ptr(std::make_shared<SqrtSchedule>(default_init_entropy_coeff,default_entropy_coeff_decay_rate)),
+            normalise_entropy_before_adding(normalise_entropy_before_adding_default)
         {
         }
 
@@ -37,13 +56,15 @@ namespace thts {
     class SmDentsManager : public SmBtsManager {
         public:
             std::shared_ptr<Schedule> entropy_coeff_schedule_ptr;
+            bool normalise_entropy_before_adding;
 
             /**
              * Constructor.
              */    
             SmDentsManager(const SmDentsManagerArgs& args) : 
                 SmBtsManager(args),
-                entropy_coeff_schedule_ptr(args.entropy_coeff_schedule_ptr)
+                entropy_coeff_schedule_ptr(args.entropy_coeff_schedule_ptr),
+                normalise_entropy_before_adding(args.normalise_entropy_before_adding)
             {
             }
 

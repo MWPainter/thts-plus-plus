@@ -627,10 +627,11 @@ namespace thts {
 namespace thts {
 
     // Constructor
-    SMMesh::SMMesh(int dim, bool find_exact_closest_vertex, bool eventually_conforming_mesh) : 
+    SMMesh::SMMesh(int dim, bool find_exact_closest_vertex, bool eventually_conforming_mesh, bool always_allow_non_conforming_simplex_to_split) : 
         dim(dim), 
         find_exact_closest_vertex(find_exact_closest_vertex),
         eventually_conforming_mesh(eventually_conforming_mesh),
+        always_allow_non_conforming_simplex_to_split(always_allow_non_conforming_simplex_to_split),
         registry(), 
         root_simplex(nullptr), 
         all_vertices_set(),
@@ -794,7 +795,11 @@ namespace thts {
         vertex->share_values_message_passing(rand_manager, max_neighbours_to_push_to);
     }
 
-    void SMMesh::maybe_subdivide(shared_ptr<SMSimplex> simplex)
+    void SMMesh::maybe_subdivide(
+        shared_ptr<SMSimplex> simplex, 
+        double min_radius, 
+        int max_depth, 
+        int split_counter_threshold)
     {
         // Perform the subdivision if needed
         if (simplex->should_subdivide(min_radius, max_depth, split_counter_threshold)) {
@@ -809,7 +814,7 @@ namespace thts {
 
         // Get the lowest depth non-conforming simplex
         shared_ptr<SMSimplex> lowest_depth_non_conforming_simplex = this->pop_lowest_depth_non_conforming_simplex();
-        this->subdivide_simplex(lowest_depth_non_conforming_simplex);
+        this->subdivide_simplex(lowest_depth_non_conforming_simplex, min_radius, max_depth, split_counter_threshold);
     }
 
     std::string SMMesh::get_pretty_print_string() const
@@ -864,7 +869,11 @@ namespace thts {
         this->non_conforming_simplices.erase(non_conforming_simplex);
     }
 
-    void SMMesh::subdivide_simplex(shared_ptr<SMSimplex> simplex)
+    void SMMesh::subdivide_simplex(
+        shared_ptr<SMSimplex> simplex, 
+        double min_radius, 
+        int max_depth, 
+        int split_counter_threshold)
     {
         // First get the simplex to create its children
         simplex->create_children(this->registry);
@@ -923,10 +932,19 @@ namespace thts {
         this->edge_to_simplex_map[new_edge] = adjacent_simplices;
     }
 
-    void SMMesh::update_non_conformity_for_new_edge(shared_ptr<SMEdge> new_edge)
+    void SMMesh::update_non_conformity_for_new_edge(
+        shared_ptr<SMEdge> new_edge
+        double min_radius, 
+        int max_depth, 
+        int split_counter_threshold)
     {
         unordered_set<shared_ptr<SMSimplex>> adjacent_simplices = this->edge_to_simplex_map.at(new_edge);
         for (shared_ptr<SMSimplex> simplex : adjacent_simplices) {
+            if (!simplex->allowed_to_subdivide(min_radius, max_depth, split_counter_threshold)
+                && !this->always_allow_non_conforming_simplex_to_split) 
+            {
+                continue;
+            }
             if (!simplex->contains_vertex(new_edge->v0) || !simplex->contains_vertex(new_edge->v1)) {
                 simplex->is_non_conforming = true;
                 this->non_conforming_simplices.insert(simplex);
@@ -959,7 +977,11 @@ namespace thts {
         this->simplex_to_edge_map.erase(simplex);
     }
 
-    void SMMesh::add_new_simplex_to_mesh_graph(shared_ptr<SMSimplex> simplex)
+    void SMMesh::add_new_simplex_to_mesh_graph(
+        shared_ptr<SMSimplex> simplex, 
+        double min_radius, 
+        int max_depth, 
+        int split_counter_threshold)
     {
         // Get edges of simplex
         unordered_set<shared_ptr<SMEdge>> edges;
@@ -982,7 +1004,10 @@ namespace thts {
         // Update non-conformity for the new simplex
         // This new simplex is only conforming if all of its edges are in the mesh graph
         // Because mesh graph should not contain any overlapping edges, we can just compare the sizes
-        if (edges.size() != mesh_graph_edges.size()) {
+        if (edges.size() != mesh_graph_edges.size() 
+            && (simplex->allowed_to_subdivide(min_radius, max_depth, split_counter_threshold)
+                || this->always_allow_non_conforming_simplex_to_split)) 
+        {
             simplex->is_non_conforming = true;
             this->non_conforming_simplices.insert(simplex);
             this->non_conforming_simplices_by_depth[simplex->depth].push(simplex);

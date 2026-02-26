@@ -25,77 +25,73 @@ namespace thts {
      * Args object so that params can be set in a more named args way
      */
     struct SmThtsManagerArgs : public MoThtsManagerArgs {
-        static const int num_backups_before_allowed_to_split_default = -1;
+        static const int max_push_radius_default=1;
+        static const int max_neighbours_to_push_to_default=-1;
 
-        static const SimplexMapSplittingOption simplex_map_splitting_option_default = SPLIT_value_diff;
+        static const double min_simplex_radius_in_simplex_tree_default=0.01;
+        static const int max_depth_in_simplex_tree_default=std::numeric_limits<int>::max();
+        static const int simplex_split_counter_threshold_default=10;
 
-        static constexpr double simplex_node_l_inf_thresh_default = 0.05; 
-        static const int simplex_node_split_visit_thresh_default = 10;
-        static const int simplex_node_max_depth_default = std::numeric_limits<int>::max();
+        static const bool use_approx_nearest_vertex_default=false;
+        static const bool eventually_conforming_simplex_map_default=true;
+        static const bool always_allow_non_conforming_simplex_to_split_default=true;
 
-        static const bool backup_all_vertices_of_simplex_default = false;
+        int max_push_radius; // maximum number of hops to push value estimates to neighbours
+        int max_neighbours_to_push_to; // maximum number of neighbours to push value estimates to from single node
 
-        Eigen::ArrayXd default_q_value;
+        double min_simplex_radius_in_simplex_tree; // minimum radius (longest edge length) of simplices in simplex map, before stop splitting
+        int max_depth_in_simplex_tree; // maximum depth of simplices in simplex map, before stop splitting
+        int simplex_split_counter_threshold; // number of times in a row that vertexes must have different value estimates before subdividing
 
-        SimplexMapSplittingOption simplex_map_splitting_option;
+        bool use_approx_nearest_vertex; // whether to consider just containing simplex for vertex lookup (as opposed to searching 1-ring neighbourhood for actual closest)
+        bool eventually_conforming_simplex_map; // split extra nodes each iteration to eventually enforce simplex mesh conformity
+        bool always_allow_non_conforming_simplex_to_split; // even if above params' conditions are met
 
-        double simplex_node_l_inf_thresh;
-        int simplex_node_split_visit_thresh;
-        int simplex_node_max_depth;
 
-        bool backup_all_vertices_of_simplex;
 
-        SmThtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env, Eigen::ArrayXd default_q_value) :
-            MoThtsManagerArgs(thts_env),
-            default_q_value(default_q_value),
-            simplex_map_splitting_option(simplex_map_splitting_option_default),
-            simplex_node_l_inf_thresh(simplex_node_l_inf_thresh_default),
-            simplex_node_split_visit_thresh(simplex_node_split_visit_thresh_default),
-            simplex_node_max_depth(simplex_node_max_depth_default),
-            backup_all_vertices_of_simplex(backup_all_vertices_of_simplex_default)
+
+        SmThtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env) :
+            MoThtsManagerArgs(thts_env)
+            max_push_radius(max_push_radius_default),
+            max_neighbours_to_push_to(max_neighbours_to_push_to_default),
+            min_simplex_radius_in_simplex_tree(min_simplex_radius_in_simplex_tree_default),
+            max_depth_in_simplex_tree(max_depth_in_simplex_tree_default),
+            simplex_split_counter_threshold(simplex_split_counter_threshold_default),
+            use_approx_nearest_vertex(use_approx_nearest_vertex_default),
+            eventually_conforming_simplex_map(eventually_conforming_simplex_map_default),
+            always_allow_non_conforming_simplex_to_split(always_allow_non_conforming_simplex_to_split_default)
         {
-        };
+        }
 
         virtual ~SmThtsManagerArgs() = default;
     };
-    
-    /**
-     * ThtsManager + stuff for multi objective environments
-     * 
-     * Member variables (environment):
-     *      num_backups_before_allowed_to_split:
-     *          The number of backups that have to be performed at a CzBall before it is allowed to 'split' and 
-     *          create child balls.
-     */
+
     class SmThtsManager : public MoThtsManager {
         public:
-            Eigen::ArrayXd default_q_value;
 
-            SimplexMapSplittingOption simplex_map_splitting_option;
+            int max_push_radius; // maximum number of hops to push value estimates to neighbours
+            int max_neighbours_to_push_to; // maximum number of neighbours to push value estimates to from single node
 
-            double simplex_node_l_inf_thresh;
-            int simplex_node_split_visit_thresh;
-            int simplex_node_max_depth;
+            double min_simplex_radius_in_simplex_tree; // minimum radius (longest edge length) of simplices in simplex map, before stop splitting
+            int max_depth_in_simplex_tree; // maximum depth of simplices in simplex map, before stop splitting
+            int simplex_split_counter_threshold; // number of times in a row that vertexes must have different value estimates before subdividing
 
-            bool backup_all_vertices_of_simplex;
+            bool use_approx_nearest_vertex; // whether to consider just containing simplex for vertex lookup (as opposed to searching 1-ring neighbourhood for actual closest)
+            bool eventually_conforming_simplex_map; // split extra nodes each iteration to eventually enforce simplex mesh conformity
+            bool always_allow_non_conforming_simplex_to_split; // even if above params' conditions are met
 
-            std::shared_ptr<Triangulation> triangulation_ptr;
-
-            /**
-             * Constructor.
-             */    
             SmThtsManager(const SmThtsManagerArgs& args) : 
                 MoThtsManager(args),
-                default_q_value(args.default_q_value),
-                simplex_map_splitting_option(args.simplex_map_splitting_option),
-                simplex_node_l_inf_thresh(args.simplex_node_l_inf_thresh),
-                simplex_node_split_visit_thresh(args.simplex_node_split_visit_thresh),
-                simplex_node_max_depth(args.simplex_node_max_depth),
-                backup_all_vertices_of_simplex(args.backup_all_vertices_of_simplex),
-                triangulation_ptr(std::make_shared<Triangulation>(
-                    (args.simplex_map_splitting_option == SPLIT_triangulation) ? reward_dim : 0))
+                max_push_radius(args.max_push_radius),
+                max_neighbours_to_push_to(args.max_neighbours_to_push_to),
+                min_simplex_radius_in_simplex_tree(args.min_simplex_radius_in_simplex_tree),
+                max_depth_in_simplex_tree(args.max_depth_in_simplex_tree),
+                simplex_split_counter_threshold(args.simplex_split_counter_threshold),
+                use_approx_nearest_vertex(args.use_approx_nearest_vertex),
+                eventually_conforming_simplex_map(args.eventually_conforming_simplex_map),
+                always_allow_non_conforming_simplex_to_split(args.always_allow_non_conforming_simplex_to_split)
             {
-            };
+            }
 
             /**
              * Any classes intended to be inherited from should make destructor virtual
