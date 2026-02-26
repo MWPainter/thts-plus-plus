@@ -10,17 +10,17 @@ namespace thts {
         static constexpr double default_init_entropy_coeff=1.0;
         static constexpr double default_entropy_coeff_decay_rate=1.0;
         static const bool use_dp_value_default=true;
-        static const bool double_normalise_q_values_default=true;
+        static const bool normalise_entropy_before_adding_default=true;
 
         std::shared_ptr<Schedule> entropy_coeff_schedule_ptr;
         bool use_dp_value;
-        bool double_normalise_q_values;
+        bool normalise_entropy_before_adding;
 
         DentsManagerArgs(std::shared_ptr<ThtsEnv> thts_env) :
             MentsManagerArgs(thts_env),
             entropy_coeff_schedule_ptr(std::make_shared<SqrtSchedule>(default_init_entropy_coeff,default_entropy_coeff_decay_rate)),
             use_dp_value(use_dp_value_default),
-            double_normalise_q_values(double_normalise_q_values_default) {}
+            normalise_entropy_before_adding(normalise_entropy_before_adding_default) {}
 
         virtual ~DentsManagerArgs() = default;
     };
@@ -56,12 +56,12 @@ namespace thts {
         public:
             std::shared_ptr<Schedule> entropy_coeff_schedule_ptr;
             bool use_dp_value;
-            bool double_normalise_q_values;
+            bool normalise_entropy_before_adding;
             
             DentsManager(const DentsManagerArgs& args) :
                 MentsManager(args),
                 entropy_coeff_schedule_ptr(args.entropy_coeff_schedule_ptr),
                 use_dp_value(args.use_dp_value),
-                double_normalise_q_values(args.double_normalise_q_values) {};
+                normalise_entropy_before_adding(args.normalise_entropy_before_adding) {};
     };
 }

@@ -97,7 +97,7 @@ namespace thts {
         }
 
         // Normalise Q values
-        if (!for_backup && manager.double_normalise_q_values) {
+        if (!for_backup && manager.normalise_entropy_before_adding) {
             double min_q_value = numeric_limits<double>::max();
             double max_q_value = numeric_limits<double>::lowest();
             for (pair<shared_ptr<const Action>,double> pr : q_values) {
@@ -119,7 +119,7 @@ namespace thts {
         }
 
         // Normalise entropy terms
-        if (!for_backup && manager.double_normalise_q_values) {
+        if (!for_backup && manager.normalise_entropy_before_adding) {
             double min_entropy_term = numeric_limits<double>::max();
             double max_entropy_term = numeric_limits<double>::lowest();
             for (pair<shared_ptr<const Action>,double> pr : entropy_terms) {
