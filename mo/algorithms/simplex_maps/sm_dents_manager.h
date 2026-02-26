@@ -4,22 +4,6 @@
 #include "algorithms/common/decaying_temp.h"
 
 
-
-
-
-
-
-        // DENTS params
-        static constexpr double default_init_entropy_coeff=1.0;
-        static constexpr double default_entropy_coeff_decay_rate=1.0;
-
-        std::shared_ptr<Schedule> entropy_coeff_schedule_ptr;
-        bool normalise_entropy_before_adding;
-
-
-
-
-
 namespace thts {
     
     // Forward declare
