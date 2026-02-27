@@ -27,7 +27,7 @@ static const std::vector<ConfigMap> CONFIG_015 =
         {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,             -1},
         {XPR_PARAM_ID_CONVEX_HULL_TOLERANCE,            1e-9},
         {XPR_PARAM_ID_USE_SOLVED_LABELLING,              true},
-        {XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE, 0.01},
+        {XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE, 0.05},
         {XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE,         0.1},
     },
     // chvi
