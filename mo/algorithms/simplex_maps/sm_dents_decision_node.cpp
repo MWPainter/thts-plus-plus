@@ -30,51 +30,66 @@ namespace thts {
         Schedule& entropy_coeff_schedule = *manager.entropy_coeff_schedule_ptr;
         return entropy_coeff_schedule(get_num_visits(ctx));
     }
-
-    void SmDentsDNode::compute_action_weights(
+    
+    /**
+    Actually computes boltzmann action weights, given value estimates from children
+    Updates action_weights_ and sum_weights_
+    */
+    void compute_action_weights_helper_(
         ActionVector& actions,
-        unordered_map<shared_ptr<const Action>,Eigen::ArrayXd>& q_val_map,
-        unordered_map<shared_ptr<const Action>,double>& entropy_map, 
-        ActionDistr& action_weights, 
-        double& sum_action_weights, 
-        double& normalisation_term, 
-        MoThtsContext& context) const
+        MoThtsContext& context,
+        unordered_map<shared_ptr<const Action>,Vec>& value_estimate_for_search_map,
+        unordered_map<shared_ptr<const Action>,double>& entropy_estimate_map,
+        ActionDistr& action_weights_,
+        double& sum_weights_) const
     {
-        // TODO: cleaner use of opp coeff... and better documentation of what things mean
-        // E.g. get_q_value should return without opp coeff
-        // Then only use opp coeff locally where necessary
-        // Also make it "get_opp_coeff" as an inline version of this
-        // tHIS is an across library thing to do
-        double opp_coeff = is_opponent() ? -1.0 : 1.0;
+        SmDentsManager& manager = (SmDentsManager&) *thts_manager;
 
         // get temp
-        double temp = get_temp(context);
-        double entropy_coeff = get_entropy_coeff(context);
+        double temp = this->get_temp(context);
+        double entropy_coeff = this->get_entropy_coeff(context); // ++DENTS
 
-        // compute normalisation term (ctx_val already includes opp coeff)
-        normalisation_term = numeric_limits<double>::lowest();
+        // compute utility weights
+        unordered_map<shared_ptr<const Action>,double> q_utilities = this->utility_weights_from_values(
+            context.context_weight, value_estimate_for_search_map);
+
+        // Normalise the utilities
+        if (manager.normalise_q_values) {
+            thts::helper::linearly_normalise_values(q_utilities);
+        }
+
+        // Normalise entropies (++DENTS)
+        if (manager.normalise_entropy_before_adding) {
+            thts::helper::linearly_normalise_values(entropy_estimate_map);
+        }
+
+        // Update q_utilities with the entropy terms (++DENTS)
+        for (shared_ptr<const Action> action : actions) 
+        {
+            q_utilities[action] += entropy_coeff * entropy_estimate_map[action];
+        }
+
+        // Compute normalization term (for the boltzmann distribution, so max weight = exp(0) = 1)
+        double normalisation_term = numeric_limits<double>::lowest();
         for (shared_ptr<const Action> action : actions) {
-            double ctx_val = thts::helper::dot(context.context_weight.vec, q_val_map[action]);
-            ctx_val += opp_coeff * entropy_coeff * entropy_map[action];
-            double ctx_val_over_temp = ctx_val / temp;
-            if (normalisation_term < ctx_val_over_temp) {
-                normalisation_term = ctx_val_over_temp;
+            double utility_over_temp = q_utilities[action] / temp;
+            if (normalisation_term < utility_over_temp) {
+                normalisation_term = utility_over_temp;
             }
         }
 
-        // compute action weights
-        sum_action_weights = 0.0;
+        // compute action weights (boltzmann distribution)
+        sum_weights_ = 0.0;
         for (shared_ptr<const Action> action : actions) {
-            double ctx_q_value = thts::helper::dot(context.context_weight.vec, q_val_map[action]);
-            ctx_q_value += opp_coeff * entropy_coeff * entropy_map[action];
-            double action_weight = exp((ctx_q_value/temp) - normalisation_term);
-            action_weights[action] = action_weight;
-            sum_action_weights += action_weight;
+            double action_weight = exp((q_utilities[action]/temp) - normalisation_term);
+            action_weights_[action] = action_weight;
+            sum_weights_ += action_weight;
         }
     }
 
     /**
-     * See comments on NGV datatype for what the pure_backup stuff is about
+    Backup is same as BTS
+    But adds entropy backups (marked with ++DENTS)
      */
     void SmDentsDNode::backup(
         const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 
@@ -84,74 +99,101 @@ namespace thts {
         MoThtsContext& ctx) 
     {
         SmDentsManager& manager = (SmDentsManager&) *thts_manager;
+        
+        // Increment backups
         num_backups++;
 
-        // Get closest NGV in simplex map
-        shared_ptr<TN> simplex = simplex_map.get_leaf_tn_node(ctx.context_weight.vec);
-        shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight.vec);
+        // Get the simplex containing the weight for this trial + closest vertex
+        shared_ptr<SMSimplex> simplex = this->simplex_map.get_simplex(ctx.context_weight);
+        shared_ptr<SMVertex> closest_vertex = simplex->get_closest_vertex(ctx.context_weight, simplex);
+        Vec closest_vertex_weight = closest_vertex->weight;
 
-        // Make list of vertices to backup
-        vector<shared_ptr<NGV>> vertices_to_backup;
-        vertices_to_backup.push_back(closest_vertex);
-        if (manager.backup_all_vertices_of_simplex) {
-            vector<shared_ptr<NGV>>& simplex_vertices = *simplex->simplex_vertices;
-            vertices_to_backup.insert(vertices_to_backup.end(), simplex_vertices.begin(), simplex_vertices.end());
-        }
-
-        // Only get actions once - avoid pointless RPC calls
+        // Get values from children for the weight we're updating
         shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
+        unordered_map<shared_ptr<const Action>,int> q_vals_num_updates;
+        unordered_map<shared_ptr<const Action>,Vec> q_vals;
+        unordered_map<shared_ptr<const Action>,Vec> q_vals_for_search;
+        unordered_map<shared_ptr<const Action>,double> entropy_map;
+        this->fill_child_values_maps_( 
+            *actions, 
+            closest_vertex_weight, 
+            q_vals_num_updates, 
+            q_vals, 
+            q_vals_for_search, 
+            entropy_map);
 
-        // Backup at all vertices
-        for (shared_ptr<NGV> ngv : vertices_to_backup) {
+        // ++DENTS - compute action policy for entropy backups
+        ActionDistr policy;
+        double sum_weights;
+        this->compute_action_weights_helper_(
+            *actions,
+            context,
+            q_vals_for_search,
+            entropy_map,
+            policy,
+            sum_weights);
+        this->compute_action_distribution_helper_(
+            *actions,
+            context,
+            policy,
+            sum_weights);
 
-            // Want to backup according to ngv->weight, so make a context with that weight to use
-            MoThtsContext ngv_ctx(ngv->weight);
+        // Compute a new value
+        double new_utility = std::numeric_limits<double>::lowest();
+        Vec new_value = Vec(manager.reward_dim, 0.0);
+        double new_utility_for_search = std::numeric_limits<double>::lowest();
+        Vec new_value_for_search = Vec(manager.reward_dim, 0.0);
+        double subtree_entropy = 0.0; // ++DENTS
 
-            // get q vals
-            unordered_map<shared_ptr<const Action>,Eigen::ArrayXd> q_val_map;
-            unordered_map<shared_ptr<const Action>,double> entropy_map;
-            unordered_map<shared_ptr<const Action>,bool> pure_backup_val_map;
-            get_child_q_values(*actions, q_val_map, entropy_map, pure_backup_val_map, ngv_ctx);
-
-            // Compute local policy + entropy
-            ActionDistr policy;
-            compute_action_distribution(*actions, q_val_map, entropy_map, policy, ngv_ctx);
-
-            double local_entropy = 0.0;
-            for (pair<shared_ptr<const Action>,double> pr : policy) {
-                double prob = pr.second;
-                if (prob == 0.0) continue;
-                local_entropy -= prob * log(prob); 
+        for (shared_ptr<const Action> action : *actions) {
+            // If SMVertex at child is not updated, OR, child doesn't exist, skip it (dont allow backups to take default_q_utility)
+            if (q_vals_num_updates[action] == 0) {
+                continue;
             }
-
-            // dp backups + subtree entropy
-            Eigen::ArrayXd best_q_val;
-            double subtree_entropy = 0.0;
-            bool best_q_val_is_pure_backup = false;
-            double max_ctx_q_val = numeric_limits<double>::lowest();
-            for (shared_ptr<const Action> action : *actions) {
-                double ctx_q_val = thts::helper::dot(ngv->weight, q_val_map[action]);
-                if (ctx_q_val > max_ctx_q_val) {
-                    max_ctx_q_val = ctx_q_val;
-                    best_q_val = q_val_map[action];
-                    best_q_val_is_pure_backup = pure_backup_val_map[action];
-                }
-                subtree_entropy += policy[action] * entropy_map[action];
+            double q_utility = closest_vertex_weight.dot(q_vals[action]);
+            if (q_utility > new_utility) {
+                new_utility = q_utility;
+                new_values = q_vals[action];
             }
-
-            // update simplex map
-            double opp_coeff = is_opponent() ? -1.0 : 1.0;
-            ngv->value_estimate = best_q_val * opp_coeff;
-            ngv->entropy = local_entropy + subtree_entropy;
-            ngv->pure_backup_value_estimate = best_q_val_is_pure_backup;
+            double q_utility_for_search = closest_vertex_weight.dot(q_vals_for_search[action]);
+            if (q_utility_for_search > new_utility_for_search) {
+                new_utility_for_search = q_utility_for_search;
+                new_value_for_search = q_vals_for_search[action];
+            }
+            subtree_entropy += policy[action] * entropy_map[action]; // ++DENTS
         }
 
-        // Message passing / sharing + splitting
-        for (shared_ptr<NGV> ngv : vertices_to_backup) {
+        // If have a heuristic value, mix it in
+        if (this->has_heuristic_value())
+        {
             SmBtsManager& manager = (SmBtsManager&) *thts_manager;
-            simplex->maybe_subdivide(manager);
-            closest_vertex->share_values_message_passing();
+            new_value_for_search *= (num_backups - manager.heuristic_weight) / num_backups;
+            new_value_for_search += manager.heuristic_weight * heuristic_value / num_backups;
         }
+
+        // ++DENTS - Compute new entropy estimate, with local entropy + subtree entropy
+        double local_entropy = 0.0; 
+        for (pair<shared_ptr<const Action>,double> pr : policy) {
+            double prob = pr.second;
+            if (prob == 0.0) continue;
+            local_entropy -= prob * log(prob); 
+        }
+        double new_entropy = local_entropy + subtree_entropy; 
+        
+        // Actually update the SMVertex with the new values
+        this->simplex_map.update_vertex_values_and_share(
+            manager,
+            closest_vertex,
+            manager.max_push_radius,
+            manager.max_neighbours_to_push_to,
+            new_value,
+            new_value_for_search,
+            new_entropy // ++DENTS
+        );
+
+        // And maybe refine the mesh
+        this->simplex_map.maybe_subdivide(
+            simplex, manager.min_radius, manager.max_depth, manager.split_counter_threshold);
     }
 }
 

@@ -12,13 +12,11 @@ namespace thts {
     struct Triangulation;
 
     // enum for how to which rules to use to split simplices
-    enum SimplexMapSplittingOption 
+    enum ContextWeightOverwriteOption 
     {
-        SPLIT_ordered = 0,                  // split along edge with minimal ||w_1 - w_2||_inf minimised, ties broken by first edge found (will lead to the same order of splits and topology of graph each time)
-        SPLIT_smallest_edge_randomly = 1,   // split along edge with minimal ||w_1 - w_2||_inf minimised, ties broken randomly
-        SPLIT_random = 2,                   // split along a random edge (provided ||w_1 - w_2||_inf < threshold)
-        SPLIT_value_diff = 3,               // split along the edge with maximal value of ||val_1 - val_2||_2
-        SPLIT_triangulation = 4,            // split simplices using a triangulation (computed in python), rather than bin tree
+        CONTEXT_WEIGHT_OVERWRITE_NONE = 0,                              // dont overwrite context weight
+        CONTEXT_WEIGHT_OVERWRITE_UNIFORM_RANDOM_VERTEX = 1,   // overwrite context weight with a vertex sampled uniformly randomly from the simplex map at root node
+        
     };
 
     /**
@@ -36,6 +34,8 @@ namespace thts {
         static const bool eventually_conforming_simplex_map_default=true;
         static const bool always_allow_non_conforming_simplex_to_split_default=true;
 
+        static const ContextWeightOverwriteOption context_weight_overwrite_option_default=CONTEXT_WEIGHT_OVERWRITE_NONE;
+
         int max_push_radius; // maximum number of hops to push value estimates to neighbours
         int max_neighbours_to_push_to; // maximum number of neighbours to push value estimates to from single node
 
@@ -47,8 +47,7 @@ namespace thts {
         bool eventually_conforming_simplex_map; // split extra nodes each iteration to eventually enforce simplex mesh conformity
         bool always_allow_non_conforming_simplex_to_split; // even if above params' conditions are met
 
-
-
+        ContextWeightOverwriteOption context_weight_overwrite_option; // if/how to overwrite context weight at root node
 
         SmThtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env) :
             MoThtsManagerArgs(thts_env)
@@ -59,7 +58,8 @@ namespace thts {
             simplex_split_counter_threshold(simplex_split_counter_threshold_default),
             use_approx_nearest_vertex(use_approx_nearest_vertex_default),
             eventually_conforming_simplex_map(eventually_conforming_simplex_map_default),
-            always_allow_non_conforming_simplex_to_split(always_allow_non_conforming_simplex_to_split_default)
+            always_allow_non_conforming_simplex_to_split(always_allow_non_conforming_simplex_to_split_default),
+            context_weight_overwrite_option(context_weight_overwrite_option_default)
         {
         }
 
@@ -80,6 +80,8 @@ namespace thts {
             bool eventually_conforming_simplex_map; // split extra nodes each iteration to eventually enforce simplex mesh conformity
             bool always_allow_non_conforming_simplex_to_split; // even if above params' conditions are met
 
+            ContextWeightOverwriteOption context_weight_overwrite_option; // if/how to overwrite context weight at root node
+
             SmThtsManager(const SmThtsManagerArgs& args) : 
                 MoThtsManager(args),
                 max_push_radius(args.max_push_radius),
@@ -89,7 +91,8 @@ namespace thts {
                 simplex_split_counter_threshold(args.simplex_split_counter_threshold),
                 use_approx_nearest_vertex(args.use_approx_nearest_vertex),
                 eventually_conforming_simplex_map(args.eventually_conforming_simplex_map),
-                always_allow_non_conforming_simplex_to_split(args.always_allow_non_conforming_simplex_to_split)
+                always_allow_non_conforming_simplex_to_split(args.always_allow_non_conforming_simplex_to_split),
+                context_weight_overwrite_option(args.context_weight_overwrite_option)
             {
             }
 

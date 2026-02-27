@@ -38,32 +38,20 @@ namespace thts {
                 MoThtsContext& ctx)  override;
 
             /**
-             * BTS code - get value temp
+             * DENTS code - get value temp
              */
             virtual double get_entropy_coeff(MoThtsContext& ctx) const;
 
             /**
-             * BTS code - computes the weights for each action.
-             * 
-             * Args:
-             *      q_val_map:
-             *          The q 
-             *      action_weights: 
-             *          An ActionDistr to be filled with values of the form exp(q_value/temp - C), where C is equal to
-             *          max(q_value/temp)
-             *      normalisation_term:
-             *          A double reference to be filled with the value of C from 'action_weights' description.
-             *      context:
-             *          A thts env context
+             * Action distribution overrides
              */
-            virtual void compute_action_weights(
+            virtual void compute_action_weights_helper_(
                 ActionVector& actions,
-                std::unordered_map<std::shared_ptr<const Action>,Eigen::ArrayXd>& q_val_map,
-                std::unordered_map<std::shared_ptr<const Action>,double>& entropy_map, 
-                ActionDistr& action_weights, 
-                double& sum_action_weights, 
-                double& normalisation_term, 
-                MoThtsContext& context) const;
+                MoThtsContext& context,
+                std::unordered_map<std::shared_ptr<const Action>,Vec>& value_estimate_for_search_map,
+                std::unordered_map<std::shared_ptr<const Action>,double>& entropy_estimate_map,
+                ActionDistr& action_weights_,
+                double& sum_weights_) const override;
 
         /**
          * Boilerplate function definitions. 

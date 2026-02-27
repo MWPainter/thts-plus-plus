@@ -622,7 +622,7 @@ namespace thts {
             int max_neighbours_to_push_to
             const Vec& value_estimate, 
             const Vec& value_estimate_for_search, 
-            double entropy_estimate=0.0,);
+            double entropy_estimate=0.0);
 
         // Maybe subdivide a simplex, if it meets the conditions to warrent it
         // Additionally, if there are any non-conforming simplices, the lowest depth one will be subdivided

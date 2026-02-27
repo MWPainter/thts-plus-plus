@@ -33,7 +33,7 @@ namespace thts {
 
             virtual ~SmBtsDNode() = default;
             
-            virtual void visit(MoThtsContext& ctx)  override;
+            // virtual void visit(MoThtsContext& ctx)  override;
             virtual std::shared_ptr<const Action> select_action(MoThtsContext& ctx)  override;
             virtual std::shared_ptr<const Action> recommend_action(MoThtsContext& ctx) const  override;
             virtual void backup(
@@ -49,72 +49,66 @@ namespace thts {
             virtual double get_temp(MoThtsContext& ctx) const;
 
             /**
-             * BTS code - Helper to get the q-value of an action. 
-             * 
-             * TODO: cleaner entropy interface
-             * 
-             * Args:
-             *      action: 
-             *          The action to get the corresponding q value for
-             *      opponent_coeff: 
-             *          A value of -1.0 or 1.0 for if we are acting as the opponent in a two player game or not 
-             *          respectively
-             *      q_val_map:
-             *          A map of q values to be filled
+             * BTS code - Helper to get the q-value(s) from children
+             Value estimates (for search), in both MO vector + scalar utility form
+             And Entropy
+             And how many visits the vertex in the child simplex map had (in case want to ignore num_updates==0 cases)
+             
+             Adds an option to only get values from children 
+             And option to ignore children that give a value with num_updates == 0
              */
-            virtual Eigen::ArrayXd get_q_value(
+            void read_values_from_child_(
                 std::shared_ptr<const Action> action, 
-                double opponent_coeff, 
-                MoThtsContext& ctx,
-                double& entropy,
-                bool& pure_backup_val) const;
-            void get_child_q_values(
+                Vec& weight,
+                int& value_estimate_num_updates_,
+                Vec& value_estimate_,
+                Vec& value_estimate_for_search_,
+                double& entropy_estimate_,
+                bool ignore_zero_update_values=false) const;
+            void fill_child_values_maps_(
                 ActionVector& actions,
-                std::unordered_map<std::shared_ptr<const Action>,Eigen::ArrayXd>& q_val_map, 
-                std::unordered_map<std::shared_ptr<const Action>,double>& entropy_map, 
-                std::unordered_map<std::shared_ptr<const Action>,bool>& pure_backup_val_map,
-                MoThtsContext& ctx) const;
+                Vec& weight,
+                std::unordered_map<std::shared_ptr<const Action>,int>& value_estimate_num_updates_map_,
+                std::unordered_map<std::shared_ptr<const Action>,Vec>& value_estimate_map_,
+                std::unordered_map<std::shared_ptr<const Action>,Vec>& value_estimate_for_search_map_,
+                std::unordered_map<std::shared_ptr<const Action>,double>& entropy_estimate_map_) const;
+            
+            /**
+            Helpers for manupulating the maps of values from children
+             */
+            std::unordered_map<shared_ptr<const Action>,double> utility_weights_from_values(
+                Vec& weight,
+                std::unordered_map<std::shared_ptr<const Action>,Vec>& values) const;
 
             /**
-             * BTS code - computes the weights for each action.
-             * 
-             * Args:
-             *      q_val_map:
-             *          The q 
-             *      action_weights: 
-             *          An ActionDistr to be filled with values of the form exp(q_value/temp - C), where C is equal to
-             *          max(q_value/temp)
-             *      normalisation_term:
-             *          A double reference to be filled with the value of C from 'action_weights' description.
-             *      context:
-             *          A thts env context
+             * BTS code - computes the weights for each action. (weights for boltzmann distribution)
              */
-            virtual void compute_action_weights(
+            virtual void compute_action_weights_(
                 ActionVector& actions,
-                std::unordered_map<std::shared_ptr<const Action>,Eigen::ArrayXd>& q_val_map,
-                std::unordered_map<std::shared_ptr<const Action>,double>& entropy_map, 
-                ActionDistr& action_weights, 
-                double& sum_action_weights, 
-                double& normalisation_term, 
-                MoThtsContext& context) const;
+                MoThtsContext& context,
+                ActionDistr& action_weights_,
+                double& sum_weights_) const;
+            virtual void compute_action_weights_helper_(
+                ActionVector& actions,
+                MoThtsContext& context,
+                std::unordered_map<std::shared_ptr<const Action>,Vec>& value_estimate_for_search_map,
+                std::unordered_map<std::shared_ptr<const Action>,double>& entropy_estimate_map,
+                ActionDistr& action_weights_,
+                double& sum_weights_) const;
 
             /**
-             * BTS code - computes the action distribution
-             * 
-             * TODO: add ability for prior policy here at later date
-             * 
-             * Args:
-             *      action_distr:
-             *          An ActionDistr to be filled with a normalised probability distribution to select actions with
-             *      context:
-             *          A thts env context
+             * BTS code - computes the action distribution for BTS
+             Basically mixes in eps greedy mass into the boltzmann distr from compute_action_weights_
              */
-            void compute_action_distribution(
+            virtual void compute_action_distribution_(
                 ActionVector& actions,
-                std::unordered_map<std::shared_ptr<const Action>,Eigen::ArrayXd>& q_val_map,
-                std::unordered_map<std::shared_ptr<const Action>,double>& entropy_map, 
-                ActionDistr& action_distr, 
-                MoThtsContext& context) const;
+                MoThtsContext& context,
+                ActionDistr& action_distr_) const;
+            virtual void compute_action_distribution_helper_(
+                ActionVector& actions,
+                MoThtsContext& context,
+                ActionDistr& action_distr_, // helper where action_distr_ is already filled with boltzmann action weights
+                double sum_weights) const;
 
             std::string get_simplex_map_pretty_print_string() const;
 

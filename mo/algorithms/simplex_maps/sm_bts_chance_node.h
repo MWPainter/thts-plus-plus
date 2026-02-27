@@ -21,7 +21,7 @@ namespace thts {
 
         protected:
             int num_backups;
-            Eigen::ArrayXd local_reward;
+            Vec local_reward;
 
         public:
             SmBtsCNode(

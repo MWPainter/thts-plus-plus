@@ -21,15 +21,19 @@ namespace thts {
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const MoThtsDNode>(parent)),
-            simplex_map(thts_manager->reward_dim, Eigen::ArrayXd::Zero(thts_manager->reward_dim))
-            // simplex_map(thts_manager->reward_dim, thts_manager->default_q_value)
+            simplex_map(
+                thts_manager->reward_dim, 
+                !thts_manager->use_approx_nearest_vertex,
+                thts_manager->eventually_conforming_simplex_map,
+                thts_manager->always_allow_non_conforming_simplex_to_split)
     {
+        Vec zero_vec = Vec(thts_manager->reward_dim, 0.0);
+        this->simplex_map.initialise_mesh(zero_vec.vec);
     }
     
     void SmThtsCNode::visit(MoThtsContext& ctx) 
     {
         MoThtsCNode::visit_itfc(ctx);
-        // num_visits += 1;
     } 
 
     string SmThtsCNode::get_simplex_map_pretty_print_string() const {

@@ -23,15 +23,40 @@ namespace thts {
                 decision_depth,
                 decision_timestep,
                 static_pointer_cast<const MoThtsCNode>(parent)),
-            // simplex_map(thts_manager->reward_dim, thts_manager->default_q_value)
-            simplex_map(thts_manager->reward_dim, mo_heuristic_value.vec)
+            simplex_map(
+                thts_manager->reward_dim, 
+                !thts_manager->use_approx_nearest_vertex,
+                thts_manager->eventually_conforming_simplex_map,
+                thts_manager->always_allow_non_conforming_simplex_to_split)
     {
+        this->simplex_map.initialise_mesh(this->mo_heuristic_value); // garunteed to be zero vec for sink states
     }
+
     
     void SmThtsDNode::visit(MoThtsContext& ctx) 
     {
         MoThtsDNode::visit_itfc(ctx);
-        // num_visits += 1;
+        
+
+        if (is_root_node()) {
+            SmThtsManager& manager = (SmThtsManager&) *thts_manager;
+            ContextWeightOverwriteOption context_weight_overwrite_option = manager.context_weight_overwrite_option;
+            
+            if (context_weight_overwrite_option == CONTEXT_WEIGHT_OVERWRITE_NONE) 
+            {
+                // do nothing
+            }
+            else if (context_weight_overwrite_option == CONTEXT_WEIGHT_OVERWRITE_UNIFORM_RANDOM_VERTEX) 
+            {
+                throw runtime_error("Weight overwrite not implemented in current version of simplex map");
+                // NGV& random_ngv = *this->simplex_map.sample_random_ngv_vertex(*thts_manager);
+                // ctx.context_weight = random_ngv.weight;
+            }
+            else 
+            {
+                throw runtime_error("Invalid context weight overwrite option");
+            }
+        }
     } 
 
     string SmThtsDNode::get_simplex_map_pretty_print_string() const {

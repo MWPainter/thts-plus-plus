@@ -17,20 +17,20 @@ namespace thts {
         static constexpr double epsilon_default=0.5;
         static constexpr double max_explore_prob_default=1.0;
 
-        static constexpr double default_ctx_q_value_default=0.0;
+        static constexpr double default_q_utility_default=0.0;
 
         std::shared_ptr<Schedule> temp_schedule_ptr;
         double epsilon;
         double max_explore_prob;
 
-        double default_ctx_q_value;
+        double default_q_utility;
 
-        SmBtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env, Eigen::ArrayXd default_q_value) :
-            SmThtsManagerArgs(thts_env, default_q_value),
+        SmBtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env) :
+            SmThtsManagerArgs(thts_env),
             temp_schedule_ptr(std::make_shared<ConstSchedule>(temp_default)),
             epsilon(epsilon_default),
             max_explore_prob(max_explore_prob_default),
-            default_ctx_q_value(default_ctx_q_value_default)
+            default_q_utility(default_q_utility_default)
         {
         }
 
@@ -49,7 +49,7 @@ namespace thts {
             std::shared_ptr<Schedule> temp_schedule_ptr;
             double epsilon;
             double max_explore_prob;
-            double default_ctx_q_value;
+            double default_q_utility;
 
             /**
              * Constructor.
@@ -59,7 +59,7 @@ namespace thts {
                 temp_schedule_ptr(args.temp_schedule_ptr),
                 epsilon(args.epsilon),
                 max_explore_prob(args.max_explore_prob),
-                default_ctx_q_value(args.default_ctx_q_value)
+                default_q_utility(args.default_q_utility)
             {
             }
 

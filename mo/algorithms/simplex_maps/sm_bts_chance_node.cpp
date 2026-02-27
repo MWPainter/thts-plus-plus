@@ -23,7 +23,7 @@ namespace thts {
             local_reward()
     {
         MoThtsEnv& env = *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());
-        local_reward = env.get_mo_reward_itfc(state,action,*thts_manager->get_thts_context());
+        local_reward = Vec(env.get_mo_reward_itfc(state,action,*thts_manager->get_thts_context()));
     }
     
     void SmBtsCNode::visit(MoThtsContext& ctx) 
@@ -56,50 +56,52 @@ namespace thts {
     {  
         SmBtsManager& manager = (SmBtsManager&) *thts_manager;
         num_backups++;
-        
-        // Get closest NGV in simplex map
-        shared_ptr<TN> simplex = simplex_map.get_leaf_tn_node(ctx.context_weight.vec);
-        shared_ptr<NGV> closest_vertex = simplex->get_closest_ngv_vertex(ctx.context_weight.vec);
 
-        // Make list of vertices to backup
-        vector<shared_ptr<NGV>> vertices_to_backup;
-        vertices_to_backup.push_back(closest_vertex);
-        if (manager.backup_all_vertices_of_simplex) {
-            vector<shared_ptr<NGV>>& simplex_vertices = *simplex->simplex_vertices;
-            vertices_to_backup.insert(vertices_to_backup.end(), simplex_vertices.begin(), simplex_vertices.end());
+        // Get the simplex containing the weight for this trial + closest vertex
+        shared_ptr<SMSimplex> simplex = this->simplex_map.get_simplex(ctx.context_weight);
+        shared_ptr<SMVertex> closest_vertex = simplex->get_closest_vertex(ctx.context_weight, simplex);
+        Vec closest_vertex_weight = closest_vertex->weight;
+
+        // Compute backup value as avg of children's
+        Vec new_value = Vec(manager.reward_dim, 0.0);
+        Vec new_value_for_search = Vec(manager.reward_dim, 0.0);
+
+        double sum_child_n_selections = 0;
+        for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
+            shared_ptr<const Observation> observation = pr.first;
+            SmBtsDNode& child = (SmBtsDNode&) *pr.second;
+            double child_n_selections = empirical_distribution[observation];
+
+            SMVertex& child_vertex = child.simplex_map.get_vertex(closest_vertex_weight);
+            Vec child_value = child_vertex.value_estimate;
+            Vec child_value_for_search = child_vertex.value_estimate_for_search;
+
+            sum_child_n_selections += child_n_selections;
+
+            new_value *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+            new_value += child_n_selections * child_value / sum_child_n_selections;
+
+            new_value_for_search *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+            new_value_for_search += child_n_selections * child_value_for_search / sum_child_n_selections;
         }
 
-        for (shared_ptr<NGV> ngv : vertices_to_backup) {
-            // Compute average value from children
-            Eigen::ArrayXd avg_val = Eigen::ArrayXd::Zero(manager.reward_dim);
-            bool pure_backup_value_estimate = true;
-            int sum_child_backups = 0;
-            for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
-                SmBtsDNode& child = (SmBtsDNode&) *pr.second;
-                if (child.num_backups == 0) continue;
+        new_value += local_reward;
+        new_value_for_search += local_reward;
 
-                shared_ptr<TN> child_simplex = child.simplex_map.get_leaf_tn_node(ngv->weight);
-                shared_ptr<NGV> child_ngv = child_simplex->get_closest_ngv_vertex(ngv->weight);
+        // Update value in simplex map vertex
+        this->simplex_map.update_vertex_values_and_share(
+            manager,
+            closest_vertex,
+            manager.max_push_radius,
+            manager.max_neighbours_to_push_to,
+            new_value,
+            new_value_for_search,
+            0.0 // entropy estimate is not used for BTS
+        );
 
-                sum_child_backups += child.num_backups;
-                avg_val *= (sum_child_backups - child.num_backups) / sum_child_backups;
-                avg_val += child.num_backups * child_ngv->value_estimate / sum_child_backups; 
-
-                pure_backup_value_estimate = pure_backup_value_estimate && child_ngv->pure_backup_value_estimate;
-            }
-
-            // Update simplex map
-            ngv->value_estimate = avg_val + local_reward;
-            ngv->pure_backup_value_estimate = pure_backup_value_estimate;
-        }
-
-        // simplex map - splitting + message passing
-        // should be safe to push, because if value better, the child decision nodes would pick it
-        // dont want to pull outdated value estimates though
-        for (shared_ptr<NGV> ngv : vertices_to_backup) {
-            simplex->maybe_subdivide(manager);
-            closest_vertex->share_values_message_passing_push();
-        }
+        // And maybe refine the mesh
+        this->simplex_map.maybe_subdivide(
+            simplex, manager.min_radius, manager.max_depth, manager.split_counter_threshold);
     }
 
     string SmBtsCNode::get_pretty_print_val() const 
