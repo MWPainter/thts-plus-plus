@@ -13,12 +13,14 @@ namespace thts {
      * Args object so that params can be set in a more named args way
      */
     struct SmBtsManagerArgs : public SmThtsManagerArgs {
+        static const bool normalise_q_values_default=true;
         static constexpr double temp_default=1.0;
         static constexpr double epsilon_default=0.5;
         static constexpr double max_explore_prob_default=1.0;
 
         static constexpr double default_q_utility_default=0.0;
 
+        bool normalise_q_values;
         std::shared_ptr<Schedule> temp_schedule_ptr;
         double epsilon;
         double max_explore_prob;
@@ -27,6 +29,7 @@ namespace thts {
 
         SmBtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env) :
             SmThtsManagerArgs(thts_env),
+            normalise_q_values(normalise_q_values_default),
             temp_schedule_ptr(std::make_shared<ConstSchedule>(temp_default)),
             epsilon(epsilon_default),
             max_explore_prob(max_explore_prob_default),
@@ -46,6 +49,7 @@ namespace thts {
      */
     class SmBtsManager : public SmThtsManager {
         public:
+            bool normalise_q_values;
             std::shared_ptr<Schedule> temp_schedule_ptr;
             double epsilon;
             double max_explore_prob;
@@ -56,6 +60,7 @@ namespace thts {
              */    
             SmBtsManager(const SmBtsManagerArgs& args) : 
                 SmThtsManager(args),
+                normalise_q_values(args.normalise_q_values),
                 temp_schedule_ptr(args.temp_schedule_ptr),
                 epsilon(args.epsilon),
                 max_explore_prob(args.max_explore_prob),

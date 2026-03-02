@@ -88,6 +88,12 @@
             "dependsOn": ["build-py_env_server-debug", "build-moexpr-debug"],
             "dependsOrder": "sequence",
             "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "build-thts-test-debug-with-py-env",
+            "dependsOn": ["build-py_env_server-debug", "build-thts-test-debug"],
+            "dependsOrder": "sequence",
+            "problemMatcher": ["$gcc"]
         }
     ]
 }

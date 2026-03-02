@@ -38,9 +38,11 @@ namespace thts {
         SmDentsManager& manager = (SmDentsManager&) *thts_manager;
         num_backups++;
 
-        // Get the simplex containing the weight for this trial + closest vertex
-        shared_ptr<SMSimplex> simplex = this->simplex_map.get_simplex(ctx.context_weight);
-        shared_ptr<SMVertex> closest_vertex = simplex->get_closest_vertex(ctx.context_weight, simplex);
+        // Lookup closest vertex and simplex to update
+        SMVertexSMSimplexPair vertex_simplex = this->simplex_map.get_closest_vertex_and_adjoining_simplex(
+            ctx.context_weight);
+        shared_ptr<SMVertex> closest_vertex = vertex_simplex.first;
+        shared_ptr<SMSimplex> simplex_to_update = vertex_simplex.second;
         Vec closest_vertex_weight = closest_vertex->weight;
 
         // Compute backup value as avg of children's
@@ -54,7 +56,8 @@ namespace thts {
             SmBtsDNode& child = (SmBtsDNode&) *pr.second;
             double child_n_selections = empirical_distribution[observation];
 
-            SMVertex& child_vertex = child.simplex_map.get_vertex(closest_vertex_weight);
+            SMVertex& child_vertex = *child.simplex_map.get_closest_vertex(
+                closest_vertex_weight, child.simplex_map.get_simplex(closest_vertex_weight));
             Vec child_value = child_vertex.value_estimate;
             Vec child_value_for_search = child_vertex.value_estimate_for_search;
             double child_entropy = child_vertex.entropy_estimate; // ++DENTS
@@ -86,7 +89,10 @@ namespace thts {
 
         // And maybe refine the mesh
         this->simplex_map.maybe_subdivide(
-            simplex, manager.min_radius, manager.max_depth, manager.split_counter_threshold);
+            simplex_to_update, 
+            manager.min_simplex_radius_in_simplex_tree, 
+            manager.max_depth_in_simplex_tree, 
+            manager.simplex_split_counter_threshold);
     }
 }
 

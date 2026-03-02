@@ -28,7 +28,7 @@ namespace thts {
                 thts_manager->always_allow_non_conforming_simplex_to_split)
     {
         Vec zero_vec = Vec(thts_manager->reward_dim, 0.0);
-        this->simplex_map.initialise_mesh(zero_vec.vec);
+        this->simplex_map.initialise_mesh(zero_vec);
     }
     
     void SmThtsCNode::visit(MoThtsContext& ctx) 

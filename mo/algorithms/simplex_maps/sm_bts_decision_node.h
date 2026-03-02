@@ -63,8 +63,7 @@ namespace thts {
                 int& value_estimate_num_updates_,
                 Vec& value_estimate_,
                 Vec& value_estimate_for_search_,
-                double& entropy_estimate_,
-                bool ignore_zero_update_values=false) const;
+                double& entropy_estimate_) const;
             void fill_child_values_maps_(
                 ActionVector& actions,
                 Vec& weight,
@@ -76,7 +75,7 @@ namespace thts {
             /**
             Helpers for manupulating the maps of values from children
              */
-            std::unordered_map<shared_ptr<const Action>,double> utility_weights_from_values(
+            std::unordered_map<std::shared_ptr<const Action>,double> utility_weights_from_values(
                 Vec& weight,
                 std::unordered_map<std::shared_ptr<const Action>,Vec>& values) const;
 

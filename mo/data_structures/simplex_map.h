@@ -178,6 +178,18 @@ namespace thts {
     struct SMEdge;
     struct SMRegistry;
     struct SMMesh;
+
+    // Typedef for long return types from functions (basically if type is so long code is unbareably ugly then add this)
+    typedef std::pair<std::shared_ptr<SMVertex>,std::shared_ptr<SMSimplex>> SMVertexSMSimplexPair;
+    
+    /**
+    So, as I was implementing it, it turned out that SMMesh was basically the SimplexMap
+    Maybe I could have seperated the logic somehow, but SimplexMap would have been a very thin wrapper around SMMesh
+    I still want to use "SimplexMap" as the name for the class in algorithms.
+    But I am also attached to SMMesh, because that class does maintain the mesh.
+    So, I will typedef :)
+    */
+    typedef SMMesh SimplexMap;
 };
 
 
@@ -201,8 +213,6 @@ namespace std {
     struct equal_to<SMVertex> {
         size_t operator()(const SMVertex&, const SMVertex&) const;
     };
-    template<>
-    bool operator==(const SMVertex& v0, const SMVertex& v1);
 
     template<>
     struct hash<shared_ptr<SMVertex>> {
@@ -212,10 +222,6 @@ namespace std {
     struct equal_to<shared_ptr<SMVertex>> {
         size_t operator()(const shared_ptr<SMVertex>&, const shared_ptr<SMVertex>&) const;
     };
-    template<>
-    bool operator==(const shared_ptr<SMVertex>& v0, const shared_ptr<SMVertex>& v1);
-
-
 
     template<>
     struct hash<SMEdge> {
@@ -228,9 +234,6 @@ namespace std {
     };
 
     template<>
-    bool operator==(const SMEdge& e0, const SMEdge& e1);
-
-    template<>
     struct hash<shared_ptr<SMEdge>> {
         size_t operator()(const shared_ptr<SMEdge>&) const;
     };
@@ -239,12 +242,14 @@ namespace std {
     struct equal_to<shared_ptr<SMEdge>> {
         size_t operator()(const shared_ptr<SMEdge>&, const shared_ptr<SMEdge>&) const;
     };
-
-    template<>
-    bool operator==(const shared_ptr<SMEdge>& e0, const shared_ptr<SMEdge>& e1);
 }
 
 namespace thts {
+    // Having these in std namespace was creating issues with compiling for some reason
+    bool operator==(const SMVertex& v0, const SMVertex& v1);
+    bool operator==(const std::shared_ptr<SMVertex>& v0, const std::shared_ptr<SMVertex>& v1);
+    bool operator==(const SMEdge& e0, const SMEdge& e1);
+    bool operator==(const std::shared_ptr<SMEdge>& e0, const std::shared_ptr<SMEdge>& e1);
     
 
     /**
@@ -275,20 +280,17 @@ namespace thts {
 
         std::shared_ptr<std::unordered_set<std::shared_ptr<SMVertex>>> neighbours;
 
-    private:
         /**
          * Constructor
+         - wanted private, but make_shared needs it to be public
          */
-        SMVertex(const Vec& weight, const Vec& heuristic_value_estimate, double entropy_estimate=0.0);
+        SMVertex(const Vec& weight, const Vec& heuristic_value_estimate, double entropy_estimate = 0.0);
 
         /**
-         * Constructor as midpoint of two other vertices
+         * Constructor as midpoint of two other vertices (use create() instead)
          */
-        SMVertex(std::shared_ptr<SMVertex> v0, std::shared_ptr<SMVertex> v1, double ratio=0.5);
+        SMVertex(std::shared_ptr<SMVertex> v0, std::shared_ptr<SMVertex> v1, double ratio = 0.5);
 
-
-    public:
-        
         /**
          * Allow vertices to be hashed and compared
          */
@@ -368,7 +370,7 @@ namespace thts {
         std::vector<std::shared_ptr<SMVertex>> vertices;
         std::unordered_set<std::shared_ptr<SMVertex>> vertices_set;
 
-        int split_counter;
+        mutable int split_counter;
         std::pair<std::shared_ptr<SMVertex>,std::shared_ptr<SMVertex>> longest_edge;
         std::shared_ptr<SMVertex> split_vertex; // null if leaf node
         std::shared_ptr<Vec> splitting_hyperplane_normal; // null if leaf node
@@ -409,7 +411,7 @@ namespace thts {
         /**
          * Function to create children and add them to the binary tree
          */
-        void create_children(SMRegistry& registry);
+        std::shared_ptr<SMVertex> create_children(SMRegistry& registry);
         
         /**
          * return true if point is on normal side of the plane defined by halfplane_point and halfplane_normal 
@@ -468,8 +470,12 @@ namespace thts {
          */
         bool vertexes_contain_multiple_unique_values() const;
         bool allowed_to_subdivide(double min_radius, int max_depth) const;
-        bool should_subdivide(double min_radius, int max_depth, int split_counter_threshold) const;
-    }
+        bool should_subdivide(
+            double min_radius, 
+            int max_depth, 
+            int split_counter_threshold, 
+            bool always_allow_non_conforming_simplex_to_split) const;
+    };
 
     /**
      * SMEdge
@@ -487,7 +493,7 @@ namespace thts {
     These objects need to be unique, so we will use a registry to keep track of them + construct them
     And make the constructor private so that only the registry can construct them
      */
-    struct SMEdge {
+    struct SMEdge : public std::enable_shared_from_this<SMEdge> {
         friend SMRegistry;
 
         std::shared_ptr<SMVertex> v0;
@@ -495,11 +501,13 @@ namespace thts {
         std::shared_ptr<SMVertex> midpoint;
         std::shared_ptr<SMEdge> child_edge_0;
         std::shared_ptr<SMEdge> child_edge_1;
-    
-    private:
-        // Private constructore to force use of registry constructor
+
+        // Constructor (use create() instead)
+        // Wanted private, but make_shared needs it to be public, and dont care enough to sort it out right now
+        // Because we just care that thesee are only made via the registry, we double checked directly that only make_shared<SMEdge> is called from SMRegistry
+        // Everywhere else uses the registry constructor
         SMEdge(std::shared_ptr<SMVertex> v0, std::shared_ptr<SMVertex> v1);
-    
+
     public:
         // Allow edge to be hashed and compared
         size_t hash() const;
@@ -507,7 +515,7 @@ namespace thts {
         bool operator==(const SMEdge& other) const;
         bool operator!=(const SMEdge& other) const;
 
-        // Split this edge
+        // Split this edge + update the graph of vertices
         void split(SMRegistry& registry);
 
         // Get the set of smallest edges that partition this edge
@@ -585,7 +593,7 @@ namespace thts {
         std::unordered_map<std::shared_ptr<SMSimplex>, std::unordered_set<std::shared_ptr<SMEdge>>> simplex_to_edge_map;
         std::unordered_map<std::shared_ptr<SMEdge>, std::unordered_set<std::shared_ptr<SMSimplex>>> edge_to_simplex_map;
         std::unordered_set<std::shared_ptr<SMSimplex>> non_conforming_simplices;
-        std::map<int,std::queue<std::shared_ptr<SMSimplex>>> non_conforming_simplices_by_depth;
+        std::map<int,std::unordered_set<std::shared_ptr<SMSimplex>>> non_conforming_simplices_by_depth;
 
         // Constructore
         SMMesh(int dim, bool find_exact_closest_vertex=true, bool eventually_conforming_mesh=true, bool always_allow_non_conforming_simplex_to_split=true);
@@ -607,6 +615,8 @@ namespace thts {
         // Get the closest vertex to a given weight (from the simplex containing the weight)
         std::shared_ptr<SMVertex> get_closest_vertex(const Vec& weight) const;
         std::shared_ptr<SMVertex> get_closest_vertex(const Vec& weight, std::shared_ptr<SMSimplex> simplex) const;
+        SMVertexSMSimplexPair get_closest_vertex_and_adjoining_simplex(const Vec& weight) const;
+        SMVertexSMSimplexPair get_closest_vertex_and_adjoining_simplex(const Vec& weight, std::shared_ptr<SMSimplex> simplex) const;
 
         // Reading from a vertex
         int get_num_updates(std::shared_ptr<SMVertex> vertex) const;
@@ -619,7 +629,7 @@ namespace thts {
             RandManager& rand_manager,
             std::shared_ptr<SMVertex> vertex, 
             int max_push_radius,
-            int max_neighbours_to_push_to
+            int max_neighbours_to_push_to,
             const Vec& value_estimate, 
             const Vec& value_estimate_for_search, 
             double entropy_estimate=0.0);
@@ -661,38 +671,48 @@ namespace thts {
         // Helper to maybe add a new edge to the graph, and inherit connections (to simplices) from the parent edge
         void inherit_parent_edge_connections(std::shared_ptr<SMEdge> new_edge, std::shared_ptr<SMEdge> parent_edge);
 
+        // Helper to remove an edge from the mesh graph
+        void remove_edge_from_mesh_graph(std::shared_ptr<SMEdge> edge);
+
         // Helper to update simplices that may now be non-conforming, checking simplices that are adjacent to the edge
         void update_non_conformity_for_new_edge(
-            std::shared_ptr<SMEdge> new_edge
+            std::shared_ptr<SMEdge> new_edge,
             double min_radius, 
             int max_depth, 
             int split_counter_threshold);
-
-        // Helper to remove an edge from the mesh graph
-        void remove_edge_from_mesh_graph(std::shared_ptr<SMEdge> edge);
 
         // Helper to remove simplex from the mesh graph
         void remove_simplex_from_mesh_graph(std::shared_ptr<SMSimplex> simplex);
 
-        // Get the set of SMEdges that are adjacent to a given simplex
-        std::unordered_set<std::shared_ptr<SMEdge>> get_edges_adjacent_to_simplex(std::shared_ptr<SMSimplex> simplex) const;
-
         // Helper to add new simplices to the mesh graph
-        void add_new_simplex_to_mesh_graph(
+        void add_new_simplex_to_mesh_graph_and_update_vertex_graph(
             std::shared_ptr<SMSimplex> simplex, 
             double min_radius, 
             int max_depth, 
             int split_counter_threshold);
+    
+    
+    // Dont care about messy code right now, as not sure want to maintain/expose MO algorithms 
+    // Just hacking in a public version of some functions for testing
+    // Really should do this in a subclass made for testing, but meh
+    public:
+        void subdivide_simplex_test(
+            std::shared_ptr<SMSimplex> simplex, 
+            double min_radius, 
+            int max_depth, 
+            int split_counter_threshold)
+        {
+            this->subdivide_simplex(simplex, min_radius, max_depth, split_counter_threshold);
+        }
+
+
+        std::shared_ptr<SMSimplex> pop_lowest_depth_non_conforming_simplex_test()
+        {
+            return this->pop_lowest_depth_non_conforming_simplex();
+        }
+            
     };
 
 
-    /**
-    So, as I was implementing it, it turned out that SMMesh was basically the SimplexMap
-    Maybe I could have seperated the logic somehow, but SimplexMap would have been a very thin wrapper around SMMesh
-    I still want to use "SimplexMap" as the name for the class in algorithms.
-    But I am also attached to SMMesh, because that class does maintain the mesh.
-    So, I will typedef :)
-    */
-    typedef SMMesh SimplexMap;
 }
 

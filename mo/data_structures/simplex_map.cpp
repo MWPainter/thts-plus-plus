@@ -5,7 +5,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <deque>
 #include <fstream>
+#include <iterator>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -30,33 +32,33 @@ namespace thts {
     /**
     * Constructor
     */
-    SMVertex::SMVertex(const Vec& weight, const Vec& heuristic_value_estimate, double entropy_estimate) : 
+    SMVertex::SMVertex(const Vec& weight, const Vec& heuristic_value_estimate, double entropy_estimate) :
         weight(weight),
         num_direct_updates(0),
-        num_updates(0), 
+        num_updates(0),
         value_estimate(Vec(weight.size(), 0.0)),
         value_estimate_for_search(heuristic_value_estimate),
         entropy_estimate(entropy_estimate),
         neighbours(make_shared<unordered_set<shared_ptr<SMVertex>>>())
     {
-    };
+    }
 
     /**
     * Constructor as midpoint of two other vertices
     */
     SMVertex::SMVertex(shared_ptr<SMVertex> v0, shared_ptr<SMVertex> v1, double ratio) : 
-        weight(ratio * v0.weight + (1.0-ratio) * v1.weight),
+        weight(ratio * v0->weight + (1.0-ratio) * v1->weight),
         num_direct_updates(0),
         num_updates(1), // count this initialisation as a message passing update
-        value_estimate(v0.value_estimate),
-        value_estimate_for_search(v0.value_estimate_for_search),
-        entropy_estimate(v0.entropy_estimate),
+        value_estimate(v0->value_estimate),
+        value_estimate_for_search(v0->value_estimate_for_search),
+        entropy_estimate(v0->entropy_estimate),
         neighbours(make_shared<unordered_set<shared_ptr<SMVertex>>>())
     {
-        if (v1.value_estimate.dot(this->weight) > v0.value_estimate.dot(this->weight)) {
-            this->value_estimate = v1.value_estimate;
-            this->value_estimate_for_search = v1.value_estimate_for_search;
-            this->entropy_estimate = v1.entropy_estimate;
+        if (v1->value_estimate.dot(this->weight) > v0->value_estimate.dot(this->weight)) {
+            this->value_estimate = v1->value_estimate;
+            this->value_estimate_for_search = v1->value_estimate_for_search;
+            this->entropy_estimate = v1->entropy_estimate;
         }
 
         // Cannot call shared_from_this() from constructor, so need to do this manually
@@ -84,7 +86,7 @@ namespace thts {
         return equals(other);
     };
 
-    bool SMVertex::operator!=(const NGV& other) const 
+    bool SMVertex::operator!=(const SMVertex& other) const 
     {
         return !equals(other);
     };
@@ -92,30 +94,28 @@ namespace thts {
     /**
     * Message passing (BFS)
     */
-    void SMVertex::share_values_message_passing(RandManager& rand_manager, int max_push_radius, int max_neighbours_to_push_to=-1) 
-    {  
-        unordered_set<shared_ptr<SMVertex>>& vertices_to_push_to = neighbours;
+    void SMVertex::share_values_message_passing_subset(RandManager& rand_manager, int max_neighbours_to_push_to)
+    {
+        const unordered_set<shared_ptr<SMVertex>>* vertices_to_push_to = neighbours.get();
         unique_ptr<unordered_set<shared_ptr<SMVertex>>> subsample_vertices;
-        if (max_neighbours_to_push_to != -1 && max_neighbours_to_push_to < neighbours->size()) {
+        if (max_neighbours_to_push_to != -1 && static_cast<size_t>(max_neighbours_to_push_to) < neighbours->size()) {
             subsample_vertices = make_unique<unordered_set<shared_ptr<SMVertex>>>();
-            subsample_vertices->reserve(max_neighbours_to_push_to);
             std::sample(
-                neighbours->begin(), 
-                neighbours->end(), 
-                subsample_vertices->begin(), 
-                max_neighbours_to_push_to, 
+                neighbours->begin(),
+                neighbours->end(),
+                std::inserter(*subsample_vertices, subsample_vertices->begin()),
+                static_cast<size_t>(max_neighbours_to_push_to),
                 rand_manager.get_random_device());
-            vertices_to_push_to = *subsample_vertices;
-
-            for (shared_ptr<SMVertex> vertex : vertices_to_push_to) {
-                share_values_message_passing_helper(*this, *vertex);
-            }
+            vertices_to_push_to = subsample_vertices.get();
+        }
+        for (const shared_ptr<SMVertex>& vertex : *vertices_to_push_to) {
+            share_values_message_passing_helper(*this, *vertex);
         }
     }
 
     void SMVertex::share_values_message_passing(RandManager& rand_manager, int max_push_radius, int max_neighbours_to_push_to) 
     {  
-        if (max_push_radius != 1 && max_neighbours_to_push_to != -1) {""
+        if (max_push_radius != 1 && max_neighbours_to_push_to != -1) {
             throw std::invalid_argument("max_push_radius != 1 is not supported unless max_neighbours_to_push_to is set "
                 "to -1 (push to all neighbours). I.e. you can only push to a subset of neighbours, or, push in a wider "
                 "radius, but not both");
@@ -123,31 +123,32 @@ namespace thts {
 
         if (max_neighbours_to_push_to != -1)
         {
-            return  this->share_values_message_passing_subset(max_push_radius);
+            return this->share_values_message_passing_subset(rand_manager, max_neighbours_to_push_to);
         }
 
         int current_push_radius = 0;
-        queue<shared_ptr<SMVertex>> vertex_queue;
-        queue<shared_ptr<SMVertex>> next_vertex_queue;
+        deque<shared_ptr<SMVertex>> vertex_queue;
+        deque<shared_ptr<SMVertex>> next_vertex_queue;
         unordered_set<shared_ptr<SMVertex>> visited_vertices;
-        vertex_queue.push(shared_from_this());
+        vertex_queue.push_back(shared_from_this());
         visited_vertices.insert(shared_from_this());
 
         while (!vertex_queue.empty() && current_push_radius < max_push_radius) {
             shared_ptr<SMVertex> current_vertex = vertex_queue.front();
-            vertex_queue.pop();
+            vertex_queue.pop_front();
             for (shared_ptr<SMVertex> neighbour_ptr : *current_vertex->neighbours) {
                 if (visited_vertices.contains(neighbour_ptr)) continue;
-                visited_vertices.insert(neighbour_ptr);
+                visited_vertices.insert(neighbour_ptr); // we are about to "visit" (try to push to) this vertex
                 bool success = share_values_message_passing_helper(*current_vertex, *neighbour_ptr);
-                if (success && !visited_vertices.contains(neighbour_ptr)) {
-                    next_vertex_queue.push(neighbour_ptr);
+                if (success) 
+                {
+                    next_vertex_queue.push_back(neighbour_ptr);
                 }
             }
             if (vertex_queue.empty()) {
                 current_push_radius++;
                 vertex_queue = next_vertex_queue;
-                next_vertex_queue.clear();
+                next_vertex_queue = deque<shared_ptr<SMVertex>>();
             }
         }
     }
@@ -215,7 +216,7 @@ namespace thts {
     SMSimplex::SMSimplex(int dim, std::vector<std::shared_ptr<SMVertex>>& vertices, int depth) :
         dim(dim),
         vertices(vertices),
-        vertices_set(vertices),
+        vertices_set(vertices.begin(), vertices.end()),
         split_counter(0),
         longest_edge(std::make_pair(nullptr, nullptr)), // set in constructor
         split_vertex(nullptr), // initialised when splitting
@@ -229,15 +230,15 @@ namespace thts {
         // If 2D, then we want to make sure that the vertices are in the correct order in longest_edge
         if (is_2d()) 
         {
-            Vec v0 = this->vertices[0]->weight;
-            Vec v1 = this->vertices[1]->weight;
+            Vec& v0 = this->vertices[0]->weight;
+            Vec& v1 = this->vertices[1]->weight;
             if (v0[0] > v1[0]) 
             {
-                this->longest_edge = std::make_pair(v1, v0);
+                this->longest_edge = std::make_pair(this->vertices[1], this->vertices[0]);
             }
             else
             {
-                this->longest_edge = std::make_pair(v0, v1);
+                this->longest_edge = std::make_pair(this->vertices[0], this->vertices[1]);
             }
             this->radius = v0.dist(v1);
             return;
@@ -256,7 +257,7 @@ namespace thts {
         }
     }
 
-    SMSimplex::is_2d() const
+    bool SMSimplex::is_2d() const
     {
         return this->dim == 2;
     }
@@ -342,25 +343,27 @@ namespace thts {
 
     /**
      * See inline comments
+     Returns the SMVertex used to split this simplex
+     (May already exist in registry from a previous split)
     */
-    void SMSimplex::create_children(SMRegistry& registry) 
+    shared_ptr<SMVertex> SMSimplex::create_children(SMRegistry& registry) 
     {
         // create the new vertex on the longest edge (halfway between the two)
         shared_ptr<SMVertex> opposite_vertex = longest_edge.first;
         shared_ptr<SMVertex> normal_vertex = longest_edge.second;
-        this->split_vertex = registry.get_or_create_vertex(*normal_vertex, *opposite_vertex, 0.5);
+        this->split_vertex = registry.get_or_create_vertex(normal_vertex, opposite_vertex, 0.5);
 
         // In 2D, we can just make the children directly, all simplices are line segments (and have same normal)
         // Additionally, we can just point the normal from the split vertex to the normal vertex
         if (is_2d())
         {
-            this->normal_child = make_shared<SMSimplex>(
-                dim, vector<shared_ptr<SMVertex>>{this->split_vertex, normal_vertex}, depth+1);
-            this->opposite_child = make_shared<SMSimplex>(
-                dim, vector<shared_ptr<SMVertex>>{this->split_vertex, opposite_vertex}, depth+1);
+            vector<shared_ptr<SMVertex>> normal_side_vertices = {this->split_vertex, normal_vertex};
+            vector<shared_ptr<SMVertex>> opposite_side_vertices = {this->split_vertex, opposite_vertex};
+            this->normal_child = make_shared<SMSimplex>(dim, normal_side_vertices, depth+1);
+            this->opposite_child = make_shared<SMSimplex>(dim, opposite_side_vertices, depth+1);
             Vec opposite_to_normal = normal_vertex->weight - opposite_vertex->weight;
             this->splitting_hyperplane_normal = make_shared<Vec>(opposite_to_normal.normalised());
-            return;
+            return this->split_vertex;
         }
          
         // Create vector of all vertices common to both children
@@ -374,25 +377,26 @@ namespace thts {
         }
 
         // Compute normal (using the dim-1 many common points of the child simplices)
-        this->splitting_hyperplane_normal = this->compute_hyperplane_normal(child_common_simplex_vertices);
+        this->splitting_hyperplane_normal = make_shared<Vec>(this->compute_hyperplane_normal(common_vertices));
 
         // and make sure that the normal points towards the normal side child
         Vec splitting_edge_normal_dir = (normal_vertex->weight - opposite_vertex->weight);
-        if (splitting_edge_normal_dir.dot(this->splitting_hyperplane_normal) < 0.0) {
-            this->splitting_hyperplane_normal *= -1.0;
+        Vec& hyperplane_normal = *this->splitting_hyperplane_normal;
+        if (splitting_edge_normal_dir.dot(hyperplane_normal) < 0.0) {
+            this->splitting_hyperplane_normal = make_shared<Vec>(hyperplane_normal * -1.0);
         }
 
         // Normal side child simplex
-        shared_ptr<vector<shared_ptr<SMVertex>>> normal_side_child_vertices = make_shared<vector<shared_ptr<SMVertex>>>(
-            common_vertices);
-        normal_side_child_vertices->push_back(normal_vertex);
+        vector<shared_ptr<SMVertex>> normal_side_child_vertices(common_vertices);
+        normal_side_child_vertices.push_back(normal_vertex);
         this->normal_child = make_shared<SMSimplex>(dim, normal_side_child_vertices, depth+1);
 
         // Opposite side child simplex
-        shared_ptr<vector<shared_ptr<SMVertex>>> opposite_side_child_vertices = make_shared<vector<shared_ptr<SMVertex>>>(
-            common_vertices);
-        opposite_side_child_vertices->push_back(opposite_vertex);
+        vector<shared_ptr<SMVertex>> opposite_side_child_vertices(common_vertices);
+        opposite_side_child_vertices.push_back(opposite_vertex);
         this->opposite_child = make_shared<SMSimplex>(dim, opposite_side_child_vertices, depth+1);
+
+        return this->split_vertex;
     }
     /**
      * return true if point is on normal side of the plane defined by halfplane_point and halfplane_normal 
@@ -412,11 +416,12 @@ namespace thts {
      */
     shared_ptr<SMSimplex> SMSimplex::traverse(const Vec& weight) const 
     {
-        if (this->halfplane_check(this->split_vertex->weight, this->splitting_hyperplane_normal, weight)) {
+        if (this->halfplane_check(this->split_vertex->weight, *this->splitting_hyperplane_normal, weight)) 
+        {
             return this->normal_child;
-        } else {
-            return this->opposite_child;
-        }
+        } 
+        // else {
+        return this->opposite_child;
     }
 
     /**
@@ -440,7 +445,9 @@ namespace thts {
         return false;
     }
 
-    bool SMSimplex::allowed_to_subdivide(double min_radius, int max_depth, int split_counter_threshold) const
+    bool SMSimplex::allowed_to_subdivide(
+        double min_radius, 
+        int max_depth) const
     {
         if (depth >= max_depth) {
             return false;
@@ -451,29 +458,43 @@ namespace thts {
         return true;
     }
 
-    bool SMSimplex::should_subdivide(double min_radius, int max_depth, int split_counter_threshold) const
+    bool SMSimplex::should_subdivide(
+        double min_radius, 
+        int max_depth, 
+        int split_counter_threshold, 
+        bool always_allow_non_conforming_simplex_to_split) const
     {
         // If already subdivided, no need
         if (!is_leaf()) {
             return false;
         }
 
+        // If always splitting non-conforming simplices, then we can subdivide
+        if (this->is_non_conforming && always_allow_non_conforming_simplex_to_split) {
+            return true;
+        }
+
         // If not allowed to subdivide, return false
-        if (!allowed_to_subdivide(min_radius, max_depth)) {
+        if (!this->allowed_to_subdivide(min_radius, max_depth)) {
             return false;
         }
 
+        // If we are allowed to subdivide, and non conforming, we can subdivide and skip the checks
+        if (this->is_non_conforming) {
+            return true;
+        }
+
         // If vertexes all share same value estimate, reset counter and no need to subdivide
-        if (!vertexes_contain_multiple_unique_values()) {
+        if (!this->vertexes_contain_multiple_unique_values()) {
             split_counter = 0;
             return false;
         }
 
         // increment counter
-        split_counter++;
+        this->split_counter++;
 
         // if counter is greater than threshold, then we should subdivide
-        return split_counter >= split_counter_threshold;
+        return this->split_counter >= split_counter_threshold;
     }
 }
 
@@ -485,8 +506,8 @@ namespace thts {
 
 namespace thts {
 
-    SMEdge::SMEdge(shared_ptr<SMVertex> v0, shared_ptr<SMVertex> v1) : 
-        v0(v0), 
+    SMEdge::SMEdge(shared_ptr<SMVertex> v0, shared_ptr<SMVertex> v1) :
+        v0(v0),
         v1(v1),
         midpoint(nullptr),
         child_edge_0(nullptr),
@@ -517,15 +538,16 @@ namespace thts {
 
     void SMEdge::split(SMRegistry& registry)
     {
-        this->midpoint = registry.get_or_create_vertex(v0, v1, 0.5);
-        this->child_edge_0 = registry.get_or_create_edge(v0, this->midpoint);
-        this->child_edge_1 = registry.get_or_create_edge(this->midpoint, v1);
+        // Create the midpoint vertex and half edges
+        this->midpoint = registry.get_or_create_vertex(this->v0, this->v1, 0.5);
+        this->child_edge_0 = registry.get_or_create_edge(this->v0, this->midpoint);
+        this->child_edge_1 = registry.get_or_create_edge(this->midpoint, this->v1);
     }
 
     shared_ptr<unordered_set<shared_ptr<SMEdge>>> SMEdge::get_edge_partition() const
     {
         shared_ptr<unordered_set<shared_ptr<SMEdge>>> partition = make_shared<unordered_set<shared_ptr<SMEdge>>>();
-        get_edge_partition_helper(shared_from_this(), *partition);
+        this->get_edge_partition_helper(std::const_pointer_cast<SMEdge>(shared_from_this()), *partition);
         return partition;
     }
 
@@ -543,7 +565,7 @@ namespace thts {
     Vec SMEdge::find_closest_point_on_edge(const Vec& point) const
     {
         double ratio = this->find_closest_point_on_edge_ratio(point);
-        return this->v0->weight * ratio + this->v1->weight * (1.0 - ratio);
+        return this->v0->weight * (1.0-ratio) + this->v1->weight * ratio;
     }
 
     // Projects v0->point onto v0->v1 and returns the ratio of the projection
@@ -575,14 +597,14 @@ namespace thts {
 
 namespace thts {
 
-    shared_ptr<SMVertex> SMRegistry::get_or_create_vertex(const Vec& weight, const Vec& value_estimate, double entropy_estimate=0.0)
-    {  
+    shared_ptr<SMVertex> SMRegistry::get_or_create_vertex(const Vec& weight, const Vec& value_estimate, double entropy_estimate)
+    {
         // Create a new vertex and lookup the unique version of it
         shared_ptr<SMVertex> vertex = make_shared<SMVertex>(weight, value_estimate, entropy_estimate);
         return this->lookup_unique_vertex(vertex);
     }
 
-    shared_ptr<SMVertex> SMRegistry::get_or_create_vertex(shared_ptr<SMVertex> v0, shared_ptr<SMVertex> v1, double ratio=0.5)
+    shared_ptr<SMVertex> SMRegistry::get_or_create_vertex(shared_ptr<SMVertex> v0, shared_ptr<SMVertex> v1, double ratio)
     {
         // Create a new vertex and lookup the unique version of it
         shared_ptr<SMVertex> vertex = make_shared<SMVertex>(v0, v1, ratio);
@@ -677,29 +699,36 @@ namespace thts {
             this->all_vertices_vector.push_back(vertex);
         }
 
+        // Create an SMEdge for each pair of vertices
+        // And connect the SMVertices to each other
+        for (size_t i=0; i<unit_simplex_vertices.size(); i++) {
+            for (size_t j=i+1; j<unit_simplex_vertices.size(); j++) {
+                shared_ptr<SMEdge> edge = registry.get_or_create_edge(
+                    unit_simplex_vertices[i], unit_simplex_vertices[j]);
+                unit_simplex_vertices[i]->add_bidirectional_connection(unit_simplex_vertices[j]);
+            }
+        }
+
         // In 2D we don't need to worry about non-conforming simplices or the mesh graph, so we are done
         // And optionally we can turn this logic off, by setting eventually_conforming_mesh to false
         if (is_2d() || !eventually_conforming_mesh) {
             return;
         }
 
-        // Create an SMEdge for each pair of vertices
-        // Add them to the mesh graph, mapping to and from the root simplex
-        // And connect the SMVertices to each other
+        // Initialise the mesh graph maps if we are enforcing conformity
         for (size_t i=0; i<unit_simplex_vertices.size(); i++) {
             for (size_t j=i+1; j<unit_simplex_vertices.size(); j++) {
                 shared_ptr<SMEdge> edge = registry.get_or_create_edge(
                     unit_simplex_vertices[i], unit_simplex_vertices[j]);
                 this->edge_to_simplex_map[edge].insert(this->root_simplex);
                 this->simplex_to_edge_map[this->root_simplex].insert(edge);
-                unit_simplex_vertices[i]->add_bidirectional_connection(unit_simplex_vertices[j]);
             }
         }
     }
 
-    shared_ptr<SMVertex> SMMesh::sample_random_vertex() const
+    shared_ptr<SMVertex> SMMesh::sample_random_vertex(RandManager& rand_manager) const
     {
-        int rand_index = rand_manager.get_rand_int(0, this->all_vertices_vector.size());
+        int rand_index = rand_manager.get_rand_int(0, static_cast<int>(this->all_vertices_vector.size()));
         return this->all_vertices_vector.at(rand_index);
     }
 
@@ -714,48 +743,74 @@ namespace thts {
 
     shared_ptr<SMVertex> SMMesh::get_closest_vertex(const Vec& weight) const
     {
-        shared_ptr<SMSimplex> simplex = get_simplex(weight);
-        return this->get_closest_vertex(simplex, weight);
+        return this->get_closest_vertex_and_adjoining_simplex(weight).first;
     }
 
-    shared_ptr<SMVertex> SMMesh::get_closest_vertex(shared_ptr<SMSimplex> simplex, const Vec& weight) const
+    SMVertexSMSimplexPair SMMesh::get_closest_vertex_and_adjoining_simplex(const Vec& weight) const
     {
-        Vec closest_point = simplex->get_closest_vertex(weight);
-        if (!this->find_exact_closest_vertex) {
-            return closest_point;
+        shared_ptr<SMSimplex> simplex = this->get_simplex(weight);
+        return this->get_closest_vertex_and_adjoining_simplex(weight, simplex);
+    }
+
+    shared_ptr<SMVertex> SMMesh::get_closest_vertex(const Vec& weight, shared_ptr<SMSimplex> simplex) const
+    {
+        return this->get_closest_vertex_and_adjoining_simplex(weight, simplex).first;
+    }
+
+    SMVertexSMSimplexPair SMMesh::get_closest_vertex_and_adjoining_simplex(
+        const Vec& weight, shared_ptr<SMSimplex> simplex) const
+    {
+        shared_ptr<SMVertex> closest_vertex = simplex->get_closest_vertex(weight);
+        if (this->is_2d() || !this->find_exact_closest_vertex) 
+        {
+            return make_pair(closest_vertex, simplex);
         }
         
-        // Get a list of vertices that are in simplices adjacent to the given simplex
-        vector<shared_ptr<SMVertex>> adjacent_vertices;
+        // Get a list of additional vertices to check that are in simplices adjacent to the given simplex
+        vector<SMVertexSMSimplexPair> additional_vertices;
         unordered_set<shared_ptr<SMSimplex>> adjacent_simplices;
         adjacent_simplices.insert(simplex);
 
         // Loop through edges of simplex
-        for (shared_ptr<SMEdge> edge : this->simplex_to_edge_map.at(simplex)) {
+        for (shared_ptr<SMEdge> edge : this->simplex_to_edge_map.at(simplex)) 
+        {
             // Then simplices adjacent to this edge
-            for (shared_ptr<SMSimplex> adjacent_simplex : this->edge_to_simplex_map.at(edge)) {
+            for (shared_ptr<SMSimplex> adjacent_simplex : this->edge_to_simplex_map.at(edge)) 
+            {
                 // If already seen this simplex, then skip
-                if (adjacent_simplices.contains(adjacent_simplex)) {
+                if (adjacent_simplices.contains(adjacent_simplex)) 
+                {
                     continue;
                 }
                 adjacent_simplices.insert(adjacent_simplex);
-                // Then add all vertices of this simplex to the list
-                for (shared_ptr<SMVertex> vertex : adjacent_simplex->vertices) {
-                    adjacent_vertices.push_back(vertex);
+                // Then add all vertices of this simplex to the list (that we haven't already checked)
+                for (shared_ptr<SMVertex> vertex : adjacent_simplex->vertices) 
+                {
+                    if (simplex->contains_vertex(vertex))
+                    {
+                        continue;
+                    }
+                    additional_vertices.push_back(make_pair(vertex, adjacent_simplex));
                 }
             }   
         }
 
         // Find the closest vertex from these points (we can initialise with the one we already found)
-        double closest_dist = closest_point.dist(weight);
-        for (shared_ptr<SMVertex> vertex : adjacent_vertices) {
+        double closest_dist = closest_vertex->weight.dist(weight);
+        shared_ptr<SMSimplex> closest_simplex = simplex;
+        for (SMVertexSMSimplexPair& vertex_simplex_pair : additional_vertices) 
+        {
+            shared_ptr<SMVertex> vertex = vertex_simplex_pair.first;
+            shared_ptr<SMSimplex> simplex = vertex_simplex_pair.second;
             double dist = vertex->weight.dist(weight);
-            if (dist < closest_dist) {
+            if (dist < closest_dist) 
+            {
                 closest_dist = dist;
                 closest_vertex = vertex;
+                closest_simplex = simplex;
             }
         }
-        return closest_vertex;
+        return make_pair(closest_vertex, closest_simplex);
     }
 
     int SMMesh::get_num_updates(shared_ptr<SMVertex> vertex) const
@@ -781,6 +836,7 @@ namespace thts {
     void SMMesh::update_vertex_values_and_share(
         RandManager& rand_manager,
         shared_ptr<SMVertex> vertex, 
+        int max_push_radius,
         int max_neighbours_to_push_to, 
         const Vec& value_estimate, 
         const Vec& value_estimate_for_search, 
@@ -792,7 +848,7 @@ namespace thts {
         vertex->value_estimate_for_search = value_estimate_for_search;
         vertex->entropy_estimate = entropy_estimate;
 
-        vertex->share_values_message_passing(rand_manager, max_neighbours_to_push_to);
+        vertex->share_values_message_passing(rand_manager, max_push_radius, max_neighbours_to_push_to);
     }
 
     void SMMesh::maybe_subdivide(
@@ -802,8 +858,9 @@ namespace thts {
         int split_counter_threshold)
     {
         // Perform the subdivision if needed
-        if (simplex->should_subdivide(min_radius, max_depth, split_counter_threshold)) {
-            this->subdivide_simplex(simplex);
+        if (simplex->should_subdivide(min_radius, max_depth, split_counter_threshold, this->always_allow_non_conforming_simplex_to_split)) 
+        {
+            this->subdivide_simplex(simplex, min_radius, max_depth, split_counter_threshold);
         }
 
         // We are done if there are no non-conforming simplices
@@ -822,7 +879,7 @@ namespace thts {
         stringstream ss;
         ss << "Simplex map pretty print: {" << endl;
         ss << "Weight // Value" << endl;
-        for (shared_ptr<NGV> v : *n_graph_vertices) {
+        for (shared_ptr<SMVertex> v : this->all_vertices_vector) {
             ss << "[";
             for (int i=0; i<v->weight.size(); i++) {
                 ss << v->weight[i] << ",";
@@ -863,10 +920,31 @@ namespace thts {
 
     // Helper to get the lowest depth non-conforming simplex
     // Non conforming simplices are stored in a map by depth, so we can just get the first one
+    // Get the first non-conforming simplex at the lowest depth
     shared_ptr<SMSimplex> SMMesh::pop_lowest_depth_non_conforming_simplex()
     {
-        shared_ptr<SMSimplex> non_conforming_simplex = (*this->non_conforming_simplices_by_depth.begin()).second.pop();
+        // If empty, return nullptr
+        if (this->non_conforming_simplices_by_depth.empty()) 
+        {
+            return nullptr;
+        }
+
+        // Get set the first depth
+        auto it = this->non_conforming_simplices_by_depth.begin();
+        std::unordered_set<std::shared_ptr<SMSimplex>>& non_conforming_simplex_queue = it->second;
+
+        // "Pop" from the set
+        shared_ptr<SMSimplex> non_conforming_simplex = *non_conforming_simplex_queue.begin();
+        non_conforming_simplex_queue.erase(non_conforming_simplex);
+
+        // If the set for this depth is now empty, then remove the depth from the map
+        if (non_conforming_simplex_queue.empty()) {
+            this->non_conforming_simplices_by_depth.erase(it);
+        }
+
+        // Remove simplex from complete set and return
         this->non_conforming_simplices.erase(non_conforming_simplex);
+        return non_conforming_simplex;
     }
 
     void SMMesh::subdivide_simplex(
@@ -876,11 +954,13 @@ namespace thts {
         int split_counter_threshold)
     {
         // First get the simplex to create its children
-        simplex->create_children(this->registry);
+        shared_ptr<SMVertex> split_vertex = simplex->create_children(this->registry);
 
-        // If 2d, then we are actually done
-        if (is_2d()) {
-            return;
+        // Add the split vertex to sets
+        if (!this->all_vertices_set.contains(split_vertex)) 
+        {
+            this->all_vertices_set.insert(split_vertex);
+            this->all_vertices_vector.push_back(split_vertex);
         }
 
         // Get the edge corresponding to the longest edge of the simplex
@@ -889,21 +969,15 @@ namespace thts {
         shared_ptr<SMEdge> longest_edge = this->registry.get_or_create_edge(
             longest_edge_vertex_0, longest_edge_vertex_1);
 
-        // Check if this edge is currently in the mesh graph
-        // If it is not, then it has already been split by a previous subdivision
-        if (this->edge_to_simplex_map.contains(longest_edge)) 
-        {
-            // Split the edge to create two child edges
-            longest_edge->split(this->registry);
+        // Split the edge to create two child edges
+        // This updates the graph of vertices
+        // N.B. This is splitting the edge in half along the splitting hyperplane
+        longest_edge->split(this->registry);
+
+        // If 2d, then we just need to make sure vertex graph is updated correctly and then we are done
+        if (is_2d()) {
             shared_ptr<SMEdge> child_edge_0 = longest_edge->child_edge_0;
             shared_ptr<SMEdge> child_edge_1 = longest_edge->child_edge_1;
-
-            // insert these new edges into the mesh graph, by inheriting connections from the parent edge
-            this->inherit_parent_edge_connections(child_edge_0, longest_edge);
-            this->inherit_parent_edge_connections(child_edge_1, longest_edge);
-
-            // Remove the parent edge from the mesh graph
-            this->remove_edge_from_mesh(longest_edge);
 
             // Update the graph of vertices for the new edges and removal of the parent edge
             shared_ptr<SMVertex> longest_edge_v0 = longest_edge->v0;
@@ -914,42 +988,58 @@ namespace thts {
             longest_edge_midpoint->add_bidirectional_connection(longest_edge_v0);
             longest_edge_midpoint->add_bidirectional_connection(longest_edge_v1);
 
-            // Update non-conformity for the new edges
-            this->update_non_conformity_for_new_edge(child_edge_0);
-            this->update_non_conformity_for_new_edge(child_edge_1);
+            return;
         }
 
         // Now remove the parent simplex from the mesh graph
-        // And add the children simplices to the mesh graph
         this->remove_simplex_from_mesh_graph(simplex);
-        this->add_new_simplex_to_mesh_graph(simplex->normal_child);
-        this->add_new_simplex_to_mesh_graph(simplex->opposite_child);
+
+        // Check if this edge is currently in the mesh graph
+        // If it is not, then it has already been split by a previous subdivision
+        if (this->edge_to_simplex_map.contains(longest_edge)) 
+        {
+            shared_ptr<SMEdge> child_edge_0 = longest_edge->child_edge_0;
+            shared_ptr<SMEdge> child_edge_1 = longest_edge->child_edge_1;
+
+            // insert these new edges into the mesh graph, by inheriting connections from the parent edge
+            this->inherit_parent_edge_connections(child_edge_0, longest_edge);
+            this->inherit_parent_edge_connections(child_edge_1, longest_edge);
+
+            // Remove the parent edge from the mesh graph
+            this->remove_edge_from_mesh_graph(longest_edge);
+
+            // Update the graph of vertices for the new edges and removal of the parent edge
+            shared_ptr<SMVertex> longest_edge_v0 = longest_edge->v0;
+            shared_ptr<SMVertex> longest_edge_v1 = longest_edge->v1;
+            shared_ptr<SMVertex> longest_edge_midpoint = longest_edge->midpoint;
+
+            longest_edge_v0->erase_bidirectional_connection(longest_edge_v1);
+            longest_edge_midpoint->add_bidirectional_connection(longest_edge_v0);
+            longest_edge_midpoint->add_bidirectional_connection(longest_edge_v1);
+
+            // Update non-conformity for the new child edges
+            this->update_non_conformity_for_new_edge(child_edge_0, min_radius, max_depth, split_counter_threshold);
+            this->update_non_conformity_for_new_edge(child_edge_1, min_radius, max_depth, split_counter_threshold);
+        }
+
+        // Add the children simplices to the mesh graph
+        // Note that this should add the new edges along the splitting hyperplane
+        this->add_new_simplex_to_mesh_graph_and_update_vertex_graph(
+            simplex->normal_child, min_radius, max_depth, split_counter_threshold);
+        this->add_new_simplex_to_mesh_graph_and_update_vertex_graph(
+            simplex->opposite_child, min_radius, max_depth, split_counter_threshold);
     }
 
     void SMMesh::inherit_parent_edge_connections(shared_ptr<SMEdge> new_edge, shared_ptr<SMEdge> parent_edge)
     {
+        // Copy edge -> simplex connections
         unordered_set<shared_ptr<SMSimplex>> adjacent_simplices = this->edge_to_simplex_map.at(parent_edge);
         this->edge_to_simplex_map[new_edge] = adjacent_simplices;
-    }
 
-    void SMMesh::update_non_conformity_for_new_edge(
-        shared_ptr<SMEdge> new_edge
-        double min_radius, 
-        int max_depth, 
-        int split_counter_threshold)
-    {
-        unordered_set<shared_ptr<SMSimplex>> adjacent_simplices = this->edge_to_simplex_map.at(new_edge);
-        for (shared_ptr<SMSimplex> simplex : adjacent_simplices) {
-            if (!simplex->allowed_to_subdivide(min_radius, max_depth, split_counter_threshold)
-                && !this->always_allow_non_conforming_simplex_to_split) 
-            {
-                continue;
-            }
-            if (!simplex->contains_vertex(new_edge->v0) || !simplex->contains_vertex(new_edge->v1)) {
-                simplex->is_non_conforming = true;
-                this->non_conforming_simplices.insert(simplex);
-                this->non_conforming_simplices_by_depth[simplex->depth].push(simplex);
-            }
+        // Add simplex -> edge connections
+        for (shared_ptr<SMSimplex> simplex : adjacent_simplices)
+        {
+            this->simplex_to_edge_map[simplex].insert(new_edge);
         }
     }
 
@@ -965,6 +1055,32 @@ namespace thts {
         this->edge_to_simplex_map.erase(edge);
     }
 
+    void SMMesh::update_non_conformity_for_new_edge(
+        shared_ptr<SMEdge> new_edge,
+        double min_radius, 
+        int max_depth, 
+        int split_counter_threshold)
+    {
+        unordered_set<shared_ptr<SMSimplex>> adjacent_simplices = this->edge_to_simplex_map.at(new_edge);
+        for (shared_ptr<SMSimplex> simplex : adjacent_simplices) 
+        {
+            if (simplex->is_non_conforming)
+            {
+                continue;
+            }
+            if (!simplex->allowed_to_subdivide(min_radius, max_depth)
+                && !this->always_allow_non_conforming_simplex_to_split) 
+            {
+                continue;
+            }
+            if (!simplex->contains_vertex(new_edge->v0) || !simplex->contains_vertex(new_edge->v1)) {
+                simplex->is_non_conforming = true;
+                this->non_conforming_simplices.insert(simplex);
+                this->non_conforming_simplices_by_depth[simplex->depth].insert(simplex);
+            }
+        }
+    }
+
     void SMMesh::remove_simplex_from_mesh_graph(shared_ptr<SMSimplex> simplex)
     {
         // Remove pointers to this simplex
@@ -975,9 +1091,20 @@ namespace thts {
         }
         // And then remove this simplex (remove the entire entry from simplex, so the entire set of edges is removed)
         this->simplex_to_edge_map.erase(simplex);
+
+        // Also this simplex was in the non-conforming set, remove it from there
+        if (this->non_conforming_simplices.contains(simplex)) 
+        {
+            this->non_conforming_simplices.erase(simplex);
+            this->non_conforming_simplices_by_depth[simplex->depth].erase(simplex);
+            if (this->non_conforming_simplices_by_depth[simplex->depth].empty()) 
+            {
+                this->non_conforming_simplices_by_depth.erase(simplex->depth);
+            }
+        }
     }
 
-    void SMMesh::add_new_simplex_to_mesh_graph(
+    void SMMesh::add_new_simplex_to_mesh_graph_and_update_vertex_graph(
         shared_ptr<SMSimplex> simplex, 
         double min_radius, 
         int max_depth, 
@@ -995,26 +1122,34 @@ namespace thts {
         // Get edges in mesh graph along the same lines as simplex
         unordered_set<shared_ptr<SMEdge>> mesh_graph_edges;
         for (shared_ptr<SMEdge> edge : edges) {
-            unordered_set<shared_ptr<SMEdge>> edge_partition = edge->get_edge_partition();
-            for (shared_ptr<SMEdge> edge_partition_edge : edge_partition) {
+            shared_ptr<unordered_set<shared_ptr<SMEdge>>> edge_partition = edge->get_edge_partition();
+            for (shared_ptr<SMEdge> edge_partition_edge : *edge_partition) {
                 mesh_graph_edges.insert(edge_partition_edge);
             }
+        }
+
+        // SMEdge objects in the mesh graph should have their vertices connected in the vertex graph
+        // So ensure that this is the case
+        for (shared_ptr<SMEdge> edge : mesh_graph_edges)
+        {
+            edge->v0->add_bidirectional_connection(edge->v1);
         }
 
         // Update non-conformity for the new simplex
         // This new simplex is only conforming if all of its edges are in the mesh graph
         // Because mesh graph should not contain any overlapping edges, we can just compare the sizes
         if (edges.size() != mesh_graph_edges.size() 
-            && (simplex->allowed_to_subdivide(min_radius, max_depth, split_counter_threshold)
+            && (simplex->allowed_to_subdivide(min_radius, max_depth)
                 || this->always_allow_non_conforming_simplex_to_split)) 
         {
             simplex->is_non_conforming = true;
             this->non_conforming_simplices.insert(simplex);
-            this->non_conforming_simplices_by_depth[simplex->depth].push(simplex);
+            this->non_conforming_simplices_by_depth[simplex->depth].insert(simplex);
         }
 
         // For each mesh edge, add pointers to this simplex
-        for (shared_ptr<SMEdge> edge : mesh_graph_edges) {
+        for (shared_ptr<SMEdge> edge : mesh_graph_edges) 
+        {
             this->edge_to_simplex_map[edge].insert(simplex);
         }
 
@@ -1044,12 +1179,6 @@ namespace std {
         return v0.equals(v1);
     }
 
-    template<>
-    bool operator==(const SMVertex& v0, const SMVertex& v1) 
-    {
-        return v0.equals(v1);
-    }
-
     // shared_ptr<SMVertex>
     size_t hash<shared_ptr<SMVertex>>::operator()(const shared_ptr<SMVertex>& v) const 
     {
@@ -1057,12 +1186,6 @@ namespace std {
     }
 
     size_t equal_to<shared_ptr<SMVertex>>::operator()(const shared_ptr<SMVertex>& v0, const shared_ptr<SMVertex>& v1) const 
-    {
-        return v0->equals(*v1);
-    }
-
-    template<>
-    bool operator==(const shared_ptr<SMVertex>& v0, const shared_ptr<SMVertex>& v1) 
     {
         return v0->equals(*v1);
     }
@@ -1078,12 +1201,6 @@ namespace std {
         return e0.equals(e1);
     }
 
-    template<>
-    bool operator==(const SMEdge& e0, const SMEdge& e1) 
-    {
-        return e0.equals(e1);
-    }
-
     // shared_ptr<SMEdge>
     size_t hash<shared_ptr<SMEdge>>::operator()(const shared_ptr<SMEdge>& e) const 
     {
@@ -1094,8 +1211,24 @@ namespace std {
     {
         return e0->equals(*e1);
     }
+}
 
-    template<>
+namespace thts {
+    bool operator==(const SMVertex& v0, const SMVertex& v1) 
+    {
+        return v0.equals(v1);
+    }
+
+    bool operator==(const shared_ptr<SMVertex>& v0, const shared_ptr<SMVertex>& v1) 
+    {
+        return v0->equals(*v1);
+    }
+
+    bool operator==(const SMEdge& e0, const SMEdge& e1) 
+    {
+        return e0.equals(e1);
+    }
+
     bool operator==(const shared_ptr<SMEdge>& e0, const shared_ptr<SMEdge>& e1) 
     {
         return e0->equals(*e1);

@@ -35,7 +35,7 @@ namespace thts {
     Actually computes boltzmann action weights, given value estimates from children
     Updates action_weights_ and sum_weights_
     */
-    void compute_action_weights_helper_(
+    void SmDentsDNode::compute_action_weights_helper_(
         ActionVector& actions,
         MoThtsContext& context,
         unordered_map<shared_ptr<const Action>,Vec>& value_estimate_for_search_map,
@@ -103,9 +103,11 @@ namespace thts {
         // Increment backups
         num_backups++;
 
-        // Get the simplex containing the weight for this trial + closest vertex
-        shared_ptr<SMSimplex> simplex = this->simplex_map.get_simplex(ctx.context_weight);
-        shared_ptr<SMVertex> closest_vertex = simplex->get_closest_vertex(ctx.context_weight, simplex);
+        // Lookup closest vertex and simplex to update
+        SMVertexSMSimplexPair vertex_simplex = this->simplex_map.get_closest_vertex_and_adjoining_simplex(
+            ctx.context_weight);
+        shared_ptr<SMVertex> closest_vertex = vertex_simplex.first;
+        shared_ptr<SMSimplex> simplex_to_update = vertex_simplex.second;
         Vec closest_vertex_weight = closest_vertex->weight;
 
         // Get values from children for the weight we're updating
@@ -127,14 +129,14 @@ namespace thts {
         double sum_weights;
         this->compute_action_weights_helper_(
             *actions,
-            context,
+            ctx,
             q_vals_for_search,
             entropy_map,
             policy,
             sum_weights);
         this->compute_action_distribution_helper_(
             *actions,
-            context,
+            ctx,
             policy,
             sum_weights);
 
@@ -150,15 +152,15 @@ namespace thts {
             if (q_vals_num_updates[action] == 0) {
                 continue;
             }
-            double q_utility = closest_vertex_weight.dot(q_vals[action]);
+            double q_utility = closest_vertex_weight.dot(q_vals.at(action));
             if (q_utility > new_utility) {
                 new_utility = q_utility;
-                new_values = q_vals[action];
+                new_value = q_vals.at(action);
             }
-            double q_utility_for_search = closest_vertex_weight.dot(q_vals_for_search[action]);
+            double q_utility_for_search = closest_vertex_weight.dot(q_vals_for_search.at(action));
             if (q_utility_for_search > new_utility_for_search) {
                 new_utility_for_search = q_utility_for_search;
-                new_value_for_search = q_vals_for_search[action];
+                new_value_for_search = q_vals_for_search.at(action);
             }
             subtree_entropy += policy[action] * entropy_map[action]; // ++DENTS
         }
@@ -193,7 +195,10 @@ namespace thts {
 
         // And maybe refine the mesh
         this->simplex_map.maybe_subdivide(
-            simplex, manager.min_radius, manager.max_depth, manager.split_counter_threshold);
+            simplex_to_update, 
+            manager.min_simplex_radius_in_simplex_tree, 
+            manager.max_depth_in_simplex_tree, 
+            manager.simplex_split_counter_threshold);
     }
 }
 

@@ -73,24 +73,23 @@ namespace thts {
 
         for (shared_ptr<const Action> action : actions) 
         {
-            if (!has_child_node_itfc(action)) 
-            {
-                value_estimate_num_updates_ = 0;
-                value_estimate_ = Vec(dim, manager.default_q_utility);
-                value_estimate_for_search_ = Vec(dim, manager.default_q_utility);
-                entropy_estimate_ = 0.0;
-            }
-            else 
+            // Fill with default values (makes sure something exists in maps)
+            value_estimate_num_updates_map_[action] = 0;
+            value_estimate_map_.emplace(action, Vec(dim, manager.default_q_utility));
+            value_estimate_for_search_map_.emplace(action, Vec(dim, manager.default_q_utility));
+            entropy_estimate_map_[action] = 0.0;
+
+            // Overwrite with child values if child exists
+            if (has_child_node_itfc(action)) 
             {
                 this->read_values_from_child_(
                     action,
                     weight,
                     value_estimate_num_updates_map_[action],
-                    value_estimate_map_[action],
-                    value_estimate_for_search_map_[action],
-                    entropy_estimate_map_[action],
-                    ignore_zero_update_values
-                )
+                    value_estimate_map_.at(action),
+                    value_estimate_for_search_map_.at(action),
+                    entropy_estimate_map_[action]
+                );
             }
         }
     }
@@ -147,7 +146,7 @@ namespace thts {
     Actually computes boltzmann action weights, given value estimates from children
     Updates action_weights_ and sum_weights_
     */
-    void compute_action_weights_helper_(
+    void SmBtsDNode::compute_action_weights_helper_(
         ActionVector& actions,
         MoThtsContext& context,
         unordered_map<shared_ptr<const Action>,Vec>& value_estimate_for_search_map,
@@ -193,13 +192,13 @@ namespace thts {
     First gets boltzmann weights
     Second adds the epsilon greedy mass
     */
-    void SmBtsDNode::compute_action_distribution(
+    void SmBtsDNode::compute_action_distribution_(
         ActionVector& actions,
         MoThtsContext& context,
         ActionDistr& action_distr_) const
     {  
         // start with boltzmann weights
-        double sum_weights;
+        double sum_weights = 0.0;
         this->compute_action_weights_(actions, context, action_distr_, sum_weights);
         this->compute_action_distribution_helper_(actions, context, action_distr_, sum_weights);
     }
@@ -226,7 +225,7 @@ namespace thts {
         double num_actions = actions.size();
         double uniform_distr_mass = 1.0 / num_actions;
         for (shared_ptr<const Action> action : actions) {
-            action_distr_[action] *= (1.0 - lambda) / sum_weights_;
+            action_distr_[action] *= (1.0 - lambda) / sum_weights;
             // if (manager.prior_policy_search_weight > 0.0) {
             //     double lambda_tilde = manager.prior_policy_search_weight / log(get_num_visits(ctx)+3);
             //     action_distr[action] *= (1.0 - lambda_tilde);
@@ -241,7 +240,7 @@ namespace thts {
         // Compute action distribution
         shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
         ActionDistr action_distr_;
-        this->compute_action_distribution(*actions, ctx, action_distr_);
+        this->compute_action_distribution_(*actions, ctx, action_distr_);
 
         // Sample, create child node if needed, and return
         shared_ptr<const Action> selected_action = helper::sample_from_distribution(action_distr_, *thts_manager);
@@ -263,21 +262,18 @@ namespace thts {
             *actions, 
             ctx.context_weight, 
             _value_estimate_num_updates_map, 
-            q_vals, 
-            _q_vals_for_search, 
-            _entropy_map,
-            false, // ignore actions that don't have a child
-            true); // ignore actions that have num_updates == 0
+            q_vals_, 
+            _q_vals_for_search_, 
+            _entropy_map_);
 
         // If no values added, return a random action
         if (q_vals_.size() == 0) {
-            int indx = thts_manager->get_rand_int(0,actions.size());
-            shared_ptr<const Action> action = actions[indx];
-            return action;
+            int indx = thts_manager->get_rand_int(0, static_cast<int>(actions->size()));
+            return actions->at(indx);
         }
 
         // Compute utility weights
-        unordered_map<shared_ptr<const Action>,double> q_utilities = this->utility_weights_from_values(ctx, q_vals_);
+        unordered_map<shared_ptr<const Action>,double> q_utilities = this->utility_weights_from_values(ctx.context_weight, q_vals_);
 
         // Return action with max utility
         return helper::get_max_key_break_ties_randomly(q_utilities, *thts_manager);
@@ -298,9 +294,11 @@ namespace thts {
         // Increment backups
         num_backups++;
 
-        // Get the simplex containing the weight for this trial + closest vertex
-        shared_ptr<SMSimplex> simplex = this->simplex_map.get_simplex(ctx.context_weight);
-        shared_ptr<SMVertex> closest_vertex = simplex->get_closest_vertex(ctx.context_weight, simplex);
+        // Lookup closest vertex and simplex to update
+        SMVertexSMSimplexPair vertex_simplex = this->simplex_map.get_closest_vertex_and_adjoining_simplex(
+            ctx.context_weight);
+        shared_ptr<SMVertex> closest_vertex = vertex_simplex.first;
+        shared_ptr<SMSimplex> simplex_to_update = vertex_simplex.second;
         Vec closest_vertex_weight = closest_vertex->weight;
 
         // Get values from children for the weight we're updating
@@ -328,15 +326,15 @@ namespace thts {
             if (q_vals_num_updates[action] == 0) {
                 continue;
             }
-            double q_utility = closest_vertex_weight.dot(q_vals[action]);
+            double q_utility = closest_vertex_weight.dot(q_vals.at(action));
             if (q_utility > new_utility) {
                 new_utility = q_utility;
-                new_values = q_vals[action];
+                new_value = q_vals.at(action);
             }
-            double q_utility_for_search = closest_vertex_weight.dot(q_vals_for_search[action]);
+            double q_utility_for_search = closest_vertex_weight.dot(q_vals_for_search.at(action));
             if (q_utility_for_search > new_utility_for_search) {
                 new_utility_for_search = q_utility_for_search;
-                new_value_for_search = q_vals_for_search[action];
+                new_value_for_search = q_vals_for_search.at(action);
             }
         }
 
@@ -361,7 +359,10 @@ namespace thts {
 
         // And maybe refine the mesh
         this->simplex_map.maybe_subdivide(
-            simplex, manager.min_radius, manager.max_depth, manager.split_counter_threshold);
+            simplex_to_update, 
+            manager.min_simplex_radius_in_simplex_tree, 
+            manager.max_depth_in_simplex_tree, 
+            manager.simplex_split_counter_threshold);
     }
 
     string SmBtsDNode::get_pretty_print_val() const {

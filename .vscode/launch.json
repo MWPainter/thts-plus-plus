@@ -198,6 +198,47 @@
             "preLaunchTask": "build-moexpr-debug-with-py-env",
             "miDebuggerPath": "/usr/bin/gdb"
         },
+
+
+
+
+
+        {
+            "name": "Debug thts-test",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/thts-test",
+            "args": ["--gtest_filter=SimplexMap_*"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "LD_LIBRARY_PATH",
+                    "value": "${workspaceFolder}:${workspaceFolder}/external/qhull/qhull_build/lib:${workspaceFolder}/external/clp/dist/lib:/home/michael/anaconda3/envs/thts++mo/lib"
+                }
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Catch C++ exceptions (stop on throw)",
+                    "text": "catch throw",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build-thts-test-debug-with-py-env",
+            "miDebuggerPath": "/usr/bin/gdb"
+        }
     ]
 }
 

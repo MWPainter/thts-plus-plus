@@ -765,14 +765,14 @@ void sm_bts_test() {
     shared_ptr<thts::test::TestMoThtsEnv> thts_env = make_shared<thts::test::TestMoThtsEnv>(walk_len, stay_prob);
 
     // Make thts manager 
-    Eigen::ArrayXd default_val = Eigen::ArrayXd::Zero(2) - walk_len * 4;
-    shared_ptr<SmBtsManagerArgs> args = make_shared<SmBtsManagerArgs>(thts_env, default_val);
+    // Eigen::ArrayXd default_val = Eigen::ArrayXd::Zero(2) - walk_len * 4;
+    shared_ptr<SmBtsManagerArgs> args = make_shared<SmBtsManagerArgs>(thts_env);
     args->seed = 60415;
     args->max_depth = walk_len * 4;
     args->mcts_mode = false;
     args->num_threads = num_threads;
     args->num_envs = num_threads; 
-    args->simplex_map_splitting_option = SPLIT_triangulation;
+    args->mo_heuristic_fn = make_shared<MoZeroHeuristicFn>(2);
     shared_ptr<SmBtsManager> manager = make_shared<SmBtsManager>(*args);    
 
     // Run search and time
@@ -835,15 +835,14 @@ void sm_bts_4d_test() {
     shared_ptr<thts::test::TestMoThtsEnv> thts_env = make_shared<thts::test::TestMoThtsEnv>(walk_len, stay_prob, true);
 
     // Make thts manager 
-    Eigen::ArrayXd default_val = Eigen::ArrayXd::Zero(4) - walk_len * 4;
-    shared_ptr<SmBtsManagerArgs> args = make_shared<SmBtsManagerArgs>(thts_env, default_val);
+    // Eigen::ArrayXd default_val = Eigen::ArrayXd::Zero(4) - walk_len * 4;
+    shared_ptr<SmBtsManagerArgs> args = make_shared<SmBtsManagerArgs>(thts_env);
     // args->seed = 60415;
     args->max_depth = walk_len * 4;
     args->mcts_mode = false;
     args->num_threads = num_threads;
     args->num_envs = num_threads; 
-    args->simplex_node_max_depth = 3;
-    args->simplex_map_splitting_option = SPLIT_triangulation;
+    args->mo_heuristic_fn = make_shared<MoZeroHeuristicFn>(4);
     shared_ptr<SmBtsManager> manager = make_shared<SmBtsManager>(*args);
 
     // Run search and time
@@ -901,13 +900,14 @@ void sm_dents_test() {
     shared_ptr<thts::test::TestMoThtsEnv> thts_env = make_shared<thts::test::TestMoThtsEnv>(walk_len, stay_prob);
 
     // Make thts manager 
-    Eigen::ArrayXd default_val = Eigen::ArrayXd::Zero(2) - walk_len * 4;
-    shared_ptr<SmDentsManagerArgs> args = make_shared<SmDentsManagerArgs>(thts_env, default_val);
+    // Eigen::ArrayXd default_val = Eigen::ArrayXd::Zero(2) - walk_len * 4;
+    shared_ptr<SmDentsManagerArgs> args = make_shared<SmDentsManagerArgs>(thts_env);
     args->seed = 60415;
     args->max_depth = walk_len * 4;
     args->mcts_mode = false;
     args->num_threads = num_threads;
     args->num_envs = num_threads; 
+    args->mo_heuristic_fn = make_shared<MoZeroHeuristicFn>(2);
     shared_ptr<SmDentsManager> manager = make_shared<SmDentsManager>(*args);
 
     // Run search and time
@@ -949,137 +949,6 @@ void sm_dents_test() {
     mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
 
     cout << "SM-DENTS evaluations from MoMCEval." << endl;
-    cout << "Mean MO return." << endl;
-    cout << mo_mc_eval.get_mo_return_mean() << endl;
-    cout << "Mean MO ctx return." << endl;
-    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
-    cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
-}
-
-void sm_bts_bin_tree_test() {
-
-    // params
-    int walk_len = 5;
-    double stay_prob = 0.0;
-
-    int num_trials = 10000;
-    int print_tree_depth = 2;
-    int num_threads = 4;
-
-    // Setup env 
-    shared_ptr<thts::test::TestMoThtsEnv> thts_env = make_shared<thts::test::TestMoThtsEnv>(walk_len, stay_prob);
-
-    // Make thts manager 
-    Eigen::ArrayXd default_val = Eigen::ArrayXd::Zero(2) - walk_len * 4;
-    shared_ptr<SmBtsManagerArgs> args = make_shared<SmBtsManagerArgs>(thts_env, default_val);
-    args->seed = 60415;
-    args->max_depth = walk_len * 4;
-    args->mcts_mode = false;
-    args->num_threads = num_threads;
-    args->num_envs = num_threads; 
-    shared_ptr<SmBtsManager> manager = make_shared<SmBtsManager>(*args);
-
-    // Run search and time
-    shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
-    shared_ptr<SmBtsDNode> root_node = make_shared<SmBtsDNode>(manager, init_state, 0, 0);
-    shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
-    chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    thts_pool->run_trials(num_trials);
-    std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
-
-    // Print out a tree
-    cout << "SM-BTS with " << num_threads << " threads (took " << dur.count() << ")";
-    if (print_tree_depth > 0) {
-        cout << " and looks like:\n";
-        cout << root_node->get_pretty_print_string(print_tree_depth);
-    } 
-    cout << endl << endl; 
-
-    // Pretty ball lists
-    cout << "Printing SM-BTS simplex map at root node ball lists for first decision." << endl;
-    cout << root_node->get_simplex_map_pretty_print_string() << endl << endl;
-    ThtsContext ctx;
-    shared_ptr<ActionVector> actions = thts_env->get_valid_actions_itfc(init_state,ctx);
-    for (shared_ptr<const Action> action : *actions) {
-        cout << "Simplex map ball list for action " << *action << ":" << endl;
-        cout << root_node->get_child_node(action)->get_simplex_map_pretty_print_string() << endl << endl;
-    }
-    
-    // Test out Mo MC Eval
-    int num_eval_rollouts = 250;
-    shared_ptr<EvalPolicy> policy = make_shared<EvalPolicy>(root_node, thts_env, manager);
-    MoMCEvaluator mo_mc_eval(
-        policy,  
-        manager->max_depth,
-        manager,
-        Vec(Eigen::ArrayXd::Zero(2)-walk_len),
-        Vec(Eigen::ArrayXd::Zero(2)-0.5*walk_len)); 
-    // py::gil_scoped_release rel2;
-    mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
-
-    cout << "SM-BTS evaluations from MoMCEval." << endl;
-    cout << "Mean MO return." << endl;
-    cout << mo_mc_eval.get_mo_return_mean() << endl;
-    cout << "Mean MO ctx return." << endl;
-    cout << mo_mc_eval.get_mo_ctx_return_mean() << endl;
-    cout << "Mean MO normalised ctx return." << endl;
-    cout << mo_mc_eval.get_reweighted_mo_ctx_return_mean() << endl;
-}
-
-void sm_bts_bin_tree_4d_test() {
-
-    // params
-    int walk_len = 5;
-    double stay_prob = 0.0;
-
-    int num_trials = 10000;
-    int print_tree_depth = 2;
-    int num_threads = 4;
-
-    // Setup env 
-    shared_ptr<thts::test::TestMoThtsEnv> thts_env = make_shared<thts::test::TestMoThtsEnv>(walk_len, stay_prob, true);
-
-    // Make thts manager 
-    Eigen::ArrayXd default_val = Eigen::ArrayXd::Zero(4) - walk_len * 4;
-    shared_ptr<SmBtsManagerArgs> args = make_shared<SmBtsManagerArgs>(thts_env, default_val);
-    // args->seed = 60415;
-    args->max_depth = walk_len * 4;
-    args->mcts_mode = false;
-    args->num_threads = num_threads;
-    args->num_envs = num_threads; 
-    args->simplex_node_max_depth = 40;
-    shared_ptr<SmBtsManager> manager = make_shared<SmBtsManager>(*args);
-
-    // Run search and time
-    shared_ptr<const State> init_state = thts_env->get_initial_state_itfc();
-    shared_ptr<SmBtsDNode> root_node = make_shared<SmBtsDNode>(manager, init_state, 0, 0);
-    shared_ptr<ThtsPool> thts_pool = make_shared<MoThtsPool>(manager, root_node, num_threads);
-    chrono::time_point<chrono::system_clock> start_time = chrono::system_clock::now();
-    thts_pool->run_trials(num_trials);
-    std::chrono::duration<double> dur = chrono::system_clock::now() - start_time;
-
-    // Print out a tree
-    cout << "SM-BTS with " << num_threads << " threads (took " << dur.count() << ")";
-    if (print_tree_depth > 0) {
-        cout << " and looks like:\n";
-        cout << root_node->get_pretty_print_string(print_tree_depth);
-    } 
-    cout << endl << endl; 
-    
-    // Test out Mo MC Eval
-    int num_eval_rollouts = 250;
-    shared_ptr<EvalPolicy> policy = make_shared<EvalPolicy>(root_node, thts_env, manager);
-    MoMCEvaluator mo_mc_eval(
-        policy,  
-        manager->max_depth,
-        manager,
-        Vec(Eigen::ArrayXd::Zero(4)-walk_len),
-        Vec(Eigen::ArrayXd::Ones(4)/(1.0-thts_env->get_gamma()))); 
-    // py::gil_scoped_release rel2;
-    mo_mc_eval.run_rollouts(num_eval_rollouts, num_threads);
-
-    cout << "SM-BTS evaluations from MoMCEval." << endl;
     cout << "Mean MO return." << endl;
     cout << mo_mc_eval.get_mo_return_mean() << endl;
     cout << "Mean MO ctx return." << endl;
@@ -1883,45 +1752,43 @@ int main(int argc, char *argv[]) {
     /**
      * Testing py thts env
     */
-    bool bts_alpha = 1.0;
-    bool use_python_env = true;
-    py_thts_env_test(bts_alpha, use_python_env); 
+    // bool bts_alpha = 1.0;
+    // bool use_python_env = true;
+    // py_thts_env_test(bts_alpha, use_python_env); 
 
     /**
      * Testing czt
     */
-    czt_test();
-    czt_4d_test();
+    // czt_test();
+    // czt_4d_test();
 
     /**
      * Testing python gym envs 
     */
-    gym_env_test();
+    // gym_env_test();
 
     /**
      * Testing python mo gym envs
     */
-    mo_gym_env_test();
+    // mo_gym_env_test();
 
     /**
      * Testing Eigen SVD
     */
-    eigen_svd_test();
+    // eigen_svd_test();
 
     /**
      * Test simplex map
     */
-    // sm_bts_test();
-    // sm_bts_4d_test();
-    // sm_bts_bin_tree_test();
-    // sm_bts_bin_tree_4d_test();
-    // sm_dents_test();
+    sm_bts_test();
+    sm_bts_4d_test();
+    sm_dents_test();
 
     /**
      * Testing chmcts
     */
-    chmcts_test();
-    chmcts_4d_test();
+    // chmcts_test();
+    // chmcts_4d_test();
 
     /**
      * Debugging Convex hull linear programs
@@ -1935,7 +1802,7 @@ int main(int argc, char *argv[]) {
      * I tried running with ./pyex /usr and ./pyex /bin simultaneously
      * And tested trying to run a second ./pyex /usr gets a runtime error
     */
-    mo_gym_env_test();
+    // mo_gym_env_test();
 
     /**
      * Debugging simplex maps on fruit tree
@@ -1943,10 +1810,10 @@ int main(int argc, char *argv[]) {
     // compare_czt_bts_fruit_tree();
 
     // New algorithms
-    ch_bts_test();
-    ch_uct_test();
-    ch_hvuct_test();
-    ch_pareto_uct_test();
+    // ch_bts_test();
+    // ch_uct_test();
+    // ch_hvuct_test();
+    // ch_pareto_uct_test();
 
     return 0;
 }

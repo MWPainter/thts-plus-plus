@@ -20,8 +20,8 @@ namespace thts {
         std::shared_ptr<Schedule> entropy_coeff_schedule_ptr;
         bool normalise_entropy_before_adding;
 
-        SmDentsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env, Eigen::ArrayXd default_q_value) :
-            SmBtsManagerArgs(thts_env, default_q_value),
+        SmDentsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env) :
+            SmBtsManagerArgs(thts_env),
             entropy_coeff_schedule_ptr(std::make_shared<SqrtSchedule>(default_init_entropy_coeff,default_entropy_coeff_decay_rate)),
             normalise_entropy_before_adding(normalise_entropy_before_adding_default)
         {

@@ -23,10 +23,10 @@ namespace thts {
      * Args object so that params can be set in a more named args way
      */
     struct SmThtsManagerArgs : public MoThtsManagerArgs {
-        static const int max_push_radius_default=1;
+        static const int max_push_radius_default=5;
         static const int max_neighbours_to_push_to_default=-1;
 
-        static const double min_simplex_radius_in_simplex_tree_default=0.01;
+        static constexpr double min_simplex_radius_in_simplex_tree_default=0.01;
         static const int max_depth_in_simplex_tree_default=std::numeric_limits<int>::max();
         static const int simplex_split_counter_threshold_default=10;
 
@@ -50,7 +50,7 @@ namespace thts {
         ContextWeightOverwriteOption context_weight_overwrite_option; // if/how to overwrite context weight at root node
 
         SmThtsManagerArgs(std::shared_ptr<MoThtsEnv> thts_env) :
-            MoThtsManagerArgs(thts_env)
+            MoThtsManagerArgs(thts_env),
             max_push_radius(max_push_radius_default),
             max_neighbours_to_push_to(max_neighbours_to_push_to_default),
             min_simplex_radius_in_simplex_tree(min_simplex_radius_in_simplex_tree_default),
