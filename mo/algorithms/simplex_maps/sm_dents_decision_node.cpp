@@ -143,9 +143,9 @@ namespace thts {
 
         // Compute a new value
         double new_utility = std::numeric_limits<double>::lowest();
-        Vec new_value = Vec(manager.reward_dim, 0.0);
+        Vec new_value = Vec::Zero(manager.reward_dim);
         double new_utility_for_search = std::numeric_limits<double>::lowest();
-        Vec new_value_for_search = Vec(manager.reward_dim, 0.0);
+        Vec new_value_for_search = Vec::Zero(manager.reward_dim);
         double subtree_entropy = 0.0; // ++DENTS
 
         for (shared_ptr<const Action> action : *actions) {

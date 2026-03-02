@@ -29,7 +29,7 @@ namespace thts {
 
         // Add running reward to context
         ChChebyUctManager& manager = (ChChebyUctManager&) *thts_manager;
-        Vec running_reward = Vec(manager.reward_dim);
+        Vec running_reward = Vec::Zero(manager.reward_dim);
         if (ctx.context_map_contains(RUNNING_REWARD_CTX_KEY)) {
             running_reward = ctx.get_value<Vec>(RUNNING_REWARD_CTX_KEY);
         }

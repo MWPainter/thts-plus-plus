@@ -20,17 +20,11 @@ namespace thts {
                 decision_timestep,
                 static_pointer_cast<const SmThtsDNode>(parent)),
             num_backups(0),
-            local_reward(thts_manager->reward_dim, 0.0)
+            local_reward(Vec::Zero(thts_manager->reward_dim))
     {
         MoThtsEnv& env = *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());
         local_reward = Vec(env.get_mo_reward_itfc(state,action,*thts_manager->get_thts_context()));
     }
-    
-    void SmBtsCNode::visit(MoThtsContext& ctx) 
-    {
-        SmThtsCNode::visit_itfc(ctx);
-        // num_visits += 1;
-    }  
 
     shared_ptr<const State> SmBtsCNode::sample_observation(MoThtsContext& ctx) 
     {
@@ -65,8 +59,8 @@ namespace thts {
         Vec closest_vertex_weight = closest_vertex->weight;
 
         // Compute backup value as avg of children's
-        Vec new_value = Vec(manager.reward_dim, 0.0);
-        Vec new_value_for_search = Vec(manager.reward_dim, 0.0);
+        Vec new_value = Vec::Zero(manager.reward_dim);
+        Vec new_value_for_search = Vec::Zero(manager.reward_dim);
 
         double sum_child_n_selections = 0;
         for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {

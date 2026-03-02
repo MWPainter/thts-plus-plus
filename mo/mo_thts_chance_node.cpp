@@ -21,7 +21,7 @@ namespace thts {
         int decision_timestep,
         shared_ptr<const MoThtsDNode> parent) :
             ThtsCNode(SkipLocalRewardInit{}, thts_manager, state, action, decision_depth, decision_timestep, parent),
-            vector_visit_count(thts_manager->reward_dim),
+            vector_visit_count(Vec::Zero(thts_manager->reward_dim)),
             local_backups(0),
             total_cnode_backups_in_subtree(0),
             total_dnode_backups_in_subtree(0),

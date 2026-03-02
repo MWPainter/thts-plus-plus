@@ -28,8 +28,8 @@ namespace thts {
         shared_ptr<const MoThtsCNode> parent,
         bool eval_mo_heuristic) :
             ThtsDNode(thts_manager, state, decision_depth, decision_timestep, parent),
-            mo_heuristic_value(thts_manager->reward_dim, 0.0),
-            vector_visit_count(thts_manager->reward_dim, 0.0),
+            mo_heuristic_value(Vec::Zero(thts_manager->reward_dim)),
+            vector_visit_count(Vec::Zero(thts_manager->reward_dim)),
             local_backups(0),
             total_cnode_backups_in_subtree(0),
             total_dnode_backups_in_subtree(0),
@@ -47,7 +47,7 @@ namespace thts {
             MoThtsEnv& mo_thts_env = (MoThtsEnv&) *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());
             MoHeuristicFn& mo_heuristic_fn = *thts_manager->mo_heuristic_fn;
             mo_heuristic_value = mo_heuristic_fn(state, mo_thts_env, *thts_manager, decision_depth);
-            vector_visit_count = Vec(thts_manager->reward_dim, thts_manager->heuristic_psuedo_trials);
+            vector_visit_count = Vec::Const(thts_manager->reward_dim, thts_manager->heuristic_psuedo_trials);
             num_visits = thts_manager->heuristic_psuedo_trials;
             local_backups = thts_manager->heuristic_psuedo_trials;
         }

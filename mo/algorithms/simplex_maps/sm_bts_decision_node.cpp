@@ -75,8 +75,8 @@ namespace thts {
         {
             // Fill with default values (makes sure something exists in maps)
             value_estimate_num_updates_map_[action] = 0;
-            value_estimate_map_.emplace(action, Vec(dim, manager.default_q_utility));
-            value_estimate_for_search_map_.emplace(action, Vec(dim, manager.default_q_utility));
+            value_estimate_map_.emplace(action, Vec::Const(dim, manager.default_q_utility));
+            value_estimate_for_search_map_.emplace(action, Vec::Const(dim, manager.default_q_utility));
             entropy_estimate_map_[action] = 0.0;
 
             // Overwrite with child values if child exists
@@ -317,9 +317,9 @@ namespace thts {
 
         // Compute a new value
         double new_utility = std::numeric_limits<double>::lowest();
-        Vec new_value = Vec(manager.reward_dim, 0.0);
+        Vec new_value = Vec::Zero(manager.reward_dim);
         double new_utility_for_search = std::numeric_limits<double>::lowest();
-        Vec new_value_for_search = Vec(manager.reward_dim, 0.0);
+        Vec new_value_for_search = Vec::Zero(manager.reward_dim);
 
         for (shared_ptr<const Action> action : *actions) {
             // If SMVertex at child is not updated, OR, child doesn't exist, skip it (dont allow backups to take default_q_utility)

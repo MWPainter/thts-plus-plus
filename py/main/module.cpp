@@ -1778,17 +1778,17 @@ int main(int argc, char *argv[]) {
     // eigen_svd_test();
 
     /**
+     * Testing chmcts
+    */
+    chmcts_test();
+    chmcts_4d_test();
+
+    /**
      * Test simplex map
     */
     sm_bts_test();
     sm_bts_4d_test();
     sm_dents_test();
-
-    /**
-     * Testing chmcts
-    */
-    // chmcts_test();
-    // chmcts_4d_test();
 
     /**
      * Debugging Convex hull linear programs

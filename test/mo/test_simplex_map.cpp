@@ -292,7 +292,7 @@ TEST(SimplexMap_SMMesh, get_closest_vertex_2d) {
 
 TEST(SimplexMap_SMMesh, get_closest_vertex_3d) {
     SMMesh mesh(3, true, true, true);
-    Vec heuristic = Vec(3);
+    Vec heuristic = Vec::Zero(3);
     mesh.initialise_mesh(heuristic);
     shared_ptr<SMVertex> closest = mesh.get_closest_vertex(make_vec(0.75, 0.25, 0.0));
     EXPECT_TRUE(closest->weight.equals(make_vec(1.0, 0.0, 0.0)));

@@ -27,14 +27,9 @@ namespace thts {
                 thts_manager->eventually_conforming_simplex_map,
                 thts_manager->always_allow_non_conforming_simplex_to_split)
     {
-        Vec zero_vec = Vec(thts_manager->reward_dim, 0.0);
+        Vec zero_vec = Vec::Zero(thts_manager->reward_dim);
         this->simplex_map.initialise_mesh(zero_vec);
     }
-    
-    void SmThtsCNode::visit(MoThtsContext& ctx) 
-    {
-        MoThtsCNode::visit_itfc(ctx);
-    } 
 
     string SmThtsCNode::get_simplex_map_pretty_print_string() const {
         return simplex_map.get_pretty_print_string();
@@ -67,8 +62,7 @@ namespace thts {
 namespace thts {
     void SmThtsCNode::visit_itfc(ThtsContext& ctx) 
     {
-        MoThtsContext& ctx_itfc = (MoThtsContext&) ctx;
-        visit(ctx_itfc);
+        MoThtsCNode::visit_itfc(ctx);
     }
     
     shared_ptr<const Observation> SmThtsCNode::sample_observation_itfc(ThtsContext& ctx) 

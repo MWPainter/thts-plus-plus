@@ -36,7 +36,6 @@ namespace thts {
     void SmThtsDNode::visit(MoThtsContext& ctx) 
     {
         MoThtsDNode::visit_itfc(ctx);
-        
 
         if (is_root_node()) {
             SmThtsManager& manager = (SmThtsManager&) *thts_manager;

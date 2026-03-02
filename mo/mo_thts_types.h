@@ -66,7 +66,11 @@ namespace thts {
             Vec(const std::vector<double>& v);
             Vec(const Vec& other);
             Vec(Vec&& other);
-            Vec(int dim, float val=0.0);
+
+            /** Create a zero vector of the given dimension */
+            static Vec Zero(int dim);
+            /** Create a constant vector of the given dimension with every element set to init_val */
+            static Vec Const(int dim, double init_val);
 
             int size() const;
             int dim() const;
@@ -84,7 +88,8 @@ namespace thts {
             bool approx_equals(const Vec& other, double tolerance = 1e-9) const;
             std::size_t hash() const;
 
-            Vec operator+(const double s) const;
+            Vec& operator+=(const double s);
+            Vec& operator*=(const double s);
 
             Vec operator+(const Vec& other) const;
             Vec operator-(const Vec& other) const;

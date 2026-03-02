@@ -36,7 +36,7 @@ namespace thts {
 
             virtual ~SmThtsCNode() = default;
             
-            virtual void visit(MoThtsContext& ctx);
+            // virtual void visit(MoThtsContext& ctx);
             virtual std::shared_ptr<const State> sample_observation(MoThtsContext& ctx) = 0;
             virtual void backup(
                 const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 

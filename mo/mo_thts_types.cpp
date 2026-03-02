@@ -114,12 +114,12 @@ namespace thts {
         vec = std::move(other.vec);
     }
 
-    Vec::Vec(int dim, float val) :
-        vec()
-    {
-        // Apparently eigen does some fast stuff and better not to init in initialiser list
-        // https://stackoverflow.com/questions/47644021/eigen-copy-constructor-vs-operator-performance
-        vec = Eigen::ArrayXd::Constant(dim, val);
+    Vec Vec::Zero(int dim) {
+        return Vec(Eigen::ArrayXd::Zero(dim));
+    }
+
+    Vec Vec::Const(int dim, double init_val) {
+        return Vec(Eigen::ArrayXd::Constant(dim, init_val));
     }
 
     int Vec::size() const {
@@ -203,11 +203,15 @@ namespace thts {
 
 
 
-    Vec Vec::operator+(const double s) const {
-        return Vec(vec + s);
+    Vec& Vec::operator+=(const double s) {
+        vec += s;
+        return *this;
     }
 
-
+    Vec& Vec::operator*=(const double s) {
+        vec *= s;
+        return *this;
+    }
 
 
     Vec Vec::operator+(const Vec& other) const {

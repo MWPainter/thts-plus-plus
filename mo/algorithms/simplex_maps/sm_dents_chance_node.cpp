@@ -46,8 +46,8 @@ namespace thts {
         Vec closest_vertex_weight = closest_vertex->weight;
 
         // Compute backup value as avg of children's
-        Vec new_value = Vec(manager.reward_dim, 0.0);
-        Vec new_value_for_search = Vec(manager.reward_dim, 0.0);
+        Vec new_value = Vec::Zero(manager.reward_dim);
+        Vec new_value_for_search = Vec::Zero(manager.reward_dim);
         double subtree_entropy = 0.0; // ++DENTS
 
         double sum_child_n_selections = 0;

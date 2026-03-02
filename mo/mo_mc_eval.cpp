@@ -64,7 +64,7 @@ namespace thts {
 
         // Bookkeeping
         int num_actions_taken = 0;
-        Vec mo_sample_return = Vec(thts_env->get_reward_dim(), 0.0);
+        Vec mo_sample_return = Vec::Zero(thts_env->get_reward_dim());
 
         // Start trial
         // shared_ptr<MoThtsContext> mo_context = static_pointer_cast<MoThtsContext>(
@@ -128,7 +128,7 @@ namespace thts {
         shared_ptr<MoThtsEnv> thts_env = dynamic_pointer_cast<MoThtsEnv>(manager->thts_env());
         int reward_dim = thts_env->get_reward_dim();
         double weight = 1.0 / mo_sampled_returns.size();
-        Vec mean = Vec(reward_dim, 0.0);
+        Vec mean = Vec::Zero(reward_dim);
         for (Vec val : mo_sampled_returns) {
             mean += weight * val;
         }
@@ -162,7 +162,7 @@ namespace thts {
         double reward_dim = thts_env->get_reward_dim();
         Vec mean = get_mo_return_mean();
         double weight = 1.0 / mo_sampled_returns.size();
-        Vec stddev = Vec(reward_dim, 0.0);
+        Vec stddev = Vec::Zero(reward_dim);
         for (Vec val : mo_sampled_returns) {
             Vec diff = val - mean;
             stddev += weight * (diff * diff);

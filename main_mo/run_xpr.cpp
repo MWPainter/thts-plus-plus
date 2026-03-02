@@ -427,7 +427,7 @@ namespace thts {
         mo_eval_metrics.sparsity_metric = convex_hull.sparsity_metric();
 
         ConvexHull scaled_convex_hull = (convex_hull - value_lower_bound) * (1.0 / (value_upper_bound - value_lower_bound));
-        Vec origin = Vec(value_lower_bound.size(), 0.0);
+        Vec origin = Vec::Zero(value_lower_bound.dim());
         mo_eval_metrics.normalised_hypervolume = scaled_convex_hull.hypervolume(origin);
         mo_eval_metrics.normalised_additive_eps_metric = scaled_convex_hull.additive_eps_metric();
         mo_eval_metrics.normalised_sparsity_metric = scaled_convex_hull.sparsity_metric();

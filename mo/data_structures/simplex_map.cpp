@@ -36,7 +36,7 @@ namespace thts {
         weight(weight),
         num_direct_updates(0),
         num_updates(0),
-        value_estimate(Vec(weight.size(), 0.0)),
+        value_estimate(Vec::Zero(weight.dim())),
         value_estimate_for_search(heuristic_value_estimate),
         entropy_estimate(entropy_estimate),
         neighbours(make_shared<unordered_set<shared_ptr<SMVertex>>>())
@@ -686,7 +686,7 @@ namespace thts {
         // Initialise the root simplex as the unit simplex
         vector<shared_ptr<SMVertex>> unit_simplex_vertices;
         for (int i=0; i<dim; i++) {
-            Vec basis_vector = Vec(dim, 0.0);
+            Vec basis_vector = Vec::Zero(dim);
             basis_vector.vec[i] = 1.0;
             shared_ptr<SMVertex> simplex_vertex = registry.get_or_create_vertex(basis_vector, heuristic_value_estimate, 0.0);
             unit_simplex_vertices.push_back(simplex_vertex);

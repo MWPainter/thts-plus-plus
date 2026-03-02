@@ -53,7 +53,7 @@ namespace thts {
             total_backups_per_iter(0)
     {
         // Initialize chvi_values with zero vector convex hull for each state
-        Vec zero_vec(dim, 0.0);
+        Vec zero_vec = Vec::Zero(dim);
         for (const auto& state : this->states) {
             chvi_values[state] = make_shared<ConvexHull>(zero_vec, convex_hull_max_size, convex_hull_tolerance);
             chvi_values_next[state] = make_shared<ConvexHull>(zero_vec, convex_hull_max_size, convex_hull_tolerance);
@@ -108,7 +108,7 @@ namespace thts {
             Vec reward = reward_map.at(state).at(action);
 
             // Compute expected next state value: sum_{s'} P(s'|s,a) * V(s')
-            ConvexHull expected_next_value = ConvexHull(Vec(dim, 0.0), convex_hull_max_size, convex_hull_tolerance);
+            ConvexHull expected_next_value = ConvexHull(Vec::Zero(dim), convex_hull_max_size, convex_hull_tolerance);
 
             for (const auto& [next_state, prob] : next_state_probs) {
                 // Get the value of the next state
