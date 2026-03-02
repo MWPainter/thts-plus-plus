@@ -53,13 +53,9 @@ namespace thts {
         unordered_map<shared_ptr<const Action>,double> q_utilities = this->utility_weights_from_values(
             context.context_weight, value_estimate_for_search_map);
 
-        // Normalise the utilities
-        if (manager.normalise_q_values) {
-            thts::helper::linearly_normalise_values(q_utilities);
-        }
-
-        // Normalise entropies (++DENTS)
+        // Normalise entropies + Q values before combining (++DENTS)
         if (manager.normalise_entropy_before_adding) {
+            thts::helper::linearly_normalise_values(q_utilities);
             thts::helper::linearly_normalise_values(entropy_estimate_map);
         }
 
@@ -67,6 +63,11 @@ namespace thts {
         for (shared_ptr<const Action> action : actions) 
         {
             q_utilities[action] += entropy_coeff * entropy_estimate_map[action];
+        }
+
+        // Normalise the utilities
+        if (manager.normalise_q_values) {
+            thts::helper::linearly_normalise_values(q_utilities);
         }
 
         // Compute normalization term (for the boltzmann distribution, so max weight = exp(0) = 1)
