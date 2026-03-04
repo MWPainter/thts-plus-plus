@@ -43,7 +43,7 @@ namespace thts {
         // Get q values and temp
         ChBtsManager& manager = (ChBtsManager&) *thts_manager;
         ActionDistr q_values;
-        fill_contextual_q_values(q_values, context, manager.default_q_value);
+        fill_contextual_q_values(q_values, context, true, manager.default_q_value);
         double temp = get_temp(context);
 
         // Optionally normalise Q values

@@ -25,6 +25,7 @@ namespace thts {
         protected:
             int num_backups;
             ConvexHull convex_hull;
+            ConvexHull convex_hull_for_search;
             Eigen::ArrayXd local_reward;
 
         public:
@@ -55,7 +56,7 @@ namespace thts {
             virtual std::string get_pretty_print_val() const override = 0;
         
 
-            double get_contextual_q_value(const MoThtsContext& ctx);
+            double get_contextual_q_value(const MoThtsContext& ctx, bool for_search=true) const;
 
 
         /**

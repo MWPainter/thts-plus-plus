@@ -880,7 +880,6 @@ namespace thts {
         manager_args.graph_search = get_graph_search();
         manager_args.first_visit = true;
         manager_args.reward_dim = env->get_reward_dim();
-        // MoThtsManager will load correct zero heuristic function based on reward dim if not set
         manager_args.heuristic_weight = 1;
         if (get_mcts_mode()) 
         {
@@ -888,7 +887,8 @@ namespace thts {
         }
         else
         {
-            manager_args.mo_heuristic_fn = make_shared<ConstMoHeuristicFn>(get_env_value_upper_bound());
+            manager_args.mo_heuristic_fn = make_shared<MoZeroHeuristicFn>(manager_args.reward_dim);
+            // manager_args.mo_heuristic_fn = make_shared<ConstMoHeuristicFn>(get_env_value_upper_bound());
         }
         manager_args.use_vector_visit_counts = get_vector_visit_counts();
         manager_args.convex_hull_max_size = get_convex_hull_max_size();
@@ -908,7 +908,8 @@ namespace thts {
     */
     double RunManager::get_default_q_utility_helper()
     {
-        return Vec(get_env_value_upper_bound()).norm();
+        return 0.0;
+        // return Vec(get_env_value_upper_bound()).norm();
     }
 
     /**

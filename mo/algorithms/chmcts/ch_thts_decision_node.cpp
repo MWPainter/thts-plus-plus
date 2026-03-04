@@ -18,7 +18,8 @@ namespace thts {
                 decision_timestep,
                 static_pointer_cast<const MoThtsCNode>(parent)),
             num_backups(0),
-            convex_hull(mo_heuristic_value, thts_manager->convex_hull_max_size, thts_manager->convex_hull_tolerance)
+            convex_hull(Vec::Zero(thts_manager->reward_dim), thts_manager->convex_hull_max_size, thts_manager->convex_hull_tolerance),
+            convex_hull_for_search(mo_heuristic_value, thts_manager->convex_hull_max_size, thts_manager->convex_hull_tolerance)
     {
     }
     
@@ -35,7 +36,7 @@ namespace thts {
     shared_ptr<const Action> ChThtsDNode::recommend_action(MoThtsContext& ctx) const 
     {  
         unordered_map<shared_ptr<const Action>,double> utilities;
-        fill_contextual_q_values(utilities, ctx, numeric_limits<double>::min());
+        fill_contextual_q_values(utilities, ctx, false, numeric_limits<double>::min());
         return thts::helper::get_max_key_break_ties_randomly(utilities, *thts_manager);
     }
     // shared_ptr<const Action> ChThtsDNode::recommend_action(MoThtsContext& ctx) const 
@@ -68,33 +69,46 @@ namespace thts {
         MoThtsManager& manager = static_cast<MoThtsManager&>(*thts_manager);
 
         convex_hull = ConvexHull(manager.convex_hull_max_size, manager.convex_hull_tolerance);
+        convex_hull_for_search = ConvexHull(manager.convex_hull_max_size, manager.convex_hull_tolerance);
         for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : children) 
         {
             ChThtsCNode& ch_child = (ChThtsCNode&) *child_pair.second;
             convex_hull |= ch_child.convex_hull;
+            convex_hull_for_search |= ch_child.convex_hull_for_search;
         }  
 
-        // if leaf node, add heuristic value to convex hull
+        // if leaf node, add heuristic value to convex hull for search
         if (convex_hull.size() == 0) 
         {
-            convex_hull = ConvexHull(mo_heuristic_value, manager.convex_hull_max_size, manager.convex_hull_tolerance);
+            convex_hull = ConvexHull(Vec::Zero(manager.reward_dim), manager.convex_hull_max_size, manager.convex_hull_tolerance);
+            convex_hull_for_search = ConvexHull(mo_heuristic_value, manager.convex_hull_max_size, manager.convex_hull_tolerance);
         }
 
         // remember to incr num_backups
         num_backups++;
+
+        // Add heuristic value to convex hull for search
+        double heuristic_ratio = manager.heuristic_weight / (num_backups + manager.heuristic_weight);
+        convex_hull_for_search *= (1.0 - heuristic_ratio);
+        convex_hull_for_search += mo_heuristic_value * heuristic_ratio;
 
         // and update solved value and backup stats
         update_solved_value();
         increment_and_update_backup_count();
     }
 
-    double ChThtsDNode::get_contextual_q_value(const MoThtsContext& ctx) {
-        return convex_hull.get_max_linear_utility(ctx.context_weight);
+    double ChThtsDNode::get_contextual_q_value(const MoThtsContext& ctx, bool for_search) const {
+        if (for_search) {
+            return convex_hull_for_search.get_max_linear_utility(ctx.context_weight);
+        } else {
+            return convex_hull.get_max_linear_utility(ctx.context_weight);
+        }
     }
 
     void ChThtsDNode::fill_contextual_q_values(
         unordered_map<shared_ptr<const Action>,double>& q_values, 
         MoThtsContext& ctx, 
+        bool for_search,
         double default_q_value) const
     {
         ActionVector actions = this->get_actions_to_consider(ctx);
@@ -104,7 +118,7 @@ namespace thts {
                 continue;
             }
             ChThtsCNode& child = (ChThtsCNode&) *get_child_node_itfc(action);
-            q_values[action] = child.get_contextual_q_value(ctx.context_weight);
+            q_values[action] = child.get_contextual_q_value(ctx, for_search);
         }
     }
 

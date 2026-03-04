@@ -24,7 +24,7 @@ static const std::vector<ConfigMap> CONFIG_052 =
         {XPR_PARAM_ID_EVAL_DELTA,                       1.0}, // log every 1 second
         {XPR_PARAM_ID_EVAL_ROLLOUTS,                    256},
         {XPR_PARAM_ID_EVAL_THREADS,                     16},
-        {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,             -1},
+        {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,             25},
         {XPR_PARAM_ID_CONVEX_HULL_TOLERANCE,            1e-9},
         {XPR_PARAM_ID_USE_SOLVED_LABELLING,              true},
         {XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE, 0.05},
