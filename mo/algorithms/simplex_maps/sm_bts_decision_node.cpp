@@ -238,9 +238,9 @@ namespace thts {
     shared_ptr<const Action> SmBtsDNode::select_action(MoThtsContext& ctx) 
     {
         // Compute action distribution
-        shared_ptr<ActionVector> actions = this->get_actions_to_consider(ctx); //thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
+        ActionVector actions = this->get_actions_to_consider(ctx); //thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
         ActionDistr action_distr_;
-        this->compute_action_distribution_(*actions, ctx, action_distr_);
+        this->compute_action_distribution_(actions, ctx, action_distr_);
 
         // Sample, create child node if needed, and return
         shared_ptr<const Action> selected_action = helper::sample_from_distribution(action_distr_, *thts_manager);

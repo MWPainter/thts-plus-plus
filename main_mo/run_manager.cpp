@@ -7,6 +7,8 @@
 #include "mo/algorithms/prior/ch_hvuct_manager.h"
 #include "mo/algorithms/prior/ch_pareto_uct_manager.h"
 #include "mo/algorithms/prior/ch_cheby_manager.h"
+#include "mo/algorithms/simplex_maps/sm_bts_manager.h"
+#include "mo/algorithms/simplex_maps/sm_dents_manager.h"
 
 #include "mo/algorithms/chmcts/ch_czt_decision_node.h"
 #include "mo/algorithms/chmcts/ch_bts_decision_node.h"
@@ -15,6 +17,8 @@
 #include "mo/algorithms/prior/ch_hvuct_decision_node.h"
 #include "mo/algorithms/prior/ch_pareto_uct_decision_node.h"
 #include "mo/algorithms/prior/ch_cheby_decision_node.h"
+#include "mo/algorithms/simplex_maps/sm_bts_decision_node.h"
+#include "mo/algorithms/simplex_maps/sm_dents_decision_node.h"
 
 #include "algorithms/common/decaying_temp.h"
 
@@ -98,6 +102,14 @@ namespace thts {
             XPR_PARAM_ID_USE_SOLVED_LABELLING,
             XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE,
             XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE,
+
+            XPR_PARAM_ID_SM_PUSH_RADIUS,
+            XPR_PARAM_ID_SM_MAX_NEIGHBOURS_TO_PUSH_TO,
+            XPR_PARAM_ID_SM_MIN_SIMPLEX_RADIUS,
+            XPR_PARAM_ID_SM_SIMPLEX_SPLIT_COUNTER_THRESHOLD,
+            XPR_PARAM_ID_SM_USE_APPROX_NEAREST_VERTEX,
+            XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,
+            XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,
         };
 
         for (string& xpr_param_id : xpr_param_ids) 
@@ -126,6 +138,8 @@ namespace thts {
             ALG_ID_CH_PARETO, 
             ALG_ID_CH_CHEBY,
             ALG_ID_CH_STANDARD_CHEBY,
+            ALG_ID_SM_BTS,
+            ALG_ID_SM_DENTS,
         };
 
         if (!alg_ids.contains(alg_id))
@@ -145,6 +159,13 @@ namespace thts {
                 throw runtime_error(ss.str());
 
             }
+        }
+
+        if (alg_config.size() != param_ids_expecting.size())
+        {
+            stringstream ss;
+            ss << "Expected " << param_ids_expecting.size() << " parameters in alg level config for " << alg_id << ", but got " << alg_config.size() << ".";
+            throw runtime_error(ss.str());
         }
     }
 
@@ -259,6 +280,17 @@ namespace thts {
     double RunManager::get_solved_labelling_tolerance() { return get_config_value<double>(xpr_config, XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE); }
 
     /**
+     * Getters - sm level config
+     */
+    int RunManager::get_sm_push_radius()                 { return get_config_value<int>(xpr_config, XPR_PARAM_ID_SM_PUSH_RADIUS); }
+    int RunManager::get_sm_max_neighbours_to_push_to()   { return get_config_value<int>(xpr_config, XPR_PARAM_ID_SM_MAX_NEIGHBOURS_TO_PUSH_TO); }
+    double RunManager::get_sm_min_simplex_radius()        { return get_config_value<double>(xpr_config, XPR_PARAM_ID_SM_MIN_SIMPLEX_RADIUS); }
+    int RunManager::get_sm_simplex_split_counter_threshold() { return get_config_value<int>(xpr_config, XPR_PARAM_ID_SM_SIMPLEX_SPLIT_COUNTER_THRESHOLD); }
+    bool RunManager::get_use_approx_nearest_vertex()     { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_SM_USE_APPROX_NEAREST_VERTEX); }
+    bool RunManager::get_eventually_conforming_simplex_map() { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP); }
+    bool RunManager::get_always_allow_non_conforming_simplex_to_split() { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT); }
+
+    /**
      * Getters - alg level config
      */
     string RunManager::get_alg_id()                         { return get_config_value<std::string>(alg_config, XPR_OR_ALG_ID_TAG); }
@@ -271,7 +303,6 @@ namespace thts {
     double RunManager::get_init_entropy_coeff()             { return get_config_value<double>(alg_config, ALG_PARAM_ID_INIT_ENTROPY_COEFF); }
     double RunManager::get_entropy_zero_at()                { return get_config_value<double>(alg_config, ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT); }
     double RunManager::get_epsilon()                        { return get_config_value<double>(alg_config, ALG_PARAM_ID_EPSILON); }
-    double RunManager::get_default_q_value()                { return get_config_value<double>(alg_config, ALG_PARAM_ID_DEFAULT_Q_VALUE); }
 
 
     /**
@@ -857,9 +888,14 @@ namespace thts {
         manager_args.first_visit = true;
         manager_args.reward_dim = env->get_reward_dim();
         // MoThtsManager will load correct zero heuristic function based on reward dim if not set
-        if (get_mcts_mode()) {
+        manager_args.heuristic_weight = 1;
+        if (get_mcts_mode()) 
+        {
             manager_args.mo_heuristic_fn = make_shared<MoRolloutHeuristicFn>();
-            manager_args.heuristic_psuedo_trials = 1;
+        }
+        else
+        {
+            manager_args.mo_heuristic_fn = make_shared<ConstMoHeuristicFn>(get_env_value_upper_bound());
         }
         manager_args.use_vector_visit_counts = get_vector_visit_counts();
         manager_args.convex_hull_max_size = get_convex_hull_max_size();
@@ -868,7 +904,20 @@ namespace thts {
         manager_args.solved_labelling_fail_confidence = get_solved_labelling_fail_confidence();
         manager_args.solved_labelling_tolerance = get_solved_labelling_tolerance();
     }
-    
+
+    /** 
+    Helper to get default q values for algorithms that use default q values
+    As we're using a constant heuristic with value v_max
+    Want take the maximum utility that we could get out of v_max
+    i.e. max_w w^T v_max
+    max w is vector pointing in direction of v_max, i.e. w = v_max / ||v_max||
+    so max w^T v_max = v_max^T v_max / ||v_max|| = ||v_max||^2 / ||v_max|| = ||v_max||
+    */
+    double RunManager::get_default_q_utility_helper()
+    {
+        return Vec(get_env_value_upper_bound()).norm();
+    }
+
     /**
      * Returns and instance of MoThtsManager to use for this run
      * Creates the manager and sets algorithm level parameters
@@ -924,7 +973,7 @@ namespace thts {
             ChBtsManagerArgs manager_args(env);
             manager_args.temp_schedule_ptr = make_shared<SqrtSchedule>(get_init_temp(), get_temp_decay_rate());
             manager_args.epsilon = get_epsilon();
-            manager_args.default_q_value = get_default_q_value();
+            manager_args.default_q_value = get_default_q_utility_helper();
             
             // if (alg_id == ALG_ID_CH_DENTS)
             // {
@@ -969,6 +1018,27 @@ namespace thts {
             return make_shared<ChChebyUctManager>(manager_args);
         }
 
+        else if (alg_id == ALG_ID_SM_BTS)
+        {
+            SmBtsManagerArgs manager_args(env);
+            manager_args.temp_schedule_ptr = make_shared<SqrtSchedule>(get_init_temp(), get_temp_decay_rate());
+            manager_args.epsilon = get_epsilon();
+            manager_args.default_q_utility = get_default_q_utility_helper();
+            _add_thts_manager_params_to_args(manager_args,env);
+            return make_shared<SmBtsManager>(manager_args);
+        }
+
+        else if (alg_id == ALG_ID_SM_DENTS)
+        {
+            SmDentsManagerArgs manager_args(env);
+            manager_args.temp_schedule_ptr = make_shared<SqrtSchedule>(get_init_temp(), get_temp_decay_rate());
+            manager_args.entropy_coeff_schedule_ptr = make_shared<LinearSchedule>(get_init_entropy_coeff(), get_entropy_zero_at());
+            manager_args.epsilon = get_epsilon();
+            manager_args.default_q_utility = get_default_q_utility_helper();
+            _add_thts_manager_params_to_args(manager_args,env);
+            return make_shared<SmDentsManager>(manager_args);
+        }
+
         stringstream ss;
         ss << "Error in RunManager get_thts_manager for alg_id = " << alg_id;
         throw runtime_error(ss.str());
@@ -1007,6 +1077,14 @@ namespace thts {
         if (alg_id == ALG_ID_CH_CHEBY || alg_id == ALG_ID_CH_STANDARD_CHEBY) {
             shared_ptr<ChChebyUctManager> chcheby_manager = static_pointer_cast<ChChebyUctManager>(manager);
             return make_shared<ChChebyUctDNode>(chcheby_manager, env->get_initial_state_itfc(), 0, 0);
+        }
+        if (alg_id == ALG_ID_SM_BTS) {
+            shared_ptr<SmBtsManager> smbts_manager = static_pointer_cast<SmBtsManager>(manager);
+            return make_shared<SmBtsDNode>(smbts_manager, env->get_initial_state_itfc(), 0, 0);
+        }
+        if (alg_id == ALG_ID_SM_DENTS) {
+            shared_ptr<SmDentsManager> smdents_manager = static_pointer_cast<SmDentsManager>(manager);
+            return make_shared<SmDentsDNode>(smdents_manager, env->get_initial_state_itfc(), 0, 0);
         }
 
         stringstream ss;

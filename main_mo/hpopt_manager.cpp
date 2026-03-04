@@ -2,21 +2,6 @@
 
 #include "helper.h"
 
-#include "algorithms/uct/uct_manager.h"
-#include "algorithms/uct/hmcts_manager.h"
-#include "algorithms/ments/ments_manager.h"
-#include "algorithms/ments/dents/dents_manager.h"
-
-#include "algorithms/uct/uct_decision_node.h"
-#include "algorithms/uct/max_uct_decision_node.h"
-#include "algorithms/ments/ments_decision_node.h"
-#include "algorithms/est/est_decision_node.h"
-#include "algorithms/ments/dents/dents_decision_node.h"
-#include "algorithms/uct/hmcts_decision_node.h"
-#include "algorithms/uct/max_uct_decision_node.h"
-#include "algorithms/ments/rents/rents_decision_node.h"
-#include "algorithms/ments/tents/tents_decision_node.h"
-
 #include "algorithms/common/decaying_temp.h"
 
 #include "py/pickle_wrapper.h"
@@ -130,6 +115,18 @@ namespace thts {
             XPR_PARAM_ID_EVAL_THREADS,
             XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,
             XPR_PARAM_ID_CONVEX_HULL_TOLERANCE,
+            XPR_PARAM_ID_USE_SOLVED_LABELLING,
+            XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE,
+            XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE,
+
+            XPR_PARAM_ID_SM_PUSH_RADIUS,
+            XPR_PARAM_ID_SM_MAX_NEIGHBOURS_TO_PUSH_TO,
+            XPR_PARAM_ID_SM_MIN_SIMPLEX_RADIUS,
+            XPR_PARAM_ID_SM_SIMPLEX_SPLIT_COUNTER_THRESHOLD,
+            XPR_PARAM_ID_SM_USE_APPROX_NEAREST_VERTEX,
+            XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,
+            XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,
+
             HPOPT_PARAM_ID_MIN_REPEATS,
             HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD,
             HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES,
@@ -160,6 +157,10 @@ namespace thts {
             ALG_ID_CH_DENTS, 
             ALG_ID_CH_HVUCT, 
             ALG_ID_CH_PARETO, 
+            ALG_ID_CH_CHEBY,
+            ALG_ID_CH_STANDARD_CHEBY,
+            ALG_ID_SM_BTS,
+            ALG_ID_SM_DENTS,
         };
 
         if (!alg_ids.contains(alg_id))
@@ -179,6 +180,13 @@ namespace thts {
                 throw runtime_error(ss.str());
 
             }
+        }
+
+        if (alg_config.size() != param_ids_expecting.size())
+        {
+            stringstream ss;
+            ss << "Expected " << param_ids_expecting.size() << " parameters in alg level config for " << alg_id << ", but got " << alg_config.size() << ".";
+            throw runtime_error(ss.str());
         }
     }
 
@@ -290,6 +298,20 @@ namespace thts {
     int HpoptManager::get_num_eval_threads()      { return get_config_value<int>(xpr_config, XPR_PARAM_ID_EVAL_THREADS); }
     int HpoptManager::get_convex_hull_max_size()  { return get_config_value<int>(xpr_config, XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE); }
     double HpoptManager::get_convex_hull_tolerance() { return get_config_value<double>(xpr_config, XPR_PARAM_ID_CONVEX_HULL_TOLERANCE); }
+    bool HpoptManager::get_use_solved_labelling() { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_USE_SOLVED_LABELLING); }
+    double HpoptManager::get_solved_labelling_fail_confidence() { return get_config_value<double>(xpr_config, XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE); }
+    double HpoptManager::get_solved_labelling_tolerance() { return get_config_value<double>(xpr_config, XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE); }
+
+    /**
+     * Getters - sm level config
+     */
+    int HpoptManager::get_sm_push_radius()                 { return get_config_value<int>(xpr_config, XPR_PARAM_ID_SM_PUSH_RADIUS); }
+    int HpoptManager::get_sm_max_neighbours_to_push_to()   { return get_config_value<int>(xpr_config, XPR_PARAM_ID_SM_MAX_NEIGHBOURS_TO_PUSH_TO); }
+    double HpoptManager::get_sm_min_simplex_radius()        { return get_config_value<double>(xpr_config, XPR_PARAM_ID_SM_MIN_SIMPLEX_RADIUS); }
+    int HpoptManager::get_sm_simplex_split_counter_threshold() { return get_config_value<int>(xpr_config, XPR_PARAM_ID_SM_SIMPLEX_SPLIT_COUNTER_THRESHOLD); }
+    bool HpoptManager::get_use_approx_nearest_vertex()     { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_SM_USE_APPROX_NEAREST_VERTEX); }
+    bool HpoptManager::get_eventually_conforming_simplex_map() { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP); }
+    bool HpoptManager::get_always_allow_non_conforming_simplex_to_split() { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT); }
 
     /**
      * Getters - alg level config

@@ -120,3 +120,17 @@ TODO: any additional plots for story
 
 
 
+
+
+
+
+
+
+-------
+Mo stuff
+-------
+
+
+make && clear &&
+./run_memory_limited 8G ./moexpr opt 050 && 
+./run_memory_limited 8G ./moexpr opt 051

@@ -29,6 +29,14 @@ static const std::vector<ConfigMap> CONFIG_000 =
         {XPR_PARAM_ID_USE_SOLVED_LABELLING,              true},
         {XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE, 0.05},
         {XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE,         0.1},
+
+        {XPR_PARAM_ID_SM_PUSH_RADIUS,                                       10}, 
+        {XPR_PARAM_ID_SM_MAX_NEIGHBOURS_TO_PUSH_TO,                         -1},
+        {XPR_PARAM_ID_SM_MIN_SIMPLEX_RADIUS,                                0.01},
+        {XPR_PARAM_ID_SM_SIMPLEX_SPLIT_COUNTER_THRESHOLD,                   10},
+        {XPR_PARAM_ID_SM_USE_APPROX_NEAREST_VERTEX,                         false},
+        {XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,                 true},
+        {XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,      true},
     },
     // czt params
     {
@@ -67,7 +75,6 @@ static const std::vector<ConfigMap> CONFIG_000 =
         {ALG_PARAM_ID_INIT_TEMP,            1.0},
         {ALG_PARAM_ID_TEMP_DECAY_RATE,      0.05},
         {ALG_PARAM_ID_EPSILON,              0.25},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,      0.0},
     },
     // // dents params
     // {

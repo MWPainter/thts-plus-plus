@@ -46,6 +46,14 @@ static const std::string XPR_PARAM_ID_USE_SOLVED_LABELLING = "use_solved_labelli
 static const std::string XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE = "solved_labelling_fail_confidence";    // confidence that confidence interval fails to contain true solved value
 static const std::string XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE = "solved_labelling_tolerance";    // tolerance for when solved values when consider a node solved
 
+static const std::string XPR_PARAM_ID_SM_PUSH_RADIUS = "sm_push_radius";                // simplex maps: push radius
+static const std::string XPR_PARAM_ID_SM_MAX_NEIGHBOURS_TO_PUSH_TO = "sm_max_neighbours_to_push_to"; // simplex maps: max neighbours to push to
+static const std::string XPR_PARAM_ID_SM_MIN_SIMPLEX_RADIUS = "sm_min_simplex_radius";    // simplex maps: min simplex radius
+static const std::string XPR_PARAM_ID_SM_SIMPLEX_SPLIT_COUNTER_THRESHOLD = "sm_simplex_split_counter_threshold"; // simplex maps: simplex split counter threshold
+static const std::string XPR_PARAM_ID_SM_USE_APPROX_NEAREST_VERTEX = "sm_use_approx_nearest_vertex"; // simplex maps: use approx nearest vertex
+static const std::string XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP = "sm_eventually_conforming_simplex_map"; // simplex maps: eventually conforming simplex map
+static const std::string XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT = "sm_always_allow_non_conforming_simplex_to_split"; // simplex maps: always allow non conforming simplex to split
+
 
 static const int NO_ENV_SIZE = -1;
 

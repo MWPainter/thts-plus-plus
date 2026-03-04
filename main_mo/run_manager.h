@@ -108,6 +108,17 @@ namespace thts {
             double get_solved_labelling_tolerance();
 
             /**
+             * Getters - sm level config
+             */
+            int get_sm_push_radius();
+            int get_sm_max_neighbours_to_push_to();
+            double get_sm_min_simplex_radius();
+            int get_sm_simplex_split_counter_threshold();
+            bool get_use_approx_nearest_vertex();
+            bool get_eventually_conforming_simplex_map();
+            bool get_always_allow_non_conforming_simplex_to_split();
+
+            /**
              * Getters - alg level config
              */
             std::string get_alg_id();
@@ -120,7 +131,6 @@ namespace thts {
             double get_init_entropy_coeff();
             double get_entropy_zero_at();
             double get_epsilon();
-            double get_default_q_value();
 
             /**
              * Returns if the env we are using is a python env
@@ -142,6 +152,7 @@ namespace thts {
              * Returns and instance of MoThtsManager to use for this run
             */
             void _add_thts_manager_params_to_args(MoThtsManagerArgs& manager_args, std::shared_ptr<MoThtsEnv> env);
+            double get_default_q_utility_helper();
             std::shared_ptr<MoThtsManager> get_thts_manager(std::shared_ptr<MoThtsEnv> env);
 
             /**

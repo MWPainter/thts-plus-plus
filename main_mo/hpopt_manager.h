@@ -111,6 +111,20 @@ namespace thts {
             int get_num_eval_threads();
             int get_convex_hull_max_size();
             double get_convex_hull_tolerance();
+            bool get_use_solved_labelling();
+            double get_solved_labelling_fail_confidence();
+            double get_solved_labelling_tolerance();
+
+            /**
+             * Getters - sm level config
+             */
+            int get_sm_push_radius();
+            int get_sm_max_neighbours_to_push_to();
+            double get_sm_min_simplex_radius();
+            int get_sm_simplex_split_counter_threshold();
+            bool get_use_approx_nearest_vertex();
+            bool get_eventually_conforming_simplex_map();
+            bool get_always_allow_non_conforming_simplex_to_split();
 
             /**
              * Getters - alg level config

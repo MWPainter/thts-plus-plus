@@ -29,6 +29,15 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_001 =
         {XPR_PARAM_ID_USE_SOLVED_LABELLING,              true},
         {XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE, 0.05},
         {XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE,         0.1},
+
+        {XPR_PARAM_ID_SM_PUSH_RADIUS,                                       10}, 
+        {XPR_PARAM_ID_SM_MAX_NEIGHBOURS_TO_PUSH_TO,                         -1},
+        {XPR_PARAM_ID_SM_MIN_SIMPLEX_RADIUS,                                0.01},
+        {XPR_PARAM_ID_SM_SIMPLEX_SPLIT_COUNTER_THRESHOLD,                   10},
+        {XPR_PARAM_ID_SM_USE_APPROX_NEAREST_VERTEX,                         false},
+        {XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,                 true},
+        {XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,      true},
+
         {HPOPT_PARAM_ID_MIN_REPEATS,                    10},
         {HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD,  1.0},
         {HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES,         30},
@@ -72,7 +81,6 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_001 =
         {ALG_PARAM_ID_INIT_TEMP,            std::make_pair(1.0e-4,  1.0e4)},
         {ALG_PARAM_ID_TEMP_DECAY_RATE,      std::make_pair(1.0e-4,  1.0e4)},
         {ALG_PARAM_ID_EPSILON,              std::make_pair(1.0e-6,  1.0e0)},
-        {ALG_PARAM_ID_DEFAULT_Q_VALUE,      std::make_pair(-100.0,  0.0)},
     },
     // // dents params
     // {

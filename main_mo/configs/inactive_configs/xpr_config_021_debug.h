@@ -29,6 +29,14 @@ static const std::vector<ConfigMap> CONFIG_021 =
         {XPR_PARAM_ID_USE_SOLVED_LABELLING,              true},
         {XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE, 0.05},
         {XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE,         0.1},
+
+        {XPR_PARAM_ID_SM_PUSH_RADIUS,                                       10}, 
+        {XPR_PARAM_ID_SM_MAX_NEIGHBOURS_TO_PUSH_TO,                         -1},
+        {XPR_PARAM_ID_SM_MIN_SIMPLEX_RADIUS,                                0.01},
+        {XPR_PARAM_ID_SM_SIMPLEX_SPLIT_COUNTER_THRESHOLD,                   10},
+        {XPR_PARAM_ID_SM_USE_APPROX_NEAREST_VERTEX,                         false},
+        {XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,                 true},
+        {XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,      true},
     },
     // chvi
     {

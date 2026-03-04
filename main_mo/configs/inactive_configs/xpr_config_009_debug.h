@@ -5,13 +5,13 @@
 #include "main_mo/configs/constants_algorithms.h"
 #include "main_mo/configs/constants_experiments.h"
 
-static const std::vector<ConfigMap> CONFIG_008 =
+static const std::vector<ConfigMap> CONFIG_009 =
 {
     // xpr params
     {
         {XPR_OR_ALG_ID_TAG,                             XPR_PARAMS_ID_TAG},
-        {XPR_PARAM_ID_NAME,                             "008_debug"},
-        {XPR_PARAM_ID_ENV,                              ENV_ID_VAMPLEW_DST_10},
+        {XPR_PARAM_ID_NAME,                             "009_debug"},
+        {XPR_PARAM_ID_ENV,                              ENV_ID_VAMPLEW_STOCH_DST_10},
         {XPR_PARAM_ID_ENV_SIZE,                         NO_ENV_SIZE},
         {XPR_PARAM_ID_MCTS_MODE,                        true},
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
@@ -29,6 +29,14 @@ static const std::vector<ConfigMap> CONFIG_008 =
         {XPR_PARAM_ID_USE_SOLVED_LABELLING,              true},
         {XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE, 0.05},
         {XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE,         0.1},
+
+        {XPR_PARAM_ID_SM_PUSH_RADIUS,                                       10}, 
+        {XPR_PARAM_ID_SM_MAX_NEIGHBOURS_TO_PUSH_TO,                         -1},
+        {XPR_PARAM_ID_SM_MIN_SIMPLEX_RADIUS,                                0.01},
+        {XPR_PARAM_ID_SM_SIMPLEX_SPLIT_COUNTER_THRESHOLD,                   10},
+        {XPR_PARAM_ID_SM_USE_APPROX_NEAREST_VERTEX,                         false},
+        {XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,                 true},
+        {XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,      true},
     },
     // bts params
     {

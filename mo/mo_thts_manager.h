@@ -17,7 +17,6 @@ namespace thts {
      */
     struct MoThtsManagerArgs : public ThtsManagerArgs {
         static const int reward_dim_default = -1;
-        static const int heuristic_psuedo_trials_default=0;
         static const bool use_vector_visit_counts_default = false;
 
         static const int convex_hull_max_size_default = -1;
@@ -29,7 +28,6 @@ namespace thts {
         
         int reward_dim;
         std::shared_ptr<MoHeuristicFn> mo_heuristic_fn;
-        int heuristic_psuedo_trials;
         bool use_vector_visit_counts;
 
         int convex_hull_max_size;
@@ -44,7 +42,6 @@ namespace thts {
             ThtsManagerArgs(std::static_pointer_cast<ThtsEnv>(thts_env)),
             reward_dim(MoThtsManagerArgs::reward_dim_default),
             mo_heuristic_fn(nullptr),
-            heuristic_psuedo_trials(heuristic_psuedo_trials_default),
             use_vector_visit_counts(MoThtsManagerArgs::use_vector_visit_counts_default),
             convex_hull_max_size(convex_hull_max_size_default),
             convex_hull_tolerance(convex_hull_tolerance_default),
@@ -68,7 +65,6 @@ namespace thts {
         public:
             int reward_dim;
             std::shared_ptr<MoHeuristicFn> mo_heuristic_fn;
-            int heuristic_psuedo_trials;
             bool use_vector_visit_counts;
 
             int convex_hull_max_size;
