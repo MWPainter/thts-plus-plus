@@ -65,8 +65,6 @@ namespace thts {
         const Eigen::ArrayXd trial_cumulative_return,
         MoThtsContext& ctx)
     {
-        increment_and_update_backup_count();
-
         MoThtsManager& manager = static_cast<MoThtsManager&>(*thts_manager);
 
         convex_hull = ConvexHull(manager.convex_hull_max_size, manager.convex_hull_tolerance);
@@ -85,8 +83,9 @@ namespace thts {
         // remember to incr num_backups
         num_backups++;
 
-        // and update solved value
+        // and update solved value and backup stats
         update_solved_value();
+        increment_and_update_backup_count();
     }
 
     double ChThtsDNode::get_contextual_q_value(const MoThtsContext& ctx) {

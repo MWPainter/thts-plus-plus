@@ -44,11 +44,11 @@ namespace thts {
         const Eigen::ArrayXd trial_cumulative_return,
         MoThtsContext& ctx) 
     {  
-        increment_and_update_backup_count();
         // Backup handled in decision nodes
 
-        // but still update solved value
+        // and update solved value and backup stats
         update_solved_value();
+        increment_and_update_backup_count();
     }
 
     string CztCNode::get_pretty_print_val() const 

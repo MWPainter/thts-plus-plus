@@ -138,7 +138,15 @@ namespace thts {
             if (!hpopt)
             {
                 MoEvalMetrics mo_eval_metrics = run_evals_thts(env, root_node, thts_manager, run_manager);
-                run_manager.write_eval_log_line(eval_log_fs, run_idx, mo_eval_metrics, 0, 0.0, 0.0, run_manager.get_num_eval_rollouts());
+                run_manager.write_eval_log_line(
+                    eval_log_fs, 
+                    run_idx, 
+                    mo_eval_metrics, 
+                    0,   // num_trials
+                    0,   // num_backups
+                    0.0, // runtime
+                    0.0, // search_budget_consumed
+                    run_manager.get_num_eval_rollouts());
             }
 
             // run trials, evaluating every eval delta
@@ -170,7 +178,15 @@ namespace thts {
                     final_mo_eval_metrics = mo_eval_metrics;
                     if (!hpopt)
                     {
-                        run_manager.write_eval_log_line(eval_log_fs, run_idx, mo_eval_metrics, total_trials_run, total_runtime, search_budget_consumed, run_manager.get_num_eval_rollouts());
+                        run_manager.write_eval_log_line(
+                            eval_log_fs, 
+                            run_idx, 
+                            mo_eval_metrics, 
+                            total_trials_run,
+                            root_node->get_total_backups_in_subtree(),
+                            total_runtime, 
+                            search_budget_consumed, 
+                            run_manager.get_num_eval_rollouts());
                     } 
                 }
             }
@@ -291,7 +307,15 @@ namespace thts {
         for (int run_idx=0; run_idx < run_manager.get_repeated_runs_per_alg(); run_idx++)
         {
             MoEvalMetrics mo_eval_metrics = run_evals_chvi(env, chvi, thts_manager, run_manager);
-            run_manager.write_eval_log_line(eval_log_fs, run_idx, mo_eval_metrics, 0, 0.0, 0.0, run_manager.get_num_eval_rollouts());
+            run_manager.write_eval_log_line(
+                eval_log_fs, 
+                run_idx, 
+                mo_eval_metrics, 
+                0,   // num_trials
+                0,   // num_backups
+                0.0, // runtime
+                0.0, // search_budget_consumed
+                run_manager.get_num_eval_rollouts());
         }
 
         // Dump convex hull at root after every delta
@@ -336,7 +360,16 @@ namespace thts {
             {
                 MoEvalMetrics mo_eval_metrics = run_evals_chvi(env, chvi, thts_manager, run_manager);
                 final_mo_eval_metrics = mo_eval_metrics;
-                run_manager.write_eval_log_line(eval_log_fs, run_idx, mo_eval_metrics, total_iters_run, total_runtime, search_budget_consumed, run_manager.get_num_eval_rollouts());
+                int num_backups = chvi->get_total_backups();
+                run_manager.write_eval_log_line(
+                    eval_log_fs, 
+                    run_idx, 
+                    mo_eval_metrics, 
+                    total_iters_run, 
+                    num_backups,
+                    total_runtime, 
+                    search_budget_consumed, 
+                    run_manager.get_num_eval_rollouts());
             }
 
             // Log convex hulls if wanted

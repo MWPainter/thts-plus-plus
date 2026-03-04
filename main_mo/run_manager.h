@@ -171,6 +171,7 @@ namespace thts {
                 int run_idx, 
                 MoEvalMetrics& mo_eval_metrics, 
                 int num_trials, 
+                int num_backups,
                 double runtime, 
                 double search_budget_consumed, 
                 int num_eval_samples);

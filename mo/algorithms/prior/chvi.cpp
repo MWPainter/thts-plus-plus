@@ -50,7 +50,8 @@ namespace thts {
             non_sink_states(),
             completed_iterations(-1),
             backups_completed_current(0),
-            total_backups_per_iter(0)
+            total_backups_per_iter(0),
+            total_backups_completed(0)
     {
         // Initialize chvi_values with zero vector convex hull for each state
         Vec zero_vec = Vec::Zero(dim);
@@ -222,6 +223,7 @@ namespace thts {
                     backup(state_to_backup);
                     // Increment backup counter (thread-safe)
                     this->backups_completed_current++;
+                    this->total_backups_completed++;
                 }
                 
                 // Check time limit after backup
@@ -359,6 +361,10 @@ namespace thts {
         
         double partial_iteration = static_cast<double>(current_backups) / static_cast<double>(total_backups_per_iter);
         return static_cast<double>(completed) + partial_iteration;
+    }
+
+    int Chvi::get_total_backups() const {
+        return total_backups_completed.load();
     }
 
     /**

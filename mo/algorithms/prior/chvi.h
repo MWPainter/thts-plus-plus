@@ -57,6 +57,7 @@ namespace thts {
         std::atomic<int> completed_iterations;      // Number of fully completed iterations
         std::atomic<int> backups_completed_current; // Number of backups completed in current iteration
         int total_backups_per_iter;                 // Total number of backups per iteration (size of non_sink_states)
+        std::atomic<int> total_backups_completed;                // Total number of backups completed
 
         public:
             Chvi(
@@ -78,6 +79,7 @@ namespace thts {
             ConvexHull get_chvi_q_value(std::shared_ptr<const State> state, std::shared_ptr<const Action> action) const;
             
             double get_num_iters_run() const;
+            int get_total_backups() const;
 
         private:
             void backup(std::shared_ptr<const State> state);

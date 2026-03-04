@@ -178,8 +178,6 @@ namespace thts {
         const Eigen::ArrayXd trial_cumulative_return,
         MoThtsContext& ctx) 
     {
-        increment_and_update_backup_count();
-
         shared_ptr<const Action> chosen_action = ctx.get_value_ptr_const<Action>(_action_ctx_key);
         shared_ptr<CzBall> chosen_ball = ctx.get_value_ptr<CzBall>(_ball_ctx_key);
         CztCNode& child = *get_child_node(chosen_action);
@@ -190,8 +188,9 @@ namespace thts {
         child.ball_list.avg_return_update_ball_list(
             trial_cumulative_return_after_node, ctx.context_weight.vec, chosen_ball);
 
-        // and update solved value
+        // and update solved value and backup stats
         update_solved_value();
+        increment_and_update_backup_count();
     }
 
     string CztDNode::get_pretty_print_val() const {

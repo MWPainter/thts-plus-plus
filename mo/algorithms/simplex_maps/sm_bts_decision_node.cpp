@@ -238,7 +238,7 @@ namespace thts {
     shared_ptr<const Action> SmBtsDNode::select_action(MoThtsContext& ctx) 
     {
         // Compute action distribution
-        shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
+        shared_ptr<ActionVector> actions = this->get_actions_to_consider(ctx); //thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
         ActionDistr action_distr_;
         this->compute_action_distribution_(*actions, ctx, action_distr_);
 
@@ -363,6 +363,10 @@ namespace thts {
             manager.min_simplex_radius_in_simplex_tree, 
             manager.max_depth_in_simplex_tree, 
             manager.simplex_split_counter_threshold);
+
+        // Update solved value and backup stats
+        update_solved_value();
+        increment_and_update_backup_count();
     }
 
     string SmBtsDNode::get_pretty_print_val() const {

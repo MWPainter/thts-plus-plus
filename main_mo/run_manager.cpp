@@ -1161,6 +1161,7 @@ namespace thts {
             << "normalised_additive_eps_metric,"
             << "normalised_sparsity_metric,"
             << "num_trials,"
+            << "num_backups,"
             << "runtime,"
             << "search_budget_consumed,"
             << "num_eval_samples" << endl;
@@ -1171,6 +1172,7 @@ namespace thts {
         int run_idx, 
         MoEvalMetrics& mo_eval_metrics, 
         int num_trials, 
+        int num_backups,
         double runtime, 
         double search_budget_consumed, 
         int num_eval_samples)
@@ -1189,6 +1191,7 @@ namespace thts {
             << mo_eval_metrics.normalised_additive_eps_metric << ","
             << mo_eval_metrics.normalised_sparsity_metric << ","
             << num_trials << "," 
+            << num_backups << ","
             << runtime << "," 
             << search_budget_consumed << ","
             << num_eval_samples << endl;

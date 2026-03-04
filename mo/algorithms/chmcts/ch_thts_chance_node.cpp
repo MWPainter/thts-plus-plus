@@ -40,8 +40,6 @@ namespace thts {
         const Eigen::ArrayXd trial_cumulative_return,
         MoThtsContext& ctx)
     {
-        increment_and_update_backup_count();
-        
         // compute total backups from children
         int total_child_backups = 0;
         for (pair<const shared_ptr<const Observation>,shared_ptr<ThtsDNode>>& child_pair : children) {
@@ -69,8 +67,9 @@ namespace thts {
         // remember to incr num_backups
         num_backups++;
 
-        // and update solved value
+        // and update solved value and backup stats
         update_solved_value();
+        increment_and_update_backup_count();
     }
 
     double ChThtsCNode::get_contextual_q_value(const MoThtsContext& ctx) {
