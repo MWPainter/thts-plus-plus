@@ -5,15 +5,15 @@
 #include "main_mo/configs/constants_algorithms.h"
 #include "main_mo/configs/constants_experiments.h"
 
-static const std::vector<ConfigMap> CONFIG_050 =
+static const std::vector<ConfigMap> CONFIG_052 =
 {
     // xpr params
     {
         {XPR_OR_ALG_ID_TAG,                             XPR_PARAMS_ID_TAG},
-        {XPR_PARAM_ID_NAME,                             "050_debug_test_sm_algs"},
+        {XPR_PARAM_ID_NAME,                             "052_debug_test_sm_algs"},
         {XPR_PARAM_ID_ENV,                              ENV_ID_VAMPLEW_DST_10_CPP},
         {XPR_PARAM_ID_ENV_SIZE,                         NO_ENV_SIZE},
-        {XPR_PARAM_ID_MCTS_MODE,                        false},
+        {XPR_PARAM_ID_MCTS_MODE,                        true},
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
         {XPR_PARAM_ID_VECTOR_VISIT_COUNTS,              false},
         {XPR_PARAM_ID_MAX_TRIAL_LENGTH,                 26*2}, 

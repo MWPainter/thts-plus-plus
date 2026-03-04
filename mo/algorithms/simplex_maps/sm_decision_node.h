@@ -48,6 +48,11 @@ namespace thts {
 
             std::string get_simplex_map_pretty_print_string() const;
 
+            /**
+             * Get an (approximate) convex hull from this node
+             */
+            virtual ConvexHull get_convex_hull() const override;
+
         protected:
             virtual std::shared_ptr<SmThtsCNode> create_child_node_helper(
                 std::shared_ptr<const Action> action) const = 0;

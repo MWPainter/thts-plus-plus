@@ -29,7 +29,7 @@ static const std::string ALG_ID_CH_HVUCT = "ch_hvuct";
 static const std::string ALG_ID_CH_PARETO = "ch_pareto";
 static const std::string ALG_ID_CH_CHEBY = "ch_cheby";
 static const std::string ALG_ID_CH_STANDARD_CHEBY = "ch_standard_cheby";
-static const std::string ALG_ID_SM_BTS = "ch_sm_bts";
+static const std::string ALG_ID_SM_BTS = "sm_bts";
 static const std::string ALG_ID_SM_DENTS = "sm_dents";
 
 // ---------------------------------------------------------------------------------------------------------------------

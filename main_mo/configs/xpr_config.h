@@ -32,6 +32,8 @@
 // #include "main_mo/configs/xpr_config_041_debug.h"
 #include "main_mo/configs/xpr_config_050_debug.h"
 #include "main_mo/configs/xpr_config_051_debug.h"
+#include "main_mo/configs/xpr_config_052_debug.h"
+#include "main_mo/configs/xpr_config_053_debug.h"
 
 // ---------------------------------------------------------------------------------------------------------------------
 // List of all configs
@@ -64,4 +66,6 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     // CONFIG_041,
     CONFIG_050,
     CONFIG_051,
+    CONFIG_052,
+    CONFIG_053,
 };

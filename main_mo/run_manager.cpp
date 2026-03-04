@@ -71,7 +71,7 @@ namespace thts {
      */  
     void RunManager::validate_config_or_raise_exception()
     {
-        if (xpr_config.size() != 20)
+        if (xpr_config.size() != 27)
         {
             throw runtime_error("Expecting 20 entries in the xpr level config.");
         }
@@ -159,13 +159,6 @@ namespace thts {
                 throw runtime_error(ss.str());
 
             }
-        }
-
-        if (alg_config.size() != param_ids_expecting.size())
-        {
-            stringstream ss;
-            ss << "Expected " << param_ids_expecting.size() << " parameters in alg level config for " << alg_id << ", but got " << alg_config.size() << ".";
-            throw runtime_error(ss.str());
         }
     }
 

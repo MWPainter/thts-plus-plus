@@ -61,6 +61,11 @@ namespace thts {
     string SmThtsDNode::get_simplex_map_pretty_print_string() const {
         return simplex_map.get_pretty_print_string();
     }
+
+    ConvexHull SmThtsDNode::get_convex_hull() const 
+    {
+        return simplex_map.get_approximate_convex_hull();
+    }
 }
 
 /**

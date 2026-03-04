@@ -88,9 +88,9 @@ namespace thts {
      */  
     void HpoptManager::validate_config_or_raise_exception()
     {
-        if (xpr_config.size() != 18)
+        if (xpr_config.size() != 30)
         {
-            throw runtime_error("Expecting 20 entries in the xpr level config.");
+            throw runtime_error("Expecting 30 entries in the xpr level config.");
         }
 
         if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != HPOPT_PARAMS_ID_TAG)
@@ -180,13 +180,6 @@ namespace thts {
                 throw runtime_error(ss.str());
 
             }
-        }
-
-        if (alg_config.size() != param_ids_expecting.size())
-        {
-            stringstream ss;
-            ss << "Expected " << param_ids_expecting.size() << " parameters in alg level config for " << alg_id << ", but got " << alg_config.size() << ".";
-            throw runtime_error(ss.str());
         }
     }
 
