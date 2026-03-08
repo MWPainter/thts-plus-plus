@@ -26,9 +26,6 @@ namespace thts {
 
         protected:
             Vec vector_visit_count;
-            int local_backups;
-            int total_cnode_backups_in_subtree;
-            int total_dnode_backups_in_subtree;
             double solved_value;
 
         public: 
@@ -168,14 +165,5 @@ namespace thts {
             double get_scalar_num_visits() const;
             Vec get_vector_num_visits() const;
             virtual void visit_itfc(ThtsContext& ctx) override;
-            
-            /**
-             * Logging to keep track of total number of backups
-             * Want to use this to compare the efficiencies of different data structures
-             */
-            void increment_and_update_backup_count();
-            int get_total_backups_in_subtree();
-            int get_cnode_backups_in_subtree();
-            int get_dnode_backups_in_subtree();
     };
 }

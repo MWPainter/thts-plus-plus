@@ -46,9 +46,6 @@ namespace thts {
         protected:
             Vec mo_heuristic_value;
             Vec vector_visit_count;
-            int local_backups;
-            int total_cnode_backups_in_subtree;
-            int total_dnode_backups_in_subtree;
             double solved_value;
 
         public: 
@@ -157,14 +154,5 @@ namespace thts {
              * Get an (approximate) convex hull from this node
              */
             virtual ConvexHull get_convex_hull() const;
-            
-            /**
-             * Logging to keep track of total number of backups
-             * Want to use this to compare the efficiencies of different data structures
-             */
-            void increment_and_update_backup_count();
-            int get_total_backups_in_subtree();
-            int get_cnode_backups_in_subtree();
-            int get_dnode_backups_in_subtree();
     };
 }

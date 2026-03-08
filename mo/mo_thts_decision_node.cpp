@@ -30,9 +30,6 @@ namespace thts {
             ThtsDNode(thts_manager, state, decision_depth, decision_timestep, parent),
             mo_heuristic_value(Vec::Zero(thts_manager->reward_dim)),
             vector_visit_count(Vec::Zero(thts_manager->reward_dim)),
-            local_backups(0),
-            total_cnode_backups_in_subtree(0),
-            total_dnode_backups_in_subtree(0),
             solved_value(1.0)
     {
         bool is_sink = thts_manager->thts_env()->is_sink_state_itfc(state, *thts_manager->get_thts_context());
@@ -49,7 +46,6 @@ namespace thts {
             mo_heuristic_value = mo_heuristic_fn(state, mo_thts_env, *thts_manager, decision_depth);
             vector_visit_count = Vec::Const(thts_manager->reward_dim, thts_manager->heuristic_weight_global);
             num_visits = thts_manager->heuristic_weight_global;
-            local_backups = thts_manager->heuristic_weight_global;
         }
     }
 
@@ -206,29 +202,5 @@ namespace thts {
     ConvexHull MoThtsDNode::get_convex_hull() const 
     {
         throw runtime_error("Calling MoThtsDNode::get_convex_hull, has this been overriden in algorithm trying to use?");
-    }
-
-    void MoThtsDNode::increment_and_update_backup_count() {
-        local_backups++;
-
-        total_cnode_backups_in_subtree = 0;
-        total_dnode_backups_in_subtree = local_backups;
-        for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pair : children) {
-            MoThtsCNode& child = (MoThtsCNode&) *pair.second;
-            total_cnode_backups_in_subtree += child.total_cnode_backups_in_subtree;
-            total_dnode_backups_in_subtree += child.total_dnode_backups_in_subtree;
-        }
-    }
-
-    int MoThtsDNode::get_total_backups_in_subtree() {
-        return total_cnode_backups_in_subtree + total_dnode_backups_in_subtree;
-    }
-
-    int MoThtsDNode::get_cnode_backups_in_subtree() {
-        return total_cnode_backups_in_subtree;
-    }
-
-    int MoThtsDNode::get_dnode_backups_in_subtree() {
-        return total_dnode_backups_in_subtree;
     }
 }

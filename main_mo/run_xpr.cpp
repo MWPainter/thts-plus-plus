@@ -183,7 +183,7 @@ namespace thts {
                             run_idx, 
                             mo_eval_metrics, 
                             total_trials_run,
-                            root_node->get_total_backups_in_subtree(),
+                            thts_pool->get_num_backups(),
                             total_runtime, 
                             search_budget_consumed, 
                             run_manager.get_num_eval_rollouts());

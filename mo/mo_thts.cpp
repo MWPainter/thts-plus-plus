@@ -19,7 +19,8 @@ namespace thts {
         int num_threads, 
         shared_ptr<ThtsLogger> logger,
         bool start_threads_in_this_constructor) :
-            ThtsPool(thts_manager, root_node, num_threads, logger, start_threads_in_this_constructor)
+            ThtsPool(thts_manager, root_node, num_threads, logger, start_threads_in_this_constructor),
+            num_backups(0)
     {
     }
 
@@ -168,14 +169,20 @@ namespace thts {
             {
                 ThtsNodeLockGuard lg(chance_node);
                 chance_node->backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);
+                num_backups++;
             }
 
             if (decision_node != nullptr)
             {
                 ThtsNodeLockGuard lg(decision_node);
                 decision_node->backup_itfc(rewards_before, rewards_after, total_return_after, total_return, context);
+                num_backups++;
             }
         }
+    }
+
+    int MoThtsPool::get_num_backups() const {
+        return num_backups;
     }
 
     /**

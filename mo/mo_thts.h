@@ -29,6 +29,8 @@ namespace thts {
      */
     class MoThtsPool : virtual public ThtsPool {
 
+            int num_backups;
+
         public:
             /**
              * Constructs the MoThtsPool with 'num_threads' worker threads.
@@ -52,6 +54,8 @@ namespace thts {
              * Destructor. (Should just call ~ThtsPool()).
              */
             virtual ~MoThtsPool() = default;
+
+            int get_num_backups() const;
 
         protected:
 

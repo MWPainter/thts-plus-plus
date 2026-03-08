@@ -22,9 +22,6 @@ namespace thts {
         shared_ptr<const MoThtsDNode> parent) :
             ThtsCNode(SkipLocalRewardInit{}, thts_manager, state, action, decision_depth, decision_timestep, parent),
             vector_visit_count(Vec::Zero(thts_manager->reward_dim)),
-            local_backups(0),
-            total_cnode_backups_in_subtree(0),
-            total_dnode_backups_in_subtree(0),
             solved_value(1.0)
     {
     }
@@ -143,29 +140,5 @@ namespace thts {
         ThtsContext& ctx) 
     {
         throw runtime_error("Called single objective backup function for multi objective node");
-    }
-
-    void MoThtsCNode::increment_and_update_backup_count() {
-        local_backups++;
-        
-        total_cnode_backups_in_subtree = local_backups;
-        total_dnode_backups_in_subtree = 0;
-        for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pair : children) {
-            MoThtsDNode& child = (MoThtsDNode&) *pair.second;
-            total_cnode_backups_in_subtree += child.total_cnode_backups_in_subtree;
-            total_dnode_backups_in_subtree += child.total_dnode_backups_in_subtree;
-        }
-    }
-
-    int MoThtsCNode::get_total_backups_in_subtree() {
-        return total_cnode_backups_in_subtree + total_dnode_backups_in_subtree;
-    }
-
-    int MoThtsCNode::get_cnode_backups_in_subtree() {
-        return total_cnode_backups_in_subtree;
-    }
-
-    int MoThtsCNode::get_dnode_backups_in_subtree() {
-        return total_dnode_backups_in_subtree;
     }
 }
