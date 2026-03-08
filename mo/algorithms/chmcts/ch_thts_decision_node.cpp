@@ -19,7 +19,7 @@ namespace thts {
                 static_pointer_cast<const MoThtsCNode>(parent)),
             num_backups(0),
             convex_hull(Vec::Zero(thts_manager->reward_dim), thts_manager->convex_hull_max_size, thts_manager->convex_hull_tolerance),
-            convex_hull_for_search(mo_heuristic_value, thts_manager->convex_hull_max_size, thts_manager->convex_hull_tolerance)
+            convex_hull_local(mo_heuristic_value, thts_manager->convex_hull_max_size, thts_manager->convex_hull_tolerance)
     {
     }
     
@@ -69,28 +69,38 @@ namespace thts {
         MoThtsManager& manager = static_cast<MoThtsManager&>(*thts_manager);
 
         convex_hull = ConvexHull(manager.convex_hull_max_size, manager.convex_hull_tolerance);
-        convex_hull_for_search = ConvexHull(manager.convex_hull_max_size, manager.convex_hull_tolerance);
         for (pair<const shared_ptr<const Action>,shared_ptr<ThtsCNode>>& child_pair : children) 
         {
             ChThtsCNode& ch_child = (ChThtsCNode&) *child_pair.second;
             convex_hull |= ch_child.convex_hull;
-            convex_hull_for_search |= ch_child.convex_hull_for_search;
         }  
 
         // if leaf node, add heuristic value to convex hull for search
         if (convex_hull.size() == 0) 
         {
             convex_hull = ConvexHull(Vec::Zero(manager.reward_dim), manager.convex_hull_max_size, manager.convex_hull_tolerance);
-            convex_hull_for_search = ConvexHull(mo_heuristic_value, manager.convex_hull_max_size, manager.convex_hull_tolerance);
         }
 
         // remember to incr num_backups
         num_backups++;
 
-        // Add heuristic value to convex hull for search
-        double heuristic_ratio = manager.heuristic_weight / (num_backups + manager.heuristic_weight);
-        convex_hull_for_search *= (1.0 - heuristic_ratio);
-        convex_hull_for_search += mo_heuristic_value * heuristic_ratio;
+        // Add heuristic value to convex hull
+        if (manager.heuristic_weight_global > 0) 
+        {
+            double heuristic_ratio = manager.heuristic_weight_global / (num_backups + manager.heuristic_weight_global);
+            convex_hull *= (1.0 - heuristic_ratio);
+            convex_hull += mo_heuristic_value * heuristic_ratio;
+        }
+
+        // And same for local convex hull
+        convex_hull_local = ConvexHull(convex_hull);
+        if (manager.heuristic_weight_local > 0) 
+        {
+            double total_heuristic_weight = manager.heuristic_weight_global + manager.heuristic_weight_local;
+            double heuristic_ratio = total_heuristic_weight / (num_backups + total_heuristic_weight);
+            convex_hull_local *= (1.0 - heuristic_ratio);
+            convex_hull_local += mo_heuristic_value * heuristic_ratio;
+        }
 
         // and update solved value and backup stats
         update_solved_value();
@@ -99,7 +109,7 @@ namespace thts {
 
     double ChThtsDNode::get_contextual_q_value(const MoThtsContext& ctx, bool for_search) const {
         if (for_search) {
-            return convex_hull_for_search.get_max_linear_utility(ctx.context_weight);
+            return convex_hull_local.get_max_linear_utility(ctx.context_weight);
         } else {
             return convex_hull.get_max_linear_utility(ctx.context_weight);
         }

@@ -47,9 +47,9 @@ namespace thts {
             MoThtsEnv& mo_thts_env = (MoThtsEnv&) *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());
             MoHeuristicFn& mo_heuristic_fn = *thts_manager->mo_heuristic_fn;
             mo_heuristic_value = mo_heuristic_fn(state, mo_thts_env, *thts_manager, decision_depth);
-            vector_visit_count = Vec::Const(thts_manager->reward_dim, thts_manager->heuristic_weight);
-            num_visits = thts_manager->heuristic_weight;
-            local_backups = thts_manager->heuristic_weight;
+            vector_visit_count = Vec::Const(thts_manager->reward_dim, thts_manager->heuristic_weight_global);
+            num_visits = thts_manager->heuristic_weight_global;
+            local_backups = thts_manager->heuristic_weight_global;
         }
     }
 

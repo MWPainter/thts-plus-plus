@@ -15,6 +15,8 @@ static const std::vector<ConfigMap> CONFIG_600 =
         {XPR_PARAM_ID_MCTS_MODE,                false},
         {XPR_PARAM_ID_GRAPH_SEARCH,             false},
         {XPR_PARAM_ID_MAX_TRIAL_LENGTH,         100},
+        {XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,  0.0},
+        {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,   1.0},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,          false},
         {XPR_PARAM_ID_TERMINATION_BOUND,        100000},
         {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    10},
@@ -58,11 +60,6 @@ static const std::vector<ConfigMap> CONFIG_600 =
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
-        {ALG_PARAM_ID_BIAS,        0.001},
-        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
-    },
-    {
-        {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
         {ALG_PARAM_ID_BIAS,        1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
@@ -74,6 +71,11 @@ static const std::vector<ConfigMap> CONFIG_600 =
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
         {ALG_PARAM_ID_BIAS,        10.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
+        {ALG_PARAM_ID_BIAS,        30.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
     {
@@ -117,11 +119,6 @@ static const std::vector<ConfigMap> CONFIG_600 =
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MAX_UCT},
-        {ALG_PARAM_ID_BIAS,        0.001},
-        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
-    },
-    {
-        {XPR_OR_ALG_ID_TAG,             ALG_ID_MAX_UCT},
         {ALG_PARAM_ID_BIAS,        1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
@@ -133,6 +130,11 @@ static const std::vector<ConfigMap> CONFIG_600 =
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MAX_UCT},
         {ALG_PARAM_ID_BIAS,        10.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_MAX_UCT},
+        {ALG_PARAM_ID_BIAS,        30.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
     {
@@ -194,6 +196,12 @@ static const std::vector<ConfigMap> CONFIG_600 =
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
         {ALG_PARAM_ID_INIT_TEMP,        10.0},
+        {ALG_PARAM_ID_EPSILON,          0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        30.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
@@ -262,6 +270,12 @@ static const std::vector<ConfigMap> CONFIG_600 =
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        30.0},
+        {ALG_PARAM_ID_EPSILON,          0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
         {ALG_PARAM_ID_INIT_TEMP,        100.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
@@ -321,6 +335,12 @@ static const std::vector<ConfigMap> CONFIG_600 =
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
         {ALG_PARAM_ID_INIT_TEMP,        10.0},
+        {ALG_PARAM_ID_EPSILON,          0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        30.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
@@ -393,6 +413,13 @@ static const std::vector<ConfigMap> CONFIG_600 =
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_BTS},
         {ALG_PARAM_ID_INIT_TEMP,        10.0},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,        30.0},
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},

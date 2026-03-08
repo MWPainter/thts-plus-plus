@@ -63,9 +63,9 @@ namespace thts {
      */  
     void RunManager::validate_config_or_raise_exception()
     {
-        if (xpr_config.size() != 13)
+        if (xpr_config.size() != 15)
         {
-            throw runtime_error("Expecting 13 entries in the xpr level config.");
+            throw runtime_error("Expecting 15 entries in the xpr level config.");
         }
 
         if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != XPR_PARAMS_ID_TAG)
@@ -79,6 +79,8 @@ namespace thts {
             XPR_PARAM_ID_ENV, 
             XPR_PARAM_ID_MCTS_MODE, 
             XPR_PARAM_ID_MAX_TRIAL_LENGTH,
+            XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,
+            XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,
             XPR_PARAM_ID_GRAPH_SEARCH,
             XPR_PARAM_ID_RUNTIME_BOUNDED, 
             XPR_PARAM_ID_TERMINATION_BOUND, 
@@ -192,6 +194,8 @@ namespace thts {
     bool RunManager::get_mcts_mode()            { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_MCTS_MODE); }
     bool RunManager::get_graph_search()         { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_GRAPH_SEARCH); }
     int RunManager::get_max_trial_length()      { return get_config_value<int>(xpr_config, XPR_PARAM_ID_MAX_TRIAL_LENGTH); }
+    double RunManager::get_heuristic_weight_global() { return get_config_value<double>(xpr_config, XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL); }
+    double RunManager::get_heuristic_weight_local() { return get_config_value<double>(xpr_config, XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL); }
     bool RunManager::xpr_is_runtime_bounded()   { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_RUNTIME_BOUNDED); }
     double RunManager::get_termination_bound()  { return get_config_value<double>(xpr_config, XPR_PARAM_ID_TERMINATION_BOUND); }
     int RunManager::get_repeated_runs_per_alg() { return get_config_value<int>(xpr_config, XPR_PARAM_ID_REPEATED_RUNS_PER_ALG); }
@@ -293,6 +297,8 @@ namespace thts {
         {
             manager_args.heuristic_fn = make_shared<ConstHeuristicFn>(get_heuristic_value());
         }
+        manager_args.heuristic_weight_global = get_heuristic_weight_global();
+        manager_args.heuristic_weight_local = get_heuristic_weight_local();
         manager_args.mcts_mode = get_mcts_mode();
         manager_args.graph_search = get_graph_search();
         manager_args.first_visit = true;
@@ -501,6 +507,8 @@ namespace thts {
             << XPR_PARAM_ID_MCTS_MODE << ","
             << XPR_PARAM_ID_GRAPH_SEARCH << ","
             << XPR_PARAM_ID_MAX_TRIAL_LENGTH << ","
+            << XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL << ","
+            << XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL << ","
             << XPR_PARAM_ID_RUNTIME_BOUNDED << ","
             << XPR_PARAM_ID_TERMINATION_BOUND << ","
             << XPR_PARAM_ID_REPEATED_RUNS_PER_ALG << ","
@@ -513,6 +521,8 @@ namespace thts {
             << get_mcts_mode() << ","
             << get_graph_search() << ","
             << get_max_trial_length() << ","
+            << get_heuristic_weight_global() << ","
+            << get_heuristic_weight_local() << ","
             << xpr_is_runtime_bounded() << ","
             << get_termination_bound() << ","
             << get_repeated_runs_per_alg() << ","

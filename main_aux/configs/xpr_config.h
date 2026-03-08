@@ -11,6 +11,9 @@
 // #include "main_aux/configs/xpr_config_001_debug.h"
 // #include "main_aux/configs/xpr_config_002_debug.h"
 // #include "main_aux/configs/xpr_config_003_debug.h"
+#include "main_aux/configs/xpr_config_010_frozen_lake_dense_debugging.h"
+#include "main_aux/configs/xpr_config_011_frozen_lake_sparse_debugging.h"
+#include "main_aux/configs/xpr_config_012_frozen_lake_slippy_debugging.h"
 // #include "main_aux/configs/xpr_config_100_dchain_temp.h"
 // #include "main_aux/configs/xpr_config_101_mod_dchain_temp.h"
 // #include "main_aux/configs/xpr_config_102_entropy_trap_temp.h"
@@ -79,6 +82,10 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     // CONFIG_001,
     // CONFIG_002,
     // CONFIG_003,
+
+    CONFIG_010,
+    CONFIG_011,
+    CONFIG_012,
     
     // CONFIG_100,
     // CONFIG_101,

@@ -21,7 +21,7 @@ namespace thts {
                 static_pointer_cast<const MoThtsDNode>(parent)),
             num_backups(0),
             convex_hull(Vec::Zero(thts_manager->reward_dim), thts_manager->convex_hull_max_size, thts_manager->convex_hull_tolerance),
-            convex_hull_for_search(Vec::Zero(thts_manager->reward_dim), thts_manager->convex_hull_max_size, thts_manager->convex_hull_tolerance),
+            convex_hull_local(Vec::Zero(thts_manager->reward_dim), thts_manager->convex_hull_max_size, thts_manager->convex_hull_tolerance),
             local_reward() 
     {
         MoThtsEnv& env = *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());
@@ -56,17 +56,17 @@ namespace thts {
             for (pair<const shared_ptr<const Observation>,shared_ptr<ThtsDNode>>& child_pair : children) {
                 ChThtsDNode& ch_child = (ChThtsDNode&) *child_pair.second;
                 convex_hull += ch_child.convex_hull * (ch_child.num_backups / total_child_backups);
-                convex_hull_for_search += ch_child.convex_hull_for_search * (ch_child.num_backups / total_child_backups);
+                convex_hull_local += ch_child.convex_hull_local * (ch_child.num_backups / total_child_backups);
             }
         } else {
             Vec zero_vec = (Vec) Eigen::ArrayXd::Zero(manager.reward_dim);
             convex_hull = ConvexHull(zero_vec, manager.convex_hull_max_size, manager.convex_hull_tolerance);
-            convex_hull_for_search = ConvexHull(zero_vec, manager.convex_hull_max_size, manager.convex_hull_tolerance);
+            convex_hull_local = ConvexHull(zero_vec, manager.convex_hull_max_size, manager.convex_hull_tolerance);
         }
 
         // add reward to convex hull too
         convex_hull += (Vec) local_reward;
-        convex_hull_for_search += (Vec) local_reward;
+        convex_hull_local += (Vec) local_reward;
 
         // remember to incr num_backups
         num_backups++;
@@ -78,7 +78,7 @@ namespace thts {
 
     double ChThtsCNode::get_contextual_q_value(const MoThtsContext& ctx, bool for_search) const {
         if (for_search) {
-            return convex_hull_for_search.get_max_linear_utility(ctx.context_weight);
+            return convex_hull_local.get_max_linear_utility(ctx.context_weight);
         } else {
             return convex_hull.get_max_linear_utility(ctx.context_weight);
         }

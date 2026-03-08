@@ -84,7 +84,7 @@ namespace thts {
         for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pair : children) {
             shared_ptr<const Action> action = pair.first;
             ChChebyUctCNode& child = (ChChebyUctCNode&) *get_child_node(action);
-            ucb_q_values[action] = this->get_cheby_value(child.convex_hull_for_search, ctx);
+            ucb_q_values[action] = this->get_cheby_value(child.convex_hull_local, ctx);
         }
     }
 

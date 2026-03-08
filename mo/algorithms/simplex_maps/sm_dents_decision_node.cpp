@@ -38,7 +38,7 @@ namespace thts {
     void SmDentsDNode::compute_action_weights_helper_(
         ActionVector& actions,
         MoThtsContext& context,
-        unordered_map<shared_ptr<const Action>,Vec>& value_estimate_for_search_map,
+        unordered_map<shared_ptr<const Action>,Vec>& value_estimate_local_map,
         unordered_map<shared_ptr<const Action>,double>& entropy_estimate_map,
         ActionDistr& action_weights_,
         double& sum_weights_) const
@@ -51,7 +51,7 @@ namespace thts {
 
         // compute utility weights
         unordered_map<shared_ptr<const Action>,double> q_utilities = this->utility_weights_from_values(
-            context.context_weight, value_estimate_for_search_map);
+            context.context_weight, value_estimate_local_map);
 
         // Normalise entropies + Q values before combining (++DENTS)
         if (manager.normalise_entropy_before_adding) {
@@ -115,14 +115,14 @@ namespace thts {
         shared_ptr<ActionVector> actions = thts_manager->thts_env()->get_valid_actions_itfc(state, ctx);
         unordered_map<shared_ptr<const Action>,int> q_vals_num_updates;
         unordered_map<shared_ptr<const Action>,Vec> q_vals;
-        unordered_map<shared_ptr<const Action>,Vec> q_vals_for_search;
+        unordered_map<shared_ptr<const Action>,Vec> q_vals_local;
         unordered_map<shared_ptr<const Action>,double> entropy_map;
         this->fill_child_values_maps_( 
             *actions, 
             closest_vertex_weight, 
             q_vals_num_updates, 
             q_vals, 
-            q_vals_for_search, 
+            q_vals_local, 
             entropy_map);
 
         // ++DENTS - compute action policy for entropy backups
@@ -131,7 +131,7 @@ namespace thts {
         this->compute_action_weights_helper_(
             *actions,
             ctx,
-            q_vals_for_search,
+            q_vals_local,
             entropy_map,
             policy,
             sum_weights);
@@ -144,8 +144,6 @@ namespace thts {
         // Compute a new value
         double new_utility = std::numeric_limits<double>::lowest();
         Vec new_value = Vec::Zero(manager.reward_dim);
-        double new_utility_for_search = std::numeric_limits<double>::lowest();
-        Vec new_value_for_search = Vec::Zero(manager.reward_dim);
         double subtree_entropy = 0.0; // ++DENTS
 
         for (shared_ptr<const Action> action : *actions) {
@@ -158,20 +156,16 @@ namespace thts {
                 new_utility = q_utility;
                 new_value = q_vals.at(action);
             }
-            double q_utility_for_search = closest_vertex_weight.dot(q_vals_for_search.at(action));
-            if (q_utility_for_search > new_utility_for_search) {
-                new_utility_for_search = q_utility_for_search;
-                new_value_for_search = q_vals_for_search.at(action);
-            }
             subtree_entropy += policy[action] * entropy_map[action]; // ++DENTS
         }
 
         // If have a heuristic value, mix it in
+        Vec new_value_local = new_value;
         if (this->has_heuristic_value())
         {
-            SmBtsManager& manager = (SmBtsManager&) *thts_manager;
-            new_value_for_search *= (num_backups - manager.heuristic_weight) / num_backups;
-            new_value_for_search += manager.heuristic_weight * heuristic_value / num_backups;
+            double heuristic_ratio = manager.heuristic_weight_local / (num_backups + manager.heuristic_weight_local);
+            new_value_local *= (1.0 - heuristic_ratio);
+            new_value_local += mo_heuristic_value * heuristic_ratio;
         }
 
         // ++DENTS - Compute new entropy estimate, with local entropy + subtree entropy
@@ -190,7 +184,7 @@ namespace thts {
             manager.max_push_radius,
             manager.max_neighbours_to_push_to,
             new_value,
-            new_value_for_search,
+            new_value_local,
             new_entropy // ++DENTS
         );
 

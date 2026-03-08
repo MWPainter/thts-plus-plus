@@ -26,6 +26,7 @@ namespace thts {
                 static_pointer_cast<const ThtsDNode>(parent)),
             num_backups(0),
             avg_return(0.0),
+            avg_return_local(0.0),
             next_state_distr(thts_manager->thts_env()->get_transition_distribution_itfc(
                 state,action,*thts_manager->get_thts_context()))
     {  
@@ -77,6 +78,7 @@ namespace thts {
         // backup_average_return(trial_cumulative_return_after_node);
         
         avg_return = 0.0;
+        avg_return_local = 0.0;
         double sum_child_n_selections = 0;
         for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
             shared_ptr<const Observation> observation = pr.first;
@@ -86,9 +88,12 @@ namespace thts {
             sum_child_n_selections += child_n_selections;
             avg_return *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
             avg_return += child_n_selections * child.avg_return / sum_child_n_selections;
+            avg_return_local *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+            avg_return_local += child_n_selections * child.avg_return_local / sum_child_n_selections;
         }
         avg_return += local_reward; // +R(s,a)
-
+        avg_return_local += local_reward; // +R(s,a)
+        
         num_backups++;
     }
 

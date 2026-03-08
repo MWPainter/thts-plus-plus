@@ -34,7 +34,8 @@ namespace thts {
         static const int num_envs_default = 1;
         static const int max_depth_default = std::numeric_limits<int>::max();
         // static const HeuristicFn heuristic_fn_default = helper::ZeroHeuristicFn();
-        static constexpr double heuristic_weight_default = 1.0;
+        static constexpr double heuristic_weight_local_default = 0.0;
+        static constexpr double heuristic_weight_global_default = 1.0;
         // static const PriorFnPtr prior_fn_default = nullptr;
 
         static const bool mcts_mode_default = true;
@@ -49,7 +50,8 @@ namespace thts {
         int num_envs;
         int max_depth;
         std::shared_ptr<HeuristicFn> heuristic_fn;
-        double heuristic_weight;
+        double heuristic_weight_local;
+        double heuristic_weight_global;
         PriorFnPtr prior_fn;
 
         bool mcts_mode;
@@ -65,7 +67,8 @@ namespace thts {
             num_envs(num_envs_default),
             max_depth(max_depth_default),
             heuristic_fn(std::make_shared<ZeroHeuristicFn>()),
-            heuristic_weight(heuristic_weight_default),
+            heuristic_weight_local(heuristic_weight_local_default),
+            heuristic_weight_global(heuristic_weight_global_default),
             prior_fn(nullptr),
             mcts_mode(mcts_mode_default),
             is_two_player_game(is_two_player_game_default),
@@ -270,7 +273,8 @@ namespace thts {
             int num_envs;
             int max_depth;
             std::shared_ptr<HeuristicFn> heuristic_fn;
-            double heuristic_weight;
+            double heuristic_weight_local;
+            double heuristic_weight_global;
             PriorFnPtr prior_fn;
 
             bool mcts_mode;

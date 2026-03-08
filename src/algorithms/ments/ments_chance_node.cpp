@@ -24,6 +24,7 @@ namespace thts {
                 static_pointer_cast<const ThtsDNode>(parent)),
             num_backups(0),
             soft_value(thts_manager->default_q_value),
+            soft_value_local(thts_manager->default_q_value),
             local_reward(thts_manager->thts_env()->get_reward_itfc(state,action,*thts_manager->get_thts_context()))//,
             // next_state_distr(thts_manager->thts_env()->get_transition_distribution_itfc(
             //     state,action,*thts_manager->get_thts_context())) 
@@ -79,6 +80,7 @@ namespace thts {
         num_backups++;
 
         soft_value = 0.0;
+        soft_value_local = 0.0;
         double sum_child_n_selections = 0;
         for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
             shared_ptr<const Observation> observation = pr.first;
@@ -88,21 +90,11 @@ namespace thts {
             sum_child_n_selections += child_n_selections;
             soft_value *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
             soft_value += child_n_selections * child.soft_value / sum_child_n_selections;
+            soft_value_local *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+            soft_value_local += child_n_selections * child.soft_value_local / sum_child_n_selections;
         }
         soft_value += local_reward; // +R(s,a)
-
-        soft_value_for_search = 0.0;
-        sum_child_n_selections = 0;
-        for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
-            shared_ptr<const Observation> observation = pr.first;
-            MentsDNode& child = (MentsDNode&) *pr.second;
-            double child_n_selections = empirical_distribution[observation];
-            if (child_n_selections == 0) continue;
-            sum_child_n_selections += child_n_selections;
-            soft_value_for_search *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
-            soft_value_for_search += child_n_selections * child.soft_value_for_search / sum_child_n_selections;
-        }
-        soft_value_for_search += local_reward; // +R(s,a)
+        soft_value_local += local_reward; // +R(s,a)
     }
 
     /**

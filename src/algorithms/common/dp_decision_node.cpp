@@ -61,10 +61,13 @@ namespace thts {
     void DPDNode::backup_dp_impl(
         DPCNodeChildMap& children, 
         bool has_heuristic_value,
-        double heuristic_weight,
+        double heuristic_weight_global,
+        double heuristic_weight_local,
         double heuristic_value,
         bool is_opponent) 
     {
+        num_backups++;
+
         double opp_coeff = is_opponent ? -1.0 : 1.0;
         dp_value = opp_coeff * -numeric_limits<double>::infinity();
 
@@ -75,23 +78,17 @@ namespace thts {
                 dp_value = child.dp_value;
             }
         }
-
-        dp_value_for_search = opp_coeff * -numeric_limits<double>::infinity();
-
-        for (pair<shared_ptr<const Action>,shared_ptr<DPCNode>> pr : children) {
-            DPCNode& child = *pr.second;
-            if (child.num_backups == 0) continue;
-            if (opp_coeff * child.dp_value_for_search > opp_coeff * dp_value_for_search) {
-                dp_value_for_search = child.dp_value_for_search;
-            }
-        }
-
-        num_backups++;
+        dp_value_local = dp_value;
 
         if (has_heuristic_value) 
         {
-            dp_value_for_search *= (num_backups - heuristic_weight) / num_backups;
-            dp_value_for_search += heuristic_weight * heuristic_value / num_backups;
+            double effective_num_backups = num_backups + heuristic_weight_global;
+            dp_value *= num_backups / effective_num_backups;
+            dp_value += heuristic_weight_global * heuristic_value / effective_num_backups;
+
+            effective_num_backups += heuristic_weight_local;
+            dp_value_local *= num_backups / effective_num_backups;
+            dp_value_local += heuristic_weight_local * heuristic_value / effective_num_backups;
         }
     }
 }

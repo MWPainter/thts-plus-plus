@@ -21,8 +21,7 @@ namespace thts {
                 action,
                 decision_depth,
                 decision_timestep,
-                static_pointer_cast<const UctDNode>(parent)),
-            avg_return_for_search(0.0)
+                static_pointer_cast<const UctDNode>(parent))
     {  
     }
 
@@ -39,7 +38,7 @@ namespace thts {
         // backup_average_return(trial_cumulative_return_after_node);
         
         avg_return = 0.0;
-        avg_return_for_search = 0.0;
+        avg_return_local = 0.0;
         double sum_child_n_selections = 0;
         for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
             shared_ptr<const Observation> observation = pr.first;
@@ -49,11 +48,11 @@ namespace thts {
             sum_child_n_selections += child_n_selections;
             avg_return *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
             avg_return += child_n_selections * child.avg_return / sum_child_n_selections;
-            avg_return_for_search *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
-            avg_return_for_search += child_n_selections * child.avg_return_for_search / sum_child_n_selections;
+            avg_return_local *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+            avg_return_local += child_n_selections * child.avg_return_local / sum_child_n_selections;
         }
         avg_return += local_reward; // +R(s,a)
-        avg_return_for_search += local_reward; // +R(s,a)
+        avg_return_local += local_reward; // +R(s,a)
 
         num_backups++;
     }

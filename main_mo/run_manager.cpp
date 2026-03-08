@@ -71,9 +71,9 @@ namespace thts {
      */  
     void RunManager::validate_config_or_raise_exception()
     {
-        if (xpr_config.size() != 27)
+        if (xpr_config.size() != 29)
         {
-            throw runtime_error("Expecting 20 entries in the xpr level config.");
+            throw runtime_error("Expecting 29 entries in the xpr level config.");
         }
 
         if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != XPR_PARAMS_ID_TAG)
@@ -88,6 +88,8 @@ namespace thts {
             XPR_PARAM_ID_ENV_SIZE,
             XPR_PARAM_ID_MCTS_MODE, 
             XPR_PARAM_ID_MAX_TRIAL_LENGTH,
+            XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,
+            XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,
             XPR_PARAM_ID_GRAPH_SEARCH,
             XPR_PARAM_ID_VECTOR_VISIT_COUNTS,
             XPR_PARAM_ID_RUNTIME_BOUNDED, 
@@ -256,6 +258,8 @@ namespace thts {
     string RunManager::get_env_id()             { return get_config_value<std::string>(xpr_config, XPR_PARAM_ID_ENV); }
     int RunManager::get_env_size()              { return get_config_value<int>(xpr_config, XPR_PARAM_ID_ENV_SIZE); }
     bool RunManager::get_mcts_mode()            { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_MCTS_MODE); }
+    double RunManager::get_heuristic_weight_global() { return get_config_value<double>(xpr_config, XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL); }
+    double RunManager::get_heuristic_weight_local() { return get_config_value<double>(xpr_config, XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL); }
     bool RunManager::get_graph_search()         { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_GRAPH_SEARCH); }
     bool RunManager::get_vector_visit_counts()  { return get_config_value<bool>(xpr_config, XPR_PARAM_ID_VECTOR_VISIT_COUNTS); }
     int RunManager::get_max_trial_length()      { return get_config_value<int>(xpr_config, XPR_PARAM_ID_MAX_TRIAL_LENGTH); }
@@ -880,16 +884,17 @@ namespace thts {
         manager_args.graph_search = get_graph_search();
         manager_args.first_visit = true;
         manager_args.reward_dim = env->get_reward_dim();
-        manager_args.heuristic_weight = 1;
         if (get_mcts_mode()) 
         {
             manager_args.mo_heuristic_fn = make_shared<MoRolloutHeuristicFn>();
         }
         else
         {
-            manager_args.mo_heuristic_fn = make_shared<MoZeroHeuristicFn>(manager_args.reward_dim);
-            // manager_args.mo_heuristic_fn = make_shared<ConstMoHeuristicFn>(get_env_value_upper_bound());
+            // manager_args.mo_heuristic_fn = make_shared<MoZeroHeuristicFn>(manager_args.reward_dim);
+            manager_args.mo_heuristic_fn = make_shared<ConstMoHeuristicFn>(get_env_value_upper_bound());
         }
+        manager_args.heuristic_weight_global = get_heuristic_weight_global();
+        manager_args.heuristic_weight_local = get_heuristic_weight_local();
         manager_args.use_vector_visit_counts = get_vector_visit_counts();
         manager_args.convex_hull_max_size = get_convex_hull_max_size();
         manager_args.convex_hull_tolerance = get_convex_hull_tolerance();
@@ -1179,6 +1184,8 @@ namespace thts {
             << XPR_PARAM_ID_GRAPH_SEARCH << ","
             << XPR_PARAM_ID_VECTOR_VISIT_COUNTS << ","
             << XPR_PARAM_ID_MAX_TRIAL_LENGTH << ","
+            << XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL << ","
+            << XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL << ","
             << XPR_PARAM_ID_RUNTIME_BOUNDED << ","
             << XPR_PARAM_ID_TERMINATION_BOUND << ","
             << XPR_PARAM_ID_REPEATED_RUNS_PER_ALG << ","
@@ -1192,6 +1199,8 @@ namespace thts {
             << get_graph_search() << ","
             << get_vector_visit_counts() << ","
             << get_max_trial_length() << ","
+            << get_heuristic_weight_global() << ","
+            << get_heuristic_weight_local() << ","
             << xpr_is_runtime_bounded() << ","
             << get_termination_bound() << ","
             << get_repeated_runs_per_alg() << ","

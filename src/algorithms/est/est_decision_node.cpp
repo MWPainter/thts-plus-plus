@@ -34,7 +34,7 @@ namespace thts {
             } 
             else if (for_search) 
             {
-                return opp_coeff * child.dp_value_for_search;
+                return opp_coeff * child.dp_value_local;
             } 
             else 
             {
@@ -76,7 +76,12 @@ namespace thts {
         // value backup
         DentsManager& manager = (DentsManager&) *thts_manager;
         if (manager.use_dp_value) {
-            backup_dp<DentsCNode>(children, has_heuristic_value(), thts_manager->heuristic_weight, heuristic_value, is_opponent());
+            backup_dp<DentsCNode>(
+                children, has_heuristic_value(), 
+                thts_manager->heuristic_weight_global,
+                thts_manager->heuristic_weight_local,
+                heuristic_value, 
+                is_opponent());
         } else {
             backup_emp(trial_cumulative_return_after_node);
         }

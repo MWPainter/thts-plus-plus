@@ -319,10 +319,10 @@ TEST(SimplexMap_SMMesh, get_value_estimate_initial) {
     EXPECT_EQ(value.size(), 2);
     EXPECT_NEAR(value.vec[0], 0.0, 1e-10);
     EXPECT_NEAR(value.vec[1], 0.0, 1e-10);
-    Vec value_for_search = mesh.get_value_estimate_for_search(v);
-    EXPECT_EQ(value_for_search.size(), 2);
-    EXPECT_NEAR(value_for_search.vec[0], 1.0, 1e-10);
-    EXPECT_NEAR(value_for_search.vec[1], 2.0, 1e-10);
+    Vec value_local = mesh.get_value_estimate_local(v);
+    EXPECT_EQ(value_local.size(), 2);
+    EXPECT_NEAR(value_local.vec[0], 1.0, 1e-10);
+    EXPECT_NEAR(value_local.vec[1], 2.0, 1e-10);
 }
 
 TEST(SimplexMap_SMMesh, update_vertex_values_and_share) {
@@ -503,13 +503,13 @@ TEST(SimplexMap_SMMesh2D, test_message_passing)
     // Update value estimate to something unique and checkable
     RandManager rand_manager(42);
     Vec new_value = make_vec(10.0, 20.0);
-    Vec new_value_for_search = make_vec(20.0, 10.0);
+    Vec new_value_local = make_vec(20.0, 10.0);
     double new_entropy_estimate = 1.0;
     mesh.update_vertex_values_and_share(
         rand_manager, 
         vertex, 
         2, //max push radius = 2
-        -1, new_value, new_value_for_search, new_entropy_estimate);
+        -1, new_value, new_value_local, new_entropy_estimate);
 
     // Vertices we expect to be updated:
     Vec val_to_ignore = make_vec(-1.0, -1.0);
@@ -551,13 +551,13 @@ TEST(SimplexMap_SMMesh2D, test_message_passing)
     for (shared_ptr<SMVertex> vertex_to_check : expected_updated_vertices)
     {
         EXPECT_TRUE(vertex_to_check->value_estimate.equals(new_value));
-        EXPECT_TRUE(vertex_to_check->value_estimate_for_search.equals(new_value_for_search));
+        EXPECT_TRUE(vertex_to_check->value_estimate_local.equals(new_value_local));
         EXPECT_EQ(vertex_to_check->entropy_estimate, new_entropy_estimate);
     }
     for (shared_ptr<SMVertex> vertex : expected_unchanged_vertices)
     {
         EXPECT_TRUE(vertex->value_estimate.equals(heuristic));
-        EXPECT_TRUE(vertex->value_estimate_for_search.equals(heuristic));
+        EXPECT_TRUE(vertex->value_estimate_local.equals(heuristic));
         EXPECT_EQ(vertex->entropy_estimate, 0.0);
     }
 
@@ -1294,7 +1294,7 @@ TEST(SimplexMap_SMMesh3D_cur, message_passing_on_fully_subdivided_3d_mesh)
 
     // Manually set value estimate for vA
     Vec value_estimate = make_vec(1.0, 1.0, 1.0);
-    Vec value_estimate_for_search = make_vec(1.0, 1.0, 1.0);
+    Vec value_estimate_local = make_vec(1.0, 1.0, 1.0);
     double entropy_estimate = 1.0;
 
     // Call message passing from vA
@@ -1305,7 +1305,7 @@ TEST(SimplexMap_SMMesh3D_cur, message_passing_on_fully_subdivided_3d_mesh)
         2, //max push radius = 2
         -1, 
         value_estimate, 
-        value_estimate_for_search, 
+        value_estimate_local, 
         entropy_estimate);
 
     // There should be 3 1-hop neighbours of vA

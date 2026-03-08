@@ -26,7 +26,7 @@ namespace thts {
         for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pair : children) {
             shared_ptr<const Action> action = pair.first;
             ChHvUctCNode& child = (ChHvUctCNode&) *get_child_node(action);
-            ucb_q_values[action] = child.convex_hull_for_search.hypervolume(*manager.hv_reference_point) / child.num_visits;
+            ucb_q_values[action] = child.convex_hull_local.hypervolume(*manager.hv_reference_point) / child.num_visits;
         }
     }
 

@@ -37,7 +37,7 @@ namespace thts {
         num_direct_updates(0),
         num_updates(0),
         value_estimate(Vec::Zero(weight.dim())),
-        value_estimate_for_search(heuristic_value_estimate),
+        value_estimate_local(heuristic_value_estimate),
         entropy_estimate(entropy_estimate),
         neighbours(make_shared<unordered_set<shared_ptr<SMVertex>>>())
     {
@@ -51,13 +51,13 @@ namespace thts {
         num_direct_updates(0),
         num_updates(1), // count this initialisation as a message passing update
         value_estimate(v0->value_estimate),
-        value_estimate_for_search(v0->value_estimate_for_search),
+        value_estimate_local(v0->value_estimate_local),
         entropy_estimate(v0->entropy_estimate),
         neighbours(make_shared<unordered_set<shared_ptr<SMVertex>>>())
     {
         if (v1->value_estimate.dot(this->weight) > v0->value_estimate.dot(this->weight)) {
             this->value_estimate = v1->value_estimate;
-            this->value_estimate_for_search = v1->value_estimate_for_search;
+            this->value_estimate_local = v1->value_estimate_local;
             this->entropy_estimate = v1->entropy_estimate;
         }
 
@@ -180,7 +180,7 @@ namespace thts {
         if (from_vertex.value_estimate.dot(to_vertex.weight) > to_vertex.value_estimate.dot(to_vertex.weight)) 
         {
             to_vertex.value_estimate = from_vertex.value_estimate;
-            to_vertex.value_estimate_for_search = from_vertex.value_estimate_for_search;
+            to_vertex.value_estimate_local = from_vertex.value_estimate_local;
             to_vertex.entropy_estimate = from_vertex.entropy_estimate;
             return true;
         }
@@ -823,9 +823,9 @@ namespace thts {
         return vertex->value_estimate;
     }
 
-    Vec SMMesh::get_value_estimate_for_search(shared_ptr<SMVertex> vertex) const
+    Vec SMMesh::get_value_estimate_local(shared_ptr<SMVertex> vertex) const
     {
-        return vertex->value_estimate_for_search;
+        return vertex->value_estimate_local;
     }
 
     double SMMesh::get_entropy_estimate(shared_ptr<SMVertex> vertex) const
@@ -839,13 +839,13 @@ namespace thts {
         int max_push_radius,
         int max_neighbours_to_push_to, 
         const Vec& value_estimate, 
-        const Vec& value_estimate_for_search, 
+        const Vec& value_estimate_local, 
         double entropy_estimate)
     {
         vertex->num_direct_updates++;
         vertex->num_updates++;
         vertex->value_estimate = value_estimate;
-        vertex->value_estimate_for_search = value_estimate_for_search;
+        vertex->value_estimate_local = value_estimate_local;
         vertex->entropy_estimate = entropy_estimate;
 
         vertex->share_values_message_passing(rand_manager, max_push_radius, max_neighbours_to_push_to);

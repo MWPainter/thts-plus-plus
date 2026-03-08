@@ -31,13 +31,14 @@ namespace thts {
                 static_pointer_cast<const ThtsCNode>(parent)),
             num_backups(0),
             soft_value(0.0),
+            soft_value_local(0.0),
             actions(thts_manager->thts_env()->get_valid_actions_itfc(state,*thts_manager->get_thts_context())),
             policy_prior(),
             psuedo_q_value_offset(0.0)
     {
         if (thts_manager->heuristic_fn != nullptr) {
-            num_backups = thts_manager->heuristic_weight;
             soft_value = heuristic_value;
+            soft_value_local = heuristic_value;
         }
 
         if (thts_manager->prior_fn != nullptr) {
@@ -103,7 +104,7 @@ namespace thts {
         if (has_child_node(action)) {
             MentsCNode& child = (MentsCNode&) *get_child_node(action);
             if (for_search) {
-                return child.soft_value_for_search * opp_coeff;
+                return child.soft_value_local * opp_coeff;
             } else {
                 return child.soft_value * opp_coeff;
             }
@@ -370,26 +371,24 @@ namespace thts {
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         double temp = get_temp();
 
+        // Re-use action weights computation for backup
         ActionDistr action_weights;
         double sum_weights;
         double normalisation_term;
         compute_action_weights(action_weights, sum_weights, normalisation_term, ctx, true, false);
-
         soft_value = opp_coeff * temp * (log(sum_weights) + normalisation_term);
+        soft_value_local = soft_value;
 
-
-
-        ActionDistr action_weights_for_search;
-        double sum_weights_for_search;
-        double normalisation_term_for_search;
-        compute_action_weights(action_weights_for_search, sum_weights_for_search, normalisation_term_for_search, ctx, true, true);
-
-        soft_value_for_search = opp_coeff * temp * (log(sum_weights_for_search) + normalisation_term_for_search);
-
+        // Mix in heuristic value
         if (has_heuristic_value()) 
         {
-            soft_value_for_search *= (num_backups - thts_manager->heuristic_weight) / num_backups;
-            soft_value_for_search += thts_manager->heuristic_weight * heuristic_value / num_backups;
+            double effective_num_backups = num_backups + thts_manager->heuristic_weight_global;
+            soft_value *= num_backups / effective_num_backups;
+            soft_value += thts_manager->heuristic_weight_global * heuristic_value / effective_num_backups;
+
+            effective_num_backups += thts_manager->heuristic_weight_local;
+            soft_value_local *= num_backups / effective_num_backups;
+            soft_value_local += thts_manager->heuristic_weight_local * heuristic_value / effective_num_backups;
         }
     }
 

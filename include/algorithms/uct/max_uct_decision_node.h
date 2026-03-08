@@ -23,9 +23,6 @@ namespace thts {
     class MaxUctDNode : public UctDNode {
         friend MaxUctCNode;
 
-        protected:
-            double avg_return_for_search;
-
 
         /**
          * Core ThtsDNode implementation functions.

@@ -94,6 +94,8 @@ namespace thts {
             bool get_graph_search();
             bool get_vector_visit_counts();
             int get_max_trial_length();
+            double get_heuristic_weight_global();
+            double get_heuristic_weight_local();
             bool xpr_is_runtime_bounded();
             double get_termination_bound();
             int get_repeated_runs_per_alg();

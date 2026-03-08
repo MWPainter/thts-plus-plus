@@ -32,15 +32,15 @@ namespace thts {
                 static_pointer_cast<const ThtsCNode>(parent)),
             num_backups(0),
             avg_return(0.0),
+            avg_return_local(0.0),
             actions(thts_manager->thts_env()->get_valid_actions_itfc(state,*thts_manager->get_thts_context())),
             policy_prior() 
     {   
         if (thts_manager->heuristic_fn != nullptr 
             && !thts_manager->thts_env()->is_sink_state_itfc(state,*thts_manager->get_thts_context())) 
         {
-            num_visits = thts_manager->heuristic_weight;
-            num_backups = thts_manager->heuristic_weight;
             avg_return = heuristic_value; 
+            avg_return_local = heuristic_value; 
         } 
 
         if (thts_manager->prior_fn != nullptr) {
@@ -79,7 +79,7 @@ namespace thts {
      */
     void UctDNode::fill_q_values(unordered_map<shared_ptr<const Action>,double>& q_values) const {
         for (shared_ptr<const Action> action : *actions) {
-            q_values[action] = get_child_node(action)->avg_return;
+            q_values[action] = get_child_node(action)->avg_return_local;
         }
     }
 
@@ -115,7 +115,7 @@ namespace thts {
             bias = UctManager::ADAPTIVE_BIAS_MIN_BIAS;
             for (shared_ptr<const Action> action : *actions) {
                 if (!has_child_node(action)) continue;
-                double child_abs_val = abs(get_child_node(action)->avg_return);
+                double child_abs_val = abs(get_child_node(action)->avg_return_local);
                 double candidate_bias = child_abs_val * adaptive_bias_coef;
                 if (candidate_bias > bias) bias = candidate_bias;
             }
@@ -291,11 +291,13 @@ namespace thts {
         avg_return = 0.0;
         double sum_child_visits = 0;
 
+        // Add heuristic "globally" which can be backed up
         if (has_heuristic_value()) {
             avg_return = heuristic_value;
-            sum_child_visits += manager.heuristic_weight;
+            sum_child_visits += manager.heuristic_weight_global;
         }
 
+        // Back up average values
         for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pr : children) {
             shared_ptr<const Action> observation = pr.first;
             UctCNode& child = (UctCNode&) *pr.second;
@@ -304,6 +306,14 @@ namespace thts {
             sum_child_visits += child_num_visits;
             avg_return *= (sum_child_visits - child_num_visits) / sum_child_visits;
             avg_return += child_num_visits * child.avg_return / sum_child_visits;
+        }
+
+        // Add heuristic "locally" to bias search with heuristic values
+        avg_return_local = avg_return;
+        if (has_heuristic_value()) {
+            sum_child_visits += manager.heuristic_weight_local;
+            avg_return_local *= (sum_child_visits - manager.heuristic_weight_local) / sum_child_visits;
+            avg_return_local += manager.heuristic_weight_local * heuristic_value / sum_child_visits;
         }
 
         num_backups++;

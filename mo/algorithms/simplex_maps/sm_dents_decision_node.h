@@ -48,7 +48,7 @@ namespace thts {
             virtual void compute_action_weights_helper_(
                 ActionVector& actions,
                 MoThtsContext& context,
-                std::unordered_map<std::shared_ptr<const Action>,Vec>& value_estimate_for_search_map,
+                std::unordered_map<std::shared_ptr<const Action>,Vec>& value_estimate_local_map,
                 std::unordered_map<std::shared_ptr<const Action>,double>& entropy_estimate_map,
                 ActionDistr& action_weights_,
                 double& sum_weights_) const override;

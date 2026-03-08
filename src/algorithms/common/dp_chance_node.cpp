@@ -27,6 +27,7 @@ namespace thts {
      */
     void DPCNode::backup_dp_impl(DPDNodeChildMap& children, EmpiricalDistributionMap& empirical_distribution, double local_reward, bool is_opponent) {
         dp_value = 0.0;
+        dp_value_local = 0.0;
         double sum_child_n_selections = 0;
         for (pair<shared_ptr<const Observation>,shared_ptr<DPDNode>> pr : children) {
             shared_ptr<const Observation> observation = pr.first;
@@ -36,21 +37,11 @@ namespace thts {
             sum_child_n_selections += child_n_selections;
             dp_value *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
             dp_value += child_n_selections * child.dp_value / sum_child_n_selections;
+            dp_value_local *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+            dp_value_local += child_n_selections * child.dp_value_local / sum_child_n_selections;
         }
         dp_value += local_reward; // +R(s,a)
-        
-        dp_value_for_search = 0.0;
-        sum_child_n_selections = 0;
-        for (pair<shared_ptr<const Observation>,shared_ptr<DPDNode>> pr : children) {
-            shared_ptr<const Observation> observation = pr.first;
-            DPDNode& child = (DPDNode&) *pr.second;
-            double child_n_selections = empirical_distribution[observation];
-            if (child_n_selections == 0) continue;
-            sum_child_n_selections += child_n_selections;
-            dp_value_for_search *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
-            dp_value_for_search += child_n_selections * child.dp_value_for_search / sum_child_n_selections;
-        }
-        dp_value_for_search += local_reward; // +R(s,a)
+        dp_value_local += local_reward; // +R(s,a)
 
         num_backups++;
     }

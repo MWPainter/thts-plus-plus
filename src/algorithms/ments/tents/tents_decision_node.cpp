@@ -280,12 +280,17 @@ namespace thts {
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         double temp = get_temp();
         soft_value = opp_coeff * temp * spmax(false);
-        soft_value_for_search = opp_coeff * temp * spmax(true);
+        soft_value_local = soft_value;
 
         if (has_heuristic_value()) 
         {
-            soft_value_for_search *= (num_backups - thts_manager->heuristic_weight) / num_backups;
-            soft_value_for_search += thts_manager->heuristic_weight * heuristic_value / num_backups;
+            double effective_num_backups = num_backups + thts_manager->heuristic_weight_global;
+            soft_value *= num_backups / effective_num_backups;
+            soft_value += thts_manager->heuristic_weight_global * heuristic_value / effective_num_backups;
+
+            effective_num_backups += thts_manager->heuristic_weight_local;
+            soft_value_local *= num_backups / effective_num_backups;
+            soft_value_local += thts_manager->heuristic_weight_local * heuristic_value / effective_num_backups;
         }
    }
 

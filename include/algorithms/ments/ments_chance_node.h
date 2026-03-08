@@ -46,7 +46,7 @@ namespace thts {
         protected:
             int num_backups;
             double soft_value;
-            double soft_value_for_search;
+            double soft_value_local;
             double local_reward;
             // std::shared_ptr<StateDistr> next_state_distr;
 

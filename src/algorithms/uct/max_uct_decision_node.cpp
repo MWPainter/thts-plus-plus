@@ -27,13 +27,12 @@ namespace thts {
                 state,
                 decision_depth,
                 decision_timestep,
-                static_pointer_cast<const UctCNode>(parent)),
-            avg_return_for_search(0.0)
+                static_pointer_cast<const UctCNode>(parent))
     {  
         if (thts_manager->heuristic_fn != nullptr 
             && !thts_manager->thts_env()->is_sink_state_itfc(state,*thts_manager->get_thts_context())) 
         {
-            avg_return_for_search = heuristic_value; 
+            avg_return_local = heuristic_value; 
         }  
     }
 
@@ -42,7 +41,7 @@ namespace thts {
      */
     void MaxUctDNode::fill_q_values(unordered_map<shared_ptr<const Action>,double>& q_values) const {
         for (shared_ptr<const Action> action : *actions) {
-            q_values[action] = get_child_node(action)->avg_return_for_search;
+            q_values[action] = get_child_node(action)->avg_return_local;
         }
     }
 
@@ -58,14 +57,12 @@ namespace thts {
     {
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         avg_return = opp_coeff * -numeric_limits<double>::infinity();
-        avg_return_for_search = opp_coeff * -numeric_limits<double>::infinity();
 
         for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pr : children) {
             MaxUctCNode& child = (MaxUctCNode&) *pr.second;
             if (child.num_backups == 0) continue;
             if (opp_coeff * child.avg_return > opp_coeff * avg_return) {
                 avg_return = child.avg_return;
-                avg_return_for_search = child.avg_return;
             }
         }
 
@@ -74,8 +71,13 @@ namespace thts {
         // mix in heuristic value if we have one
         if (has_heuristic_value()) 
         {
-            avg_return_for_search *= (num_backups - thts_manager->heuristic_weight) / num_backups;
-            avg_return_for_search += thts_manager->heuristic_weight * heuristic_value / num_backups;
+            double effective_num_backups = num_backups + thts_manager->heuristic_weight_global;
+            avg_return *= num_backups / effective_num_backups;
+            avg_return += thts_manager->heuristic_weight_global * heuristic_value / effective_num_backups;
+
+            effective_num_backups += thts_manager->heuristic_weight_local;
+            avg_return_local *= num_backups / effective_num_backups;
+            avg_return_local += thts_manager->heuristic_weight_local * heuristic_value / effective_num_backups;
         }
     }
     

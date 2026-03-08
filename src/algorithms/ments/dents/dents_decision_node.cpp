@@ -49,7 +49,7 @@ namespace thts {
             return child.avg_return;
         }
         if (for_search) {
-            return child.dp_value_for_search;
+            return child.dp_value_local;
         }
         return child.dp_value;
     }
@@ -139,7 +139,7 @@ namespace thts {
         for (shared_ptr<const Action> action : *actions) {
             soft_q_values[action] = q_values[action] + entropy_coeff * entropy_terms[action] * entropy_coeff;
         }
-    }
+    } 
 
     /**
      * Calls the empnode implementation of recommend action
@@ -190,21 +190,28 @@ namespace thts {
 
         // value backup
         double val_estimate;
-        double val_estimate_for_search;
+        double val_estimate_local;
         DentsManager& manager = (DentsManager&) *thts_manager;
         if (manager.use_dp_value) {
-            backup_dp<DentsCNode>(children, has_heuristic_value(), thts_manager->heuristic_weight, heuristic_value, is_opponent());
+            backup_dp<DentsCNode>(
+                children, 
+                has_heuristic_value(), 
+                thts_manager->heuristic_weight_global,
+                thts_manager->heuristic_weight_local,
+                heuristic_value, 
+                is_opponent());
             val_estimate = dp_value;
-            val_estimate_for_search = dp_value_for_search;
+            val_estimate_local = dp_value_local;
         } else {
             backup_emp(trial_cumulative_return_after_node);
             val_estimate = avg_return;
-            val_estimate_for_search = avg_return;
+            val_estimate_local = avg_return;
         }
     
         // update local soft_value so that value is sensible / for pretty printing
+        // N.B. not actually used in algo
         soft_value = val_estimate + get_entropy_coeff() * subtree_entropy;
-        soft_value_for_search = val_estimate_for_search + get_entropy_coeff() * subtree_entropy;
+        soft_value_local = val_estimate_local + get_entropy_coeff() * subtree_entropy;
     }
 
     /**

@@ -30,12 +30,17 @@ namespace thts {
         protected:
             int num_backups;
             double dp_value;
-            double dp_value_for_search;
+            double dp_value_local;
 
             /**
              * Constructor 
              */
-            DPDNode(double dp_value=0.0) : num_backups(1), dp_value(dp_value), dp_value_for_search(dp_value) {};
+            DPDNode(double dp_value=0.0) : 
+                num_backups(0), 
+                dp_value(dp_value), 
+                dp_value_local(dp_value) 
+            {
+            };
 
             /**
              * Destructor
@@ -87,7 +92,8 @@ namespace thts {
             void backup_dp_impl(
                 DPCNodeChildMap& children, 
                 bool has_heuristic_value,
-                double heuristic_weight,
+                double heuristic_weight_global,
+                double heuristic_weight_local,
                 double heuristic_value, 
                 bool is_opponent);
 
@@ -165,7 +171,8 @@ namespace thts {
             void backup_dp(
                 const CNodeChildMap& children, 
                 bool has_heuristic_value, 
-                double heuristic_weight, 
+                double heuristic_weight_global,
+                double heuristic_weight_local, 
                 double heuristic_value, 
                 bool is_opponent=false) 
             {
@@ -173,7 +180,8 @@ namespace thts {
                 backup_dp_impl(
                     *dp_children, 
                     has_heuristic_value, 
-                    heuristic_weight, 
+                    heuristic_weight_global,
+                    heuristic_weight_local, 
                     heuristic_value, 
                     is_opponent);
             }

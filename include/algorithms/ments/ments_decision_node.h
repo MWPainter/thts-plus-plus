@@ -57,7 +57,7 @@ namespace thts {
         protected:
             int num_backups;
             double soft_value;
-            double soft_value_for_search;
+            double soft_value_local;
             std::shared_ptr<ActionVector> actions;
             std::shared_ptr<ActionPrior> policy_prior;
             double psuedo_q_value_offset;

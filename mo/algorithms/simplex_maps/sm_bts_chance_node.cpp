@@ -60,7 +60,7 @@ namespace thts {
 
         // Compute backup value as avg of children's
         Vec new_value = Vec::Zero(manager.reward_dim);
-        Vec new_value_for_search = Vec::Zero(manager.reward_dim);
+        Vec new_value_local = Vec::Zero(manager.reward_dim);
 
         double sum_child_n_selections = 0;
         for (pair<shared_ptr<const Observation>,shared_ptr<ThtsDNode>> pr : children) {
@@ -71,19 +71,19 @@ namespace thts {
             SMVertex& child_vertex = *child.simplex_map.get_closest_vertex(
                 closest_vertex_weight, child.simplex_map.get_simplex(closest_vertex_weight));
             Vec child_value = child_vertex.value_estimate;
-            Vec child_value_for_search = child_vertex.value_estimate_for_search;
+            Vec child_value_local = child_vertex.value_estimate_local;
 
             sum_child_n_selections += child_n_selections;
 
             new_value *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
             new_value += child_n_selections * child_value / sum_child_n_selections;
 
-            new_value_for_search *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
-            new_value_for_search += child_n_selections * child_value_for_search / sum_child_n_selections;
+            new_value_local *= (sum_child_n_selections - child_n_selections) / sum_child_n_selections;
+            new_value_local += child_n_selections * child_value_local / sum_child_n_selections;
         }
 
         new_value += local_reward;
-        new_value_for_search += local_reward;
+        new_value_local += local_reward;
 
         // Update value in simplex map vertex
         this->simplex_map.update_vertex_values_and_share(
@@ -92,7 +92,7 @@ namespace thts {
             manager.max_push_radius,
             manager.max_neighbours_to_push_to,
             new_value,
-            new_value_for_search,
+            new_value_local,
             0.0 // entropy estimate is not used for BTS
         );
 

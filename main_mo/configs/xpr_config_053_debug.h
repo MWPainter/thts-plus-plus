@@ -16,7 +16,9 @@ static const std::vector<ConfigMap> CONFIG_053 =
         {XPR_PARAM_ID_MCTS_MODE,                        true},
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
         {XPR_PARAM_ID_VECTOR_VISIT_COUNTS,              false},
-        {XPR_PARAM_ID_MAX_TRIAL_LENGTH,                 26*2}, 
+        {XPR_PARAM_ID_MAX_TRIAL_LENGTH,                 26*2},
+        {XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,  1.0},
+        {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,   0.0}, 
         {XPR_PARAM_ID_RUNTIME_BOUNDED,                  true}, 
         {XPR_PARAM_ID_TERMINATION_BOUND,                10.0}, // 90 sec
         {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            2},

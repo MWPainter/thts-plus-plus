@@ -275,7 +275,7 @@ namespace thts {
         int num_direct_updates;
         int num_updates;
         Vec value_estimate;
-        Vec value_estimate_for_search;
+        Vec value_estimate_local;
         double entropy_estimate;
 
         std::shared_ptr<std::unordered_set<std::shared_ptr<SMVertex>>> neighbours;
@@ -621,7 +621,7 @@ namespace thts {
         // Reading from a vertex
         int get_num_updates(std::shared_ptr<SMVertex> vertex) const;
         Vec get_value_estimate(std::shared_ptr<SMVertex> vertex) const;
-        Vec get_value_estimate_for_search(std::shared_ptr<SMVertex> vertex) const;
+        Vec get_value_estimate_local(std::shared_ptr<SMVertex> vertex) const;
         double get_entropy_estimate(std::shared_ptr<SMVertex> vertex) const;
 
         // Update a value estimate for a vertex
@@ -631,7 +631,7 @@ namespace thts {
             int max_push_radius,
             int max_neighbours_to_push_to,
             const Vec& value_estimate, 
-            const Vec& value_estimate_for_search, 
+            const Vec& value_estimate_local, 
             double entropy_estimate=0.0);
 
         // Maybe subdivide a simplex, if it meets the conditions to warrent it

@@ -37,6 +37,7 @@ namespace thts {
         protected:
             int num_backups;
             double avg_return;
+            double avg_return_local;
             std::shared_ptr<StateDistr> next_state_distr;
 
             /**

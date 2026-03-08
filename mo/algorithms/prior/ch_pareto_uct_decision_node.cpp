@@ -65,7 +65,7 @@ namespace thts {
             ChParetoUctCNode& child = (ChParetoUctCNode&) *pair.second;
             int child_visits = child.get_num_visits(ctx);
             Eigen::ArrayXd ucb_conf_vec = Eigen::ArrayXd::Ones(manager.reward_dim) * compute_ucb_confidence_interval(local_visits, child_visits);
-            ConvexHull shifted_child_ch = child.convex_hull_for_search + Vec(ucb_conf_vec);
+            ConvexHull shifted_child_ch = child.convex_hull_local + Vec(ucb_conf_vec);
             for (const Vec& v : shifted_child_ch.ch_points) {
                 vec_to_action_map[v].push_back(action);
             }

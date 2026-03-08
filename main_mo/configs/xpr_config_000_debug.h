@@ -17,6 +17,8 @@ static const std::vector<ConfigMap> CONFIG_000 =
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
         {XPR_PARAM_ID_VECTOR_VISIT_COUNTS,              false},
         {XPR_PARAM_ID_MAX_TRIAL_LENGTH,                 10000},
+        {XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,  0.0},
+        {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,   1.0},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,                  true},
         {XPR_PARAM_ID_TERMINATION_BOUND,                1.0},
         {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            5},

@@ -132,6 +132,8 @@ Mo stuff
 
 
 make && clear &&
+./run_memory_limited 8G ./auxexpr eval 010 &&
+python plot_aux.py 010 &&
 ./run_memory_limited 8G ./moexpr eval 050 && 
 ./run_memory_limited 8G ./moexpr eval 051 &&
 ./run_memory_limited 8G ./moexpr eval 052 && 

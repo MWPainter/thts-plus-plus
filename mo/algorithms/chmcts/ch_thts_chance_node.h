@@ -25,7 +25,7 @@ namespace thts {
         protected:
             int num_backups;
             ConvexHull convex_hull;
-            ConvexHull convex_hull_for_search;
+            ConvexHull convex_hull_local;
             Eigen::ArrayXd local_reward;
 
         public:
