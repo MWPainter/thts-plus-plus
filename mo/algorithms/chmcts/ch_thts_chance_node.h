@@ -56,7 +56,7 @@ namespace thts {
             virtual std::string get_pretty_print_val() const override = 0;
         
 
-            double get_contextual_q_value(const MoThtsContext& ctx, bool for_search=true) const;
+            double get_contextual_q_value(const MoThtsContext& ctx, bool for_backup=false) const;
 
 
         /**

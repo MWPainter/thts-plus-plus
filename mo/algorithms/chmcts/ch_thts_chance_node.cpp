@@ -75,8 +75,8 @@ namespace thts {
         update_solved_value();
     }
 
-    double ChThtsCNode::get_contextual_q_value(const MoThtsContext& ctx, bool for_search) const {
-        if (for_search) {
+    double ChThtsCNode::get_contextual_q_value(const MoThtsContext& ctx, bool for_backup) const {
+        if (!for_backup) {
             return convex_hull_local.get_max_linear_utility(ctx.context_weight);
         } else {
             return convex_hull.get_max_linear_utility(ctx.context_weight);

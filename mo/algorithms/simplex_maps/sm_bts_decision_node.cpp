@@ -332,10 +332,19 @@ namespace thts {
         }
 
         // If have a heuristic value, mix it in
-        Vec new_value_local = new_value;
-        if (this->has_heuristic_value())
+        if (this->has_heuristic_value() && manager.heuristic_weight_global > 0) 
         {
-            double heuristic_ratio = manager.heuristic_weight_local / (num_backups + manager.heuristic_weight_local);
+            double heuristic_ratio = manager.heuristic_weight_global / (num_backups + manager.heuristic_weight_global);
+            new_value *= (1.0 - heuristic_ratio);
+            new_value += mo_heuristic_value * heuristic_ratio;
+        }
+
+        // If have a heuristic value, mix it in
+        Vec new_value_local = new_value;
+        if (this->has_heuristic_value() && manager.heuristic_weight_local > 0) 
+        {
+            double total_heuristic_weight = manager.heuristic_weight_global + manager.heuristic_weight_local;
+            double heuristic_ratio = total_heuristic_weight / (num_backups + total_heuristic_weight);
             new_value_local *= (1.0 - heuristic_ratio);
             new_value_local += mo_heuristic_value * heuristic_ratio;
         }

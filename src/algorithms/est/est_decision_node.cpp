@@ -24,7 +24,7 @@ namespace thts {
     /**
      * Gets the q_value to use for a child, calls ments version when there is not a child node
      */
-    double EstDNode::get_soft_q_value(std::shared_ptr<const Action> action, double opp_coeff, bool for_search) const {
+    double EstDNode::get_soft_q_value(std::shared_ptr<const Action> action, double opp_coeff, bool for_backup) const {
         if (has_child_node(action)) {
             EstCNode& child = (EstCNode&) *get_child_node(action);
             DentsManager& manager = (DentsManager&) *thts_manager;
@@ -32,7 +32,7 @@ namespace thts {
             {
                 return opp_coeff * child.avg_return;
             } 
-            else if (for_search) 
+            else if (!for_backup) 
             {
                 return opp_coeff * child.dp_value_local;
             } 
@@ -42,7 +42,7 @@ namespace thts {
             }
         } 
 
-        return MentsDNode::get_soft_q_value(action, opp_coeff, for_search);
+        return MentsDNode::get_soft_q_value(action, opp_coeff, for_backup);
     }
 
     /**
@@ -51,11 +51,10 @@ namespace thts {
     void EstDNode::fill_soft_q_values(
         unordered_map<shared_ptr<const Action>,double>& q_values,
         double opp_coeff,
-        bool for_backup,
-        bool for_search) const
+        bool for_backup) const
     {
         for (shared_ptr<const Action> action : *actions) {
-            q_values[action] = get_soft_q_value(action, opp_coeff, for_search);
+            q_values[action] = get_soft_q_value(action, opp_coeff, for_backup);
         }
     }
 

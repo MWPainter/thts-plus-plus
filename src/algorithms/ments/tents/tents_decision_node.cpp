@@ -12,7 +12,7 @@ using namespace std;
 static double EPS = 1e-16;
 
 namespace thts {
-    /**
+    /** 
      * Constructor, 
      * initialises the maps used by tents,
      * cache the selected_action_key used in contexts
@@ -30,11 +30,14 @@ namespace thts {
                 decision_timestep,
                 static_pointer_cast<const MentsCNode>(parent))
     {
-        for (shared_ptr<const Action> action : *actions) {
-            double qval = get_soft_q_value_over_temp(action, false);
+        for (shared_ptr<const Action> action : *actions) 
+        {
+            bool for_backup = true;
+            double qval = get_soft_q_value_over_temp(action, for_backup);
             qval_to_act.insert(make_pair(qval, action));
             act_to_qval.insert_or_assign(action, qval);
-            double qval_for_search = get_soft_q_value_over_temp(action, true);
+            for_backup = false;
+            double qval_for_search = get_soft_q_value_over_temp(action, for_backup);
             qval_to_act_for_search.insert(make_pair(qval_for_search, action));
             act_to_qval_for_search.insert_or_assign(action, qval_for_search);
         }
@@ -47,9 +50,9 @@ namespace thts {
     /**
      * Get the value of Q(s,a)/temp from the best available source (see ments get_soft_q_value, tries child, then prior)
     */
-    double TentsDNode::get_soft_q_value_over_temp(shared_ptr<const Action> action, bool for_search) const {
+    double TentsDNode::get_soft_q_value_over_temp(shared_ptr<const Action> action, bool for_backup) const {
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
-        double qval = get_soft_q_value(action, opp_coeff, for_search);
+        double qval = get_soft_q_value(action, opp_coeff, for_backup);
         double temp = get_temp();
         if (temp <= 0.0 || !std::isfinite(temp)) {
             temp = EPS;
@@ -60,27 +63,30 @@ namespace thts {
     /**
      * Updates the tents mapping for 'action' to/from 'neq_q_value'
     */
-    void TentsDNode::update_maps(shared_ptr<const Action> action, double new_q_value, bool for_search) {
-        if (!for_search) {
-            double old_q_value = act_to_qval[action];
-            act_to_qval.erase(action);
-            for (auto it=qval_to_act.find(old_q_value); it != qval_to_act.end(); it++) {
-                if (it->first != old_q_value) throw runtime_error("Error in updating Tents maps.");
-                if (it->second != action) continue;
-                qval_to_act.erase(it);
-                break;
-            }
-
-            act_to_qval.insert_or_assign(action, new_q_value);
-            qval_to_act.insert(make_pair(new_q_value, action));
-
+    void TentsDNode::update_maps(shared_ptr<const Action> action, double new_q_value, bool for_backup) {
+        if (!for_backup) {
+            update_maps_for_search(action, new_q_value);
             return;
         }
 
-        double old_q_value_for_search = act_to_qval_for_search[action];
+        double old_q_value = act_to_qval[action];
+        act_to_qval.erase(action);
+        for (auto it=qval_to_act.find(old_q_value); it != qval_to_act.end(); it++) {
+            if (it->first != old_q_value) throw runtime_error("Error in updating Tents maps.");
+            if (it->second != action) continue;
+            qval_to_act.erase(it);
+            break;
+        }
+
+        act_to_qval.insert_or_assign(action, new_q_value);
+        qval_to_act.insert(make_pair(new_q_value, action));
+    }
+
+    void TentsDNode::update_maps_for_search(shared_ptr<const Action> action, double new_q_value) {
+        double old_q_value = act_to_qval_for_search[action];
         act_to_qval_for_search.erase(action);
-        for (auto it=qval_to_act_for_search.find(old_q_value_for_search); it != qval_to_act_for_search.end(); it++) {
-            if (it->first != old_q_value_for_search) throw runtime_error("Error in updating Tents maps.");
+        for (auto it=qval_to_act_for_search.find(old_q_value); it != qval_to_act_for_search.end(); it++) {
+            if (it->first != old_q_value) throw runtime_error("Error in updating Tents maps.");
             if (it->second != action) continue;
             qval_to_act_for_search.erase(it);
             break;
@@ -98,25 +104,29 @@ namespace thts {
      * It is important the the values of Q(s,a)/temp are iterated over from the highest to lowest values (which the 
      * reverse iterator over the multimap will do)
     */
-    unique_ptr<ActionVector> TentsDNode::get_sparse_action_set(bool for_search) const {
-        if (!for_search) {
-            unique_ptr<ActionVector> sparse_action_set = make_unique<ActionVector>();
-            double i = 0;
-            double sum_values = 0.0;
-            for (auto it=qval_to_act.rbegin(); it != qval_to_act.rend(); it++) {
-                double value = it->first;
-                if (!std::isfinite(value)) continue;
-                shared_ptr<const Action> action = it->second;
-                sum_values += value;
-                if (1.0 + (i+1.0)*value > sum_values) {
-                    sparse_action_set->push_back(action);
-                }
-                i++;
-            }
-            return sparse_action_set;
+    unique_ptr<ActionVector> TentsDNode::get_sparse_action_set(bool for_backup, bool only_actions_with_children) const {
+        if (!for_backup) {
+            return get_sparse_action_set_for_search(only_actions_with_children);
         }
 
+        unique_ptr<ActionVector> sparse_action_set = make_unique<ActionVector>();
+        double i = 0;
+        double sum_values = 0.0;
+        for (auto it=qval_to_act.rbegin(); it != qval_to_act.rend(); it++) {
+            double value = it->first;
+            if (!std::isfinite(value)) continue;
+            shared_ptr<const Action> action = it->second;
+            if (only_actions_with_children && !has_child_node(action)) continue;
+            sum_values += value;
+            if (1.0 + (i+1.0)*value > sum_values) {
+                sparse_action_set->push_back(action);
+            }
+            i++;
+        }
+        return sparse_action_set;
+    }
 
+    unique_ptr<ActionVector> TentsDNode::get_sparse_action_set_for_search(bool only_actions_with_children) const {
         unique_ptr<ActionVector> sparse_action_set = make_unique<ActionVector>();
         double i = 0;
         double sum_values = 0.0;
@@ -124,6 +134,7 @@ namespace thts {
             double value = it->first;
             if (!std::isfinite(value)) continue;
             shared_ptr<const Action> action = it->second;
+            if (only_actions_with_children && !has_child_node(action)) continue;
             sum_values += value;
             if (1.0 + (i+1.0)*value > sum_values) {
                 sparse_action_set->push_back(action);
@@ -138,18 +149,12 @@ namespace thts {
      * http://proceedings.mlr.press/v139/dam21a/dam21a.pdf
      * This just computes the spmax equation given in the paper
     */
-    double TentsDNode::spmax(bool for_search) const {
-        unique_ptr<ActionVector> sparse_action_set = get_sparse_action_set(for_search);
+    double TentsDNode::spmax(bool for_backup, bool only_actions_with_children) const {
+        unique_ptr<ActionVector> sparse_action_set = get_sparse_action_set(for_backup, only_actions_with_children);
 
         double sum_sparse_values = 0.0;
-        if (!for_search) {
-            for (shared_ptr<const Action> action : *sparse_action_set) {
-                    sum_sparse_values += act_to_qval.at(action);
-            }
-        } else {
-            for (shared_ptr<const Action> action : *sparse_action_set) {
-                sum_sparse_values += act_to_qval_for_search.at(action);
-            }
+        for (shared_ptr<const Action> action : *sparse_action_set) {
+                sum_sparse_values += act_to_qval.at(action);
         }
 
         size_t sparse_size = sparse_action_set->size();
@@ -158,16 +163,9 @@ namespace thts {
         }
         double spmax_common_term = 0.5 * pow(sum_sparse_values-1.0, 2.0) / pow(static_cast<double>(sparse_size), 2.0);
         double spmax = 0.5;
-        if (!for_search) {
-            for (shared_ptr<const Action> action : *sparse_action_set) {
-                double action_val = act_to_qval.at(action);
-                spmax += pow(action_val, 2.0) / 2.0 - spmax_common_term;
-            }
-        } else {
-            for (shared_ptr<const Action> action : *sparse_action_set) {
-                double action_val = act_to_qval_for_search.at(action);
-                spmax += pow(action_val, 2.0) / 2.0 - spmax_common_term;
-            }
+        for (shared_ptr<const Action> action : *sparse_action_set) {
+            double action_val = act_to_qval.at(action);
+            spmax += pow(action_val, 2.0) / 2.0 - spmax_common_term;
         }
 
         return spmax;
@@ -189,29 +187,28 @@ namespace thts {
         double& normalisation_term, 
         ThtsContext& context,
         bool for_backup,
-        bool for_search) const
+        bool only_actions_with_children) const
     {
         sum_action_weights = 0.0;
         normalisation_term = 0.0;
 
         // compute the common term (guard empty sparse set to avoid division by zero → NaN)
-        unique_ptr<ActionVector> sparse_action_set = get_sparse_action_set(for_search);
+        unique_ptr<ActionVector> sparse_action_set = get_sparse_action_set(for_backup,only_actions_with_children);
         if (sparse_action_set->empty()) {
             size_t n_actions = actions->size();
             if (n_actions == 0) {
                 return;
             }
-            double uniform_weight = 1.0 / static_cast<double>(n_actions);
             for (shared_ptr<const Action> action : *actions) {
-                action_weights[action] = uniform_weight;
+                action_weights[action] = 1.0;
             }
-            sum_action_weights = 1.0;
+            sum_action_weights = n_actions;
             return;
         }
 
         double sum_sparse_values = 0.0;
         for (shared_ptr<const Action> action : *sparse_action_set) {
-            double q_over_t = get_soft_q_value_over_temp(action, for_search);
+            double q_over_t = get_soft_q_value_over_temp(action, for_backup);
             if (std::isfinite(q_over_t)) {
                 sum_sparse_values += q_over_t;
             }
@@ -220,7 +217,7 @@ namespace thts {
 
         // compute weights and store (skip non-finite to avoid propagating NaN)
         for (shared_ptr<const Action> action : *actions) {
-            double q_over_t = get_soft_q_value_over_temp(action, for_search);
+            double q_over_t = get_soft_q_value_over_temp(action, for_backup);
             if (!std::isfinite(q_over_t)) continue;
             double weight = q_over_t - common_term;
             if (weight < 0.0) weight = 0.0;
@@ -241,6 +238,17 @@ namespace thts {
             }
             sum_action_weights = 1.0;
         }
+
+        // For not backups, normalise the action weights
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        if (!for_backup && manager.normalise_q_values) 
+        {
+            thts::helper::linearly_normalise_values(action_weights);
+            sum_action_weights = 0.0;
+            for (pair<shared_ptr<const Action>,double> pr : action_weights) {
+                sum_action_weights += pr.second;
+            }
+        }
     }
 
     /**
@@ -260,10 +268,12 @@ namespace thts {
     */
    void TentsDNode::backup_update_map(ThtsContext& ctx) {
         shared_ptr<const Action> selected_action = ctx.get_value_ptr_const<Action>(_selected_action_key);
-        double new_q_value = get_soft_q_value_over_temp(selected_action, false);
-        update_maps(selected_action, new_q_value, false);
-        new_q_value = get_soft_q_value_over_temp(selected_action, true);
-        update_maps(selected_action, new_q_value, true);
+        bool for_backup = false;
+        double new_q_value = get_soft_q_value_over_temp(selected_action, for_backup);
+        update_maps(selected_action, new_q_value, for_backup);
+        for_backup = true;
+        new_q_value = get_soft_q_value_over_temp(selected_action, for_backup);
+        update_maps(selected_action, new_q_value, for_backup);
    }
 
     /**
@@ -279,7 +289,9 @@ namespace thts {
 
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
         double temp = get_temp();
-        soft_value = opp_coeff * temp * spmax(false);
+        bool for_backup = true;
+        bool only_actions_with_children = true;
+        soft_value = opp_coeff * temp * spmax(for_backup, only_actions_with_children);
         soft_value_local = soft_value;
 
         if (has_heuristic_value()) 

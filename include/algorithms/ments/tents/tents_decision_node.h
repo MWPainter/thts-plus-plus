@@ -69,7 +69,7 @@ namespace thts {
              *      The soft value corresponding to the child at 'action', divided by the temperature
              * 
             */
-            double get_soft_q_value_over_temp(std::shared_ptr<const Action> action, bool for_search) const;
+            double get_soft_q_value_over_temp(std::shared_ptr<const Action> action, bool for_backup) const;
 
             /**
              * Updates the 'qval_to_act' and 'act_to_qval' maps.
@@ -80,7 +80,8 @@ namespace thts {
              *      action: The action to be updated in the maps
              *      new_q_value: The new q_value (over temp) to be updated in the maps
             */
-            void update_maps(std::shared_ptr<const Action> action, double new_q_value, bool for_search);
+            void update_maps(std::shared_ptr<const Action> action, double new_q_value, bool for_backup);
+            void update_maps_for_search(std::shared_ptr<const Action> action, double new_q_value);
 
             /**
              * Computes the sparse action set for this node.
@@ -88,7 +89,8 @@ namespace thts {
              * Assumes that we already hold locks for all of the children.
              * See paper for definition of sparse_action_set. http://proceedings.mlr.press/v139/dam21a/dam21a.pdf
             */
-            std::unique_ptr<std::vector<std::shared_ptr<const Action>>> get_sparse_action_set(bool for_search) const;
+            std::unique_ptr<std::vector<std::shared_ptr<const Action>>> get_sparse_action_set(bool for_backup, bool only_actions_with_children) const;
+            std::unique_ptr<std::vector<std::shared_ptr<const Action>>> get_sparse_action_set_for_search(bool only_actions_with_children) const;
 
             /**
              * Computes the spmax at this node. 
@@ -99,7 +101,7 @@ namespace thts {
              * Returns:
              *      The spmax
             */
-            double spmax(bool for_search) const;
+            double spmax(bool for_backup, bool only_actions_with_children) const;
 
             /**
              * Computes the weights for each action for the Tents action selection.
@@ -124,7 +126,7 @@ namespace thts {
                 double& normalisation_term, 
                 ThtsContext& context,
                 bool for_backup,
-                bool for_search) const override;
+                bool only_actions_with_children) const override;
 
             /**
              * Updates the tents maps for the backup, using the selected action stored in ctx

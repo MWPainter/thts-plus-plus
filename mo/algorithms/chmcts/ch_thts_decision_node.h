@@ -57,11 +57,11 @@ namespace thts {
                 std::shared_ptr<const Action> action) const = 0;
             virtual std::string get_pretty_print_val() const override = 0;
 
-            double get_contextual_q_value(const MoThtsContext& ctx, bool for_search=true) const;
+            double get_contextual_q_value(const MoThtsContext& ctx, bool for_backup) const;
             virtual void fill_contextual_q_values(
                 std::unordered_map<std::shared_ptr<const Action>,double>& q_values, 
                 MoThtsContext& ctx, 
-                bool for_search=true,
+                bool for_backup,
                 double default_q_value=0) const;
 
         public:

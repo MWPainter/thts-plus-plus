@@ -8,7 +8,7 @@ namespace thts {
      * Args object so that params can be set in a more named args way
      */
     struct MentsManagerArgs : public ThtsManagerArgs {
-        static const bool normalise_q_values_default=true;
+        static const bool normalise_q_values_default=false;
         static constexpr double temp_default=1.0;
         static constexpr double prior_policy_search_weight_default=0.0;
         static constexpr double epsilon_default=0.5;

@@ -123,6 +123,11 @@ namespace thts {
                 const double trial_cumulative_return,
                 ThtsContext& ctx);
 
+            /**
+             * Returns the number of times this node has been backed up.
+             */
+            int get_num_backups() const { return num_backups; }
+
         protected:
             /**
              * A helper function that makes a child node object on the heap and returns it. 

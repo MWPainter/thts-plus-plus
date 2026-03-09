@@ -100,10 +100,10 @@ namespace thts {
      * Handle numerical instability for the prior_prob=0 case
      * log
      */
-    double MentsDNode::get_soft_q_value(std::shared_ptr<const Action> action, double opp_coeff, bool for_search) const {
+    double MentsDNode::get_soft_q_value(std::shared_ptr<const Action> action, double opp_coeff, bool for_backup) const {
         if (has_child_node(action)) {
             MentsCNode& child = (MentsCNode&) *get_child_node(action);
-            if (for_search) {
+            if (!for_backup) {
                 return child.soft_value_local * opp_coeff;
             } else {
                 return child.soft_value * opp_coeff;
@@ -131,11 +131,10 @@ namespace thts {
     void MentsDNode::fill_soft_q_values(
         unordered_map<shared_ptr<const Action>,double>& q_values,
         double opp_coeff,
-        bool for_backup,
-        bool for_search) const
+        bool for_backup) const
     {
         for (shared_ptr<const Action> action : *actions) {
-            q_values[action] = get_soft_q_value(action, opp_coeff, for_search);
+            q_values[action] = get_soft_q_value(action, opp_coeff, for_backup);
         }
     }
 
@@ -165,7 +164,7 @@ namespace thts {
         double& normalisation_term, 
         ThtsContext& context,
         bool for_backup,
-        bool for_search) const
+        bool only_actions_with_children) const
     {
         // get temp
         double opp_coeff = is_opponent() ? -1.0 : 1.0;
@@ -173,7 +172,19 @@ namespace thts {
 
         // Get current q values
         unordered_map<shared_ptr<const Action>,double> q_values;
-        fill_soft_q_values(q_values, opp_coeff, for_backup, for_search);
+        fill_soft_q_values(q_values, opp_coeff, for_backup);
+
+        // Optionally remove the q values that didn't come from an updated child node
+        if (only_actions_with_children) 
+        {
+            for (shared_ptr<const Action> action : *actions) 
+            {
+                if (!has_child_node(action)) continue;
+                MentsCNode& child = (MentsCNode&) *get_child_node(action);
+                if (child.num_backups > 0) continue;
+                q_values.erase(action);
+            }
+        }
 
         // optionally normalise q values (for action selection)
         MentsManager& manager = (MentsManager&) *thts_manager;
@@ -234,7 +245,9 @@ namespace thts {
         // compute boltzmann weights
         double sum_weights;
         double _normalisation_term;
-        compute_action_weights(action_distr, sum_weights, _normalisation_term, context, false, true);
+        bool for_backup = false;
+        bool only_actions_with_children = false;
+        compute_action_weights(action_distr, sum_weights, _normalisation_term, context, for_backup, only_actions_with_children);
 
         // compute lambda
         MentsManager& manager = (MentsManager&) *thts_manager;
@@ -249,21 +262,25 @@ namespace thts {
         double num_actions = actions->size();
         double uniform_distr_mass = 1.0 / num_actions;
         vector<shared_ptr<const Action>> near_zero_prob_actions;
-        for (shared_ptr<const Action> action : *actions) {
+        for (shared_ptr<const Action> action : *actions) 
+        {
             action_distr[action] *= (1.0 - lambda) / sum_weights;
-            if (manager.prior_policy_search_weight > 0.0) {
+            if (manager.prior_policy_search_weight > 0.0) 
+            {
                 double lambda_tilde = manager.prior_policy_search_weight / log(num_visits+3);
                 action_distr[action] *= (1.0 - lambda_tilde);
                 action_distr[action] += (1.0 - lambda) * lambda_tilde * policy_prior->at(action);
             }
             action_distr[action] += lambda * uniform_distr_mass;
-            if (action_distr[action] < EPS) {
+            if (action_distr[action] < EPS) 
+            {
                 near_zero_prob_actions.push_back(action);
             }
         }
 
         // Remove close to zero probabilities (never going to sample + leads to numerical ick later)
-        for (shared_ptr<const Action> action : near_zero_prob_actions) {
+        for (shared_ptr<const Action> action : near_zero_prob_actions) 
+        {
             action_distr.erase(action);
         }
     }
@@ -304,7 +321,8 @@ namespace thts {
         unordered_map<shared_ptr<const Action>, double> soft_values;
 
         for (shared_ptr<const Action> action : *actions) {
-            double q_value = get_soft_q_value(action, opp_coeff, false);
+            bool for_backup = true; // dont add extra heuristic for search
+            double q_value = get_soft_q_value(action, opp_coeff, for_backup);
             if (has_child_node(action) && get_child_node(action)->num_visits >= manager.recommend_visit_threshold) {
                 soft_values_thresholded[action] = q_value;
             } else {
@@ -375,7 +393,9 @@ namespace thts {
         ActionDistr action_weights;
         double sum_weights;
         double normalisation_term;
-        compute_action_weights(action_weights, sum_weights, normalisation_term, ctx, true, false);
+        bool for_backup = true;
+        bool only_acitons_with_children = true;
+        compute_action_weights(action_weights, sum_weights, normalisation_term, ctx, for_backup, only_acitons_with_children);
         soft_value = opp_coeff * temp * (log(sum_weights) + normalisation_term);
         soft_value_local = soft_value;
 

@@ -43,7 +43,8 @@ namespace thts {
         // Get q values and temp
         ChBtsManager& manager = (ChBtsManager&) *thts_manager;
         ActionDistr q_values;
-        fill_contextual_q_values(q_values, context, true, manager.default_q_value);
+        bool for_backup = false;
+        fill_contextual_q_values(q_values, context, for_backup, manager.default_q_value);
         double temp = get_temp(context);
 
         // Optionally normalise Q values
@@ -92,6 +93,8 @@ namespace thts {
         // compute boltzmann weights
         double sum_weights;
         double _normalisation_term;
+        bool for_backup = false;
+        bool only_actions_with_children = false;
         compute_action_weights(action_distr, sum_weights, _normalisation_term, context);
 
         // Avoid division by zero

@@ -36,10 +36,10 @@ namespace thts {
     /**
      * Get the raw q value of a child node
      */
-    double DentsDNode::get_q_value(std::shared_ptr<const Action> action, double opp_coeff, bool for_search) const {
+    double DentsDNode::get_q_value(std::shared_ptr<const Action> action, double opp_coeff, bool for_backup) const {
         if (!has_child_node(action)) {
             // returns the heuristic value
-            return MentsDNode::get_soft_q_value(action, opp_coeff, for_search);
+            return MentsDNode::get_soft_q_value(action, opp_coeff, for_backup);
         }
 
         DentsManager& manager = (DentsManager&) *thts_manager;
@@ -48,7 +48,7 @@ namespace thts {
         {
             return child.avg_return;
         }
-        if (for_search) {
+        if (!for_backup) {
             return child.dp_value_local;
         }
         return child.dp_value;
@@ -85,15 +85,14 @@ namespace thts {
     void DentsDNode::fill_soft_q_values(
         unordered_map<shared_ptr<const Action>,double>& soft_q_values,
         double opp_coeff,
-        bool for_backup,
-        bool for_search) const
+        bool for_backup) const
     {
         DentsManager& manager = (DentsManager&) *ThtsDNode::thts_manager;
 
         // Get current q values
         unordered_map<shared_ptr<const Action>,double> q_values;
         for (shared_ptr<const Action> action : *actions) {
-            q_values[action] = get_q_value(action, opp_coeff, for_search);
+            q_values[action] = get_q_value(action, opp_coeff, for_backup);
         }
 
         // Normalise Q values

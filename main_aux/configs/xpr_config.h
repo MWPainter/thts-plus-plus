@@ -14,6 +14,7 @@
 #include "main_aux/configs/xpr_config_010_frozen_lake_dense_debugging.h"
 #include "main_aux/configs/xpr_config_011_frozen_lake_sparse_debugging.h"
 #include "main_aux/configs/xpr_config_012_frozen_lake_slippy_debugging.h"
+#include "main_aux/configs/xpr_config_013_frozen_lake_sparse_debugging.h"
 // #include "main_aux/configs/xpr_config_100_dchain_temp.h"
 // #include "main_aux/configs/xpr_config_101_mod_dchain_temp.h"
 // #include "main_aux/configs/xpr_config_102_entropy_trap_temp.h"
@@ -69,6 +70,15 @@
 #include "main_aux/configs/xpr_config_820_frozen_lake_slippy_scenic_route.h"
 #include "main_aux/configs/xpr_config_821_frozen_lake_slippy_scenic_route.h"
 #include "main_aux/configs/xpr_config_822_frozen_lake_slippy_scenic_route.h"
+#include "main_aux/configs/xpr_config_900_sailing.h"
+#include "main_aux/configs/xpr_config_901_sailing.h"
+#include "main_aux/configs/xpr_config_902_sailing.h"
+#include "main_aux/configs/xpr_config_910_sailing.h"
+#include "main_aux/configs/xpr_config_911_sailing.h"
+#include "main_aux/configs/xpr_config_912_sailing.h"
+#include "main_aux/configs/xpr_config_920_sailing.h"
+#include "main_aux/configs/xpr_config_921_sailing.h"
+#include "main_aux/configs/xpr_config_922_sailing.h"
 // #include "main_aux/configs/xpr_config_999_ments_entropy_trap_debug.h"
 
 
@@ -86,6 +96,7 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     CONFIG_010,
     CONFIG_011,
     CONFIG_012,
+    CONFIG_013,
     
     // CONFIG_100,
     // CONFIG_101,
@@ -157,6 +168,18 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     CONFIG_820,
     CONFIG_821,
     CONFIG_822,
+
+    CONFIG_900,
+    CONFIG_901,
+    CONFIG_902,
+
+    CONFIG_910,
+    CONFIG_911,
+    CONFIG_912,
+
+    CONFIG_920,
+    CONFIG_921,
+    CONFIG_922,
 
     // CONFIG_999,
 };

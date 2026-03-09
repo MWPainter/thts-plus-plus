@@ -106,7 +106,7 @@ namespace thts {
                 double& normalisation_term, 
                 ThtsContext& context,
                 bool for_backup,
-                bool for_search) const override;
+                bool only_actions_with_children) const override;
 
             /**
              * Implements select_action for rents.

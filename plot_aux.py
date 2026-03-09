@@ -706,6 +706,15 @@ if __name__ == "__main__":
             # legend_loc="lower left",
         )
     
+    if "013" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
+        print("Plotting: ", "013")
+        filenames = glob.glob("aux_eval_logs/013_*/**/eval_log.txt", recursive=True)
+        make_eval_plot(
+            filenames=filenames,
+            plot_filename="plots/013_debug_sailing.png",
+            # legend_loc="lower left",
+        )
+    
     if "999" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
         print("Plotting: ", "999")
         filenames = glob.glob("aux_eval_logs/999_*/**/eval_log.txt", recursive=True)
@@ -1371,6 +1380,100 @@ if __name__ == "__main__":
         make_param_sens_plot(
             filenames=filenames,
             plot_filename="plots/822_fl_slippy_6x6_eps=1.0.png",
+            legend_loc="lower left",
+            seperate_plots=False,
+        )
+
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Hpopt/aux - temperature vs performance - sailing
+    # ------------------------------------------------------------------------------------------------------------------
+    if "900" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+        print("Plotting: ", "900")
+        filenames = glob.glob("aux_eval_logs/900_*/**/eval_log.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename="plots/900_sailing_north_8x8_eps=0.0.png",
+            legend_loc="lower left",
+            seperate_plots=False,
+        )
+
+    if "901" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+        print("Plotting: ", "901")
+        filenames = glob.glob("aux_eval_logs/901_*/**/eval_log.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename="plots/901_sailing_north_8x16_eps=0.0.png",
+            legend_loc="lower left",
+            seperate_plots=False,
+        )
+
+    if "902" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+        print("Plotting: ", "902")
+        filenames = glob.glob("aux_eval_logs/902_*/**/eval_log.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename="plots/902_sailing_north_16x16_eps=0.0.png",
+            legend_loc="lower left",
+            seperate_plots=False,
+        )
+
+    # if "810" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "810")
+    #     filenames = glob.glob("aux_eval_logs/810_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/810_fl_slippy_4x4_eps=0.5.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #     )
+
+    # if "811" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "811")
+    #     filenames = glob.glob("aux_eval_logs/811_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/811_fl_slippy_5x5_eps=0.5.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #     )
+
+    # if "812" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "812")
+    #     filenames = glob.glob("aux_eval_logs/812_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/812_fl_slippy_6x6_eps=0.5.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #     )
+
+    if "920" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+        print("Plotting: ", "920")
+        filenames = glob.glob("aux_eval_logs/920_*/**/eval_log.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename="plots/920_sailing_north_8x8_eps=1.0.png",
+            legend_loc="lower left",
+            seperate_plots=False,
+        )
+
+    if "921" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+        print("Plotting: ", "921")
+        filenames = glob.glob("aux_eval_logs/921_*/**/eval_log.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename="plots/921_sailing_north_8x16_eps=1.0.png",
+            legend_loc="lower left",
+            seperate_plots=False,
+        )
+
+    if "922" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+        print("Plotting: ", "922")
+        filenames = glob.glob("aux_eval_logs/922_*/**/eval_log.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename="plots/922_sailing_north_16x16_eps=1.0.png",
             legend_loc="lower left",
             seperate_plots=False,
         )

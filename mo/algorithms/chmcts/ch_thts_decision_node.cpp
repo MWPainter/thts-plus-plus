@@ -36,7 +36,9 @@ namespace thts {
     shared_ptr<const Action> ChThtsDNode::recommend_action(MoThtsContext& ctx) const 
     {  
         unordered_map<shared_ptr<const Action>,double> utilities;
-        fill_contextual_q_values(utilities, ctx, false, numeric_limits<double>::min());
+        bool for_backup = false;
+        double default_q_value = numeric_limits<double>::min();
+        fill_contextual_q_values(utilities, ctx, for_backup, default_q_value);
         return thts::helper::get_max_key_break_ties_randomly(utilities, *thts_manager);
     }
     // shared_ptr<const Action> ChThtsDNode::recommend_action(MoThtsContext& ctx) const 
@@ -85,7 +87,7 @@ namespace thts {
         num_backups++;
 
         // Add heuristic value to convex hull
-        if (manager.heuristic_weight_global > 0) 
+        if (this->has_heuristic_value() && manager.heuristic_weight_global > 0) 
         {
             double heuristic_ratio = manager.heuristic_weight_global / (num_backups + manager.heuristic_weight_global);
             convex_hull *= (1.0 - heuristic_ratio);
@@ -94,7 +96,7 @@ namespace thts {
 
         // And same for local convex hull
         convex_hull_local = ConvexHull(convex_hull);
-        if (manager.heuristic_weight_local > 0) 
+        if (this->has_heuristic_value() && manager.heuristic_weight_local > 0) 
         {
             double total_heuristic_weight = manager.heuristic_weight_global + manager.heuristic_weight_local;
             double heuristic_ratio = total_heuristic_weight / (num_backups + total_heuristic_weight);
@@ -106,8 +108,8 @@ namespace thts {
         update_solved_value();
     }
 
-    double ChThtsDNode::get_contextual_q_value(const MoThtsContext& ctx, bool for_search) const {
-        if (for_search) {
+    double ChThtsDNode::get_contextual_q_value(const MoThtsContext& ctx, bool for_backup) const {
+        if (!for_backup) {
             return convex_hull_local.get_max_linear_utility(ctx.context_weight);
         } else {
             return convex_hull.get_max_linear_utility(ctx.context_weight);
@@ -117,7 +119,7 @@ namespace thts {
     void ChThtsDNode::fill_contextual_q_values(
         unordered_map<shared_ptr<const Action>,double>& q_values, 
         MoThtsContext& ctx, 
-        bool for_search,
+        bool for_backup,
         double default_q_value) const
     {
         ActionVector actions = this->get_actions_to_consider(ctx);
@@ -127,7 +129,7 @@ namespace thts {
                 continue;
             }
             ChThtsCNode& child = (ChThtsCNode&) *get_child_node_itfc(action);
-            q_values[action] = child.get_contextual_q_value(ctx, for_search);
+            q_values[action] = child.get_contextual_q_value(ctx, for_backup);
         }
     }
 
