@@ -188,9 +188,8 @@ namespace thts {
         child.ball_list.avg_return_update_ball_list(
             trial_cumulative_return_after_node, ctx.context_weight.vec, chosen_ball);
 
-        // and update solved value and backup stats
+        // and update solved value 
         update_solved_value();
-        increment_and_update_backup_count();
     }
 
     string CztDNode::get_pretty_print_val() const {

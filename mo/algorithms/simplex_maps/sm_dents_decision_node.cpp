@@ -195,9 +195,8 @@ namespace thts {
             manager.max_depth_in_simplex_tree, 
             manager.simplex_split_counter_threshold);
 
-        // Update solved value and backup stats
+        // Update solved value
         update_solved_value();
-        increment_and_update_backup_count();
     }
 }
 

@@ -7,6 +7,7 @@
 #include "mo/mo_thts_decision_node.h"
 #include "mo/mo_thts_env.h"
 
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <limits>
@@ -29,7 +30,7 @@ namespace thts {
      */
     class MoThtsPool : virtual public ThtsPool {
 
-            int num_backups;
+            std::atomic<int> num_backups;
 
         public:
             /**

@@ -71,9 +71,8 @@ namespace thts {
         // remember to incr num_backups
         num_backups++;
 
-        // and update solved value and backup stats
+        // and update solved value
         update_solved_value();
-        increment_and_update_backup_count();
     }
 
     double ChThtsCNode::get_contextual_q_value(const MoThtsContext& ctx, bool for_search) const {

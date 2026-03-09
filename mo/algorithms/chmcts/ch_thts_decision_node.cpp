@@ -102,9 +102,8 @@ namespace thts {
             convex_hull_local += mo_heuristic_value * heuristic_ratio;
         }
 
-        // and update solved value and backup stats
+        // and update solved value
         update_solved_value();
-        increment_and_update_backup_count();
     }
 
     double ChThtsDNode::get_contextual_q_value(const MoThtsContext& ctx, bool for_search) const {
