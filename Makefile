@@ -97,7 +97,6 @@ CPPFLAGS += -Wpedantic -Wno-vla -Wcast-align -Wcast-qual -Wdisabled-optimization
 # CPPFLAGS += -Wpedantic -Wno-vla -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wsign-promo -Wstrict-null-sentinel -Wno-unused
 # Optimization flags (excluded for debug targets)
 OPTIMIZATION_FLAGS = -O3 --param max-gcse-memory=4194304 # 4GB for gcse (large TUs e.g. hpopt_manager.cpp)
-# OPTIMIZATION_FLAGS = -O2 --param max-gcse-memory=1048576 # 1GB for gcse optimization
 CPPFLAGS += $(OPTIMIZATION_FLAGS)
 
 # C++ flags for building pybind11 executable/library
@@ -107,6 +106,8 @@ PY_EX_CPPFLAGS += -pie -fPIE # needed to create executable
 # C++ flags for tests + debugging
 TEST_CPPFLAGS = 
 CPPFLAGS_DEBUG = -g -ggdb3
+# C++ flags for profiling (perf/callgrind): debug symbols + frame pointer for stack unwinding
+CPPFLAGS_PROFILE = -g -ggdb3 -O2 -fno-omit-frame-pointer
 
 # ld flags
 LDFLAGS = -Lexternal/qhull/qhull_build/lib 
@@ -139,6 +140,7 @@ TARGET_THTS_PY_EX = pyex
 TARGET_THTS_PY_EX_DEBUG = pyex-debug
 TARGET_MO_EXPR = moexpr
 TARGET_MO_EXPR_DEBUG = moexpr-debug
+TARGET_MO_EXPR_PROFILE = moexpr-profile
 TARGET_AUX_EXPR = auxexpr
 TARGET_AUX_EXPR_DEBUG = auxexpr-debug
 TARGET_PY_ENV_SERVER = py_env_server
@@ -274,6 +276,12 @@ $(TARGET_MO_EXPR): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(MAIN_MO_OBJECTS)
 $(TARGET_MO_EXPR_DEBUG): CPPFLAGS := $(filter-out $(OPTIMIZATION_FLAGS),$(CPPFLAGS)) $(CPPFLAGS_DEBUG)
 $(TARGET_MO_EXPR_DEBUG): $(TARGET_MO_EXPR)
 
+# Mo Expr with profiling flags (for perf/callgrind)
+$(TARGET_MO_EXPR_PROFILE): CPPFLAGS := $(filter-out $(OPTIMIZATION_FLAGS),$(CPPFLAGS)) $(CPPFLAGS_PROFILE)
+$(TARGET_MO_EXPR_PROFILE): LDFLAGS += $(PY_LDFLAGS)
+$(TARGET_MO_EXPR_PROFILE): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(MAIN_MO_OBJECTS)
+	$(CXX) -shared $(PY_EX_CPPFLAGS) $(CPPFLAGS) $^ -o $(TARGET_MO_EXPR_PROFILE) $(LDFLAGS)
+
 # Aux Expr entry point
 $(TARGET_AUX_EXPR): LDFLAGS += $(PY_LDFLAGS)
 $(TARGET_AUX_EXPR): $(OBJECTS) $(PY_OBJECTS) $(MO_OBJECTS) $(MAIN_AUX_OBJECTS)
@@ -300,4 +308,4 @@ clean:
 #####
 # Phony targets, so make knows when a target isn't producing a corresponding output file of same name
 #####
-.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST_DEBUG) $(TARGET_THTS_PY_LIB) $(TARGET_THTS_PY_EX_DEBUG) $(TARGET_MO_EXPR_DEBUG) $(TARGET_AUX_EXPR_DEBUG)
+.PHONY: clean $(TARGET_THTS) $(TARGET_THTS_TEST_DEBUG) $(TARGET_THTS_PY_LIB) $(TARGET_THTS_PY_EX_DEBUG) $(TARGET_MO_EXPR_DEBUG) $(TARGET_MO_EXPR_PROFILE) $(TARGET_AUX_EXPR_DEBUG)
