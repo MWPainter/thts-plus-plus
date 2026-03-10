@@ -69,13 +69,12 @@ namespace thts {
             return;
         }
 
-        double old_q_value = act_to_qval[action];
         act_to_qval.erase(action);
-        for (auto it=qval_to_act.find(old_q_value); it != qval_to_act.end(); it++) {
-            if (it->first != old_q_value) throw runtime_error("Error in updating Tents maps.");
-            if (it->second != action) continue;
-            qval_to_act.erase(it);
-            break;
+        for (auto it = qval_to_act.begin(); it != qval_to_act.end(); ++it) {
+            if (it->second == action) {
+                qval_to_act.erase(it);
+                break;
+            }
         }
 
         act_to_qval.insert_or_assign(action, new_q_value);
@@ -83,13 +82,12 @@ namespace thts {
     }
 
     void TentsDNode::update_maps_for_search(shared_ptr<const Action> action, double new_q_value) {
-        double old_q_value = act_to_qval_for_search[action];
         act_to_qval_for_search.erase(action);
-        for (auto it=qval_to_act_for_search.find(old_q_value); it != qval_to_act_for_search.end(); it++) {
-            if (it->first != old_q_value) throw runtime_error("Error in updating Tents maps.");
-            if (it->second != action) continue;
-            qval_to_act_for_search.erase(it);
-            break;
+        for (auto it = qval_to_act_for_search.begin(); it != qval_to_act_for_search.end(); ++it) {
+            if (it->second == action) {
+                qval_to_act_for_search.erase(it);
+                break;
+            }
         }
 
         act_to_qval_for_search.insert_or_assign(action, new_q_value);
