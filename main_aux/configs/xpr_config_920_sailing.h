@@ -327,7 +327,7 @@ static const std::vector<ConfigMap> CONFIG_920 =
         {ALG_PARAM_ID_EPSILON,          1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.001},
-        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    500.0},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    100000.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
@@ -336,7 +336,7 @@ static const std::vector<ConfigMap> CONFIG_920 =
         {ALG_PARAM_ID_EPSILON,          1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.003},
-        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    500.0},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    100000.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
@@ -345,7 +345,7 @@ static const std::vector<ConfigMap> CONFIG_920 =
         {ALG_PARAM_ID_EPSILON,          1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.01},
-        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    500.0},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    100000.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
@@ -354,7 +354,7 @@ static const std::vector<ConfigMap> CONFIG_920 =
         {ALG_PARAM_ID_EPSILON,          1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.03},
-        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    500.0},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    100000.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
@@ -363,7 +363,7 @@ static const std::vector<ConfigMap> CONFIG_920 =
         {ALG_PARAM_ID_EPSILON,          1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.1},
-        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    500.0},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    100000.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
@@ -372,7 +372,7 @@ static const std::vector<ConfigMap> CONFIG_920 =
         {ALG_PARAM_ID_EPSILON,          1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.3},
-        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    500.0},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    100000.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
@@ -381,7 +381,7 @@ static const std::vector<ConfigMap> CONFIG_920 =
         {ALG_PARAM_ID_EPSILON,          1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       1.0},
-        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    500.0},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    100000.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
@@ -390,7 +390,7 @@ static const std::vector<ConfigMap> CONFIG_920 =
         {ALG_PARAM_ID_EPSILON,          1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       3.0},
-        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    500.0},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    100000.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
@@ -399,7 +399,7 @@ static const std::vector<ConfigMap> CONFIG_920 =
         {ALG_PARAM_ID_EPSILON,          1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       10.0},
-        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    500.0},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    100000.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
@@ -408,7 +408,7 @@ static const std::vector<ConfigMap> CONFIG_920 =
         {ALG_PARAM_ID_EPSILON,          1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       30.0},
-        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    500.0},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    100000.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
@@ -417,6 +417,6 @@ static const std::vector<ConfigMap> CONFIG_920 =
         {ALG_PARAM_ID_EPSILON,          1.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       100.0},
-        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    500.0},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    100000.0},
     },
 };

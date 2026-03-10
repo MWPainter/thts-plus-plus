@@ -164,17 +164,18 @@ namespace thts {
         unordered_map<shared_ptr<const Action>,double> q_values;
         fill_soft_q_values(q_values, opp_coeff, for_backup);
 
-        // If for backup, remove the q values that didn't come from an updated child node
-        if (only_actions_with_children) 
-        {
-            for (shared_ptr<const Action> action : *actions) 
-            {
-                if (!has_child_node(action)) continue;
-                MentsCNode& child = (MentsCNode&) *get_child_node(action);
-                if (child.get_num_backups() > 0) continue;
-                q_values.erase(action);
-            }
-        }
+        // // If for backup, remove the q values that didn't come from an updated child node
+        // if (only_actions_with_children) 
+        // {
+        //     for (shared_ptr<const Action> action : *actions) 
+        //     {
+        //         if (has_child_node(action) && get_child_node(action)->get_num_backups() > 0) 
+        //         {
+        //             continue;
+        //         }
+        //         q_values.erase(action);
+        //     }
+        // }
 
         // optionally normalise q values
         MentsManager& manager = (MentsManager&) *thts_manager;

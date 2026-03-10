@@ -37,7 +37,7 @@ static const std::vector<ConfigMap> CONFIG_013 =
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
-        {ALG_PARAM_ID_INIT_TEMP,        0.1},
+        {ALG_PARAM_ID_INIT_TEMP,        1.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
@@ -55,7 +55,7 @@ static const std::vector<ConfigMap> CONFIG_013 =
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_BTS},
-        {ALG_PARAM_ID_INIT_TEMP,        1.0},
+        {ALG_PARAM_ID_INIT_TEMP,        100.0},
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},

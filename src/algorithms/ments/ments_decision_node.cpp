@@ -179,9 +179,10 @@ namespace thts {
         {
             for (shared_ptr<const Action> action : *actions) 
             {
-                if (!has_child_node(action)) continue;
-                MentsCNode& child = (MentsCNode&) *get_child_node(action);
-                if (child.num_backups > 0) continue;
+                if (has_child_node(action) && get_child_node(action)->get_num_backups() > 0) 
+                {
+                    continue;
+                }
                 q_values.erase(action);
             }
         }
