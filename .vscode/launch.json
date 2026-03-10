@@ -2,6 +2,7 @@
     "version": "0.2.0",
     "configurations": [
 
+
     
 
 
@@ -55,7 +56,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/auxexpr",
-            "args": ["eval", "400"],
+            "args": ["eval", "013"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [

@@ -18,6 +18,11 @@ namespace thts {
     // forward declare corresponding RentsCNode class
     class RentsCNode;
 
+    // Const string used in context mappping
+    static const std::string CURRENT_SELECTION_DEPTH_KEY = "current_selection_depth";
+    static const std::string CURRENT_PARENT_ID_AT_DEPTH_STRING_KEY = "current_parent_id_at_depth_string";
+    static const std::string PARENT_ACTION_DISTRIBUTION_KEY = "parent_action_distribution";
+
     /**
      * An implementation of RENTS in the Thts schema
      * 
@@ -41,29 +46,51 @@ namespace thts {
          * Core RentsDNode implementation.
          */
         protected:
-            std::string _node_distr_key;
-            std::string _parent_distr_key;
 
-            /**
-             * Gets the action distribution for a parent node 
-             * 
-             * Args:
-             *      ctx: A thts env context containing the distribution of the parent node
-             * 
-             * Returns:
-             *      The action distribution the parent node used, or, nullptr if this node has no parent decision node 
-             *      (i.e. it is the root node/top level node)
-            */
-            std::shared_ptr<ActionDistr> get_parent_distr_from_context(ThtsContext& ctx) const;
+            /** 
+                Revamped distribution storage for graph search.
 
-            /**
-             * Puts the action distribution for this node into the thts env context
-             * 
-             * Args:
-             *      action_distr: The distribution over actions computed in the select action phase to be stored
-             *      ctx: A thts env context to store the distribution
+                Format of the context mapping used here:
+
+                    current_selection_depth -> int
+
+                    current_parent_id_at_depth_string -> string (id of the parent node)
+                    parent_action_distribution -> ActionDistr (parent distribution used in selection)
+
+                    node_id_string -> string (maps node_id_string to last parent_id_at_depth_string)
+                    node_id_at_depth_string -> ActionDistr (action distribution in selection for node at this depth)
             */
-           void put_node_distr_in_context(std::shared_ptr<ActionDistr> action_distr, ThtsContext& ctx) const;
+            int get_and_increment_current_selection_depth(ThtsContext& ctx) const;
+        
+            std::string get_node_id_string() const;
+            std::string get_node_at_depth_id_string(int current_selection_depth) const;
+
+            std::shared_ptr<ActionDistr> get_parent_distribution_selection(ThtsContext& ctx) const;
+            std::shared_ptr<ActionDistr> get_parent_distribution_backup(ThtsContext& ctx) const;
+            std::shared_ptr<ActionDistr> get_parent_distribution(bool for_backup, ThtsContext& ctx) const;
+
+            void update_context_after_selection(int current_selection_depth, std::shared_ptr<ActionDistr> action_distr, ThtsContext& ctx) const;
+
+        //     /**
+        //      * Gets the action distribution for a parent node 
+        //      * 
+        //      * Args:
+        //      *      ctx: A thts env context containing the distribution of the parent node
+        //      * 
+        //      * Returns:
+        //      *      The action distribution the parent node used, or, nullptr if this node has no parent decision node 
+        //      *      (i.e. it is the root node/top level node)
+        //     */
+        //     std::shared_ptr<ActionDistr> get_parent_distr_from_context(ThtsContext& ctx) const;
+
+        //     /**
+        //      * Puts the action distribution for this node into the thts env context
+        //      * 
+        //      * Args:
+        //      *      action_distr: The distribution over actions computed in the select action phase to be stored
+        //      *      ctx: A thts env context to store the distribution
+        //     */
+        //    void put_node_distr_in_context(std::shared_ptr<ActionDistr> action_distr, ThtsContext& ctx) const;
 
            /**
             * Get prob from parent distribution (handling boundary cases at the root node)

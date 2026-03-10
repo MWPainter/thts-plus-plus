@@ -24,31 +24,104 @@ namespace thts {
                 decision_timestep,
                 static_pointer_cast<const MentsCNode>(parent))
     {
-        stringstream ss_n;
-        ss_n << "d_" << decision_depth;
-        _node_distr_key = ss_n.str();
+    }
 
-        if (decision_depth > 0) {
-            stringstream ss_p;
-            ss_p << "d_" << decision_depth-1;
-            _parent_distr_key = ss_p.str();
+    /**
+        Keeping track of the current selection depth.
+    */
+    int RentsDNode::get_and_increment_current_selection_depth(ThtsContext& ctx) const
+    {   
+        // root node case
+        if (!ctx.context_map_contains(CURRENT_SELECTION_DEPTH_KEY)) 
+        {   
+            // No value means we are at depth 0, so increment to 1
+            ctx.put_value<int>(CURRENT_SELECTION_DEPTH_KEY, make_shared<int>(1));
+            return 0;
         }
+
+        // Otherwise, get it out of the map, and replace it with incremented value
+        int current_selection_depth = *ctx.get_value_ptr<int>(CURRENT_SELECTION_DEPTH_KEY);
+        ctx.put_value<int>(CURRENT_SELECTION_DEPTH_KEY, make_shared<int>(current_selection_depth+1));
+        return current_selection_depth;
     }
 
     /**
-     * Gets the action distribution for a parent node 
-     * Or just null pointer if we're the root node
+        Just a unique id for this node
     */
-    shared_ptr<ActionDistr> RentsDNode::get_parent_distr_from_context(ThtsContext& ctx) const {
-        if (decision_depth < 1) return nullptr;
-        return ctx.get_value_ptr<ActionDistr>(_parent_distr_key);
+    string RentsDNode::get_node_id_string() const 
+    {
+        stringstream ss;
+        ss << static_cast<const void*>(this);
+        return ss.str();
     }
 
     /**
-     * Puts the action distribution for this node into the thts env context
+        Unique id, tagged with an integer (depth)
     */
-    void RentsDNode::put_node_distr_in_context(shared_ptr<ActionDistr> action_distr, ThtsContext& ctx) const {
-        ctx.put_value(_node_distr_key, action_distr);
+    string RentsDNode::get_node_at_depth_id_string(int current_selection_depth) const
+    {
+        stringstream ss;
+        ss << get_node_id_string() << "_" << current_selection_depth;
+        return ss.str();
+    }
+
+    /**
+        Gets the last distribution used in this trial (only will work during selection)
+    */
+    shared_ptr<ActionDistr> RentsDNode::get_parent_distribution_selection(ThtsContext& ctx) const
+    {   
+        if (!ctx.context_map_contains(PARENT_ACTION_DISTRIBUTION_KEY)) {
+            return nullptr;
+        }
+        return ctx.get_value_ptr<ActionDistr>(PARENT_ACTION_DISTRIBUTION_KEY);
+    }
+
+    /**
+        Gets the parent distribution during backup
+    */
+    shared_ptr<ActionDistr> RentsDNode::get_parent_distribution_backup(ThtsContext& ctx) const
+    {
+        string node_id_string = get_node_id_string();
+        shared_ptr<string> parent_id_at_depth_string_ptr = ctx.get_value_ptr<string>(node_id_string);
+        if (parent_id_at_depth_string_ptr == nullptr) 
+        {
+            return nullptr;
+        }
+        return ctx.get_value_ptr<ActionDistr>(*parent_id_at_depth_string_ptr);
+    }
+
+    shared_ptr<ActionDistr> RentsDNode::get_parent_distribution(bool for_backup, ThtsContext& ctx) const
+    {
+        if (for_backup) 
+        {
+            return get_parent_distribution_backup(ctx);
+        }
+        return get_parent_distribution_selection(ctx);
+    }
+
+    /**
+        Stores the action distribution for this node in the context
+        This is non-trivial, because we need to update all parts of the context mapping
+    */
+    void RentsDNode::update_context_after_selection(int current_selection_depth, shared_ptr<ActionDistr> action_distr, ThtsContext& ctx) const
+    {
+        // Get the current parent_id_at_depth_string
+        shared_ptr<string> parent_id_at_depth_string_ptr = nullptr;
+        if (ctx.context_map_contains(CURRENT_PARENT_ID_AT_DEPTH_STRING_KEY)) {
+            parent_id_at_depth_string_ptr = ctx.get_value_ptr<string>(CURRENT_PARENT_ID_AT_DEPTH_STRING_KEY);
+        }
+
+        // Get current node ids
+        string node_id_string = get_node_id_string();
+        string node_at_depth_id_string = get_node_at_depth_id_string(current_selection_depth);
+
+        // Update context for next selection
+        ctx.put_value<string>(CURRENT_PARENT_ID_AT_DEPTH_STRING_KEY, make_shared<string>(node_at_depth_id_string));
+        ctx.put_value<ActionDistr>(PARENT_ACTION_DISTRIBUTION_KEY, action_distr);
+
+        // Update context for backup at this node
+        ctx.put_value<string>(node_id_string, parent_id_at_depth_string_ptr);
+        ctx.put_value<ActionDistr>(node_at_depth_id_string, action_distr);
     }
 
     /**
@@ -133,7 +206,7 @@ namespace thts {
         }
 
         // Get parent distribution
-        shared_ptr<ActionDistr> parent_distr = get_parent_distr_from_context(context);
+        shared_ptr<ActionDistr> parent_distr = get_parent_distribution(for_backup, context);
 
         // compute action weights
         sum_action_weights = 0.0;
@@ -169,7 +242,10 @@ namespace thts {
     shared_ptr<const Action> RentsDNode::select_action_rents(ThtsContext& ctx) {
         shared_ptr<ActionDistr> action_distr = make_shared<ActionDistr>();
         compute_action_distribution(*action_distr, ctx);
-        put_node_distr_in_context(action_distr, ctx);
+
+        int current_selection_depth = get_and_increment_current_selection_depth(ctx);
+        update_context_after_selection(current_selection_depth, action_distr, ctx);
+
         shared_ptr<const Action> selected_action = helper::sample_from_distribution(*action_distr, *thts_manager);
         if (!has_child_node(selected_action)) {
             create_child_node(selected_action);
