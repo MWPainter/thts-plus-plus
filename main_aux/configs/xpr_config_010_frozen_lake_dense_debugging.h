@@ -38,13 +38,13 @@ static const std::vector<ConfigMap> CONFIG_010 =
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
-        {ALG_PARAM_ID_INIT_TEMP,        1.0},
+        {ALG_PARAM_ID_INIT_TEMP,        0.1},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
-        {ALG_PARAM_ID_INIT_TEMP,        1.0},
+        {ALG_PARAM_ID_INIT_TEMP,        0.1},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
     },
