@@ -33,11 +33,11 @@ namespace thts {
         for (shared_ptr<const Action> action : *actions) 
         {
             bool for_backup = true;
-            double qval = get_soft_q_value_over_temp(action, for_backup);
+            double qval = get_soft_q_value_over_temp_safe(action, for_backup);
             qval_to_act.insert(make_pair(qval, action));
             act_to_qval.insert_or_assign(action, qval);
             for_backup = false;
-            double qval_for_search = get_soft_q_value_over_temp(action, for_backup);
+            double qval_for_search = get_soft_q_value_over_temp_safe(action, for_backup);
             qval_to_act_for_search.insert(make_pair(qval_for_search, action));
             act_to_qval_for_search.insert_or_assign(action, qval_for_search);
         }
@@ -47,23 +47,39 @@ namespace thts {
         _selected_action_key = ss.str();
     }
 
-    /**
-     * Get the value of Q(s,a)/temp from the best available source (see ments get_soft_q_value, tries child, then prior)
-    */
-    double TentsDNode::get_soft_q_value_over_temp(shared_ptr<const Action> action, bool for_backup) const {
-        double opp_coeff = is_opponent() ? -1.0 : 1.0;
-        double qval = get_soft_q_value(action, opp_coeff, for_backup);
+    double TentsDNode::get_temp_safe() const
+    {
         double temp = get_temp();
         if (temp <= 0.0 || !std::isfinite(temp)) {
             temp = EPS;
         }
+        return temp;
+    }
+
+    /**
+     * Get the value of Q(s,a)/temp from the best available source (see ments get_soft_q_value, tries child, then prior)
+    */
+    double TentsDNode::get_soft_q_value_safe(shared_ptr<const Action> action, bool for_backup) const 
+    {
+        double opp_coeff = is_opponent() ? -1.0 : 1.0;
+        double qval = get_soft_q_value(action, opp_coeff, for_backup);
+        double temp = get_temp_safe();
+        return qval;
+    }
+
+    double TentsDNode::get_soft_q_value_over_temp_safe(shared_ptr<const Action> action, bool for_backup) const 
+    {
+        double opp_coeff = is_opponent() ? -1.0 : 1.0;
+        double qval = get_soft_q_value(action, opp_coeff, for_backup);
+        double temp = get_temp_safe();
         return qval / temp;
     }
 
     /**
      * Updates the tents mapping for 'action' to/from 'neq_q_value'
     */
-    void TentsDNode::update_maps(shared_ptr<const Action> action, double new_q_value, bool for_backup) {
+    void TentsDNode::update_maps(shared_ptr<const Action> action, double new_q_value, bool for_backup) 
+    {
         if (!for_backup) {
             update_maps_for_search(action, new_q_value);
             return;
@@ -204,19 +220,41 @@ namespace thts {
             return;
         }
 
-        double sum_sparse_values = 0.0;
-        for (shared_ptr<const Action> action : *sparse_action_set) {
-            double q_over_t = get_soft_q_value_over_temp(action, for_backup);
-            if (std::isfinite(q_over_t)) {
-                sum_sparse_values += q_over_t;
-            }
+        // Get q values and normalise them
+        for (shared_ptr<const Action> action : *actions) {
+            double q_value = get_soft_q_value_safe(action, for_backup);
+            if (!std::isfinite(q_value)) continue;
+            action_weights[action] = q_value;
         }
-        double common_term = (sum_sparse_values - 1.0) / static_cast<double>(sparse_action_set->size());
+
+        MentsManager& manager = (MentsManager&) *thts_manager;
+        if (!for_backup && manager.normalise_q_values) 
+        {
+            thts::helper::linearly_normalise_values(action_weights);
+        }
+
+        // Compute common term
+        double sum_sparse_values = 0.0;
+        double temp = get_temp_safe();
+        for (shared_ptr<const Action> action : *sparse_action_set) {
+            double q_over_t = action_weights[action] / temp;
+            sum_sparse_values += q_over_t;
+        }
+        double common_term = 0.0;
+        if (sparse_action_set->size() > 0) 
+        {
+            common_term = (sum_sparse_values - 1.0) / static_cast<double>(sparse_action_set->size());
+        }
 
         // compute weights and store (skip non-finite to avoid propagating NaN)
+        sum_action_weights = 0.0;
         for (shared_ptr<const Action> action : *actions) {
-            double q_over_t = get_soft_q_value_over_temp(action, for_backup);
-            if (!std::isfinite(q_over_t)) continue;
+            double q_over_t = action_weights[action] / temp;
+            if (!std::isfinite(q_over_t)) 
+            {
+                action_weights.erase(action);
+                continue;
+            }
             double weight = q_over_t - common_term;
             if (weight < 0.0) weight = 0.0;
             action_weights[action] = weight;
@@ -236,17 +274,6 @@ namespace thts {
             }
             sum_action_weights = 1.0;
         }
-
-        // For not backups, normalise the action weights
-        MentsManager& manager = (MentsManager&) *thts_manager;
-        if (!for_backup && manager.normalise_q_values) 
-        {
-            thts::helper::linearly_normalise_values(action_weights);
-            sum_action_weights = 0.0;
-            for (pair<shared_ptr<const Action>,double> pr : action_weights) {
-                sum_action_weights += pr.second;
-            }
-        }
     }
 
     /**
@@ -255,7 +282,6 @@ namespace thts {
      */
     shared_ptr<const Action> TentsDNode::select_action(ThtsContext& ctx) {
         shared_ptr<const Action> selected_action = select_action_ments(ctx);
-        ctx.put_value_const(_selected_action_key, selected_action);
         return selected_action;
     }
 
@@ -265,13 +291,15 @@ namespace thts {
      * Update value in map
     */
    void TentsDNode::backup_update_map(ThtsContext& ctx) {
-        shared_ptr<const Action> selected_action = ctx.get_value_ptr_const<Action>(_selected_action_key);
-        bool for_backup = false;
-        double new_q_value = get_soft_q_value_over_temp(selected_action, for_backup);
-        update_maps(selected_action, new_q_value, for_backup);
-        for_backup = true;
-        new_q_value = get_soft_q_value_over_temp(selected_action, for_backup);
-        update_maps(selected_action, new_q_value, for_backup);
+        for (shared_ptr<const Action> action : *actions) 
+        {
+            bool for_backup = false;
+            double new_q_value = get_soft_q_value_over_temp_safe(action, for_backup);
+            update_maps(action, new_q_value, for_backup);
+            for_backup = true;
+            new_q_value = get_soft_q_value_over_temp_safe(action, for_backup);
+            update_maps(action, new_q_value, for_backup);
+        }
    }
 
     /**

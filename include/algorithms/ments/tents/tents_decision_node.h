@@ -69,7 +69,9 @@ namespace thts {
              *      The soft value corresponding to the child at 'action', divided by the temperature
              * 
             */
-            double get_soft_q_value_over_temp(std::shared_ptr<const Action> action, bool for_backup) const;
+            double get_temp_safe() const;
+            double get_soft_q_value_safe(std::shared_ptr<const Action> action, bool for_backup) const;
+            double get_soft_q_value_over_temp_safe(std::shared_ptr<const Action> action, bool for_backup) const;
 
             /**
              * Updates the 'qval_to_act' and 'act_to_qval' maps.
