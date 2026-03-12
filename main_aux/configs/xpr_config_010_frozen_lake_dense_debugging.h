@@ -69,5 +69,16 @@ static const std::vector<ConfigMap> CONFIG_010 =
         {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       1.0},
         {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    500.0},
+        {ALG_PARAM_ID_NORMALISE_ENTROPY_BEFORE_ADDING, 0}
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        1.1},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       1.1},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    500.0},
+        {ALG_PARAM_ID_NORMALISE_ENTROPY_BEFORE_ADDING, 1}
     },
 };

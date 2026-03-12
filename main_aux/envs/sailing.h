@@ -11,8 +11,33 @@
 
 enum SailDirection { NN, NE, EE, SE, SS, SW, WW, NW };
 
-namespace thts{
-    /** 
+namespace thts {
+
+    /**
+     * State for SailingEnv: x, y coordinates, wind direction, and timestep.
+     */
+    class SailingState : public State {
+    public:
+        int x;
+        int y;
+        int wind_dir;
+        int timestep;
+
+        SailingState(int x, int y, int wind_dir, int timestep)
+            : x(x), y(y), wind_dir(wind_dir), timestep(timestep) {}
+        virtual ~SailingState() = default;
+        virtual std::size_t hash() const override;
+        bool equals(const SailingState& other) const;
+        virtual bool equals_itfc(const Observation& other) const override;
+        virtual std::string get_pretty_print_string() const override;
+    };
+
+    typedef std::unordered_map<std::shared_ptr<const SailingState>, double> SailingStateDistr;
+
+    std::ostream& operator<<(std::ostream& os, const SailingState& s);
+    std::ostream& operator<<(std::ostream& os, const std::shared_ptr<const SailingState>& s);
+
+    /**
      * TODO: write your docstring
      */
     class SailingEnv : public ThtsEnv {
@@ -55,83 +80,83 @@ namespace thts{
              * Returns:
              *      Initial state for this environment instance
              */
-            std::shared_ptr<const Int3TupleState> get_initial_state() const;
+            std::shared_ptr<const SailingState> get_initial_state() const;
 
             /**
              * Returns if a state is a sink state.
-             * 
+             *
              * Args:
              *      state: The state to be checked if it is a sink state
-             * 
+             *
              * Returns:
              *      True if 'state' is a sink state and false otherwise
              */
-            bool is_sink_state(std::shared_ptr<const Int3TupleState> state) const;
+            bool is_sink_state(std::shared_ptr<const SailingState> state) const;
 
             /**
              * Returns a list of actions that are valid in a given state.
-             * 
+             *
              * Args:
              *      state: The state that we want a list of available actions from
-             * 
+             *
              * Returns:
              *      Returns a list of actions available from 'state'
              */
-            std::shared_ptr<IntActionVector> get_valid_actions(std::shared_ptr<const Int3TupleState> state) const;
+            std::shared_ptr<IntActionVector> get_valid_actions(std::shared_ptr<const SailingState> state) const;
 
             /**
              * Returns a distribution over successor states from a state action pair.
-             * 
-             * Given a state and action returns a distribution of possible successor states. The probability 
-             * distribution is returned in the form of a map, where the keys are of the State type, and the values are 
+             *
+             * Given a state and action returns a distribution of possible successor states. The probability
+             * distribution is returned in the form of a map, where the keys are of the State type, and the values are
              * doubles, which sum to one.
-             * 
+             *
              * Args:
              *      state: The state to get a transition distribution from
              *      action: The action to get a transition distribution for
-             * 
+             *
              * Returns:
              *      Returns a successor state distribution from taking 'action' in state 'state'.
              */
-            std::shared_ptr<Int3TupleStateDistr> get_transition_distribution(
-                std::shared_ptr<const Int3TupleState> state, std::shared_ptr<const IntAction> action) const;
+            std::shared_ptr<SailingStateDistr> get_transition_distribution(
+                std::shared_ptr<const SailingState> state, std::shared_ptr<const IntAction> action) const;
 
             /**
              * Samples an successor state when taking an action from a state.
-             * 
+             *
              * Given a state, action pair, samples a possible successor state that can arrise.
-             * 
+             *
              * Args:
              *      state: The state to sample an observation from
              *      action: The action taken to sample an observation for
              *      rand_manager: A RandManager ref to access the random number sampling interface
-             * 
+             *
              * Returns:
              *      Returns an successor state sampled from taking 'action' from 'state'
              */
-            std::shared_ptr<const Int3TupleState> sample_transition_distribution(
-                std::shared_ptr<const Int3TupleState> state, 
-                std::shared_ptr<const IntAction> action, 
+            std::shared_ptr<const SailingState> sample_transition_distribution(
+                std::shared_ptr<const SailingState> state,
+                std::shared_ptr<const IntAction> action,
                 RandManager& rand_manager) const;
-            
+
             /**
              * Returns the reward for a given state, action, observation tuple.
-             * 
-             * Commonly the reward is written as a function of just the state and action pair. But we provide the 
-             * option to depend on the observation too. 
-             * 
+             *
+             * Commonly the reward is written as a function of just the state and action pair. But we provide the
+             * option to depend on the observation too.
+             *
              * Args:
              *      state: The current state to get a reward for
              *      action: The action taken to get a reward for
-             *      observation: 
-             *          The (optional) observation sampled from the state, action pair that can optionally be used as 
+             *      observation:
+             *          The (optional) observation sampled from the state, action pair that can optionally be used as
              *          part of the reward function.
-             * 
+             *
              * Returns:
              *      The reward for taking 'action' from 'state' (and sampling 'observation')
              */
             double get_reward(
-                std::shared_ptr<const Int3TupleState> state, 
+                std::shared_ptr<const SailingState> state,
                 std::shared_ptr<const IntAction> action) const;
 
 
@@ -160,27 +185,27 @@ namespace thts{
              * Returns:
              *      Returns a distribution over observations from taking 'action' in state 'state'.
              */
-            virtual std::shared_ptr<Int3TupleStateDistr> get_observation_distribution(
-                std::shared_ptr<const IntAction> action, std::shared_ptr<const Int3TupleState> next_state, ThtsContext& ctx) const;
+            virtual std::shared_ptr<SailingStateDistr> get_observation_distribution(
+                std::shared_ptr<const IntAction> action, std::shared_ptr<const SailingState> next_state, ThtsContext& ctx) const;
 
             /**
              * Samples an observation when arriving in a (next) state after taking an action.
-             * 
+             *
              * Given a state-action pair, samples a possible sobservation.
-             * 
+             *
              * A default implementation is provided for full observable environments, where observation == next state.
-             * 
+             *
              * Args:
              *      action: The action taken to sample an observation for
              *      next_state: The state (arriving in)  to sample an observation for
              *      rand_manager: A RandManager ref to access the random number sampling interface
-             * 
+             *
              * Returns:
              *      Returns an observation sampled from taking 'action' that arived in 'next_state'
              */
-            virtual std::shared_ptr<const Int3TupleState> sample_observation_distribution(
-                std::shared_ptr<const IntAction> action, 
-                std::shared_ptr<const Int3TupleState> next_state, 
+            virtual std::shared_ptr<const SailingState> sample_observation_distribution(
+                std::shared_ptr<const IntAction> action,
+                std::shared_ptr<const SailingState> next_state,
                 RandManager& rand_manager, ThtsContext& ctx) const;
 
             /**

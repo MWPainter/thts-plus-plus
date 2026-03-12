@@ -35,6 +35,7 @@ static const std::string ALG_PARAM_ID_INIT_TEMP = "temp";                       
 static const std::string ALG_PARAM_ID_TEMP_DECAY_RATE= "temp_decay_rate";                   // param controling temp decay (boltzmann with decay algorithms)
 static const std::string ALG_PARAM_ID_INIT_ENTROPY_COEFF = "entropy_coeff";                 // initial entropy coeff (dents)
 static const std::string ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT = "entropy_zero_at";            // number of trials after which entropy_coeff linearly decays to zero (dents)
+static const std::string ALG_PARAM_ID_NORMALISE_ENTROPY_BEFORE_ADDING = "normalise_entropy_before_adding"; // whether to normalise entropy before adding it to the value (dents)
 static const std::string ALG_PARAM_ID_EPSILON = "epsilon";                                  // exploration param (boltzmann algorithms)
 static const std::string ALG_PARAM_ID_HEURISTIC_VALUE = "heuristic_value";                  // default (constant) value to use for a heuristic
 
@@ -103,6 +104,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_
             ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,
             ALG_PARAM_ID_EPSILON,
             ALG_PARAM_ID_HEURISTIC_VALUE,
+            ALG_PARAM_ID_NORMALISE_ENTROPY_BEFORE_ADDING,
         },
     },
 };

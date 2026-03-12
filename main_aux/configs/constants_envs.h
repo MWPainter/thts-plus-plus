@@ -26,6 +26,10 @@ static const std::string ENV_ID_FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED = "frozen_
 
 static const std::string ENV_ID_FROZEN_LAKE_D_8x8 = "frozen_lake_(map=8x8,dense)";
 static const std::string ENV_ID_FROZEN_LAKE_S_8x8 = "frozen_lake_(map=8x8,sparse)";
+static const std::string ENV_ID_FROZEN_LAKE_D_8x12 = "frozen_lake_(map=8x12,dense)";
+static const std::string ENV_ID_FROZEN_LAKE_S_8x12 = "frozen_lake_(map=8x12,sparse)";
+static const std::string ENV_ID_FROZEN_LAKE_D_12x12 = "frozen_lake_(map=12x12,dense)";
+static const std::string ENV_ID_FROZEN_LAKE_S_12x12 = "frozen_lake_(map=12x12,sparse)";
 static const std::string ENV_ID_FROZEN_LAKE_D_8x16 = "frozen_lake_(map=8x16,dense)";
 static const std::string ENV_ID_FROZEN_LAKE_S_8x16 = "frozen_lake_(map=8x16,sparse)";
 static const std::string ENV_ID_FROZEN_LAKE_D_16x16 = "frozen_lake_(map=16x16,dense)";

@@ -164,18 +164,18 @@ namespace thts {
         unordered_map<shared_ptr<const Action>,double> q_values;
         fill_soft_q_values(q_values, opp_coeff, for_backup);
 
-        // // If for backup, remove the q values that didn't come from an updated child node
-        // if (only_actions_with_children) 
-        // {
-        //     for (shared_ptr<const Action> action : *actions) 
-        //     {
-        //         if (has_child_node(action) && get_child_node(action)->get_num_backups() > 0) 
-        //         {
-        //             continue;
-        //         }
-        //         q_values.erase(action);
-        //     }
-        // }
+        // If for backup, remove the q values that didn't come from an updated child node
+        if (only_actions_with_children) 
+        {
+            for (shared_ptr<const Action> action : *actions) 
+            {
+                if (has_child_node(action) && get_child_node(action)->get_num_backups() > 0) 
+                {
+                    continue;
+                }
+                q_values.erase(action);
+            }
+        }
 
         // optionally normalise q values
         MentsManager& manager = (MentsManager&) *thts_manager;
@@ -208,6 +208,39 @@ namespace thts {
 
         // Get parent distribution
         shared_ptr<ActionDistr> parent_distr = get_parent_distribution(for_backup, context);
+
+        // If removed actions from q_values, should remove them from the parent distribution and renormalise
+        // If we dont do this, then the KL divergence RENTS uses will be incorrect and potentially negative (as we're not actually summing over a probability distribution)
+        if (only_actions_with_children) 
+        {
+            // Remove
+            double sum_parent_weights = 0.0;
+            for (shared_ptr<const Action> action : *actions) 
+            {
+                if (has_child_node(action) && get_child_node(action)->get_num_backups() > 0) 
+                {
+                    sum_parent_weights += parent_distr->at(action);
+                    continue;
+                }
+                parent_distr->erase(action);
+            }
+
+            // Renormalise
+            for (pair<shared_ptr<const Action>,double> pr : *parent_distr) 
+            {
+                parent_distr->at(pr.first) /= sum_parent_weights;
+            }
+
+            // Uniform if we removed everything (shouldn't happen, but just in case)
+            if (parent_distr->empty()) 
+            {
+                parent_distr = make_shared<ActionDistr>();
+                for (shared_ptr<const Action> action : *actions) 
+                {
+                    parent_distr->insert(make_pair(action, 1.0 / actions->size()));
+                }
+            }
+        }
 
         // compute action weights
         sum_action_weights = 0.0;

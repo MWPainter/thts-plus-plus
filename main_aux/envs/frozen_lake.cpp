@@ -125,7 +125,23 @@ namespace thts {
     /**
      * Can always move in any direction, unless in sink state
      */    
-    shared_ptr<IntActionVector> FrozenLakeEnv::get_valid_actions(shared_ptr<const Int3TupleState> state) const {
+    shared_ptr<IntActionVector> FrozenLakeEnv::get_valid_actions(shared_ptr<const Int3TupleState> state) const 
+    {
+        // Sink down to hell
+        if (is_hole_state(state,map)) 
+        {
+            shared_ptr<IntActionVector> terminal_actions = make_shared<IntActionVector>();
+            terminal_actions->push_back(make_shared<IntAction>(FL_DOWN));
+            return terminal_actions;
+        }
+        // Ascend to heaven
+        if (is_goal_state(state,map))
+        {
+            shared_ptr<IntActionVector> terminal_actions = make_shared<IntActionVector>();
+            terminal_actions->push_back(make_shared<IntAction>(FL_UP));
+            return terminal_actions;
+        }
+        // Otherwise can move in any direction in the mortal plane
         return cached_actions;
     }
 

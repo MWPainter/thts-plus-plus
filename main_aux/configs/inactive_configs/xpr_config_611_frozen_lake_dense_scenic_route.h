@@ -5,23 +5,21 @@
 #include "main_aux/configs/constants_algorithms.h"
 #include "main_aux/configs/constants_experiments.h"
 
-static const std::vector<ConfigMap> CONFIG_912 =
+static const std::vector<ConfigMap> CONFIG_611 =
 {
     // xpr params
     {
         {XPR_OR_ALG_ID_TAG,                     XPR_PARAMS_ID_TAG},
-        {XPR_PARAM_ID_NAME,                     "912_supp_sailing_north_16x16"},
-        {XPR_PARAM_ID_ENV,                      ENV_ID_SAILING_16x16_NORTH_ID},
-        {XPR_PARAM_ID_MCTS_MODE,                true},
+        {XPR_PARAM_ID_NAME,                     "611_supp_frozen_lake_dense_scenic_route_8x16"},
+        {XPR_PARAM_ID_ENV,                      ENV_ID_FROZEN_LAKE_D_8x16},
+        {XPR_PARAM_ID_MCTS_MODE,                false},
         {XPR_PARAM_ID_GRAPH_SEARCH,             true},
         {XPR_PARAM_ID_MAX_TRIAL_LENGTH,         100},
-        {XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,  1.0},
-        {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,   0.0},
+        {XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,  0.0},
+        {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,   1.0},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,          false},
-        // {XPR_PARAM_ID_TERMINATION_BOUND,        100000},
-        // {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    10},
-        {XPR_PARAM_ID_TERMINATION_BOUND,        50000},
-        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    3},
+        {XPR_PARAM_ID_TERMINATION_BOUND,        100000},
+        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    10},
         {XPR_PARAM_ID_SEARCH_THREADS,           16},
         {XPR_PARAM_ID_EVAL_DELTA,               2500},
         {XPR_PARAM_ID_EVAL_ROLLOUTS,            256},

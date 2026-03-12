@@ -214,6 +214,7 @@ namespace thts {
     double RunManager::get_temp_decay_rate()    { return get_config_value<double>(alg_config, ALG_PARAM_ID_TEMP_DECAY_RATE); }
     double RunManager::get_init_entropy_coeff() { return get_config_value<double>(alg_config, ALG_PARAM_ID_INIT_ENTROPY_COEFF); }
     double RunManager::get_entropy_zero_at()    { return get_config_value<double>(alg_config, ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT); }
+    int RunManager::get_normalise_entropy_before_adding() { return get_config_value<int>(alg_config, ALG_PARAM_ID_NORMALISE_ENTROPY_BEFORE_ADDING); }
     double RunManager::get_epsilon()            { return get_config_value<double>(alg_config, ALG_PARAM_ID_EPSILON); }
     double RunManager::get_heuristic_value()    { return get_config_value<double>(alg_config, ALG_PARAM_ID_HEURISTIC_VALUE); }
 
@@ -249,10 +250,14 @@ namespace thts {
         if (env_id == ENV_ID_FROZEN_LAKE_NO_HOLE_SPARSE_DISCOUNTED) return make_shared<FrozenLakeEnv>(6,6,FL_6x6_NO_HOLE_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
 
         if (env_id == ENV_ID_FROZEN_LAKE_D_8x8)     return make_shared<FrozenLakeEnv>(8,8,FL_8x8_MAP,false,FL_DENSE_REWARD, 1.0, this->get_max_trial_length());
+        if (env_id == ENV_ID_FROZEN_LAKE_D_8x12)    return make_shared<FrozenLakeEnv>(8,12,FL_GEN_8x12_MAP,false,FL_DENSE_REWARD, 1.0, this->get_max_trial_length());
+        if (env_id == ENV_ID_FROZEN_LAKE_D_12x12)   return make_shared<FrozenLakeEnv>(12,12,FL_GEN_12x12_MAP,false,FL_DENSE_REWARD, 1.0, this->get_max_trial_length());
         if (env_id == ENV_ID_FROZEN_LAKE_D_8x16)    return make_shared<FrozenLakeEnv>(8,16,FL_GEN_8x16_MAP,false,FL_DENSE_REWARD, 1.0, this->get_max_trial_length());
         if (env_id == ENV_ID_FROZEN_LAKE_D_16x16)   return make_shared<FrozenLakeEnv>(16,16,FL_GEN_16x16_MAP,false,FL_DENSE_REWARD, 1.0, this->get_max_trial_length());
 
         if (env_id == ENV_ID_FROZEN_LAKE_S_8x8)     return make_shared<FrozenLakeEnv>(8,8,FL_8x8_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
+        if (env_id == ENV_ID_FROZEN_LAKE_S_8x12)    return make_shared<FrozenLakeEnv>(8,12,FL_GEN_8x12_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
+        if (env_id == ENV_ID_FROZEN_LAKE_S_12x12)   return make_shared<FrozenLakeEnv>(12,12,FL_GEN_12x12_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
         if (env_id == ENV_ID_FROZEN_LAKE_S_8x16)    return make_shared<FrozenLakeEnv>(8,16,FL_GEN_8x16_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
         if (env_id == ENV_ID_FROZEN_LAKE_S_16x16)   return make_shared<FrozenLakeEnv>(16,16,FL_GEN_16x16_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
 
@@ -360,6 +365,7 @@ namespace thts {
             if (alg_id == ALG_ID_DENTS)
             {
                 manager_args.entropy_coeff_schedule_ptr = make_shared<LinearSchedule>(get_init_entropy_coeff(), get_entropy_zero_at());
+                manager_args.normalise_entropy_before_adding = (get_normalise_entropy_before_adding() > 0);
             }
 
             _add_thts_manager_params_to_args(manager_args, get_env_id());

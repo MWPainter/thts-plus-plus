@@ -47,4 +47,5 @@ static const std::unordered_set<std::string> HPOPT_LOG_SCALE_ALG_PARAM_IDS =
 static const std::unordered_set<std::string> HPOPT_INT_ALG_PARAM_IDS =
 {
     ALG_PARAM_ID_UCT_BUDGET,
+    ALG_PARAM_ID_NORMALISE_ENTROPY_BEFORE_ADDING,
 };

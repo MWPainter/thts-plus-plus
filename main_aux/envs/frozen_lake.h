@@ -87,6 +87,36 @@ static const std::string FL_GEN_4x12_MAP[] =
     "FFFFFFFFFFHG",
 };
 
+// python generate_random_frozen_lake_env.py 8 12 0.8
+static const std::string FL_GEN_8x12_MAP[] =
+{
+    "SFFFFFFFHHFF",
+    "FHFFFFFFFFFF",
+    "FFFHHHFFFFFH",
+    "FFHFHFFFFFFF",
+    "FFFFFFHFFFHF",
+    "FFFFFFFFFHFH",
+    "FHHFFFFHFFFF",
+    "FFFFFFFFFFFG",
+};
+
+// python generate_random_frozen_lake_env.py 12 12 0.8
+static const std::string FL_GEN_12x12_MAP[] =
+{
+    "SFFHFFFHHFHH",
+    "FFHFFFHFFFHF",
+    "FFFFFFFFFFFH",
+    "HHHFHFFFFFFH",
+    "FFHFHHFHFHFH",
+    "HFFFFFFFFFFF",
+    "HFHFFFHFFFFF",
+    "HFFFHFFFFFFF",
+    "FFHFHFFHFFFF",
+    "FFFHFFFFFHHF",
+    "FHFFFFFHFFHF",
+    "FHFFHFFHHHHG",
+};
+
 // python generate_random_frozen_lake_env.py 8 16 0.8
 static const std::string FL_GEN_8x16_MAP[] =
 {
