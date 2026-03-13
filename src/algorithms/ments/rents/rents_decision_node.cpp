@@ -211,13 +211,13 @@ namespace thts {
 
         // If removed actions from q_values, should remove them from the parent distribution and renormalise
         // If we dont do this, then the KL divergence RENTS uses will be incorrect and potentially negative (as we're not actually summing over a probability distribution)
-        if (only_actions_with_children) 
+        if (only_actions_with_children && parent_distr != nullptr) 
         {
             // Remove
             double sum_parent_weights = 0.0;
             for (shared_ptr<const Action> action : *actions) 
             {
-                if (has_child_node(action) && get_child_node(action)->get_num_backups() > 0) 
+                if (parent_distr->contains(action) &&has_child_node(action) && get_child_node(action)->get_num_backups() > 0) 
                 {
                     sum_parent_weights += parent_distr->at(action);
                     continue;
