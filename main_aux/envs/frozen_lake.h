@@ -183,6 +183,7 @@ namespace thts{
             double reward_discount_factor;
             int max_steps;
             bool is_slippery;
+            double dense_hole_cost;
 
 
         /**
@@ -199,7 +200,8 @@ namespace thts{
                 bool is_slippery=false,
                 int reward_type=FL_DENSE_REWARD, 
                 double reward_discount_factor=0.99, 
-                int max_steps=-1);
+                int max_steps=-1,
+                double dense_hole_cost=100.0);
 
             virtual std::shared_ptr<ThtsEnv> clone() override;
 
