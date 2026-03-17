@@ -63,8 +63,12 @@ namespace thts {
         else if (x >= width) x = width-1;
         if (y < 0) y = 0;
         else if (y >= height) y = height-1;
-        if (is_hole_state(state,map)) t = HOLE_TIME;
-        return make_shared<const Int3TupleState>(x, y, t);
+        shared_ptr<const Int3TupleState> next_state = make_shared<const Int3TupleState>(x, y, t);
+        if (!is_hole_state(next_state,map))
+        {
+            return next_state;
+        }
+        return make_shared<const Int3TupleState>(x, y, HOLE_TIME);
     }
 
     shared_ptr<const Int3TupleState> compute_next_state_deterministic(
@@ -228,7 +232,7 @@ namespace thts {
 
         if (reward_type == FL_DENSE_REWARD) {
             if (is_hole_state(state,map)) {
-                return -dense_hole_cost; 
+                return -(max_steps - t) - dense_hole_cost; 
             }
             return -1.0;
         }

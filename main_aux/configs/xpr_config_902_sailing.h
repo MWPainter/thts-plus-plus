@@ -14,12 +14,12 @@ static const std::vector<ConfigMap> CONFIG_902 =
         {XPR_PARAM_ID_ENV,                      ENV_ID_SAILING_16x16_NORTH_ID},
         {XPR_PARAM_ID_MCTS_MODE,                true},
         {XPR_PARAM_ID_GRAPH_SEARCH,             true},
-        {XPR_PARAM_ID_MAX_TRIAL_LENGTH,         100},
+        {XPR_PARAM_ID_MAX_TRIAL_LENGTH,         200}, // 100
         {XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,  1.0},
         {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,   0.0},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,          false},
-        {XPR_PARAM_ID_TERMINATION_BOUND,        100000},
-        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    10},
+        {XPR_PARAM_ID_TERMINATION_BOUND,        250000}, // 100000
+        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    3}, // 10
         {XPR_PARAM_ID_SEARCH_THREADS,           16},
         {XPR_PARAM_ID_EVAL_DELTA,               2500},
         {XPR_PARAM_ID_EVAL_ROLLOUTS,            256},

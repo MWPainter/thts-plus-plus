@@ -158,34 +158,15 @@ python plot_aux.py 010 011 012 013 014
 
 make && clear &&
 ./run_memory_limited 16G ./auxexpr eval 600 &&
-./run_memory_limited 16G ./auxexpr eval 600a &&
-./run_memory_limited 16G ./auxexpr eval 600b &&
 ./run_memory_limited 16G ./auxexpr eval 601 &&
 ./run_memory_limited 16G ./auxexpr eval 602 &&
 ./run_memory_limited 16G ./auxexpr eval 700 &&
-./run_memory_limited 16G ./auxexpr eval 700a &&
-./run_memory_limited 16G ./auxexpr eval 700b &&
 ./run_memory_limited 16G ./auxexpr eval 701 &&
 ./run_memory_limited 16G ./auxexpr eval 702 &&
-./run_memory_limited 16G ./auxexpr eval 710 &&
-./run_memory_limited 16G ./auxexpr eval 710a &&
-./run_memory_limited 16G ./auxexpr eval 710b &&
-./run_memory_limited 16G ./auxexpr eval 711 &&
-./run_memory_limited 16G ./auxexpr eval 712 &&
 ./run_memory_limited 16G ./auxexpr eval 800 &&
 ./run_memory_limited 16G ./auxexpr eval 801 &&
 ./run_memory_limited 16G ./auxexpr eval 802 &&
-./run_memory_limited 16G ./auxexpr eval 803 &&
-./run_memory_limited 16G ./auxexpr eval 804 &&
-./run_memory_limited 16G ./auxexpr eval 810 &&
-./run_memory_limited 16G ./auxexpr eval 811 &&
-./run_memory_limited 16G ./auxexpr eval 812 &&
-./run_memory_limited 16G ./auxexpr eval 813 &&
-./run_memory_limited 16G ./auxexpr eval 814 &&
 ./run_memory_limited 16G ./auxexpr eval 900 &&
 ./run_memory_limited 16G ./auxexpr eval 901 &&
 ./run_memory_limited 16G ./auxexpr eval 902 &&
-./run_memory_limited 16G ./auxexpr eval 910 &&
-./run_memory_limited 16G ./auxexpr eval 911 &&
-./run_memory_limited 16G ./auxexpr eval 912 &&
-python plot_aux.py 600 600a 600b 601 602 700 700a 700b 701 702 710 710a 710b 711 712 800 801 802 803 804 810 811 812 813 814 900 901 902 910 911 912
+python plot_aux.py 600 601 602 700 701 702 800 801 802 900 901 902

@@ -190,6 +190,8 @@ def read_eval_file_to_df(filename,num_trials_scale):
                 heuristic_value = float(val)
             elif param_id == "entropy_coeff":
                 entropy_coeff = float(val)
+            elif param_id == "normalise_entropy_before_adding" and val == "0":
+                alg_id = "dents(no_norm)"
 
     df = pd.read_csv(filepath_or_buffer=filename, header=12, index_col=False, skip_blank_lines=False)
     df["alg_id"] = alg_id
@@ -302,6 +304,7 @@ def make_eval_plot(
     df["alg_id"] = df["alg_id"].map({
         "bts": bts_str,
         "dents": dents_str,
+        "dents(no_norm)": dents_str + "(no_norm)",
         "uct": uct_str,
         "maxuct": max_uct_str,
         "hmcts": hmcts_str,
@@ -322,6 +325,8 @@ def make_eval_plot(
             palette[alg_id] = "tab:blue"
         if dents_str in alg_id:
             palette[alg_id] = "tab:orange"
+        if dents_str + "(no_norm)" in alg_id:
+            palette[alg_id] = plt.cm.tab20(3) # light orange
         if uct_str in alg_id:
             palette[alg_id] = "tab:green"
         if max_uct_str in alg_id:
@@ -467,6 +472,7 @@ def make_param_sens_plot(
     df["alg_id"] = df["alg_id"].map({
         "bts": bts_str,
         "dents": dents_str,
+        "dents(no_norm)": dents_str + "(no_norm)",
         "uct": uct_str,
         "maxuct": max_uct_str,
         "hmcts": hmcts_str,
@@ -497,10 +503,12 @@ def make_param_sens_plot(
             palette[alg_id] = "tab:blue"
         if dents_str in alg_id:
             palette[alg_id] = "tab:orange"
+        if dents_str + "(no_norm)" in alg_id:
+            palette[alg_id] = plt.cm.tab20(3) # light orange
         if uct_str in alg_id:
             palette[alg_id] = "tab:green"
         if max_uct_str in alg_id:
-            palette[alg_id] = "tab:red" #plt.cm.tab20(12) # light green
+            palette[alg_id] = "tab:red" 
         if hmcts_str in alg_id:
             palette[alg_id] = "tab:purple" #"tab:red"
         if ments_str in alg_id:

@@ -11,11 +11,11 @@
 // #include "main_aux/configs/xpr_config_001_debug.h"
 // #include "main_aux/configs/xpr_config_002_debug.h"
 // #include "main_aux/configs/xpr_config_003_debug.h"
-#include "main_aux/configs/xpr_config_010_frozen_lake_dense_debugging.h"
-#include "main_aux/configs/xpr_config_011_frozen_lake_sparse_debugging.h"
-#include "main_aux/configs/xpr_config_012_frozen_lake_slippy_debugging.h"
-#include "main_aux/configs/xpr_config_013_sailing_debugging.h"
-#include "main_aux/configs/xpr_config_014_sailing_debugging.h"
+// #include "main_aux/configs/xpr_config_010_frozen_lake_dense_debugging.h"
+// #include "main_aux/configs/xpr_config_011_frozen_lake_sparse_debugging.h"
+// #include "main_aux/configs/xpr_config_012_frozen_lake_slippy_debugging.h"
+// #include "main_aux/configs/xpr_config_013_sailing_debugging.h"
+// #include "main_aux/configs/xpr_config_014_sailing_debugging.h"
 // #include "main_aux/configs/xpr_config_100_dchain_temp.h"
 // #include "main_aux/configs/xpr_config_101_mod_dchain_temp.h"
 // #include "main_aux/configs/xpr_config_102_entropy_trap_temp.h"
@@ -45,54 +45,17 @@
 // #include "main_aux/configs/xpr_config_451_sailing_south_east.h"
 // #include "main_aux/configs/xpr_config_452_sailing_south_east.h"
 #include "main_aux/configs/xpr_config_600_frozen_lake_dense_scenic_route.h"
-#include "main_aux/configs/xpr_config_600a_frozen_lake_dense_scenic_route.h"
-#include "main_aux/configs/xpr_config_600b_frozen_lake_dense_scenic_route.h"
 #include "main_aux/configs/xpr_config_601_frozen_lake_dense_scenic_route.h"
 #include "main_aux/configs/xpr_config_602_frozen_lake_dense_scenic_route.h"
-// #include "main_aux/configs/xpr_config_610_frozen_lake_dense_scenic_route.h"
-// #include "main_aux/configs/xpr_config_610a_frozen_lake_dense_scenic_route.h"
-// #include "main_aux/configs/xpr_config_610b_frozen_lake_dense_scenic_route.h"
-// #include "main_aux/configs/xpr_config_611_frozen_lake_dense_scenic_route.h"
-// #include "main_aux/configs/xpr_config_612_frozen_lake_dense_scenic_route.h"
-// #include "main_aux/configs/xpr_config_620_frozen_lake_dense_scenic_route.h"
-// #include "main_aux/configs/xpr_config_621_frozen_lake_dense_scenic_route.h"
-// #include "main_aux/configs/xpr_config_622_frozen_lake_dense_scenic_route.h"
 #include "main_aux/configs/xpr_config_700_frozen_lake_sparse_scenic_route.h"
-#include "main_aux/configs/xpr_config_700a_frozen_lake_sparse_scenic_route.h"
-#include "main_aux/configs/xpr_config_700b_frozen_lake_sparse_scenic_route.h"
 #include "main_aux/configs/xpr_config_701_frozen_lake_sparse_scenic_route.h"
 #include "main_aux/configs/xpr_config_702_frozen_lake_sparse_scenic_route.h"
-#include "main_aux/configs/xpr_config_710_frozen_lake_sparse_scenic_route.h"
-#include "main_aux/configs/xpr_config_710a_frozen_lake_sparse_scenic_route.h"
-#include "main_aux/configs/xpr_config_710b_frozen_lake_sparse_scenic_route.h"
-#include "main_aux/configs/xpr_config_711_frozen_lake_sparse_scenic_route.h"
-#include "main_aux/configs/xpr_config_712_frozen_lake_sparse_scenic_route.h"
-// #include "main_aux/configs/xpr_config_720_frozen_lake_sparse_scenic_route.h"
-// #include "main_aux/configs/xpr_config_721_frozen_lake_sparse_scenic_route.h"
-// #include "main_aux/configs/xpr_config_722_frozen_lake_sparse_scenic_route.h"
 #include "main_aux/configs/xpr_config_800_frozen_lake_slippy_scenic_route.h"
 #include "main_aux/configs/xpr_config_801_frozen_lake_slippy_scenic_route.h"
 #include "main_aux/configs/xpr_config_802_frozen_lake_slippy_scenic_route.h"
-#include "main_aux/configs/xpr_config_803_frozen_lake_slippy_scenic_route.h"
-#include "main_aux/configs/xpr_config_804_frozen_lake_slippy_scenic_route.h"
-#include "main_aux/configs/xpr_config_810_frozen_lake_slippy_scenic_route.h"
-#include "main_aux/configs/xpr_config_811_frozen_lake_slippy_scenic_route.h"
-#include "main_aux/configs/xpr_config_812_frozen_lake_slippy_scenic_route.h"
-#include "main_aux/configs/xpr_config_813_frozen_lake_slippy_scenic_route.h"
-#include "main_aux/configs/xpr_config_814_frozen_lake_slippy_scenic_route.h"
-// #include "main_aux/configs/xpr_config_820_frozen_lake_slippy_scenic_route.h"
-// #include "main_aux/configs/xpr_config_821_frozen_lake_slippy_scenic_route.h"
-// #include "main_aux/configs/xpr_config_822_frozen_lake_slippy_scenic_route.h"
 #include "main_aux/configs/xpr_config_900_sailing.h"
 #include "main_aux/configs/xpr_config_901_sailing.h"
 #include "main_aux/configs/xpr_config_902_sailing.h"
-#include "main_aux/configs/xpr_config_910_sailing.h"
-#include "main_aux/configs/xpr_config_911_sailing.h"
-#include "main_aux/configs/xpr_config_912_sailing.h"
-// #include "main_aux/configs/xpr_config_920_sailing.h"
-// #include "main_aux/configs/xpr_config_921_sailing.h"
-// #include "main_aux/configs/xpr_config_922_sailing.h"
-// #include "main_aux/configs/xpr_config_999_ments_entropy_trap_debug.h"
 
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -106,11 +69,11 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     // CONFIG_002,
     // CONFIG_003,
 
-    CONFIG_010,
-    CONFIG_011,
-    CONFIG_012,
-    CONFIG_013,
-    CONFIG_014,
+    // CONFIG_010,
+    // CONFIG_011,
+    // CONFIG_012,
+    // CONFIG_013,
+    // CONFIG_014,
 
     // CONFIG_100,
     // CONFIG_101,
@@ -148,62 +111,18 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     // CONFIG_452,
 
     CONFIG_600,
-    CONFIG_600a,
-    CONFIG_600b,
     CONFIG_601,
     CONFIG_602,
 
-    // CONFIG_610,
-    // CONFIG_611,
-    // CONFIG_612,
-
-    // CONFIG_620,
-    // CONFIG_621,
-    // CONFIG_622,
-
     CONFIG_700,
-    CONFIG_700a,
-    CONFIG_700b,
     CONFIG_701,
     CONFIG_702,
-
-    CONFIG_710,
-    CONFIG_710a,
-    CONFIG_710b,
-    CONFIG_711,
-    CONFIG_712,
-
-    // CONFIG_720,
-    // CONFIG_721,
-    // CONFIG_722,
 
     CONFIG_800,
     CONFIG_801,
     CONFIG_802,
-    CONFIG_803,
-    CONFIG_804,
-
-    CONFIG_810,
-    CONFIG_811,
-    CONFIG_812,
-    CONFIG_813,
-    CONFIG_814,
-
-    // CONFIG_820,
-    // CONFIG_821,
-    // CONFIG_822,
 
     CONFIG_900,
     CONFIG_901,
     CONFIG_902,
-
-    CONFIG_910,
-    CONFIG_911,
-    CONFIG_912,
-
-    // CONFIG_920,
-    // CONFIG_921,
-    // CONFIG_922,
-
-    // CONFIG_999,
 };

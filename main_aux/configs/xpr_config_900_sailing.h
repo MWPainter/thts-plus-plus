@@ -18,8 +18,8 @@ static const std::vector<ConfigMap> CONFIG_900 =
         {XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,  1.0},
         {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,   0.0},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,          false},
-        {XPR_PARAM_ID_TERMINATION_BOUND,        100000},
-        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    10},
+        {XPR_PARAM_ID_TERMINATION_BOUND,        250000}, // 100000
+        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    3}, // 10
         {XPR_PARAM_ID_SEARCH_THREADS,           16},
         {XPR_PARAM_ID_EVAL_DELTA,               2500},
         {XPR_PARAM_ID_EVAL_ROLLOUTS,            256},

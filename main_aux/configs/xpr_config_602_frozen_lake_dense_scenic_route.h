@@ -10,13 +10,13 @@ static const std::vector<ConfigMap> CONFIG_602 =
     // xpr params
     {
         {XPR_OR_ALG_ID_TAG,                     XPR_PARAMS_ID_TAG},
-        {XPR_PARAM_ID_NAME,                     "602_supp_frozen_lake_dense_scenic_route_16x16"},
-        {XPR_PARAM_ID_ENV,                      ENV_ID_FROZEN_LAKE_D_16x16},
+        {XPR_PARAM_ID_NAME,                     "602_supp_frozen_lake_dense_scenic_route_12x12"},
+        {XPR_PARAM_ID_ENV,                      ENV_ID_FROZEN_LAKE_D_12x12},
         {XPR_PARAM_ID_MCTS_MODE,                false},
         {XPR_PARAM_ID_GRAPH_SEARCH,             true},
         {XPR_PARAM_ID_MAX_TRIAL_LENGTH,         100},
         {XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,  0.0},
-        {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,   1.0},
+        {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,   0.0},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,          false},
         {XPR_PARAM_ID_TERMINATION_BOUND,        100000},
         {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    10},
