@@ -56,13 +56,17 @@ def make_lineplot_df(
     alpha=1.0,
     use_legend=True,
     font_scale=1.2,
+    figsize=(10.24, 7.68),
+    dpi=200,
     legend_loc=None,
     horizontal_lines=None):
     """
     General helper for plotting lineplots in our style.
     """
 
-    plt.figure()
+    # Default matplotlib output is often ~640x480 (dpi=100). Increase dpi so
+    # saved images are higher resolution without changing plot physical size.
+    plt.figure(figsize=figsize, dpi=dpi)
     sns.set_theme(style="darkgrid",font_scale=font_scale)
 
     # params = {
@@ -128,7 +132,7 @@ def make_lineplot_df(
 
     plt.tight_layout()
     if filename is not None:
-        plt.savefig(filename)
+        plt.savefig(filename, dpi=dpi, bbox_inches="tight")
     else:
         plt.show()
     plt.close()
@@ -268,6 +272,10 @@ def make_eval_plot(
     from a lighter version of the algorithm colour (low param) to black (high param).
     If continuous_hue_key_is_logarithmic is True, the parameter is normalised on a log scale for the palette.
     """
+
+    if (len(filenames) == 0):
+        print(f"Skipping plot {plot_filename} because no files found")
+        return
 
     # Default params
     if hue_key is None:
@@ -430,12 +438,17 @@ def make_param_sens_plot(
     use_legend=True,
     alpha=1.0,
     num_trials_scale=1,
+    horizontal_lines=None,
     legend_loc=None,
     seperate_plots=True,
     fl_sparse_reward_transform=False):
     """
     Makes an plot to compare  
     """
+
+    if (len(filenames) == 0):
+        print(f"Skipping plot {plot_filename} because no files found")
+        return
 
     if seperate_plots and plot_filename_frmt_str is None:
         raise ValueError("plot_filename_frmt_str must be provided if seperate_plots is True")
@@ -556,7 +569,8 @@ def make_param_sens_plot(
             # markevery=markevery,
             use_legend=use_legend,
             legend_loc=legend_loc,
-            alpha=alpha)
+            alpha=alpha,
+            horizontal_lines=horizontal_lines)
         return
 
     for alg_id in [uct_str]:
@@ -590,7 +604,8 @@ def make_param_sens_plot(
             # markevery=markevery,
             use_legend=use_legend,
             legend_loc=legend_loc,
-            alpha=alpha)
+            alpha=alpha,
+            horizontal_lines=horizontal_lines)
         
     for alg_id in [ments_str,bts_str,dents_str]:
         if alg_id not in algs_in_data:
@@ -623,7 +638,8 @@ def make_param_sens_plot(
             # markevery=markevery,
             use_legend=use_legend,
             legend_loc=legend_loc,
-            alpha=alpha)
+            alpha=alpha,
+            horizontal_lines=horizontal_lines)
 
 
     # Call our actual make plot function
@@ -1122,26 +1138,7 @@ if __name__ == "__main__":
             plot_filename="plots/600_fl_dense_8x8_eps=0.0.png",
             legend_loc="lower left",
             seperate_plots=False,
-        )
-
-    if "600a" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "600a")
-        filenames = glob.glob("aux_eval_logs/600a_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/600a_fl_dense_8x12_eps=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
-
-    if "600b" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "600b")
-        filenames = glob.glob("aux_eval_logs/600b_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/600b_fl_dense_12x12_eps=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
+            horizontal_lines=[-15],
         )
 
     if "601" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
@@ -1149,9 +1146,10 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/601_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/601_fl_dense_8x16_eps=0.0.png",
+            plot_filename="plots/601_fl_dense_8x12_eps=0.0.png",
             legend_loc="lower left",
             seperate_plots=False,
+            horizontal_lines=[-19],
         )
 
     if "602" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
@@ -1159,70 +1157,11 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/602_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/602_fl_dense_16x16_eps=0.0.png",
+            plot_filename="plots/602_fl_dense_12x12_eps=0.0.png",
             legend_loc="lower left",
             seperate_plots=False,
+            horizontal_lines=[-23],
         )
-
-    # if "610" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-    #     print("Plotting: ", "610")
-    #     filenames = glob.glob("aux_eval_logs/610_*/**/eval_log.txt", recursive=True)
-    #     make_param_sens_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/610_fl_dense_8x8_eps=0.5.png",
-    #         legend_loc="lower left",
-    #         seperate_plots=False,
-    #     )
-
-    # if "611" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-    #     print("Plotting: ", "611")
-    #     filenames = glob.glob("aux_eval_logs/611_*/**/eval_log.txt", recursive=True)
-    #     make_param_sens_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/611_fl_dense_8x16_eps=0.5.png",
-    #         legend_loc="lower left",
-    #         seperate_plots=False,
-    #     )
-
-    # if "612" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-    #     print("Plotting: ", "612")
-    #     filenames = glob.glob("aux_eval_logs/612_*/**/eval_log.txt", recursive=True)
-    #     make_param_sens_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/612_fl_dense_16x16_eps=0.5.png",
-    #         legend_loc="lower left",
-    #         seperate_plots=False,
-    #     )
-
-    # if "620" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-    #     print("Plotting: ", "620")
-    #     filenames = glob.glob("aux_eval_logs/620_*/**/eval_log.txt", recursive=True)
-    #     make_param_sens_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/620_fl_dense_8x8_eps=1.0.png",
-    #         legend_loc="lower left",
-    #         seperate_plots=False,
-    #     )
-
-    # if "621" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-    #     print("Plotting: ", "621")
-    #     filenames = glob.glob("aux_eval_logs/621_*/**/eval_log.txt", recursive=True)
-    #     make_param_sens_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/621_fl_dense_8x16_eps=1.0.png",
-    #         legend_loc="lower left",
-    #         seperate_plots=False,
-    #     )
-
-    # if "622" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-    #     print("Plotting: ", "622")
-    #     filenames = glob.glob("aux_eval_logs/622_*/**/eval_log.txt", recursive=True)
-    #     make_param_sens_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/622_fl_dense_16x16_eps=1.0.png",
-    #         legend_loc="lower left",
-    #         seperate_plots=False,
-    #     )
 
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -1236,26 +1175,7 @@ if __name__ == "__main__":
             plot_filename="plots/700_fl_sparse_8x8_eps=0.0.png",
             legend_loc="lower left",
             seperate_plots=False,
-        )
-
-    if "700a" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "700a")
-        filenames = glob.glob("aux_eval_logs/700a_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/700a_fl_sparse_8x12_eps=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
-
-    if "700b" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "700b")
-        filenames = glob.glob("aux_eval_logs/700b_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/700b_fl_sparse_12x12_eps=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
+            horizontal_lines=[0.99**15],
         )
 
     if "701" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
@@ -1263,9 +1183,21 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/701_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/701_fl_sparse_8x16_eps=0.0.png",
+            plot_filename="plots/701_fl_sparse_8x12_eps=0.0.png",
             legend_loc="lower left",
             seperate_plots=False,
+            horizontal_lines=[0.99**19],
+        )
+
+    if "701a" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+        print("Plotting: ", "701a")
+        filenames = glob.glob("aux_eval_logs/701a_*/**/eval_log.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename="plots/701a_fl_sparse_8x12_eps=0.0_decaying_temp=0.01.png",
+            legend_loc="lower left",
+            seperate_plots=False,
+            horizontal_lines=[0.99**19],
         )
 
     if "702" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
@@ -1273,9 +1205,10 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/702_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/702_fl_sparse_16x16_eps=0.0.png",
+            plot_filename="plots/702_fl_sparse_12x12_eps=0.0.png",
             legend_loc="lower left",
             seperate_plots=False,
+            horizontal_lines=[0.99**23],
         )
 
     if "710" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
@@ -1283,29 +1216,10 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/710_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/710_fl_sparse_8x8_heuristic=0.0.png",
+            plot_filename="plots/710_fl_sparse_8x8_eps=1.0.png",
             legend_loc="lower left",
             seperate_plots=False,
-        )
-
-    if "710a" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "710a")
-        filenames = glob.glob("aux_eval_logs/710a_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/710a_fl_sparse_8x12_heuristic=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
-
-    if "710b" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "710b")
-        filenames = glob.glob("aux_eval_logs/710b_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/710b_fl_sparse_12x12_heuristic=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
+            horizontal_lines=[0.99**15],
         )
 
     if "711" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
@@ -1313,9 +1227,21 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/711_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/711_fl_sparse_8x16_heuristic=0.0.png",
+            plot_filename="plots/711_fl_sparse_8x12_eps=1.0.png",
             legend_loc="lower left",
             seperate_plots=False,
+            horizontal_lines=[0.99**19],
+        )
+
+    if "711a" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+        print("Plotting: ", "711a")
+        filenames = glob.glob("aux_eval_logs/711a_*/**/eval_log.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename="plots/711a_fl_sparse_8x12_eps=1.0_decaying_temp=0.01.png",
+            legend_loc="lower left",
+            seperate_plots=False,
+            horizontal_lines=[0.99**19],
         )
 
     if "712" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
@@ -1323,40 +1249,44 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/712_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/712_fl_sparse_16x16_heuristic=0.0.png",
+            plot_filename="plots/712_fl_sparse_12x12_eps=1.0.png",
             legend_loc="lower left",
             seperate_plots=False,
+            horizontal_lines=[0.99**23],
         )
 
-    # if "720" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-    #     print("Plotting: ", "720")
-    #     filenames = glob.glob("aux_eval_logs/720_*/**/eval_log.txt", recursive=True)
-    #     make_param_sens_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/720_fl_sparse_8x8_eps=1.0.png",
-    #         legend_loc="lower left",
-    #         seperate_plots=False,
-    #     )
+    if "720" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+        print("Plotting: ", "720")
+        filenames = glob.glob("aux_eval_logs/720_*/**/eval_log.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename="plots/720_fl_sparse_8x8_eps=1.0_tree.png",
+            legend_loc="lower left",
+            seperate_plots=False,
+            horizontal_lines=[0.99**15],
+        )
 
-    # if "721" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-    #     print("Plotting: ", "721")
-    #     filenames = glob.glob("aux_eval_logs/721_*/**/eval_log.txt", recursive=True)
-    #     make_param_sens_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/721_fl_sparse_8x16_eps=1.0.png",
-    #         legend_loc="lower left",
-    #         seperate_plots=False,
-    #     )
+    if "721" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+        print("Plotting: ", "721")
+        filenames = glob.glob("aux_eval_logs/721_*/**/eval_log.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename="plots/721_fl_sparse_8x12_eps=1.0_tree.png",
+            legend_loc="lower left",
+            seperate_plots=False,
+            horizontal_lines=[0.99**19],
+        )
 
-    # if "722" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-    #     print("Plotting: ", "722")
-    #     filenames = glob.glob("aux_eval_logs/722_*/**/eval_log.txt", recursive=True)
-    #     make_param_sens_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/722_fl_sparse_16x16_eps=1.0.png",
-    #         legend_loc="lower left",
-    #         seperate_plots=False,
-    #     )
+    if "722" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+        print("Plotting: ", "722")
+        filenames = glob.glob("aux_eval_logs/722_*/**/eval_log.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename="plots/722_fl_sparse_12x12_eps=1.0_tree.png",
+            legend_loc="lower left",
+            seperate_plots=False,
+            horizontal_lines=[0.99**23],
+        )
 
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -1370,6 +1300,18 @@ if __name__ == "__main__":
             plot_filename="plots/800_fl_slippy_4x4_eps=0.0.png",
             legend_loc="lower left",
             seperate_plots=False,
+            horizontal_lines=[0.7442],
+        )
+
+    if "800a" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+        print("Plotting: ", "800a")
+        filenames = glob.glob("aux_eval_logs/800a_*/**/eval_log.txt", recursive=True)
+        make_param_sens_plot(
+            filenames=filenames,
+            plot_filename="plots/800a_fl_slippy_4x4_eps=0.0_decaying_temp=0.01.png",
+            legend_loc="lower left",
+            seperate_plots=False,
+            horizontal_lines=[0.7442],
         )
 
     if "801" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
@@ -1380,6 +1322,7 @@ if __name__ == "__main__":
             plot_filename="plots/801_fl_slippy_5x5_eps=0.0.png",
             legend_loc="lower left",
             seperate_plots=False,
+            horizontal_lines=[0.9149],
         )
 
     if "802" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
@@ -1390,107 +1333,8 @@ if __name__ == "__main__":
             plot_filename="plots/802_fl_slippy_6x6_eps=0.0.png",
             legend_loc="lower left",
             seperate_plots=False,
+            horizontal_lines=[0.8165],
         )
-
-    if "803" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "803")
-        filenames = glob.glob("aux_eval_logs/803_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/803_fl_slippy_4x8_eps=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
-
-    if "804" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "804")
-        filenames = glob.glob("aux_eval_logs/804_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/804_fl_slippy_4x12_eps=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
-
-    if "810" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "810")
-        filenames = glob.glob("aux_eval_logs/810_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/810_fl_slippy_4x4_heuristic=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
-
-    if "811" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "811")
-        filenames = glob.glob("aux_eval_logs/811_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/811_fl_slippy_5x5_heuristic=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
-
-    if "812" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "812")
-        filenames = glob.glob("aux_eval_logs/812_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/812_fl_slippy_6x6_heuristic=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
-
-    if "813" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "813")
-        filenames = glob.glob("aux_eval_logs/813_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/813_fl_slippy_4x8_heuristic=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
-
-    if "814" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "814")
-        filenames = glob.glob("aux_eval_logs/814_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/814_fl_slippy_4x12_heuristic=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
-
-    # if "820" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-    #     print("Plotting: ", "820")
-    #     filenames = glob.glob("aux_eval_logs/820_*/**/eval_log.txt", recursive=True)
-    #     make_param_sens_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/820_fl_slippy_4x4_eps=1.0.png",
-    #         legend_loc="lower left",
-    #         seperate_plots=False,
-    #     )
-
-    # if "821" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-    #     print("Plotting: ", "821")
-    #     filenames = glob.glob("aux_eval_logs/821_*/**/eval_log.txt", recursive=True)
-    #     make_param_sens_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/821_fl_slippy_5x5_eps=1.0.png",
-    #         legend_loc="lower left",
-    #         seperate_plots=False,
-    #     )
-
-    # if "822" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-    #     print("Plotting: ", "822")
-    #     filenames = glob.glob("aux_eval_logs/822_*/**/eval_log.txt", recursive=True)
-    #     make_param_sens_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/822_fl_slippy_6x6_eps=1.0.png",
-    #         legend_loc="lower left",
-    #         seperate_plots=False,
-    #     )
 
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -1501,7 +1345,7 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/900_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/900_sailing_north_8x8_eps=0.0.png",
+            plot_filename="plots/900_sailing_north_8x8.png",
             legend_loc="lower left",
             seperate_plots=False,
         )
@@ -1511,7 +1355,7 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/901_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/901_sailing_north_8x16_eps=0.0.png",
+            plot_filename="plots/901_sailing_north_8x16.png",
             legend_loc="lower left",
             seperate_plots=False,
         )
@@ -1521,37 +1365,7 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/902_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/902_sailing_north_16x16_eps=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
-
-    if "910" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "910")
-        filenames = glob.glob("aux_eval_logs/910_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/910_sailing_north_8x8_heuristic=-500.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
-
-    if "911" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "901")
-        filenames = glob.glob("aux_eval_logs/911_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/911_sailing_north_8x16_heuristic=-500.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
-
-    if "912" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "902")
-        filenames = glob.glob("aux_eval_logs/912_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/912_sailing_north_16x16_heuristic=-500.0.png",
+            plot_filename="plots/902_sailing_north_16x16.png",
             legend_loc="lower left",
             seperate_plots=False,
         )

@@ -12,8 +12,7 @@ static const int DELTA_Y[] = {      0,       1,       0,    -1 };
 static const char HOLE_CHAR = 'H';
 static const char GOAL_CHAR = 'G';
 
-static const int HOLE_TIME = -10;
-static const int SINK_TIME = -20;
+static const int TERMINAL_TIMESTEP = -1;
 
 namespace thts {
     /**
@@ -53,32 +52,25 @@ namespace thts {
         shared_ptr<const Int3TupleState> state, 
         const int act_val, 
         const int width, 
-        const int height,
-        const std::string* map)  
+        const int height)  
     {
         int x = get<0>(state->state) + DELTA_X[act_val];
         int y = get<1>(state->state) + DELTA_Y[act_val];
-        int t = get<2>(state->state) + 1;
+        int t = get<2>(state->state);
         if (x < 0) x = 0;
         else if (x >= width) x = width-1;
         if (y < 0) y = 0;
         else if (y >= height) y = height-1;
-        shared_ptr<const Int3TupleState> next_state = make_shared<const Int3TupleState>(x, y, t);
-        if (!is_hole_state(next_state,map))
-        {
-            return next_state;
-        }
-        return make_shared<const Int3TupleState>(x, y, HOLE_TIME);
+        return make_shared<const Int3TupleState>(x, y, t+1);
     }
 
     shared_ptr<const Int3TupleState> compute_next_state_deterministic(
         shared_ptr<const Int3TupleState> state, 
         shared_ptr<const IntAction> action, 
         int width, 
-        int height,
-        const std::string* map)  
+        int height)  
     {
-        return compute_next_state_deterministic(state, action->action, width, height, map);
+        return compute_next_state_deterministic(state, action->action, width, height);
     }
 
     /**
@@ -92,22 +84,19 @@ namespace thts {
         int reward_type, 
         double reward_discount_factor, 
         int max_steps,
-        double dense_hole_cost) : 
+        double dense_hole_cost,
+        bool avoid_collision_actions) : 
             ThtsEnv(true), 
             height(height),
             width(width),
             map(map),
-            cached_actions(make_shared<IntActionVector>()),
             reward_type(reward_type),
             reward_discount_factor(reward_discount_factor),
             max_steps(max_steps == -1 ? 10*(width+height) : max_steps),
             is_slippery(is_slippery),
-            dense_hole_cost(dense_hole_cost)
+            dense_hole_cost(dense_hole_cost),
+            avoid_collision_actions(avoid_collision_actions)
     {
-        cached_actions->push_back(make_shared<const IntAction>(FL_RIGHT));
-        cached_actions->push_back(make_shared<const IntAction>(FL_DOWN));
-        cached_actions->push_back(make_shared<const IntAction>(FL_LEFT));
-        cached_actions->push_back(make_shared<const IntAction>(FL_UP));
     }
 
     shared_ptr<ThtsEnv> FrozenLakeEnv::clone() {
@@ -131,7 +120,7 @@ namespace thts {
     */
     bool FrozenLakeEnv::is_sink_state(shared_ptr<const Int3TupleState> state) const {
         const int t = get<2>(state->state);
-        return (is_goal_state(state,map) && t==SINK_TIME) || (is_hole_state(state,map) && t==SINK_TIME) || t >= max_steps;
+        return (t == TERMINAL_TIMESTEP) || (t >= max_steps);
     }
 
     /**
@@ -153,8 +142,23 @@ namespace thts {
             terminal_actions->push_back(make_shared<IntAction>(FL_UP));
             return terminal_actions;
         }
+        shared_ptr<IntActionVector> valid_actions = make_shared<IntActionVector>();
+        int x = get<0>(state->state);
+        int y = get<1>(state->state);
+        if (!avoid_collision_actions || (x < width-1)) {
+            valid_actions->push_back(make_shared<const IntAction>(FL_RIGHT));
+        }
+        if (!avoid_collision_actions || (y < height-1)) {
+            valid_actions->push_back(make_shared<const IntAction>(FL_DOWN));
+        }
+        if (!avoid_collision_actions || (x > 0)) {
+            valid_actions->push_back(make_shared<const IntAction>(FL_LEFT));
+        }
+        if (!avoid_collision_actions || (y > 0)) {
+            valid_actions->push_back(make_shared<const IntAction>(FL_UP));
+        }
         // Otherwise can move in any direction in the mortal plane
-        return cached_actions;
+        return valid_actions;
     }
 
     /**
@@ -165,15 +169,15 @@ namespace thts {
     {
         shared_ptr<Int3TupleStateDistr> next_state_distr = make_shared<Int3TupleStateDistr>();
 
-        if (is_hole_state(state,map) || is_goal_state(state,map)) {
-            shared_ptr<Int3TupleStateDistr> next_state_distr = make_shared<Int3TupleStateDistr>();
-            shared_ptr<const Int3TupleState> next_state = make_shared<const Int3TupleState>(get<0>(state->state), get<1>(state->state), SINK_TIME);
-            next_state_distr->insert_or_assign(next_state, 1.0);
+        if (is_hole_state(state,map) || is_goal_state(state,map)) 
+        {
+            shared_ptr<const Int3TupleState> terminal_state = make_shared<Int3TupleState>(get<0>(state->state), get<1>(state->state), TERMINAL_TIMESTEP);
+            next_state_distr->insert_or_assign(terminal_state, 1.0);
             return next_state_distr;
         }
 
         if (!is_slippery) {
-            shared_ptr<const Int3TupleState> next_state = compute_next_state_deterministic(state, action, width, height, map);
+            shared_ptr<const Int3TupleState> next_state = compute_next_state_deterministic(state, action, width, height);
             next_state_distr->insert_or_assign(next_state, 1.0);
             return next_state_distr;
         }
@@ -181,10 +185,10 @@ namespace thts {
         double slip_prob = 1.0/3.0;
         double next_state_prob = slip_prob;
 
-        shared_ptr<const Int3TupleState> next_state = compute_next_state_deterministic(state, action, width, height, map);
+        shared_ptr<const Int3TupleState> next_state = compute_next_state_deterministic(state, action, width, height);
         next_state_distr->insert_or_assign(next_state, next_state_prob);
 
-        next_state = compute_next_state_deterministic(state, mod(action->action-1,4), width, height, map);
+        next_state = compute_next_state_deterministic(state, mod(action->action-1,4), width, height);
         next_state_prob = slip_prob;
         if (next_state_distr->contains(next_state)) {
             next_state_prob += next_state_distr->at(next_state);
@@ -192,7 +196,7 @@ namespace thts {
         next_state_distr->insert_or_assign(next_state, next_state_prob);
 
         next_state_prob = 1.0 - 2*slip_prob;
-        next_state = compute_next_state_deterministic(state, mod(action->action+1,4), width, height, map);
+        next_state = compute_next_state_deterministic(state, mod(action->action+1,4), width, height);
         if (next_state_distr->contains(next_state)) {
             next_state_prob += next_state_distr->at(next_state);
         }
@@ -207,14 +211,17 @@ namespace thts {
     shared_ptr<const Int3TupleState> FrozenLakeEnv::sample_transition_distribution(
         shared_ptr<const Int3TupleState> state, shared_ptr<const IntAction> action, RandManager& rand_manager) const 
     {
-        if (is_hole_state(state,map) || is_goal_state(state,map)) {
-            return make_shared<const Int3TupleState>(get<0>(state->state), get<1>(state->state), SINK_TIME);
+        if (is_hole_state(state,map) || is_goal_state(state,map)) 
+        {
+            return make_shared<Int3TupleState>(get<0>(state->state), get<1>(state->state), TERMINAL_TIMESTEP);
         }
-        if (!is_slippery) {
-            return compute_next_state_deterministic(state, action, width, height, map);
+
+        if (!is_slippery) 
+        {
+            return compute_next_state_deterministic(state, action, width, height);
         }
         int rand_int = rand_manager.get_rand_int(0,3) - 1;
-        return compute_next_state_deterministic(state, mod(action->action+rand_int,4), width, height, map);
+        return compute_next_state_deterministic(state, mod(action->action+rand_int,4), width, height);
     }
 
     /**
@@ -230,29 +237,21 @@ namespace thts {
     {
         const int t = get<2>(state->state);
 
-        if (reward_type == FL_DENSE_REWARD) {
-            if (is_hole_state(state,map)) {
+        if (reward_type == FL_DENSE_REWARD) 
+        {
+            if (is_hole_state(state,map)) 
+            {
+                // Hole should have value = -(max_steps+dense_hole_cost), but account for t timesteps already taken
                 return -(max_steps - t) - dense_hole_cost; 
             }
             return -1.0;
         }
 
-        if (reward_type == FL_SPARSE_LEN_REWARD) {
-            if (is_hole_state(state,map)) {
-                return -max_steps;
-            }
-            if (is_goal_state(state,map)) {
-                return -t;
-            }
-            if (t == max_steps-1) {
-                return -max_steps;
-            }
-            return 0.0;
-        }
-
-        if (reward_type == FL_SPARSE_DISCOUNTED_REWARD) {
-            if (is_goal_state(state,map)) {
-                return pow(reward_discount_factor, t);
+        if (reward_type == FL_SPARSE_DISCOUNTED_REWARD) 
+        {
+            if (is_goal_state(state,map)) 
+            {
+                return pow(reward_discount_factor, t+1);
             }
             return 0.0;
         }

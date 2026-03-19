@@ -46,13 +46,20 @@
 // #include "main_aux/configs/xpr_config_452_sailing_south_east.h"
 #include "main_aux/configs/xpr_config_600_frozen_lake_dense_scenic_route.h"
 #include "main_aux/configs/xpr_config_601_frozen_lake_dense_scenic_route.h"
-#include "main_aux/configs/xpr_config_602_frozen_lake_dense_scenic_route.h"
 #include "main_aux/configs/xpr_config_700_frozen_lake_sparse_scenic_route.h"
 #include "main_aux/configs/xpr_config_701_frozen_lake_sparse_scenic_route.h"
-#include "main_aux/configs/xpr_config_702_frozen_lake_sparse_scenic_route.h"
+#include "main_aux/configs/xpr_config_701a_frozen_lake_sparse_scenic_route.h"
+#include "main_aux/configs/xpr_config_710_frozen_lake_sparse_scenic_route.h"
+#include "main_aux/configs/xpr_config_711_frozen_lake_sparse_scenic_route.h"
+#include "main_aux/configs/xpr_config_711a_frozen_lake_sparse_scenic_route.h"
 #include "main_aux/configs/xpr_config_800_frozen_lake_slippy_scenic_route.h"
+#include "main_aux/configs/xpr_config_800a_frozen_lake_slippy_scenic_route.h"
 #include "main_aux/configs/xpr_config_801_frozen_lake_slippy_scenic_route.h"
 #include "main_aux/configs/xpr_config_802_frozen_lake_slippy_scenic_route.h"
+#include "main_aux/configs/xpr_config_810_frozen_lake_slippy_scenic_route.h"
+#include "main_aux/configs/xpr_config_810a_frozen_lake_slippy_scenic_route.h"
+#include "main_aux/configs/xpr_config_811_frozen_lake_slippy_scenic_route.h"
+#include "main_aux/configs/xpr_config_812_frozen_lake_slippy_scenic_route.h"
 #include "main_aux/configs/xpr_config_900_sailing.h"
 #include "main_aux/configs/xpr_config_901_sailing.h"
 #include "main_aux/configs/xpr_config_902_sailing.h"
@@ -112,15 +119,24 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
 
     CONFIG_600,
     CONFIG_601,
-    CONFIG_602,
 
     CONFIG_700,
     CONFIG_701,
-    CONFIG_702,
+    CONFIG_701a,
+
+    CONFIG_710,
+    CONFIG_711,
+    CONFIG_711a,
 
     CONFIG_800,
+    CONFIG_800a,
     CONFIG_801,
     CONFIG_802,
+
+    CONFIG_810,
+    CONFIG_810a,
+    CONFIG_811,
+    CONFIG_812,
 
     CONFIG_900,
     CONFIG_901,

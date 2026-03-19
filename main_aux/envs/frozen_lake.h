@@ -48,7 +48,7 @@ static const std::string FL_8x8_MAP[] =
     "FFFHFFFG",
 };
 
-// python generate_random_frozen_lake_env.py 5 5 0.8
+// python generate_frozen_lake_env.py 5 5 0.8
 static const std::string FL_GEN_5x5_MAP[] =
 {
     "SFFFF",
@@ -58,7 +58,7 @@ static const std::string FL_GEN_5x5_MAP[] =
     "FFFHG",
 };
 
-// python generate_random_frozen_lake_env.py 6 6 0.8
+// python generate_frozen_lake_env.py 6 6 0.8
 static const std::string FL_GEN_6x6_MAP[] =
 {
     "SFFFFF",
@@ -69,7 +69,7 @@ static const std::string FL_GEN_6x6_MAP[] =
     "FFFFFG",
 };
 
-// python generate_random_frozen_lake_env.py 4 8 0.8
+// python generate_frozen_lake_env.py 4 8 0.8
 static const std::string FL_GEN_4x8_MAP[] =
 {
     "SFFFHFFF",
@@ -78,7 +78,7 @@ static const std::string FL_GEN_4x8_MAP[] =
     "FFFFFFHG",
 };
 
-// python generate_random_frozen_lake_env.py 4 12 0.8
+// python generate_frozen_lake_env.py 4 12 0.8
 static const std::string FL_GEN_4x12_MAP[] =
 {
     "SFFHFFFFFFFH",
@@ -87,37 +87,37 @@ static const std::string FL_GEN_4x12_MAP[] =
     "FFFFFFFFFFHG",
 };
 
-// python generate_random_frozen_lake_env.py 8 12 0.8
+// python generate_frozen_lake_env.py 8 12 0.8
 static const std::string FL_GEN_8x12_MAP[] =
 {
-    "SFFFFFFFHHFF",
-    "FHFFFFFFFFFF",
-    "FFFHHHFFFFFH",
-    "FFHFHFFFFFFF",
-    "FFFFFFHFFFHF",
-    "FFFFFFFFFHFH",
-    "FHHFFFFHFFFF",
-    "FFFFFFFFFFFG",
+    "SFFFFFFFFHFH",
+    "FFFFFFFFFHFF",
+    "FFFFFFFFFHHF",
+    "FFFFFHFFHFFH",
+    "FFFFFFFFFFFF",
+    "FFFFFFFFFFFF",
+    "FFFFHHFFFFFF",
+    "FFHFFFFFFFFG",
 };
 
-// python generate_random_frozen_lake_env.py 12 12 0.8
+// python generate_frozen_lake_env.py 12 12 0.8
 static const std::string FL_GEN_12x12_MAP[] =
 {
-    "SFFHFFFHHFHH",
-    "FFHFFFHFFFHF",
-    "FFFFFFFFFFFH",
-    "HHHFHFFFFFFH",
-    "FFHFHHFHFHFH",
-    "HFFFFFFFFFFF",
-    "HFHFFFHFFFFF",
-    "HFFFHFFFFFFF",
-    "FFHFHFFHFFFF",
-    "FFFHFFFFFHHF",
-    "FHFFFFFHFFHF",
-    "FHFFHFFHHHHG",
+    "SFFHFFFFFFFF",
+    "FHFFFFFFFHFF",
+    "HFFFFHHHFFFF",
+    "FFHFFFFFHFFF",
+    "FHHHFHHFFFFF",
+    "HFHFHFFFHFFF",
+    "FFFFFFFFHFFF",
+    "HHFFFHFFFFFF",
+    "FFFFFFFHFFFH",
+    "FFHFFHFFHFFH",
+    "FFFFFHHFFFFH",
+    "FHFFFFFHFFFG",
 };
 
-// python generate_random_frozen_lake_env.py 8 16 0.8
+// python generate_frozen_lake_env.py 8 16 0.8
 static const std::string FL_GEN_8x16_MAP[] =
 {
     "SFFFFFFFFFFFFFHF",
@@ -130,7 +130,7 @@ static const std::string FL_GEN_8x16_MAP[] =
     "FFFFFHFFHHFFHHFG",
 };
 
-// python generate_random_frozen_lake_env.py 16 16 0.8
+// python generate_frozen_lake_env.py 16 16 0.8
 static const std::string FL_GEN_16x16_MAP[] =
 {
     "SFFHFHFFHFFFFFFF",
@@ -178,12 +178,12 @@ namespace thts{
             int height;
             int width;
             const std::string* map;
-            std::shared_ptr<IntActionVector> cached_actions;
             int reward_type;
             double reward_discount_factor;
             int max_steps;
             bool is_slippery;
             double dense_hole_cost;
+            bool avoid_collision_actions;
 
 
         /**
@@ -201,7 +201,8 @@ namespace thts{
                 int reward_type=FL_DENSE_REWARD, 
                 double reward_discount_factor=0.99, 
                 int max_steps=-1,
-                double dense_hole_cost=100.0);
+                double dense_hole_cost=100.0,
+                bool avoid_collision_actions=false);
 
             virtual std::shared_ptr<ThtsEnv> clone() override;
 

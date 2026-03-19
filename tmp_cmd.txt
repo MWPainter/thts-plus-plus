@@ -170,3 +170,38 @@ make && clear &&
 ./run_memory_limited 16G ./auxexpr eval 901 &&
 ./run_memory_limited 16G ./auxexpr eval 902 &&
 python plot_aux.py 600 601 602 700 701 702 800 801 802 900 901 902
+
+
+
+
+make && clear &&
+./run_memory_limited 16G ./auxexpr eval 700 &&
+./run_memory_limited 16G ./auxexpr eval 701_ &&
+./run_memory_limited 16G ./auxexpr eval 701a_ &&
+./run_memory_limited 16G ./auxexpr eval 710 &&
+./run_memory_limited 16G ./auxexpr eval 711_ &&
+./run_memory_limited 16G ./auxexpr eval 711a_ &&
+./run_memory_limited 16G ./auxexpr eval 800_ &&
+./run_memory_limited 16G ./auxexpr eval 800a_ &&
+./run_memory_limited 16G ./auxexpr eval 801 &&
+./run_memory_limited 16G ./auxexpr eval 802 &&
+./run_memory_limited 16G ./auxexpr eval 900 &&
+./run_memory_limited 16G ./auxexpr eval 901 &&
+./run_memory_limited 16G ./auxexpr eval 902 &&
+python plot_aux.py 700 701 701a 702 710 711 711a 712 720 721 722 800 800a 801 802 900 901 902 &&
+./run_memory_limited 16G ./auxexpr opt 300 &&
+./run_memory_limited 16G ./auxexpr opt 310 &&
+./run_memory_limited 16G ./auxexpr opt 320 &&
+./run_memory_limited 16G ./auxexpr opt 330 &&
+./run_memory_limited 16G ./auxexpr opt 340 &&
+./run_memory_limited 16G ./auxexpr opt 350
+
+
+
+TODO:
+1. check 90X
+2. make 91X?
+3. make sure graph based FL gets solved (bigger envs)
+4. make eval configs + run
+4.1. including the D-chain envs
+5. run more repeats on 700 - 902 + add more resolution in plots

@@ -159,7 +159,7 @@ namespace thts::helper {
         {
             for (auto it = values.begin(); it != values.end(); it++)
             {
-                it->second = 0.0;
+                it->second = 1.0;
             }
             return;
         }

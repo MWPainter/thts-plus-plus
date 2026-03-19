@@ -90,7 +90,6 @@ namespace thts {
             double get_temp_decay_rate();
             double get_init_entropy_coeff();
             double get_entropy_zero_at();
-            int get_normalise_entropy_before_adding();
             double get_epsilon();
             double get_heuristic_value();
 

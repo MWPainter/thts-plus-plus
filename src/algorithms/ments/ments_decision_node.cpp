@@ -189,21 +189,9 @@ namespace thts {
 
         // optionally normalise q values (for action selection)
         MentsManager& manager = (MentsManager&) *thts_manager;
-        if (!for_backup && manager.normalise_q_values) {
-            double min_q_value = numeric_limits<double>::max();
-            double max_q_value = numeric_limits<double>::lowest();
-
-            for (pair<shared_ptr<const Action>,double> pr : q_values) {
-                double q_value = pr.second;
-                if (q_value < min_q_value) min_q_value = q_value;
-                if (q_value > max_q_value) max_q_value = q_value;
-            }
-
-            for (pair<shared_ptr<const Action>,double> pr : q_values) {
-                shared_ptr<const Action> action = pr.first;
-                double q_value = pr.second;
-                q_values[action] = (q_value - min_q_value) / (max_q_value - min_q_value + EPS);
-            }
+        if (!for_backup && manager.normalise_q_values) 
+        {
+            thts::helper::linearly_normalise_values(q_values);
         }
 
         // compute (numerical stability) normalisation term

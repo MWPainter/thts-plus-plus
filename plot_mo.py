@@ -34,12 +34,15 @@ def make_lineplot_df(
     y_axis_range=None,
     alpha=1.0,
     use_legend=True,
-    font_scale=1.2):
+    font_scale=1.2,
+    figsize=(10.24, 7.68),
+    dpi=200):
     """
     General helper for plotting lineplots in our style.
     """
 
-    plt.figure()
+    # Make the saved image physically larger (viewer size) + higher-res (dpi).
+    plt.figure(figsize=figsize, dpi=dpi)
     sns.set_theme(style="darkgrid",font_scale=font_scale)
 
     # params = {
@@ -95,7 +98,8 @@ def make_lineplot_df(
         plt.gca().get_legend().remove()
 
     if filename is not None:
-        plt.savefig(filename)
+        plt.tight_layout()
+        plt.savefig(filename, dpi=dpi, bbox_inches="tight")
     else:
         plt.show()
     plt.close()

@@ -1162,7 +1162,7 @@ namespace thts {
         }
 
         // Open the file (will create it if it doesn't exist)
-        ofstream file(filename, ios::out | ios::trunc);
+        ofstream file(filename, ios::out | ios::app);
         if (!file.is_open()) 
         {
             throw runtime_error("Failed to open file: " + filename.string());
@@ -1176,6 +1176,12 @@ namespace thts {
      */
     void RunManager::write_eval_log_header(std::ofstream& fs)
     {
+        // If appending to an existing file, avoid duplicating the header.
+        // When opened with ios::app, tellp() will be at EOF.
+        if (fs.tellp() != std::streampos(0)) {
+            return;
+        }
+
         // Xpr level params
         fs << "Xpr level params:" << endl << endl;;
         fs << XPR_PARAM_ID_NAME << ","
@@ -1302,7 +1308,7 @@ namespace thts {
         }
 
         // Open the file (will create it if it doesn't exist)
-        ofstream file(filename, ios::out | ios::trunc);
+        ofstream file(filename, ios::out | ios::app);
         if (!file.is_open()) 
         {
             throw runtime_error("Failed to open file: " + filename.string());
@@ -1341,7 +1347,7 @@ namespace thts {
         }
 
         // Open the file (will create it if it doesn't exist)
-        ofstream file(filename, ios::out | ios::trunc);
+        ofstream file(filename, ios::out | ios::app);
         if (!file.is_open()) 
         {
             throw runtime_error("Failed to open file: " + filename.string());

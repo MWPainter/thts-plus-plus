@@ -35,7 +35,7 @@ namespace thts {
      * Checks if any run's need python
      * If so, makes an interpreter and releases gil
      */
-    void main_xpr(string xpr_id_prefix, string xpr_dir_override)
+    void main_xpr(string xpr_id_prefix, string xpr_dir_override, int repeats_already_run)
     {
         // Read in config
         vector<ConfigMap> xpr_configs = RunManager::lookup_config_vector_from_xpr_prefix(xpr_id_prefix);
@@ -62,7 +62,7 @@ namespace thts {
 
         // Actually run experiments
         for (RunManager& run_manager : run_managers) {
-            run_searches(run_manager);
+            run_searches(run_manager, false, true, repeats_already_run);
         }
     }
 
@@ -70,21 +70,24 @@ namespace thts {
      * Performs all of the (replicated) searches corresponding to 'run_id'
      * If hpopt is true, then dont run any logging, and only return the final mc eval
     */
-    double run_searches(RunManager& run_manager, bool hpopt, bool log_trees)
+    double run_searches(RunManager& run_manager, bool hpopt, bool log_trees, int repeats_already_run)
     {
         // Open eval log
         ofstream eval_log_fs;
         if (!hpopt)
         {
             eval_log_fs = run_manager.get_eval_log_filestream();
-            run_manager.write_eval_log_header(eval_log_fs);
+            if (repeats_already_run == 0) 
+            {
+                run_manager.write_eval_log_header(eval_log_fs);
+            }
         }
 
         // final eval to return
         double final_eval_mean = 0.0; 
         
         // Run the perscribed number of repeats
-        for (int run_idx=0; run_idx < run_manager.get_repeated_runs_per_alg(); run_idx++)
+        for (int run_idx=repeats_already_run; run_idx < run_manager.get_repeated_runs_per_alg(); run_idx++)
         {
             // cout so know we're doing something
             if (!hpopt)

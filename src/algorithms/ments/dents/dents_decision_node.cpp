@@ -1,6 +1,7 @@
 #include "algorithms/ments/dents/dents_decision_node.h"
 
 #include "algorithms/common/decaying_temp.h"
+#include "helper_templates.h"
 
 using namespace std; 
 
@@ -96,19 +97,9 @@ namespace thts {
         }
 
         // Normalise Q values
-        if (!for_backup && manager.normalise_entropy_before_adding) {
-            double min_q_value = numeric_limits<double>::max();
-            double max_q_value = numeric_limits<double>::lowest();
-            for (pair<shared_ptr<const Action>,double> pr : q_values) {
-                double q_value = pr.second;
-                if (q_value < min_q_value) min_q_value = q_value;
-                if (q_value > max_q_value) max_q_value = q_value;
-            }
-            for (pair<shared_ptr<const Action>,double> pr : q_values) {
-                shared_ptr<const Action> action = pr.first;
-                double q_value = pr.second;
-                q_values[action] = (q_value - min_q_value) / (max_q_value - min_q_value + EPS);
-            }
+        if (!for_backup && manager.normalise_entropy_before_adding) 
+        {
+            thts::helper::linearly_normalise_values(q_values);
         }
 
         // Get entropy terms
@@ -118,25 +109,15 @@ namespace thts {
         }
 
         // Normalise entropy terms
-        if (!for_backup && manager.normalise_entropy_before_adding) {
-            double min_entropy_term = numeric_limits<double>::max();
-            double max_entropy_term = numeric_limits<double>::lowest();
-            for (pair<shared_ptr<const Action>,double> pr : entropy_terms) {
-                double entropy_term = pr.second;
-                if (entropy_term < min_entropy_term) min_entropy_term = entropy_term;
-                if (entropy_term > max_entropy_term) max_entropy_term = entropy_term;
-            }
-            for (pair<shared_ptr<const Action>,double> pr : entropy_terms) {
-                shared_ptr<const Action> action = pr.first;
-                double entropy_term = pr.second;
-                entropy_terms[action] = (entropy_term - min_entropy_term) / (max_entropy_term - min_entropy_term + EPS);
-            }
+        if (!for_backup && manager.normalise_entropy_before_adding) 
+        {
+            thts::helper::linearly_normalise_values(entropy_terms);
         }
 
         // Combine q values and entropy terms to fill in soft q values
         double entropy_coeff = get_entropy_coeff();
         for (shared_ptr<const Action> action : *actions) {
-            soft_q_values[action] = q_values[action] + entropy_coeff * entropy_terms[action] * entropy_coeff;
+            soft_q_values[action] = q_values[action] + entropy_coeff * entropy_terms[action];
         }
     } 
 

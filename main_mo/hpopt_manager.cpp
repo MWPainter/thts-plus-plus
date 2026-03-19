@@ -622,7 +622,7 @@ namespace thts {
         }
 
         // Open the file (will create it if it doesn't exist)
-        ofstream file(filepath, ios::out | ios::trunc);
+        ofstream file(filepath, ios::out | ios::app);
         if (!file.is_open()) 
         {
             throw runtime_error("Failed to open file: " + filepath.string());
@@ -646,6 +646,11 @@ namespace thts {
      */
     void HpoptManager::write_hpopt_summary_header()
     {
+        // If appending to an existing file, avoid duplicating the header.
+        if (hpopt_summary_fs.tellp() != std::streampos(0)) {
+            return;
+        }
+
         // Xpr level params
         hpopt_summary_fs << "Hpopt Xpr level params:" << endl << endl;;
         hpopt_summary_fs << XPR_PARAM_ID_NAME << ","

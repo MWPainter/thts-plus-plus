@@ -10,17 +10,19 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    if (argc < 3 || argc > 4) {
-        throw runtime_error("Usage: program [eval|opt] [expr_id] [optional: xpr_dir_override]\n"
+    if (argc < 3 || argc > 5) {
+        throw runtime_error("Usage: program [eval|opt] [expr_id] [optional: xpr_dir_override] [optional: repeats_already_run]\n"
                             "  eval: run an evaluation experiment\n"
                             "  opt: perform hyperparameter optimisation\n"
-                            "  xpr_dir_override: optional directory name to add results to an existing experiment");
+                            "  xpr_dir_override: optional directory name to add results to an existing experiment\n"
+                            "  repeats_already_run: optional number of repeats already run (to resume from)");
     }
 
-    string xpr_dir_override = (argc == 4) ? argv[3] : "";
+    string xpr_dir_override = (argc >= 4) ? argv[3] : "";
+    int repeats_already_run = (argc >= 5) ? stoi(argv[4]) : 0;
 
     if (string(argv[1]) == "eval") {
-        thts::main_xpr(argv[2], xpr_dir_override);
+        thts::main_xpr(argv[2], xpr_dir_override, repeats_already_run);
     } else if (string(argv[1]) == "opt") {  
         thts::main_hp_opt(argv[2]);
     } else {
