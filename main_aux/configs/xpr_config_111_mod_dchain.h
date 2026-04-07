@@ -1,0 +1,318 @@
+#pragma once
+
+#include "main_aux/configs/config_map.h"
+
+#include "main_aux/configs/constants_algorithms.h"
+#include "main_aux/configs/constants_experiments.h"
+
+static const std::vector<ConfigMap> CONFIG_111 =
+{
+    // xpr params
+    {
+        {XPR_OR_ALG_ID_TAG,                     XPR_PARAMS_ID_TAG},
+        {XPR_PARAM_ID_NAME,                     "111_supp_mod_dchain_temp_vary"},
+        {XPR_PARAM_ID_ENV,                      ENV_ID_MOD_D_CHAIN_10},
+        {XPR_PARAM_ID_MCTS_MODE,                false},
+        {XPR_PARAM_ID_GRAPH_SEARCH,             false},
+        {XPR_PARAM_ID_MAX_TRIAL_LENGTH,         10000},
+        {XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,  0.0},
+        {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,   0.0},
+        {XPR_PARAM_ID_RUNTIME_BOUNDED,          false},
+        {XPR_PARAM_ID_TERMINATION_BOUND,        10000.0},
+        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    25},
+        {XPR_PARAM_ID_SEARCH_THREADS,           16},
+        {XPR_PARAM_ID_EVAL_DELTA,               10000},
+        {XPR_PARAM_ID_EVAL_ROLLOUTS,            256},
+        {XPR_PARAM_ID_EVAL_THREADS,             16}, 
+    },
+    // range of uct params
+    {
+        {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
+        {ALG_PARAM_ID_BIAS, 0.001},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
+        {ALG_PARAM_ID_BIAS, 0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
+        {ALG_PARAM_ID_BIAS, 0.1},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
+        {ALG_PARAM_ID_BIAS, 1.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
+        {ALG_PARAM_ID_BIAS, 10.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
+        {ALG_PARAM_ID_BIAS, 100.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG, ALG_ID_UCT},
+        {ALG_PARAM_ID_BIAS, 1000.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    // range of maxuct params
+    {
+        {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT},
+        {ALG_PARAM_ID_BIAS, 0.001},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT}, 
+        {ALG_PARAM_ID_BIAS, 0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT}, 
+        {ALG_PARAM_ID_BIAS, 0.1},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT},
+        {ALG_PARAM_ID_BIAS, 1.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT},
+        {ALG_PARAM_ID_BIAS, 10.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT}, 
+        {ALG_PARAM_ID_BIAS, 100.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG, ALG_ID_MAX_UCT}, 
+        {ALG_PARAM_ID_BIAS, 1000.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    // range of ments params
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        0.001},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        0.01},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        0.1},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        0.12},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        0.14},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        0.16},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        0.18},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        0.32},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        1.0},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        10.0},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        100.0},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        1000.0},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
+    },
+    // range of bts params
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,        0.001},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,        0.01},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,        0.1},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,        1.0},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,        10.0},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,        100.0},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,        1000.0},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+    },
+    // range of dents params
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        0.001},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.001},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    1.0e12},
+        // {ALG_PARAM_ID_NORMALISE_Q,      0}, // manually hacked in for this xpr
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        0.01},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.01},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    1.0e12},
+        // {ALG_PARAM_ID_NORMALISE_Q,      0}, // manually hacked in for this xpr
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        0.1},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.1},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    1.0e12},
+        // {ALG_PARAM_ID_NORMALISE_Q,      0}, // manually hacked in for this xpr
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        1.0},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       1.00},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    1.0e12},
+        // {ALG_PARAM_ID_NORMALISE_Q,      0}, // manually hacked in for this xpr
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        10.0},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       10.0},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    1.0e12},
+        // {ALG_PARAM_ID_NORMALISE_Q,      0}, // manually hacked in for this xpr
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        100.0},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       100.0},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    1.0e12},
+        // {ALG_PARAM_ID_NORMALISE_Q,      0}, // manually hacked in for this xpr
+    },
+    {
+        {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},
+        {ALG_PARAM_ID_INIT_TEMP,        1000.0},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
+        {ALG_PARAM_ID_EPSILON,          0.01},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       1000.0},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    1.0e12},
+        // {ALG_PARAM_ID_NORMALISE_Q,      0}, // manually hacked in for this xpr
+    },
+};

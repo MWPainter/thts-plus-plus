@@ -24,17 +24,18 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_310 =
         {XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,          0.0},
         {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,           0.0},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,                  false},
-        {XPR_PARAM_ID_TERMINATION_BOUND,                10000},
+        {XPR_PARAM_ID_TERMINATION_BOUND,                50000},
         // {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            2},
         {XPR_PARAM_ID_SEARCH_THREADS,                   16},
-        {XPR_PARAM_ID_EVAL_DELTA,                       10000},
+        {XPR_PARAM_ID_EVAL_DELTA,                       50000},
         {XPR_PARAM_ID_EVAL_ROLLOUTS,                    1},
         {XPR_PARAM_ID_EVAL_THREADS,                     1},
         {HPOPT_PARAM_ID_MIN_REPEATS,                    10},
-        {HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD,  1.0},
-        {HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES,         50},
+        {HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD,  0.015},
+        {HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES,         75},
         {HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES,     10},
         {HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ,          20},
+        {HPOPT_PARAM_ID_BAYESOPT_USE_GPML,              1},
     },
     // uct params
     {
@@ -62,6 +63,7 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_310 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  std::make_pair(0.0,  0.0)},
         {ALG_PARAM_ID_EPSILON,          std::make_pair(1.0e-6,1.0)}, 
         {ALG_PARAM_ID_HEURISTIC_VALUE, std::make_pair(1.0,  1.0)},
+        {ALG_PARAM_ID_NORMALISE_Q,      std::make_pair(0,  0)},
     },
     // rents params
     {
@@ -70,6 +72,7 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_310 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  std::make_pair(0.0,  0.0)},
         {ALG_PARAM_ID_EPSILON,          std::make_pair(1.0e-6,1.0)}, 
         {ALG_PARAM_ID_HEURISTIC_VALUE, std::make_pair(1.0,  1.0)},
+        {ALG_PARAM_ID_NORMALISE_Q,      std::make_pair(0,  0)},
     },
     // tents params
     {
@@ -78,6 +81,7 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_310 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  std::make_pair(0.0,  0.0)},
         {ALG_PARAM_ID_EPSILON,          std::make_pair(1.0e-6,1.0)}, 
         {ALG_PARAM_ID_HEURISTIC_VALUE, std::make_pair(1.0,  1.0)},
+        {ALG_PARAM_ID_NORMALISE_Q,      std::make_pair(0,  0)},
     },
     // bts params
     {
@@ -95,6 +99,6 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_310 =
         {ALG_PARAM_ID_EPSILON,          std::make_pair(1.0e-6,1.0)}, 
         {ALG_PARAM_ID_HEURISTIC_VALUE, std::make_pair(1.0,  1.0)},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       std::make_pair(1.0e-5,  1.0e2)},
-        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    std::make_pair(1.0e3,  1.0e5)},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    std::make_pair(1.0e3,  1.0e6)},
     },
 };

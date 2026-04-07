@@ -51,19 +51,34 @@ namespace thts {
      * Constructor
      */
     HpoptManager::HpoptManager(std::time_t xpr_timestamp, HpoptConfigMap xpr_config, HpoptConfigMap alg_config, bayesopt::Parameters params) :
-        bayesopt::ContinuousModel(alg_config.size()-1, params), 
+        bayesopt::ContinuousModel(count_hyperparams(alg_config), params), 
         xpr_timestamp(xpr_timestamp), 
         xpr_config(xpr_config), 
         alg_config(alg_config), 
-        num_hyperparams(alg_config.size()-1),
+        num_hyperparams(0),
+        hyperparams_optimising(0),
         best_config_map(),
         best_mean_eval(std::numeric_limits<double>::lowest()),
-        best_std_mean_eval(std::numeric_limits<double>::lowest()),
+        best_std_mean_eval(0.0),
         hpopt_summary_fs(),
         hp_opt_iter(0),
         bo_params(params)
     {
         validate_config_or_raise_exception();
+        for (const auto& [param_id, param_range] : alg_config)
+        {
+            if (param_id == XPR_OR_ALG_ID_TAG) continue;
+            const auto& range = get_config_value<std::pair<double,double>>(alg_config, param_id);
+            if (range.first != range.second)
+            {
+                hyperparams_optimising.push_back(param_id);
+                num_hyperparams++;
+            }
+        }
+        if (num_hyperparams == 0)
+        {
+            throw runtime_error("No hyperparameters to optimise found in alg level config.");
+        }
         set_bayesopt_bounding_box();
     }
 
@@ -75,7 +90,8 @@ namespace thts {
         xpr_timestamp(other.xpr_timestamp),
         xpr_config(other.xpr_config),
         alg_config(other.alg_config),
-        num_hyperparams(other.alg_config.size()-1),
+        num_hyperparams(other.num_hyperparams),
+        hyperparams_optimising(other.hyperparams_optimising),
         best_config_map(other.best_config_map),
         best_mean_eval(other.best_mean_eval),
         best_std_mean_eval(other.best_std_mean_eval),
@@ -100,9 +116,9 @@ namespace thts {
      */  
     void HpoptManager::validate_config_or_raise_exception()
     {
-        if (xpr_config.size() != 19)
+        if (xpr_config.size() != 20)
         {
-            throw runtime_error("Expecting 19 entries in the xpr level config.");
+            throw runtime_error("Expecting 20 entries in the xpr level config.");
         }
 
         if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != HPOPT_PARAMS_ID_TAG)
@@ -131,6 +147,7 @@ namespace thts {
             HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES,
             HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES,
             HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ,
+            HPOPT_PARAM_ID_BAYESOPT_USE_GPML,
         };
 
         for (string& xpr_param_id : xpr_param_ids) 
@@ -175,6 +192,21 @@ namespace thts {
 
             }
         }
+    }
+
+    /**
+     * Helper to count the number of hyperparams being optimised (where min != max)
+     */
+    int HpoptManager::count_hyperparams(const HpoptConfigMap& alg_config)
+    {
+        int count = 0;
+        for (const auto& [param_id, param_range] : alg_config)
+        {
+            if (param_id == XPR_OR_ALG_ID_TAG) continue;
+            const auto& range = get_config_value<std::pair<double,double>>(alg_config, param_id);
+            if (range.first != range.second) count++;
+        }
+        return count;
     }
 
     /**
@@ -237,10 +269,10 @@ namespace thts {
         int bayesopt_total_samples = get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES);
         int bayesopt_init_rand_samples = get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES);
         int bayesopt_relearn_freq = get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ);
+        bool bayesopt_use_gpml = get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_USE_GPML) > 0;
 
         bayesopt::Parameters bo_params;
-        bo_params.surr_name = "sGaussianProcessML";
-        // bo_params.surr_name = "sGaussianProcessNormal";
+        bo_params.surr_name = bayesopt_use_gpml ? "sGaussianProcessML" : "sGaussianProcessNormal";
         bo_params.noise = target_std_per_bayesopt_sample*target_std_per_bayesopt_sample;
         bo_params.n_iterations = bayesopt_total_samples - bayesopt_init_rand_samples;
         bo_params.n_init_samples = bayesopt_init_rand_samples;
@@ -298,6 +330,7 @@ namespace thts {
     int HpoptManager::get_hpopt_total_samples()                     { return get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES); }
     int HpoptManager::get_hpopt_init_random_samples()               { return get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES); }
     int HpoptManager::get_hpopt_relearn_freq()                      { return get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ); }
+    bool HpoptManager::get_hpopt_use_gpml()                         { return get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_USE_GPML) > 0; }
 
     /**
      * Helper function to compute mean and std of vector of evals
@@ -464,30 +497,29 @@ namespace thts {
         ConfigMap query_alg_config;
         query_alg_config[XPR_OR_ALG_ID_TAG] = get_config_value<std::string>(alg_config, XPR_OR_ALG_ID_TAG);
 
-        int i = 0;
-
-        for (auto [config_key, value_range] : alg_config)
+        // Set all fixed params (where min == max) to their fixed value
+        for (const auto& [config_key, value_range] : alg_config)
         {
-            if (config_key == XPR_OR_ALG_ID_TAG)
+            if (config_key == XPR_OR_ALG_ID_TAG) continue;
+            pair<double,double> min_max = get_config_value<std::pair<double,double>>(alg_config, config_key);
+            if (min_max.first == min_max.second)
             {
-                continue;
+                query_alg_config[config_key] = min_max.first;
             }
+        }
 
-            pair<double,double> min_max = std::get<pair<double,double>>(value_range);
+        // Sample optimised hyperparams from the query vector
+        for (int i = 0; i < num_hyperparams; i++)
+        {
+            const string& config_key = hyperparams_optimising[i];
+            pair<double,double> min_max = get_config_value<std::pair<double,double>>(alg_config, config_key);
             double min = min_max.first;
             double max = min_max.second;
 
-            if (min == max)
-            {
-                query_alg_config[config_key] = min;
-                continue;
-            }
-
             bool log_scaling = HPOPT_LOG_SCALE_ALG_PARAM_IDS.contains(config_key);
             bool int_param = HPOPT_INT_ALG_PARAM_IDS.contains(config_key);
-            
-            double query_i = query[i++];
-            double sampled_param = get_cts_val_from_bayesopt_sample(query_i, min, max, log_scaling);
+
+            double sampled_param = get_cts_val_from_bayesopt_sample(query[i], min, max, log_scaling);
 
             if (!int_param)
             {

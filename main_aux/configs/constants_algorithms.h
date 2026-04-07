@@ -38,6 +38,7 @@ static const std::string ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT = "entropy_zero_at";
 static const std::string ALG_PARAM_ID_NORMALISE_ENTROPY_BEFORE_ADDING = "normalise_entropy_before_adding"; // whether to normalise entropy before adding it to the value (dents)
 static const std::string ALG_PARAM_ID_EPSILON = "epsilon";                                  // exploration param (boltzmann algorithms)
 static const std::string ALG_PARAM_ID_HEURISTIC_VALUE = "heuristic_value";                  // default (constant) value to use for a heuristic
+static const std::string ALG_PARAM_ID_NORMALISE_Q = "normalise_q";                          // whether to normalise Q(s,a) before passing it to search policy
 
 // ---------------------------------------------------------------------------------------------------------------------
 // A map specifying the relevant parameters for each algorithm (all the params that should be specified)
@@ -70,6 +71,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_
             ALG_PARAM_ID_TEMP_DECAY_RATE,
             ALG_PARAM_ID_EPSILON,
             ALG_PARAM_ID_HEURISTIC_VALUE,
+            ALG_PARAM_ID_NORMALISE_Q,
         },
     },
     {ALG_ID_RENTS,
@@ -78,6 +80,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_
             ALG_PARAM_ID_TEMP_DECAY_RATE,
             ALG_PARAM_ID_EPSILON,
             ALG_PARAM_ID_HEURISTIC_VALUE,
+            ALG_PARAM_ID_NORMALISE_Q,
         },
     },
     {ALG_ID_TENTS,
@@ -86,6 +89,7 @@ static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_
             ALG_PARAM_ID_TEMP_DECAY_RATE,
             ALG_PARAM_ID_EPSILON,
             ALG_PARAM_ID_HEURISTIC_VALUE,
+            ALG_PARAM_ID_NORMALISE_Q,
         },
     },
     {ALG_ID_BTS,

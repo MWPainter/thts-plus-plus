@@ -115,7 +115,7 @@ namespace thts {
             allowed_actions[SE] = false;
             allowed_actions[SS] = false;
             allowed_actions[SW] = false;
-        } else if (y == width-1) {
+        } else if (y == height-1) {
             allowed_actions[NE] = false;
             allowed_actions[NN] = false;
             allowed_actions[NW] = false;

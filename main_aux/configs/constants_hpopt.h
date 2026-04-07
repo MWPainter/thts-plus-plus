@@ -24,6 +24,7 @@ static const std::string HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD = "conf_th
 static const std::string HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES = "bayesopt_total_samples";          // total number of samples to use in bayesopt
 static const std::string HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES = "bayesopt_init_rand_samples";  // how many samples to sample uniformly randomly at start of bayesopt
 static const std::string HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ = "bayesopt_relearn_freq";            // how often bayesopt will internally update or "relearn" parameters used in bayesian optimisation
+static const std::string HPOPT_PARAM_ID_BAYESOPT_USE_GPML = "bayesopt_use_gp_ml";                  // if should use Gaussian Process surrogate model with maximum likelihood estimation
 
 // ---------------------------------------------------------------------------------------------------------------------
 // For hyperparam optimisation: set of parameters to search over a log scaling

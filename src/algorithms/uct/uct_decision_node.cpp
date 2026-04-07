@@ -289,11 +289,13 @@ namespace thts {
         UctManager& manager = (UctManager&) *thts_manager;
 
         avg_return = 0.0;
+        avg_return_local = 0.0;
         double sum_child_visits = 0;
 
         // Add heuristic "globally" which can be backed up
         if (has_heuristic_value()) {
             avg_return = heuristic_value;
+            avg_return_local = heuristic_value;
             sum_child_visits += manager.heuristic_weight_global;
         }
 
@@ -306,6 +308,8 @@ namespace thts {
             sum_child_visits += child_num_visits;
             avg_return *= (sum_child_visits - child_num_visits) / sum_child_visits;
             avg_return += child_num_visits * child.avg_return / sum_child_visits;
+            avg_return_local *= (sum_child_visits - child_num_visits) / sum_child_visits;
+            avg_return_local += child_num_visits * child.avg_return_local / sum_child_visits;
         }
 
         // Add heuristic "locally" to bias search with heuristic values

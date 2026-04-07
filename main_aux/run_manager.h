@@ -92,6 +92,8 @@ namespace thts {
             double get_entropy_zero_at();
             double get_epsilon();
             double get_heuristic_value();
+            double get_normalise_q();
+            bool get_normalise_q_bool();
 
             /**
              * Returns if the env we are using is a python env
@@ -106,7 +108,7 @@ namespace thts {
             /**
              * Returns and instance of ThtsManager to use for this run
             */
-            void _add_thts_manager_params_to_args(ThtsManagerArgs& manager_args, std::string env_id);
+            void _add_thts_manager_params_to_args(ThtsManagerArgs& manager_args, std::string env_id, std::shared_ptr<ThtsEnv> env);
             std::shared_ptr<ThtsManager> get_thts_manager(std::shared_ptr<ThtsEnv> env);
 
             /**
@@ -147,5 +149,20 @@ namespace thts {
             std::filesystem::path get_tree_log_filename(int run_idx);
             std::ofstream get_tree_log_filestream(int run_idx);
             void dump_tree_log(std::shared_ptr<ThtsDNode> root_node, int run_idx);
+    };
+
+    struct FrozenLakeSparseHeuristicFn : public ConstHeuristicFn 
+    {
+        public:
+            FrozenLakeSparseHeuristicFn(double value, const std::string* map);
+            virtual double operator()(
+                std::shared_ptr<const State> state, 
+                ThtsEnv& env, 
+                ThtsManager& manager, 
+                int depth=0) override;
+            virtual ~FrozenLakeSparseHeuristicFn() = default;
+
+        private:
+            const std::string* map;
     };
 }

@@ -146,12 +146,12 @@ namespace thts {
          * casts.
          */
         public:
-            // virtual void backup_itfc(
-            //     const std::vector<double>& trial_rewards_before_node, 
-            //     const std::vector<double>& trial_rewards_after_node, 
-            //     const double trial_cumulative_return_after_node, 
-            //     const double trial_cumulative_return,
-            //     ThtsContext& ctx) override;
+            virtual void backup_itfc(
+                const std::vector<double>& trial_rewards_before_node, 
+                const std::vector<double>& trial_rewards_after_node, 
+                const double trial_cumulative_return_after_node, 
+                const double trial_cumulative_return,
+                ThtsContext& ctx) override;
 
             virtual std::shared_ptr<ThtsDNode> create_child_node_helper_itfc(
                 std::shared_ptr<const Observation> observation, std::shared_ptr<const State> next_state=nullptr) const override;

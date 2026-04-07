@@ -86,6 +86,7 @@ namespace thts {
             dp_value *= num_backups / effective_num_backups;
             dp_value += heuristic_weight_global * heuristic_value / effective_num_backups;
 
+            dp_value_local = dp_value;
             effective_num_backups += heuristic_weight_local;
             dp_value_local *= num_backups / effective_num_backups;
             dp_value_local += heuristic_weight_local * heuristic_value / effective_num_backups;

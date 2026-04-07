@@ -216,7 +216,8 @@ namespace thts {
     double RunManager::get_entropy_zero_at()    { return get_config_value<double>(alg_config, ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT); }
     double RunManager::get_epsilon()            { return get_config_value<double>(alg_config, ALG_PARAM_ID_EPSILON); }
     double RunManager::get_heuristic_value()    { return get_config_value<double>(alg_config, ALG_PARAM_ID_HEURISTIC_VALUE); }
-
+    double RunManager::get_normalise_q()        { return get_config_value<double>(alg_config, ALG_PARAM_ID_NORMALISE_Q); }
+    bool RunManager::get_normalise_q_bool()     { return get_config_value<double>(alg_config, ALG_PARAM_ID_NORMALISE_Q) > 0; }
 
     /**
      * Returns if the env we are using is a python env
@@ -243,6 +244,7 @@ namespace thts {
         if (env_id == ENV_ID_MOD_D_CHAIN_10)    return make_shared<DChainEnv>(10,0.5);
         if (env_id == ENV_ID_ENTROPY_TRAP_10)   return make_shared<EntropyTrapEnv>(10,10,1.0);
         if (env_id == ENV_ID_ENTROPY_TRAP_15)   return make_shared<EntropyTrapEnv>(15,15,1.0);
+        if (env_id == ENV_ID_ENTROPY_TRAP_15_25) return make_shared<EntropyTrapEnv>(15,25,1.0);
 
         if (env_id == ENV_ID_FROZEN_LAKE_NO_HOLE_DENSE)             return make_shared<FrozenLakeEnv>(6,6,FL_6x6_NO_HOLE_MAP,false,FL_DENSE_REWARD, 1.0, this->get_max_trial_length());
         if (env_id == ENV_ID_FROZEN_LAKE_NO_HOLE_SPARSE_LEN)        return make_shared<FrozenLakeEnv>(6,6,FL_6x6_NO_HOLE_MAP,false,FL_SPARSE_LEN_REWARD, 1.0, this->get_max_trial_length());
@@ -258,7 +260,13 @@ namespace thts {
         if (env_id == ENV_ID_FROZEN_LAKE_S_8x12)    return make_shared<FrozenLakeEnv>(8,12,FL_GEN_8x12_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length());
         if (env_id == ENV_ID_FROZEN_LAKE_S_12x12)   return make_shared<FrozenLakeEnv>(12,12,FL_GEN_12x12_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length(), 100, true);
         if (env_id == ENV_ID_FROZEN_LAKE_S_8x16)    return make_shared<FrozenLakeEnv>(8,16,FL_GEN_8x16_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length(), 100, true);
+        if (env_id == ENV_ID_FROZEN_LAKE_S_8x20)    return make_shared<FrozenLakeEnv>(8,20,FL_GEN_8x20_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length(), 100, true);
+        if (env_id == ENV_ID_FROZEN_LAKE_S_8x24)    return make_shared<FrozenLakeEnv>(8,24,FL_GEN_8x24_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length(), 100, true);
+        if (env_id == ENV_ID_FROZEN_LAKE_S_8x32)    return make_shared<FrozenLakeEnv>(8,32,FL_GEN_8x32_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length(), 100, true);
+        if (env_id == ENV_ID_FROZEN_LAKE_S_8x40)    return make_shared<FrozenLakeEnv>(8,40,FL_GEN_8x40_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length(), 100, true);
         if (env_id == ENV_ID_FROZEN_LAKE_S_16x16)   return make_shared<FrozenLakeEnv>(16,16,FL_GEN_16x16_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length(), 100, true);
+        if (env_id == ENV_ID_FROZEN_LAKE_S_16x32)   return make_shared<FrozenLakeEnv>(16,16,FL_GEN_16x32_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length(), 100, true);
+        if (env_id == ENV_ID_FROZEN_LAKE_S_32x32)   return make_shared<FrozenLakeEnv>(32,32,FL_GEN_32x32_MAP,false,FL_SPARSE_DISCOUNTED_REWARD, 0.99, this->get_max_trial_length(), 100, true);
 
         if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_4x4) return make_shared<FrozenLakeEnv>(4,4,FL_4x4_MAP,true,FL_DENSE_REWARD, 0.99, this->get_max_trial_length());
         if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_D_5x5) return make_shared<FrozenLakeEnv>(5,5,FL_GEN_5x5_MAP,true,FL_DENSE_REWARD, 0.99, this->get_max_trial_length());
@@ -271,6 +279,12 @@ namespace thts {
         if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_6x6) return make_shared<FrozenLakeEnv>(6,6,FL_GEN_6x6_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 1.0, this->get_max_trial_length());
         if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_4x8) return make_shared<FrozenLakeEnv>(4,8,FL_GEN_4x8_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 1.0, this->get_max_trial_length());
         if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_4x12) return make_shared<FrozenLakeEnv>(4,12,FL_GEN_4x12_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 1.0, this->get_max_trial_length());
+        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_4x16) return make_shared<FrozenLakeEnv>(4,16,FL_GEN_4x16_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 1.0, this->get_max_trial_length());
+        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_8x8) return make_shared<FrozenLakeEnv>(8,8,FL_8x8_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 1.0, this->get_max_trial_length());
+        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_8x12) return make_shared<FrozenLakeEnv>(8,12,FL_GEN_8x12_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 1.0, this->get_max_trial_length());
+        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_8x16) return make_shared<FrozenLakeEnv>(8,16,FL_GEN_8x16_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 1.0, this->get_max_trial_length());
+        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_8x20) return make_shared<FrozenLakeEnv>(8,20,FL_GEN_8x20_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 1.0, this->get_max_trial_length());
+        if (env_id == ENV_ID_SLIPPY_FROZEN_LAKE_S_12x12) return make_shared<FrozenLakeEnv>(12,12,FL_GEN_12x12_MAP,true,FL_SPARSE_DISCOUNTED_REWARD, 1.0, this->get_max_trial_length());
 
         if (env_id == ENV_ID_SAILING_NORTH_ID)             return make_shared<SailingEnv>(8,8,NN);
         if (env_id == ENV_ID_SAILING_SOUTH_EAST_ID)        return make_shared<SailingEnv>(8,8,SE);
@@ -287,8 +301,14 @@ namespace thts {
     /**
      * Helper to add params to a manager args object for ThtsManager level params
      */
-    void RunManager::_add_thts_manager_params_to_args(ThtsManagerArgs& manager_args, string env_id)
+    void RunManager::_add_thts_manager_params_to_args(ThtsManagerArgs& manager_args, string env_id, shared_ptr<ThtsEnv> env)
     {
+        bool is_sparse_fl = false;
+
+        if (SPARSE_FL_ENVS.contains(env_id))
+        {
+            is_sparse_fl = true;
+        }
         manager_args.num_threads = get_num_search_threads();
         manager_args.num_envs = std::max(get_num_search_threads(), get_num_eval_threads());
         manager_args.max_depth = get_max_trial_length();
@@ -299,7 +319,15 @@ namespace thts {
         }
         else 
         {
-            manager_args.heuristic_fn = make_shared<ConstHeuristicFn>(get_heuristic_value());
+            if (is_sparse_fl)
+            {
+                shared_ptr<FrozenLakeEnv> fl_env = static_pointer_cast<FrozenLakeEnv>(env);
+                manager_args.heuristic_fn = make_shared<FrozenLakeSparseHeuristicFn>(get_heuristic_value(), fl_env->map);
+            }
+            else
+            {
+                manager_args.heuristic_fn = make_shared<ConstHeuristicFn>(get_heuristic_value());
+            }
         }
         manager_args.heuristic_weight_global = get_heuristic_weight_global();
         manager_args.heuristic_weight_local = get_heuristic_weight_local();
@@ -323,7 +351,7 @@ namespace thts {
             UctManagerArgs manager_args(env);
             manager_args.bias = get_bias();
             manager_args.recommend_most_visited = false;
-            _add_thts_manager_params_to_args(manager_args, get_env_id());
+            _add_thts_manager_params_to_args(manager_args, get_env_id(), env);
             return make_shared<UctManager>(manager_args);
         }
 
@@ -338,7 +366,7 @@ namespace thts {
             manager_args.total_budget = get_termination_bound();
             manager_args.uct_budget_threshold = get_uct_budget();
             manager_args.recommend_most_visited = false;
-            _add_thts_manager_params_to_args(manager_args, get_env_id());
+            _add_thts_manager_params_to_args(manager_args, get_env_id(), env);
             return make_shared<HmctsManager>(manager_args);
         }
 
@@ -349,8 +377,8 @@ namespace thts {
             manager_args.epsilon = get_epsilon();
             manager_args.default_q_value = get_heuristic_value();
             manager_args.recommend_most_visited = false;
-            manager_args.normalise_q_values = false;
-            _add_thts_manager_params_to_args(manager_args, get_env_id());
+            manager_args.normalise_q_values = get_normalise_q_bool();
+            _add_thts_manager_params_to_args(manager_args, get_env_id(), env);
             return make_shared<MentsManager>(manager_args);
         }
 
@@ -361,13 +389,14 @@ namespace thts {
             manager_args.epsilon = get_epsilon();
             manager_args.default_q_value = get_heuristic_value();
             manager_args.recommend_most_visited = false;
+            manager_args.normalise_entropy_before_adding = false;
             
             if (alg_id == ALG_ID_DENTS)
             {
                 manager_args.entropy_coeff_schedule_ptr = make_shared<LinearSchedule>(get_init_entropy_coeff(), get_entropy_zero_at());
             }
 
-            _add_thts_manager_params_to_args(manager_args, get_env_id());
+            _add_thts_manager_params_to_args(manager_args, get_env_id(), env);
 
             return make_shared<DentsManager>(manager_args);
         }
@@ -619,7 +648,22 @@ namespace thts {
     void RunManager::dump_tree_log(shared_ptr<ThtsDNode> root_node, int run_idx)
     {
         ofstream tree_log_fs = get_tree_log_filestream(run_idx);
-        tree_log_fs << root_node->get_pretty_print_string(4) << endl;
+        tree_log_fs << root_node->get_pretty_print_string(2) << endl;
         tree_log_fs.close();
+    }
+
+    FrozenLakeSparseHeuristicFn::FrozenLakeSparseHeuristicFn(double value, const std::string* map) :
+        ConstHeuristicFn(value), map(map) {}
+
+    double FrozenLakeSparseHeuristicFn::operator()(
+        shared_ptr<const State> state, ThtsEnv& env, ThtsManager& manager, int depth)
+    {
+        shared_ptr<const Int3TupleState> fl_state = static_pointer_cast<const Int3TupleState>(state);
+        int x = get<0>(fl_state->state);
+        int y = get<1>(fl_state->state);
+        if (map[x][y] == 'H') {
+            return 0.0;
+        }
+        return ConstHeuristicFn::operator()(state, env, manager, depth);
     }
 }

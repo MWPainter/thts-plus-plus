@@ -5,6 +5,7 @@
 
 
 
+
     
 
 
@@ -58,7 +59,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/auxexpr",
-            "args": ["eval", "011"],
+            "args": ["eval", "050"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [

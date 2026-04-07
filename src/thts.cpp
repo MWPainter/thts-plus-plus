@@ -120,10 +120,10 @@ namespace thts {
         int current_path_length) 
     {
         lock_guard<recursive_mutex> lg(cur_node->lock);
-        if (cur_node->is_leaf()) return false;
+        if (cur_node->is_sink()) return false;
         // if (cur_node->is_sink()) return false;
         // if (cur_node->decision_depth >= thts_manager->max_depth) return false;
-        if (current_path_length-1 >= thts_manager->max_depth) return false;
+        if (current_path_length >= thts_manager->max_depth) return false;
         if (thts_manager->mcts_mode && new_decision_node_created_this_trial) return false;
         return true;
     }

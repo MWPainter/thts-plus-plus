@@ -11,6 +11,7 @@ static const std::string ENV_ID_D_CHAIN_10 = "dchain(D=10,R=1.0)";
 static const std::string ENV_ID_MOD_D_CHAIN_10 = "dchain(D=10,R=0.5)";
 static const std::string ENV_ID_ENTROPY_TRAP_10 = "entropy_trap(D=10,H=10)";
 static const std::string ENV_ID_ENTROPY_TRAP_15 = "entropy_trap(D=15,H=15)";
+static const std::string ENV_ID_ENTROPY_TRAP_15_25 = "entropy_trap(D=15,H=25)";
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Environment id's - frozen lake (comparing rewards)
@@ -32,8 +33,16 @@ static const std::string ENV_ID_FROZEN_LAKE_D_12x12 = "frozen_lake_(map=12x12,de
 static const std::string ENV_ID_FROZEN_LAKE_S_12x12 = "frozen_lake_(map=12x12,sparse)";
 static const std::string ENV_ID_FROZEN_LAKE_D_8x16 = "frozen_lake_(map=8x16,dense)";
 static const std::string ENV_ID_FROZEN_LAKE_S_8x16 = "frozen_lake_(map=8x16,sparse)";
+static const std::string ENV_ID_FROZEN_LAKE_S_8x20 = "frozen_lake_(map=8x20,sparse)";
+static const std::string ENV_ID_FROZEN_LAKE_S_8x24 = "frozen_lake_(map=8x24,sparse)";
+static const std::string ENV_ID_FROZEN_LAKE_S_8x32 = "frozen_lake_(map=8x32,sparse)";
+static const std::string ENV_ID_FROZEN_LAKE_S_8x40 = "frozen_lake_(map=8x40,sparse)";
 static const std::string ENV_ID_FROZEN_LAKE_D_16x16 = "frozen_lake_(map=16x16,dense)";
 static const std::string ENV_ID_FROZEN_LAKE_S_16x16 = "frozen_lake_(map=16x16,sparse)";
+static const std::string ENV_ID_FROZEN_LAKE_D_16x32 = "frozen_lake_(map=16x32,dense)";
+static const std::string ENV_ID_FROZEN_LAKE_S_16x32 = "frozen_lake_(map=16x32,sparse)";
+static const std::string ENV_ID_FROZEN_LAKE_D_32x32 = "frozen_lake_(map=32x32,dense)";
+static const std::string ENV_ID_FROZEN_LAKE_S_32x32 = "frozen_lake_(map=32x32,sparse)";
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Environment id's - frozen lake (stochastic)
@@ -49,6 +58,12 @@ static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_D_4x8 = "slippy_frozen_lake_(
 static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_S_4x8 = "slippy_frozen_lake_(map=4x8,sparse)";
 static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_D_4x12 = "slippy_frozen_lake_(map=4x12,dense)";
 static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_S_4x12 = "slippy_frozen_lake_(map=4x12,sparse)";
+static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_S_4x16 = "slippy_frozen_lake_(map=4x16,sparse)";
+static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_S_8x8 = "slippy_frozen_lake_(map=8x8,sparse)";
+static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_S_8x12 = "slippy_frozen_lake_(map=8x12,sparse)";
+static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_S_8x16 = "slippy_frozen_lake_(map=8x16,sparse)";
+static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_S_8x20 = "slippy_frozen_lake_(map=8x20,sparse)";
+static const std::string ENV_ID_SLIPPY_FROZEN_LAKE_S_12x12 = "slippy_frozen_lake_(map=12x12,sparse)";
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Environment id's - sailing
@@ -80,3 +95,32 @@ static const std::unordered_set<std::string> GYM_ENVS =
     ENV_ID_TAXI_GYM,
 };
 
+// ---------------------------------------------------------------------------------------------------------------------
+// Environment id's - all FL envs with a sparse reward
+// ---------------------------------------------------------------------------------------------------------------------
+
+static const std::unordered_set<std::string> SPARSE_FL_ENVS =
+{
+    ENV_ID_FROZEN_LAKE_S_8x8,
+    ENV_ID_FROZEN_LAKE_S_8x12,
+    ENV_ID_FROZEN_LAKE_S_12x12,
+    ENV_ID_FROZEN_LAKE_S_8x16,
+    ENV_ID_FROZEN_LAKE_S_8x20,
+    ENV_ID_FROZEN_LAKE_S_8x24,
+    ENV_ID_FROZEN_LAKE_S_8x32,
+    ENV_ID_FROZEN_LAKE_S_8x40,
+    ENV_ID_FROZEN_LAKE_S_16x16,
+    ENV_ID_FROZEN_LAKE_S_16x32,
+    ENV_ID_FROZEN_LAKE_S_32x32,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_4x4,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_5x5,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_6x6,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_4x8,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_4x12,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_4x16,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_8x8,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_8x12,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_8x16,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_8x20,
+    ENV_ID_SLIPPY_FROZEN_LAKE_S_12x12,
+};

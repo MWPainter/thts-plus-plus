@@ -68,6 +68,7 @@ namespace thts {
 
     /**
      * This node is a leaf node iff (it is a sink node or it is at the maximum decision depth)
+     * TODO: update or delete - decision depth does not match actual distance from root node in graph necessarily
      */
     bool ThtsDNode::is_leaf() const {
         return is_sink() || decision_depth >= thts_manager->max_depth;

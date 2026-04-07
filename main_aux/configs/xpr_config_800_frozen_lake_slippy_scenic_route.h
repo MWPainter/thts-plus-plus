@@ -18,8 +18,8 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,  0.0},
         {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,   0.0},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,          false},
-        {XPR_PARAM_ID_TERMINATION_BOUND,        250000},
-        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    3}, // 10
+        {XPR_PARAM_ID_TERMINATION_BOUND,        100000},
+        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    15},
         {XPR_PARAM_ID_SEARCH_THREADS,           16},
         {XPR_PARAM_ID_EVAL_DELTA,               2500},
         {XPR_PARAM_ID_EVAL_ROLLOUTS,            256},
@@ -31,27 +31,27 @@ static const std::vector<ConfigMap> CONFIG_800 =
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
         {ALG_PARAM_ID_BIAS,        0.00001},
-        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
         {ALG_PARAM_ID_BIAS,        0.00003},
-        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
         {ALG_PARAM_ID_BIAS,        0.0001},
-        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
         {ALG_PARAM_ID_BIAS,        0.0003},
-        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
         {ALG_PARAM_ID_BIAS,        0.001},
-        {ALG_PARAM_ID_HEURISTIC_VALUE,  0.0},
+        {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_UCT},
@@ -191,6 +191,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
@@ -198,6 +199,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
@@ -205,6 +207,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
@@ -212,6 +215,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
@@ -219,6 +223,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
@@ -226,6 +231,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
@@ -233,6 +239,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
@@ -240,6 +247,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
@@ -247,6 +255,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
@@ -254,6 +263,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
@@ -261,6 +271,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
@@ -268,6 +279,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
@@ -275,6 +287,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_MENTS},
@@ -282,8 +295,9 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
-
+    
     //------------------------------------------------------------------------------------------------
     // range of rents params
     {
@@ -292,6 +306,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
@@ -299,6 +314,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
@@ -306,6 +322,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
@@ -313,6 +330,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
@@ -320,6 +338,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
@@ -327,6 +346,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
@@ -334,6 +354,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
@@ -341,6 +362,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
@@ -348,6 +370,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
@@ -355,6 +378,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
@@ -362,6 +386,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
@@ -369,6 +394,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
@@ -376,6 +402,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
@@ -383,6 +410,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_RENTS},
@@ -390,6 +418,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
 
 
@@ -401,6 +430,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
@@ -408,6 +438,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
@@ -415,6 +446,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
@@ -422,6 +454,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
@@ -429,6 +462,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
@@ -436,6 +470,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
@@ -443,6 +478,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
@@ -450,6 +486,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
@@ -457,6 +494,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
@@ -464,6 +502,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
@@ -471,6 +510,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
@@ -478,6 +518,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
@@ -485,6 +526,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
@@ -492,6 +534,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_TENTS},
@@ -499,6 +542,7 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_TEMP_DECAY_RATE,  0.0},
         {ALG_PARAM_ID_EPSILON,          0.0},
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
+        {ALG_PARAM_ID_NORMALISE_Q,      0},
     },
 
 
@@ -729,7 +773,6 @@ static const std::vector<ConfigMap> CONFIG_800 =
         {ALG_PARAM_ID_HEURISTIC_VALUE,  1.0},
         {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       10.0},
         {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    100000.0},
-        {ALG_PARAM_ID_NORMALISE_ENTROPY_BEFORE_ADDING, 0},
     },
     {
         {XPR_OR_ALG_ID_TAG,             ALG_ID_DENTS},

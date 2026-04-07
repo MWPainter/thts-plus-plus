@@ -63,6 +63,12 @@ MAPS = {
         "FFFFHFFFFFFF",
         "FFFFFFFFFFHG",
     ],
+    "gen_4x16": [
+        "SFFFFHFFFFFFFFFF",
+        "HFFFFFFFFHFFHHFF",
+        "FFHHHFHFFFHHHFFF",
+        "FFHHFFFFFFFFHFFG",
+    ],
     "gen_8x16": [
         "SFFFFFFFFFFFFFHF",
         "FHHFFFHFHHFFFHFF",

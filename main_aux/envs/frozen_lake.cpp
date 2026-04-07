@@ -100,7 +100,7 @@ namespace thts {
     }
 
     shared_ptr<ThtsEnv> FrozenLakeEnv::clone() {
-        return make_shared<FrozenLakeEnv>(width,height,map,is_slippery,reward_type,reward_discount_factor,max_steps,dense_hole_cost);
+        return make_shared<FrozenLakeEnv>(width,height,map,is_slippery,reward_type,reward_discount_factor,max_steps,dense_hole_cost,avoid_collision_actions);
     }
 
     /**

@@ -97,21 +97,21 @@ namespace thts {
  */
 namespace thts {
 
-    // void MaxUctCNode::backup_itfc(
-    //     const vector<double>& trial_rewards_before_node, 
-    //     const vector<double>& trial_rewards_after_node, 
-    //     const double trial_cumulative_return_after_node, 
-    //     const double trial_cumulative_return,
-    //     ThtsContext& ctx) 
-    // {
-    //     ThtsContext& ctx_itfc = (ThtsContext&) ctx;
-    //     backup(
-    //         trial_rewards_before_node, 
-    //         trial_rewards_after_node, 
-    //         trial_cumulative_return_after_node, 
-    //         trial_cumulative_return, 
-    //         ctx_itfc);
-    // }
+    void MaxUctCNode::backup_itfc(
+        const vector<double>& trial_rewards_before_node, 
+        const vector<double>& trial_rewards_after_node, 
+        const double trial_cumulative_return_after_node, 
+        const double trial_cumulative_return,
+        ThtsContext& ctx) 
+    {
+        ThtsContext& ctx_itfc = (ThtsContext&) ctx;
+        backup(
+            trial_rewards_before_node, 
+            trial_rewards_after_node, 
+            trial_cumulative_return_after_node, 
+            trial_cumulative_return, 
+            ctx_itfc);
+    }
 
     shared_ptr<ThtsDNode> MaxUctCNode::create_child_node_helper_itfc(
         shared_ptr<const Observation> observation, shared_ptr<const State> next_state) const 

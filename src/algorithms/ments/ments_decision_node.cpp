@@ -395,6 +395,7 @@ namespace thts {
             soft_value *= num_backups / effective_num_backups;
             soft_value += thts_manager->heuristic_weight_global * heuristic_value / effective_num_backups;
 
+            soft_value_local = soft_value;
             effective_num_backups += thts_manager->heuristic_weight_local;
             soft_value_local *= num_backups / effective_num_backups;
             soft_value_local += thts_manager->heuristic_weight_local * heuristic_value / effective_num_backups;

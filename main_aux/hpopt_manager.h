@@ -39,6 +39,7 @@ namespace thts {
             HpoptConfigMap xpr_config;
             HpoptConfigMap alg_config;
             int num_hyperparams;
+            std::vector<std::string> hyperparams_optimising;
             ConfigMap best_config_map;
             double best_mean_eval;
             double best_std_mean_eval;
@@ -69,6 +70,12 @@ namespace thts {
             void validate_config_or_raise_exception();
 
         public:
+            /**
+             * Helper to count the number of hyperparams being optimised (where min != max)
+             * Static so it can be used in the initializer list before num_hyperparams is set
+             */
+            static int count_hyperparams(const HpoptConfigMap& alg_config);
+
             /**
              * Sets the bounding box for bayesopt to sample from
              */
@@ -123,6 +130,7 @@ namespace thts {
             int get_hpopt_total_samples();
             int get_hpopt_init_random_samples();
             int get_hpopt_relearn_freq();
+            bool get_hpopt_use_gpml();
 
             /**
              * Bayesopt intefrace.
