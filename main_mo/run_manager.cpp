@@ -71,10 +71,6 @@ namespace thts {
      */  
     void RunManager::validate_config_or_raise_exception()
     {
-        if (xpr_config.size() != 29)
-        {
-            throw runtime_error("Expecting 29 entries in the xpr level config.");
-        }
 
         if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != XPR_PARAMS_ID_TAG)
         {
@@ -122,6 +118,11 @@ namespace thts {
                 ss << "Expecting to find value for " << xpr_param_id << " in xpr level config.";
                 throw runtime_error(ss.str());
             }
+        }
+
+        if (xpr_config.size() != 29)
+        {
+            throw runtime_error("Expecting 29 entries in the xpr level config. (provided config mmust have additional keys)");
         }
 
         string alg_id = get_config_value<std::string>(alg_config, XPR_OR_ALG_ID_TAG);

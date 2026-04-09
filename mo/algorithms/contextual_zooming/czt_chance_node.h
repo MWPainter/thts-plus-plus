@@ -12,12 +12,14 @@ namespace thts {
     class CztDNode;
     class CztManager;
     class MoThtsContext;
+    class ChCztCNode;
 
     /**
      * CZT impl
     */
     class CztCNode : public BlThtsCNode {
         friend CztDNode;
+        friend ChCztCNode;
 
         public:
             CztCNode(

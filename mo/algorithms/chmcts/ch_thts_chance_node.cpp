@@ -31,7 +31,11 @@ namespace thts {
     void ChThtsCNode::visit(MoThtsContext& ctx) 
     {
         MoThtsCNode::visit_itfc(ctx);
-        // num_visits += 1;
+
+        MoThtsEnv& env = *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());
+        Eigen::ArrayXd sampled_reward = env.get_mo_reward_itfc(state,action,*thts_manager->get_thts_context());
+        local_reward *= (num_visits - 1.0) / num_visits;
+        local_reward += sampled_reward / num_visits;
     } 
 
     void ChThtsCNode::backup(
@@ -51,7 +55,8 @@ namespace thts {
         // use empirical distribution to take an average of child ch values
         // If havent visited any children yet then convex hull of child values is just the zero vector
         MoThtsManager& manager = static_cast<MoThtsManager&>(*thts_manager);
-        convex_hull = ConvexHull(manager.convex_hull_max_size, manager.convex_hull_tolerance);  
+        convex_hull = ConvexHull(manager.convex_hull_max_size, manager.convex_hull_tolerance);
+        convex_hull_local = ConvexHull(manager.convex_hull_max_size, manager.convex_hull_tolerance);
         if (total_child_backups > 0) {
             for (pair<const shared_ptr<const Observation>,shared_ptr<ThtsDNode>>& child_pair : children) {
                 ChThtsDNode& ch_child = (ChThtsDNode&) *child_pair.second;

@@ -104,11 +104,6 @@ namespace thts {
      */  
     void HpoptManager::validate_config_or_raise_exception()
     {
-        if (xpr_config.size() != 32)
-        {
-            throw runtime_error("Expecting 32 entries in the xpr level config.");
-        }
-
         if (get_config_value<std::string>(xpr_config, XPR_OR_ALG_ID_TAG) != HPOPT_PARAMS_ID_TAG)
         {
             throw runtime_error("In hpopt manager expecting config entry: {XPR_OR_ALG_ID_TAG,HPOPT_PARAMS_ID_TAG}");
@@ -118,6 +113,7 @@ namespace thts {
         {
             XPR_PARAM_ID_NAME, 
             XPR_PARAM_ID_ENV, 
+            // XPR_PARAM_ID_ENV_SIZE,
             XPR_PARAM_ID_MCTS_MODE, 
             XPR_PARAM_ID_GRAPH_SEARCH,
             XPR_PARAM_ID_VECTOR_VISIT_COUNTS,
@@ -150,7 +146,13 @@ namespace thts {
             HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES,
             HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES,
             HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ,
+            HPOPT_PARAM_ID_BAYESOPT_USE_GPML,
         };
+
+        if (xpr_config.size() != 33)
+        {
+            throw runtime_error("Expecting 33 entries in the xpr level config.");
+        }
 
         for (string& xpr_param_id : xpr_param_ids) 
         {
@@ -276,10 +278,10 @@ namespace thts {
         int bayesopt_total_samples = get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES);
         int bayesopt_init_rand_samples = get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES);
         int bayesopt_relearn_freq = get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ);
+        bool bayesopt_use_gpml = get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_USE_GPML) > 0;
 
         bayesopt::Parameters bo_params;
-        bo_params.surr_name = "sGaussianProcessML";
-        // bo_params.surr_name = "sGaussianProcessNormal";
+        bo_params.surr_name = bayesopt_use_gpml ? "sGaussianProcessML" : "sGaussianProcessNormal";
         bo_params.noise = target_std_per_bayesopt_sample*target_std_per_bayesopt_sample;
         bo_params.n_iterations = bayesopt_total_samples - bayesopt_init_rand_samples;
         bo_params.n_init_samples = bayesopt_init_rand_samples;
@@ -529,6 +531,7 @@ namespace thts {
             {XPR_OR_ALG_ID_TAG,                     XPR_PARAMS_ID_TAG},
             {XPR_PARAM_ID_NAME,                     get_config_value<std::string>(xpr_config, XPR_PARAM_ID_NAME)},
             {XPR_PARAM_ID_ENV,                      get_config_value<std::string>(xpr_config, XPR_PARAM_ID_ENV)},
+            {XPR_PARAM_ID_ENV_SIZE,                 NO_ENV_SIZE},
             {XPR_PARAM_ID_MCTS_MODE,                get_config_value<bool>(xpr_config, XPR_PARAM_ID_MCTS_MODE)},
             {XPR_PARAM_ID_GRAPH_SEARCH,             get_config_value<bool>(xpr_config, XPR_PARAM_ID_GRAPH_SEARCH)},
             {XPR_PARAM_ID_VECTOR_VISIT_COUNTS,      get_config_value<bool>(xpr_config, XPR_PARAM_ID_VECTOR_VISIT_COUNTS)},
@@ -544,6 +547,18 @@ namespace thts {
             {XPR_PARAM_ID_EVAL_THREADS,             get_config_value<int>(xpr_config, XPR_PARAM_ID_EVAL_THREADS)},
             {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,     get_config_value<int>(xpr_config, XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE)},
             {XPR_PARAM_ID_CONVEX_HULL_TOLERANCE,    get_config_value<double>(xpr_config, XPR_PARAM_ID_CONVEX_HULL_TOLERANCE)},
+
+            {XPR_PARAM_ID_USE_SOLVED_LABELLING,             get_config_value<bool>(xpr_config, XPR_PARAM_ID_USE_SOLVED_LABELLING)},
+            {XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE, get_config_value<double>(xpr_config, XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE)},
+            {XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE,       get_config_value<double>(xpr_config, XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE)},
+
+            {XPR_PARAM_ID_SM_PUSH_RADIUS,                                   get_config_value<int>(xpr_config, XPR_PARAM_ID_SM_PUSH_RADIUS)},
+            {XPR_PARAM_ID_SM_MAX_NEIGHBOURS_TO_PUSH_TO,                     get_config_value<int>(xpr_config, XPR_PARAM_ID_SM_MAX_NEIGHBOURS_TO_PUSH_TO)},
+            {XPR_PARAM_ID_SM_MIN_SIMPLEX_RADIUS,                            get_config_value<double>(xpr_config, XPR_PARAM_ID_SM_MIN_SIMPLEX_RADIUS)},
+            {XPR_PARAM_ID_SM_SIMPLEX_SPLIT_COUNTER_THRESHOLD,               get_config_value<int>(xpr_config, XPR_PARAM_ID_SM_SIMPLEX_SPLIT_COUNTER_THRESHOLD)},
+            {XPR_PARAM_ID_SM_USE_APPROX_NEAREST_VERTEX,                     get_config_value<bool>(xpr_config, XPR_PARAM_ID_SM_USE_APPROX_NEAREST_VERTEX)},
+            {XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,             get_config_value<bool>(xpr_config, XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP)},
+            {XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,  get_config_value<bool>(xpr_config, XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT)},
         };
     }
 

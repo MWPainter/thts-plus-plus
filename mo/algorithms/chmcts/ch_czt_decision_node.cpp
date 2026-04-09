@@ -97,7 +97,7 @@ namespace thts {
             decision_depth, 
             decision_timestep, 
             static_pointer_cast<const ChCztDNode>(shared_from_this()));
-        child_node->czt_node = static_pointer_cast<CztCNode>(czt_node->get_child_node_itfc(action));
+        child_node->czt_node = static_pointer_cast<CztCNode>(this->czt_node->create_child_node_helper(action));
         return static_pointer_cast<ChThtsCNode>(child_node);
     }
 

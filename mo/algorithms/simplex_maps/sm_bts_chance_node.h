@@ -34,7 +34,7 @@ namespace thts {
 
             virtual ~SmBtsCNode() = default;
             
-            // virtual void visit(MoThtsContext& ctx);
+            virtual void visit(MoThtsContext& ctx);
             virtual std::shared_ptr<const State> sample_observation(MoThtsContext& ctx) override;
             virtual void backup(
                 const std::vector<Eigen::ArrayXd>& trial_rewards_before_node, 
@@ -63,5 +63,8 @@ namespace thts {
         public:
             std::shared_ptr<SmBtsDNode> create_child_node(std::shared_ptr<const State> next_state);
             std::shared_ptr<SmBtsDNode> get_child_node(std::shared_ptr<const State> next_state) const;
+
+            // Allow visit to update local reward
+            virtual void visit_itfc(ThtsContext& ctx) override;
     };
 }

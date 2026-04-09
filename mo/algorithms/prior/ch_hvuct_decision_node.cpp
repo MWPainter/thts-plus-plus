@@ -2,6 +2,8 @@
 
 #include "helper_templates.h"
 
+#include <iostream>
+
 using namespace std; 
 
 namespace thts {
@@ -25,7 +27,7 @@ namespace thts {
         ChHvUctManager& manager = (ChHvUctManager&) *thts_manager;
         for (pair<shared_ptr<const Action>,shared_ptr<ThtsCNode>> pair : children) {
             shared_ptr<const Action> action = pair.first;
-            ChHvUctCNode& child = (ChHvUctCNode&) *get_child_node(action);
+            ChHvUctCNode& child = *static_pointer_cast<ChHvUctCNode>(get_child_node(action));
             ucb_q_values[action] = child.convex_hull_local.hypervolume(*manager.hv_reference_point) / child.num_visits;
         }
     }

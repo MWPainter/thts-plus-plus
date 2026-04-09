@@ -26,6 +26,16 @@ namespace thts {
         local_reward = Vec(env.get_mo_reward_itfc(state,action,*thts_manager->get_thts_context()));
     }
 
+    void SmBtsCNode::visit(MoThtsContext& ctx) 
+    {
+        SmThtsCNode::visit_itfc(ctx);
+
+        MoThtsEnv& env = *dynamic_pointer_cast<MoThtsEnv>(thts_manager->thts_env());
+        Vec sampled_reward = Vec(env.get_mo_reward_itfc(state,action,*thts_manager->get_thts_context()));
+        local_reward *= (num_visits - 1.0) / num_visits;
+        local_reward += sampled_reward / num_visits;
+    }
+
     shared_ptr<const State> SmBtsCNode::sample_observation(MoThtsContext& ctx) 
     {
         shared_ptr<const Observation> obs = thts_manager->thts_env()->sample_transition_distribution_itfc(
@@ -36,7 +46,6 @@ namespace thts {
         }
         return next_state;
     }
-
 
     /**
      * See comments on NGV datatype for what the pure_backup stuff is about
@@ -146,5 +155,16 @@ namespace thts {
         shared_ptr<const Observation> obs_itfc = static_pointer_cast<const Observation>(next_state);
         shared_ptr<ThtsDNode> new_child = ThtsCNode::get_child_node_itfc(obs_itfc);
         return static_pointer_cast<SmBtsDNode>(new_child);
+    }
+}
+
+/**
+ * Boilerplate ThtsDNode interface implementation. Copied from thts_decision_node_template.h.
+ */
+namespace thts {
+    void SmBtsCNode::visit_itfc(ThtsContext& ctx) 
+    {
+        MoThtsContext& ctx_itfc = (MoThtsContext&) ctx;
+        visit(ctx_itfc);
     }
 }

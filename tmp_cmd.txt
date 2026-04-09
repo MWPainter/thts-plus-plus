@@ -124,21 +124,6 @@ TODO: any additional plots for story
 
 
 
--------
-Mo stuff
--------
-
-
-make && clear &&
-./run_memory_limited 16G ./auxexpr eval 010 &&
-./run_memory_limited 16G ./auxexpr eval 011 &&
-./run_memory_limited 16G ./auxexpr eval 012 &&
-python plot_aux.py 010 011 012 &&
-./run_memory_limited 8G ./moexpr eval 050 && 
-./run_memory_limited 8G ./moexpr eval 051 &&
-./run_memory_limited 8G ./moexpr eval 052 && 
-./run_memory_limited 8G ./moexpr eval 053
-
 
 
 
@@ -161,14 +146,11 @@ python plot_aux.py 010 011 012 &&
 Final Ch4 stuff hopefully
 ------
 
-
-
-
+make && clear &&
+./run_memory_limited 16G ./auxexpr opt 370
 
 
 make && clear &&
-./run_memory_limited 16G ./auxexpr eval 425 &&
-python plot_aux.py 425
 ./run_memory_limited 16G ./auxexpr eval 470 &&
 ./run_memory_limited 16G ./auxexpr eval 471 &&
 ./run_memory_limited 16G ./auxexpr eval 472 &&
@@ -176,15 +158,53 @@ python plot_aux.py 470 471 472
 
 
 
+More resolution on param sens?
+
+
+
+-------
+Mo stuff
+-------
+
+
+make && clear &&
+./run_memory_limited 16G ./moexpr eval 060 &&
+./run_memory_limited 16G ./moexpr eval 061 &&
+./run_memory_limited 16G ./moexpr eval 062 &&
+./run_memory_limited 16G ./moexpr eval 070 &&
+./run_memory_limited 16G ./moexpr eval 071 &&
+./run_memory_limited 16G ./moexpr eval 072
 
 
 
 
 
 
-TODO from hpopt 360
+
+make && clear &&
+./run_memory_limited 16G ./moexpr opt 100 &&
+./run_memory_limited 16G ./moexpr opt 110 &&
+./run_memory_limited 16G ./moexpr opt 120 &&
+./run_memory_limited 16G ./moexpr opt 130 &&
+./run_memory_limited 16G ./moexpr opt 140 &&
+./run_memory_limited 16G ./moexpr opt 150 &&
+./run_memory_limited 16G ./moexpr opt 200 &&
+./run_memory_limited 16G ./moexpr opt 210 &&
+./run_memory_limited 16G ./moexpr opt 220 &&
+./run_memory_limited 16G ./moexpr opt 230 &&
+./run_memory_limited 16G ./moexpr opt 240 &&
+./run_memory_limited 16G ./moexpr opt 250 &&
+./run_memory_limited 16G ./moexpr opt 260 &&
+./run_memory_limited 16G ./moexpr opt 270 &&
+./run_memory_limited 16G ./moexpr opt 280 &&
+./run_memory_limited 16G ./moexpr opt 290 
 
 
+TODO: setup evals
+- 1min per repeat?
+- start with 3-5 repeats
+- make sure can continue like in aux xpr
 
 
-
+TODO: setup scalable improved DTS env 
+TODO: setup toy envs for scaling tests

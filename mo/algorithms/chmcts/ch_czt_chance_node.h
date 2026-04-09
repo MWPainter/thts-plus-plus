@@ -43,7 +43,7 @@ namespace thts {
                 const std::vector<Eigen::ArrayXd>& trial_rewards_after_node, 
                 const Eigen::ArrayXd trial_cumulative_return_after_node, 
                 const Eigen::ArrayXd trial_cumulative_return,
-                MoThtsContext& ctx);
+                MoThtsContext& ctx) override;
 
         protected:
             virtual std::string get_pretty_print_val() const override;

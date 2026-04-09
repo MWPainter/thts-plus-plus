@@ -37,7 +37,9 @@ namespace thts {
 
     shared_ptr<const State> ChCztCNode::sample_observation(MoThtsContext& ctx)
     {
-        shared_ptr<const State> next_state = czt_node->sample_observation(ctx);
+        shared_ptr<const Observation> obs = thts_manager->thts_env()->sample_transition_distribution_itfc(
+            state, action, *thts_manager, ctx); 
+        shared_ptr<const State> next_state = static_pointer_cast<const State>(obs);
         if (!has_child_node_itfc(static_pointer_cast<const Observation>(next_state))) {
             create_child_node(next_state);
         }
@@ -94,8 +96,7 @@ namespace thts {
             decision_depth, 
             decision_timestep, 
             static_pointer_cast<const ChCztCNode>(shared_from_this()));
-        shared_ptr<const Observation> obs = static_pointer_cast<const Observation>(next_state);
-        child_node->czt_node = static_pointer_cast<CztDNode>(czt_node->get_child_node_itfc(obs));
+        child_node->czt_node = static_pointer_cast<CztDNode>(this->czt_node->create_child_node_helper(next_state));
         return static_pointer_cast<ChThtsDNode>(child_node);
     }
 

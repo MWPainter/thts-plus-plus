@@ -13,12 +13,14 @@ namespace thts {
     class CztCNode;
     class CztManager;
     class MoThtsContext;
+    class ChCztDNode;
 
     /**
      * CZT impl
     */
     class CztDNode : public BlThtsDNode {
         friend CztCNode;
+        friend ChCztDNode;
 
         private:
             std::string _action_ctx_key;

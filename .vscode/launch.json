@@ -6,6 +6,7 @@
 
 
 
+
     
 
 
@@ -137,7 +138,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/moexpr",
-            "args": ["eval", "040"],
+            "args": ["eval", "060"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [
