@@ -18,6 +18,7 @@
 #include "main_aux/configs/hpopt_config_350_sailing_south_east.h"
 #include "main_aux/configs/hpopt_config_351_sailing_south_east.h"
 #include "main_aux/configs/hpopt_config_360_frozen_lake_det_sparse.h"
+#include "main_aux/configs/hpopt_config_370_frozen_lake_det_sparse.h"
 
 // ---------------------------------------------------------------------------------------------------------------------
 // List of all configs
@@ -36,4 +37,5 @@ static const std::vector<std::vector<HpoptConfigMap>> ALL_HPOPT_CONFIGS =
     HPOPT_CONFIG_350,
     HPOPT_CONFIG_351,
     HPOPT_CONFIG_360,
+    HPOPT_CONFIG_370,
 };
