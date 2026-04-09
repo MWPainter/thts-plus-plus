@@ -164,9 +164,15 @@ Final Ch4 stuff hopefully
 
 
 
+
+
 make && clear &&
-./run_memory_limited 16G ./auxexpr eval 462 &&
-python plot_aux.py 462
+./run_memory_limited 16G ./auxexpr eval 425 &&
+python plot_aux.py 425
+./run_memory_limited 16G ./auxexpr eval 470 &&
+./run_memory_limited 16G ./auxexpr eval 471 &&
+./run_memory_limited 16G ./auxexpr eval 472 &&
+python plot_aux.py 470 471 472
 
 
 

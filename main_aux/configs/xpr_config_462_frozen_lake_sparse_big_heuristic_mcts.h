@@ -19,7 +19,7 @@ static const std::vector<ConfigMap> CONFIG_462 =
         {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,   0.0},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,          false},
         {XPR_PARAM_ID_TERMINATION_BOUND,        2500000}, //500000},
-        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    25},
+        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,    100},
         {XPR_PARAM_ID_SEARCH_THREADS,           16},
         {XPR_PARAM_ID_EVAL_DELTA,               1000},
         {XPR_PARAM_ID_EVAL_ROLLOUTS,            512},

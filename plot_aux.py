@@ -1286,26 +1286,56 @@ if __name__ == "__main__":
         )
 
 
-    # # ------------------------------------------------------------------------------------------------------------------
-    # # Eval - Frozen Lake Sparse + mcts mode
-    # # ------------------------------------------------------------------------------------------------------------------
-    # if "470" in sys.argv or "all" in sys.argv or "fl_sparse_mcts_graph" in sys.argv:
-    #     print("Plotting: ", "470")
-    #     filenames = glob.glob("aux_eval_logs/470_*/**/eval_log.txt", recursive=True)
-    #     make_eval_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/470_FL_sparse_8x8+mcts+graph.png",
-    #         # legend_loc="lower left",
-    #     )
+    # ------------------------------------------------------------------------------------------------------------------
+    # Eval - Frozen Lake Sparse + mcts mode + graph mode
+    # ------------------------------------------------------------------------------------------------------------------
+    if "470" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
+        print("Plotting: ", "470")
+        filenames = glob.glob("aux_eval_logs/470_*/**/eval_log.txt", recursive=True)
+        make_eval_plot(
+            filenames=filenames,
+            plot_filename="plots/470_FL_sparse_8x8+mcts+graph.png",
+            # legend_loc="lower left",
+        )
+        make_eval_plot(
+            filenames=filenames,
+            plot_filename="plots/470_FL_sparse_8x8_PATH+mcts+graph.png",
+            # legend_loc="lower left",
+            path_len_plot=True,
+            max_path_len=100,
+        )
 
-    # if "471" in sys.argv or "all" in sys.argv or "fl_sparse_mcts_graph" in sys.argv:
-    #     print("Plotting: ", "471")
-    #     filenames = glob.glob("aux_eval_logs/471_*/**/eval_log.txt", recursive=True)
-    #     make_eval_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/471_FL_sparse_8x12+mcts+graph.png",
-    #         # legend_loc="lower left",
-    #     )
+    if "471" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
+        print("Plotting: ", "471")
+        filenames = glob.glob("aux_eval_logs/471_*/**/eval_log.txt", recursive=True)
+        make_eval_plot(
+            filenames=filenames,
+            plot_filename="plots/471_FL_sparse_8x12+mcts+graph.png",
+            # legend_loc="lower left",
+        )
+        make_eval_plot(
+            filenames=filenames,
+            plot_filename="plots/471_FL_sparse_8x12_PATH+mcts+graph.png",
+            # legend_loc="lower left",
+            path_len_plot=True,
+            max_path_len=100,
+        )
+
+    if "472" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
+        print("Plotting: ", "472")
+        filenames = glob.glob("aux_eval_logs/472_*/**/eval_log.txt", recursive=True)
+        make_eval_plot(
+            filenames=filenames,
+            plot_filename="plots/472_FL_sparse_8x16+mcts+graph.png",
+            # legend_loc="lower left",
+        )
+        make_eval_plot(
+            filenames=filenames,
+            plot_filename="plots/472_FL_sparse_8x16_PATH+mcts+graph.png",
+            # legend_loc="lower left",
+            path_len_plot=True,
+            max_path_len=100,
+        )
 
 
     # ------------------------------------------------------------------------------------------------------------------

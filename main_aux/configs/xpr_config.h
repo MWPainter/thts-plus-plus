@@ -19,12 +19,13 @@
 #include "main_aux/configs/xpr_config_422_frozen_lake_sparse_big_heuristic.h"
 #include "main_aux/configs/xpr_config_424_frozen_lake_sparse_big_heuristic.h"
 #include "main_aux/configs/xpr_config_425_frozen_lake_sparse_big_heuristic.h"
-#include "main_aux/configs/xpr_config_425a_frozen_lake_sparse_big_heuristic.h"
 
 #include "main_aux/configs/xpr_config_460_frozen_lake_sparse_big_heuristic_mcts.h"
 #include "main_aux/configs/xpr_config_462_frozen_lake_sparse_big_heuristic_mcts.h"
-#include "main_aux/configs/xpr_config_464_frozen_lake_sparse_big_heuristic_mcts.h"
-#include "main_aux/configs/xpr_config_465_frozen_lake_sparse_big_heuristic_mcts.h"
+
+#include "main_aux/configs/xpr_config_470_frozen_lake_sparse_big_heuristic_mcts.h"
+#include "main_aux/configs/xpr_config_471_frozen_lake_sparse_big_heuristic_mcts.h"
+#include "main_aux/configs/xpr_config_472_frozen_lake_sparse_big_heuristic_mcts.h"
 
 #include "main_aux/configs/xpr_config_480_slippy_frozen_lake.h"
 #include "main_aux/configs/xpr_config_481_slippy_frozen_lake.h"
@@ -73,12 +74,13 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     CONFIG_422,
     CONFIG_424,
     CONFIG_425,
-    CONFIG_425a,
 
     CONFIG_460,
     CONFIG_462,
-    CONFIG_464,
-    CONFIG_465,
+
+    CONFIG_470,
+    CONFIG_471,
+    CONFIG_472,
 
     CONFIG_480,
     CONFIG_481,
