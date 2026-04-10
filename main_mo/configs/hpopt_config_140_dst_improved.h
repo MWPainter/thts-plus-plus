@@ -23,7 +23,7 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_140 =
         {XPR_PARAM_ID_TERMINATION_BOUND,                1.0}, // give each alg 1 second to run (going to do a lot of repeats) - if get bad results can try longer
         // {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            2},
         {XPR_PARAM_ID_SEARCH_THREADS,                   16},
-        {XPR_PARAM_ID_EVAL_DELTA,                       5.0}, 
+        {XPR_PARAM_ID_EVAL_DELTA,                       1.0}, 
         {XPR_PARAM_ID_EVAL_ROLLOUTS,                    1024},
         {XPR_PARAM_ID_EVAL_THREADS,                     16},
         {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,             25},

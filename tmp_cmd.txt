@@ -176,16 +176,14 @@ make && clear &&
 ./run_memory_limited 16G ./moexpr eval 072
 
 
-
+Finished:
+./run_memory_limited 16G ./moexpr opt 100 &&     // accidetnally ran with time limit =1.0, eval delta = 5.0 => time limit really 5.0
 
 
 
 
 make && clear &&
-./run_memory_limited 16G ./moexpr opt 100 &&
 ./run_memory_limited 16G ./moexpr opt 110 &&
-./run_memory_limited 16G ./moexpr opt 120 &&
-./run_memory_limited 16G ./moexpr opt 130 &&
 ./run_memory_limited 16G ./moexpr opt 140 &&
 ./run_memory_limited 16G ./moexpr opt 150 &&
 ./run_memory_limited 16G ./moexpr opt 200 &&
@@ -198,6 +196,11 @@ make && clear &&
 ./run_memory_limited 16G ./moexpr opt 270 &&
 ./run_memory_limited 16G ./moexpr opt 280 &&
 ./run_memory_limited 16G ./moexpr opt 290 
+
+
+These ones are less interesting overall and repeats of 100 + 110 with different treasure vals, so either reuse 100 + 110 params or run later:
+./run_memory_limited 16G ./moexpr opt 120 &&
+./run_memory_limited 16G ./moexpr opt 130 &&
 
 
 TODO: setup evals

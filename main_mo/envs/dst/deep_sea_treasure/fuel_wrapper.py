@@ -34,10 +34,10 @@ class FuelWrapper(gym.Wrapper): #type: ignore[misc]
 		inner_high = self.env.reward_space.high
 
 		self.reward_space = gym.spaces.Box(
-			low=np.append(inner_low, -max(wrapper_config["fuel_cost"])),	# type: ignore[no-untyped-call]
-			high=np.append(inner_high, 0),									# type: ignore[no-untyped-call]
+			low=np.append(inner_low, np.float32(-max(wrapper_config["fuel_cost"]))),	# type: ignore[no-untyped-call]
+			high=np.append(inner_high, np.float32(0)),									# type: ignore[no-untyped-call]
 			shape=(self.env.reward_space.shape[0] + 1,),
-			#dtype=np.float32
+			dtype=np.float32
 		)
 
 		self.action_space = self.env.action_space
