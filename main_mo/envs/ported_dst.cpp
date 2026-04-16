@@ -163,15 +163,15 @@ namespace thts {
         return valid_actions;
     }
 
-    unordered_set<shared_ptr<const State>> PortedDeepSeaTreasureThtsEnv::get_all_states() const {
-        unordered_set<shared_ptr<const State>> all_states;
+    vector<shared_ptr<const State>> PortedDeepSeaTreasureThtsEnv::get_all_states() const {
+        vector<shared_ptr<const State>> all_states_vec;
         
         // Add all valid (non-rock) positions in the grid for all timesteps
         for (int t = 0; t <= max_timestep; t++) {
             for (int x = 0; x < num_cols; x++) {
                 for (int y = 0; y < num_rows; y++) {
                     if (is_valid_state(x, y)) {
-                        all_states.insert(
+                        all_states_vec.push_back(
                             static_pointer_cast<const State>(
                                 make_shared<DSTState>(x, y, t)));
                     }
@@ -180,10 +180,10 @@ namespace thts {
         }
         
         // Add terminal state
-        all_states.insert(
+        all_states_vec.push_back(
             static_pointer_cast<const State>(get_terminal_state()));
         
-        return all_states;
+        return all_states_vec;
     }
 
     shared_ptr<const DSTState> PortedDeepSeaTreasureThtsEnv::sample_next_state(

@@ -379,7 +379,28 @@ namespace thts {
         // Solve
         // Can call primal or dual and read out primal solution (which is what we want)
         // Not sure if there's any difference in implementations there *shrugs* but this is what the examples call so...
-        lp.dual();
+        // Good chat with claude explained that dual is starting with dual feasible + primal infeasible solution for iterating
+        // Here's a docstring claude provided from the chat:
+        //
+        // Solve using primal simplex rather than dual simplex.
+        //
+        // Both algorithms solve the same LP and produce the same optimal solution when
+        // they converge, but they take different paths:
+        //   - Dual simplex: starts dual feasible, iterates until primal feasibility is achieved.
+        //     Can return primal infeasible intermediate solutions if it fails to converge,
+        //     which is what the CLP examples use (lp.dual()) and why we saw spurious
+        //     primal infeasibilities on near-degenerate inputs.
+        //   - Primal simplex: starts primal feasible, iterates until dual feasibility
+        //     (optimality) is achieved. Guarantees primal feasibility throughout.
+        //
+        // We use primal simplex because our problem becomes nearly degenerate when points
+        // are tightly clustered (margin x ~ 0), and dual simplex was returning w_i < 0
+        // (violating the w >= 0 constraint) in these cases.
+        //
+        // N.B. even with primal simplex, a near-zero objective value (~1e-16) indicates
+        // the point lies on the boundary of the convex hull and should be treated carefully.
+        //lp.dual();
+        lp.primal();
 
         // // For debugging
         // cout << "In lp solver:" << endl;
@@ -936,6 +957,7 @@ namespace thts {
                 ss << "Reference point needs to be (pareto) weakly dominated by all points in the convex hull to compute hypervolume." << endl;
                 ss << "Reference point: " << ref_point << endl;
                 ss << "Culprit point in CH: " << point << endl;
+                ss << "Full convex hull: " << *this << endl;
                 throw runtime_error(ss.str());
             }
         }
@@ -979,10 +1001,22 @@ namespace thts {
             qhull_flat_input.insert(qhull_flat_input.end(), point.vec.begin(), point.vec.end());
         }
 
-        // Run qhull to compute the convex hull, and output the hypervolume
-        orgQhull::Qhull qhull;
-        qhull.runQhull("", dim, num_points, qhull_flat_input.data(), "Qt Qx");
-        return qhull.volume();
+        // (Try) Run qhull to compute the convex hull, and output the hypervolume
+        try 
+        {
+            orgQhull::Qhull qhull;
+            qhull.runQhull("", dim, num_points, qhull_flat_input.data(), "Qt Qx Pp");
+            return qhull.volume();
+        } 
+        catch (...) 
+        {
+            // QHull failed (likely due to input CH points being lower dimensinoal than the space)
+            // For example the points (0,0,0), (0,0,1), (0,1,0) and (0,1,1) form a 2D square in 3D space
+            // But this example passes all of the checks above
+            // Could check for it explicitly and add a lot of extra costs/checks
+            // But just trying it + catching the exception handles both in same time/cost
+            return 0.0;
+        }
     }
 
     /**
@@ -1132,3 +1166,60 @@ namespace std {
         return os;
     }
 }
+
+
+
+
+
+
+// Claude generated code for checking if set of points has lower rank than the dimension of the space (originally in hypervolume)
+/**
+        // Check if the points span the full dimensional space via Gaussian elimination.
+        // If rank < dim, the points are coplanar and qhull would error on the degenerate input.
+        {
+            auto it = geometric_hull_points.begin();
+            Vec origin = *it;
+            ++it;
+
+            std::vector<std::vector<double>> diff_matrix;
+            diff_matrix.reserve(geometric_hull_points.size() - 1);
+            for (; it != geometric_hull_points.end(); ++it) {
+                std::vector<double> diff(dim);
+                for (int j = 0; j < dim; j++) {
+                    diff[j] = it->vec[j] - origin.vec[j];
+                }
+                diff_matrix.push_back(std::move(diff));
+            }
+
+            int nrows = static_cast<int>(diff_matrix.size());
+            int rank = 0;
+            constexpr double rank_tol = 1e-10;
+
+            for (int col = 0; col < dim && rank < nrows; col++) {
+                int pivot_row = -1;
+                double max_val = rank_tol;
+                for (int row = rank; row < nrows; row++) {
+                    double abs_val = std::abs(diff_matrix[row][col]);
+                    if (abs_val > max_val) {
+                        max_val = abs_val;
+                        pivot_row = row;
+                    }
+                }
+                if (pivot_row == -1) continue;
+
+                std::swap(diff_matrix[rank], diff_matrix[pivot_row]);
+                double pivot_val = diff_matrix[rank][col];
+                for (int row = rank + 1; row < nrows; row++) {
+                    double factor = diff_matrix[row][col] / pivot_val;
+                    for (int j = col; j < dim; j++) {
+                        diff_matrix[row][j] -= factor * diff_matrix[rank][j];
+                    }
+                }
+                rank++;
+            }
+
+            if (rank < dim) {
+                return 0.0;
+            }
+        }
+*/

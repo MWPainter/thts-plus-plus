@@ -35,7 +35,7 @@ class ImprovedDeepSeaTreasureThtsEnv(MoGymThtsEnv):
         is_vamplew = bool(is_vamplew)
         max_steps = int(max_steps)
         map_id = int(map_id)
-        max_velocity = 1.0 if is_vamplew else 2.0
+        max_velocity = 1.0 if is_vamplew else 4.0
 
         if map_id not in MAPS:
             raise ValueError(f"Invalid map id: {map_id}")
@@ -72,5 +72,13 @@ class ImprovedDeepSeaTreasureThtsEnv(MoGymThtsEnv):
             return super().get_valid_actions(state)
         n = self.env.action_space.spaces[0].n
         m = self.env.action_space.spaces[1].n
-        return [(i,j) for i in range(n) for j in range(m)]
+        mid_x = n // 2
+        mid_y = m // 2
+        actions = []
+        for i in range(n):
+            actions.append((i, mid_y))
+        for j in range(m):
+            if j != mid_y:
+                actions.append((mid_x, j))
+        return actions
 

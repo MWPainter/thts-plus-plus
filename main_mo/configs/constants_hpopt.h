@@ -26,6 +26,8 @@ static const std::string HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES = "bayesopt_i
 static const std::string HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ = "bayesopt_relearn_freq";            // how often bayesopt will internally update or "relearn" parameters used in bayesian optimisation
 static const std::string HPOPT_PARAM_ID_BAYESOPT_USE_GPML = "bayesopt_use_gp_ml";                  // if should use Gaussian Process surrogate model with maximum likelihood estimation
 
+static const std::string HPOPT_PARAM_ID_USE_HYPERVOLUME_AS_METRIC = "use_hypervolume_as_metric"; // if should use hypervolume as metric for hyperparam optimisation (avoids running rollouts)
+
 // ---------------------------------------------------------------------------------------------------------------------
 // For hyperparam optimisation: set of parameters to search over a log scaling
 // ---------------------------------------------------------------------------------------------------------------------

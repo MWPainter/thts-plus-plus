@@ -65,6 +65,9 @@ namespace thts {
             trial_cumulative_return_after_node, 
             trial_cumulative_return,
             ctx);
+        
+        // Because using CH, can use solved values to prune actions, even if CZT values get clobbered
+        czt_node->update_solved_value();
     }
 
     string ChCztCNode::get_pretty_print_val() const 

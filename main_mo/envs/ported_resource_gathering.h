@@ -8,16 +8,16 @@ namespace thts {
     using namespace std;
 
     /**
-     * State representation for ResourceGathering: [x, y, has_gold, has_gem]
+     * State representation for ResourceGathering: [x, y, has_gold, has_gem, timestep]
      */
     class ResourceGatheringState : public State {
         public:
-            std::array<int, 4> state;  // [x, y, has_gold, has_gem]
+            std::array<int, 5> state;  // [x, y, has_gold, has_gem, timestep]
 
-            ResourceGatheringState(int x, int y, int has_gold, int has_gem) 
-                : state({x, y, has_gold, has_gem}) {}
+            ResourceGatheringState(int x, int y, int has_gold, int has_gem, int timestep) 
+                : state({x, y, has_gold, has_gem, timestep}) {}
             
-            ResourceGatheringState(std::array<int, 4> state) : state(state) {}
+            ResourceGatheringState(std::array<int, 5> state) : state(state) {}
             
             virtual ~ResourceGatheringState() = default;
             virtual std::size_t hash() const override;
@@ -27,11 +27,14 @@ namespace thts {
     };
 
     /**
-     * Pre-death state for ResourceGathering (intermediate state before terminal)
+     * Pre-death state for ResourceGathering (intermediate state before terminal).
+     * Timestep is retained solely for graph search transposition table uniqueness.
      */
     class ResourceGatheringPreDeathState : public State {
         public:
-            ResourceGatheringPreDeathState() {}
+            int timestep;
+
+            ResourceGatheringPreDeathState(int timestep) : timestep(timestep) {}
             virtual ~ResourceGatheringPreDeathState() = default;
             virtual std::size_t hash() const override;
             bool equals(const ResourceGatheringPreDeathState& other) const;
@@ -40,11 +43,14 @@ namespace thts {
     };
 
     /**
-     * Terminal state for ResourceGathering
+     * Terminal state for ResourceGathering.
+     * Timestep is retained solely for graph search transposition table uniqueness.
      */
     class ResourceGatheringTerminalState : public State {
         public:
-            ResourceGatheringTerminalState() {}
+            int timestep;
+
+            ResourceGatheringTerminalState(int timestep) : timestep(timestep) {}
             virtual ~ResourceGatheringTerminalState() = default;
             virtual std::size_t hash() const override;
             bool equals(const ResourceGatheringTerminalState& other) const;
@@ -57,10 +63,11 @@ namespace thts {
     /**
      * A C++ port of the ResourceGathering environment from mo-gymnasium.
      * 
-     * State: [x, y, has_gold, has_gem] where:
+     * State: [x, y, has_gold, has_gem, timestep] where:
      *   - x, y: position coordinates (0-4)
      *   - has_gold: 0 or 1
      *   - has_gem: 0 or 1
+     *   - timestep: current time step (needed for graph search transposition correctness)
      * 
      * Actions: 0=up, 1=down, 2=left, 3=right
      * 
@@ -95,19 +102,22 @@ namespace thts {
             };
 
             bool timed;
+            int time_horizon;
 
         public:
-            PortedResourceGatheringThtsEnv(bool timed=false) : 
+            PortedResourceGatheringThtsEnv(bool timed=false, int time_horizon=100) : 
                 ThtsEnv(true),
-                MoThtsEnv(3, true),  // reward_dim=3, fully_observable=true
-                timed(timed)
+                MoThtsEnv(timed ? 4 : 3, true),
+                timed(timed),
+                time_horizon(time_horizon)
             {
             }
 
             PortedResourceGatheringThtsEnv(PortedResourceGatheringThtsEnv& other) : 
                 ThtsEnv(true),
-                MoThtsEnv(3, true),
-                timed(other.timed)
+                MoThtsEnv(other.timed ? 4 : 3, true),
+                timed(other.timed),
+                time_horizon(other.time_horizon)
             {
             }
 
@@ -120,11 +130,12 @@ namespace thts {
             int get_y(shared_ptr<const ResourceGatheringState> state) const;
             int get_has_gold(shared_ptr<const ResourceGatheringState> state) const;
             int get_has_gem(shared_ptr<const ResourceGatheringState> state) const;
+            int get_timestep(shared_ptr<const ResourceGatheringState> state) const;
             bool is_valid_position(int x, int y) const;
             char get_map_value(int x, int y) const;
             shared_ptr<const ResourceGatheringState> get_initial_state() const;
-            shared_ptr<const ResourceGatheringPreDeathState> get_pre_death_state() const;
-            shared_ptr<const ResourceGatheringTerminalState> get_terminal_state() const;
+            shared_ptr<const ResourceGatheringPreDeathState> get_pre_death_state(int timestep) const;
+            shared_ptr<const ResourceGatheringTerminalState> get_terminal_state(int timestep) const;
             bool is_sink_state(shared_ptr<const State> state, ThtsContext& ctx) const;
             shared_ptr<IntActionVector> get_valid_actions(
                 shared_ptr<const ResourceGatheringState> state, ThtsContext& ctx) const;
@@ -133,7 +144,7 @@ namespace thts {
              * Returns the set of all possible states in the environment
              * Includes all regular states, pre-death state, and terminal state
              */
-            std::unordered_set<std::shared_ptr<const State>> get_all_states() const;
+            std::vector<std::shared_ptr<const State>> get_all_states() const;
 
         private:
             shared_ptr<const ResourceGatheringState> make_next_state(
@@ -231,4 +242,3 @@ namespace std {
                        const shared_ptr<const ResourceGatheringTerminalState>& rhs) const;
     };
 }
-

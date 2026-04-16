@@ -35,7 +35,10 @@ namespace thts {
 
     string ChUctCNode::get_pretty_print_val() const 
     {
-        return "";
+        stringstream ss;
+        ss << "solved_val=" << solved_value;
+        return ss.str();
+        // return "";
     }
 }
 

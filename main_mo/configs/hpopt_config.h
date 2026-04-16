@@ -9,10 +9,12 @@
 #include "main_mo/configs/hpopt_config_001_debug.h"
 #include "main_mo/configs/hpopt_config_100_dst.h"
 #include "main_mo/configs/hpopt_config_110_dst_stoch.h"
-#include "main_mo/configs/hpopt_config_120_dst_gym.h"
-#include "main_mo/configs/hpopt_config_130_dst_gym_stoch.h"
+#include "main_mo/configs/hpopt_config_120_dst_stoch_clm.h"
+
 #include "main_mo/configs/hpopt_config_140_dst_improved.h"
 #include "main_mo/configs/hpopt_config_150_dst_improved_stoch.h"
+#include "main_mo/configs/hpopt_config_160_dst_improved_stoch_clm.h"
+
 #include "main_mo/configs/hpopt_config_200_fruit_tree.h"
 #include "main_mo/configs/hpopt_config_210_fruit_tree_stoch.h"
 #include "main_mo/configs/hpopt_config_220_resource_gather.h"
@@ -35,9 +37,10 @@ static const std::vector<std::vector<HpoptConfigMap>> ALL_HPOPT_CONFIGS =
     HPOPT_CONFIG_100,
     HPOPT_CONFIG_110,
     HPOPT_CONFIG_120,
-    HPOPT_CONFIG_130,
+    
     HPOPT_CONFIG_140,
     HPOPT_CONFIG_150,
+    HPOPT_CONFIG_160,
     
     HPOPT_CONFIG_200,
     HPOPT_CONFIG_210,

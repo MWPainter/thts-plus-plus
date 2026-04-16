@@ -14,6 +14,7 @@
 namespace thts {
 
     typedef std::unordered_set<std::shared_ptr<const State>> StateSet;
+    typedef std::vector<std::shared_ptr<const State>> OrderedStateVec;
     typedef std::unordered_map<std::shared_ptr<const State>, 
                                std::unordered_map<std::shared_ptr<const Action>, 
                                             std::unordered_map<std::shared_ptr<const State>, double>>> TransitionProbs;
@@ -24,40 +25,46 @@ namespace thts {
                                std::unordered_map<std::shared_ptr<const Action>, std::shared_ptr<ConvexHull>>> QMap;
     
     class Chvi {
-        int num_threads;
+        protected:
+            int num_threads;
 
-        const int dim;
-        const int convex_hull_max_size;
-        const double convex_hull_tolerance;
-        const std::shared_ptr<const State> start_state;
-        const StateSet states;
-        const StateSet sink_states;
-        const TransitionProbs transition_probs;
-        const RewardMap reward_map;
-        
-        // Double buffering for thread-safe synchronous value iteration
-        VMap chvi_values;           // Values being read from (previous iteration)
-        VMap chvi_values_next;      // Values being written to (current iteration)
-        
-        // Q-value storage: Q(s,a) for each state-action pair
-        QMap chvi_q_values;         // Q values from previous iteration
-        QMap chvi_q_values_next;    // Q values being written to (current iteration)
-        
-        // Work queue and synchronization for multi-threaded execution
-        std::queue<std::shared_ptr<const State>> work_queue;
-        std::mutex queue_mutex;
-        std::condition_variable queue_cv;
-        std::atomic<bool> should_stop;
-        std::atomic<int> threads_waiting;
-        
-        // Cached list of non-sink states
-        std::vector<std::shared_ptr<const State>> non_sink_states;
-        
-        // Iteration tracking
-        std::atomic<int> completed_iterations;      // Number of fully completed iterations
-        std::atomic<int> backups_completed_current; // Number of backups completed in current iteration
-        int total_backups_per_iter;                 // Total number of backups per iteration (size of non_sink_states)
-        std::atomic<int> total_backups_completed;                // Total number of backups completed
+            const int dim;
+            const int convex_hull_max_size;
+            const double convex_hull_tolerance;
+            const std::shared_ptr<const State> start_state;
+            const StateSet states;
+            const StateSet sink_states;
+            const TransitionProbs transition_probs;
+            const RewardMap reward_map;
+            
+            // Double buffering for thread-safe synchronous value iteration
+            VMap chvi_values;           // Values being read from (previous iteration)
+            VMap chvi_values_next;      // Values being written to (current iteration)
+            
+            // Q-value storage: Q(s,a) for each state-action pair
+            QMap chvi_q_values;         // Q values from previous iteration
+            QMap chvi_q_values_next;    // Q values being written to (current iteration)
+            
+            // Work queue and synchronization for multi-threaded execution
+            std::queue<std::shared_ptr<const State>> work_queue;
+            std::mutex queue_mutex;
+            std::condition_variable queue_cv;
+            std::atomic<bool> should_stop;
+            std::atomic<int> threads_waiting;
+
+            // Cached list of non-sink states (protected so subclasses can control ordering)
+            std::vector<std::shared_ptr<const State>> non_sink_states;
+            
+            // When true, backup reads from chvi_values_next (Gauss-Seidel style) instead of
+            // chvi_values (Jacobi style), so ordered sweeps see freshly computed values.
+            bool use_gauss_seidel = false;
+
+        private:
+            // Iteration tracking
+            std::atomic<int> completed_iterations;      // Number of fully completed iterations
+            std::atomic<int> backups_completed_current; // Number of backups completed in current iteration
+            int total_backups_per_iter;                 // Total number of backups per iteration (size of non_sink_states)
+            std::atomic<int> total_backups_completed;                // Total number of backups completed
 
         public:
             Chvi(
@@ -83,6 +90,33 @@ namespace thts {
 
         private:
             void backup(std::shared_ptr<const State> state);
+    };
+
+
+    /**
+     * ChviOrdered
+     * 
+     * Subclass of Chvi that takes an ordered vector of states instead of an unordered set.
+     * The backup order follows the vector ordering, which is useful for topological or
+     * prioritised orderings where convergence depends on the sweep order.
+     */
+    class ChviOrdered : public Chvi {
+        public:
+            ChviOrdered(
+                int num_threads,
+                int dim,
+                std::shared_ptr<const State> start_state,
+                OrderedStateVec ordered_states,
+                OrderedStateVec ordered_sink_states,
+                TransitionProbs transition_probs,
+                RewardMap reward_map,
+                int convex_hull_max_size=-1,
+                double convex_hull_tolerance=1e-9,
+                bool gauss_seidel=true);
+            virtual ~ChviOrdered() = default;
+
+        private:
+            static StateSet to_state_set(const OrderedStateVec& vec);
     };
 
 

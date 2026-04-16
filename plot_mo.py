@@ -13,6 +13,25 @@ import sys
 
 import glob
 
+
+# This function is vibe coded, pretty sure there is a cleaner way to do continuous hue
+def _param_to_colour(base_colour, t, lighten_frac=0.2):
+    """
+    Map a normalised parameter t in [0, 1] to a colour that goes from
+    a lighter version of base_colour (t=0) to black (t=1).
+    Keeps the algorithm-to-colour mapping while varying shade by parameter.
+    lighten_frac: how much to mix base with white for the "low" end (0 = no lighten, 1 = white).
+    """
+    rgb = np.array(mpl.colors.to_rgb(base_colour))
+    white = np.array([1.0, 1.0, 1.0])
+    light_rgb = (1 - lighten_frac) * rgb + lighten_frac * white
+    black = np.array([0.0, 0.0, 0.0])
+    # t=0 -> rgb, t=1 -> black
+    blend = (1 - t) * rgb + t * black
+    blend = np.clip(blend, 0, 1)
+    return mpl.colors.to_hex(blend)
+
+
 def make_lineplot_df(
     df, 
     x_axis_key, 
@@ -23,6 +42,8 @@ def make_lineplot_df(
     x_axis_lab=None, 
     y_axis_lab=None, 
     legend_lab=None,
+    x_log_scale=False,
+    y_log_scale=False,
     y_scale_transform_forward=None,
     y_scale_transform_inverse=None,
     filename=None, 
@@ -36,12 +57,15 @@ def make_lineplot_df(
     use_legend=True,
     font_scale=1.2,
     figsize=(10.24, 7.68),
-    dpi=200):
+    dpi=200,
+    legend_loc=None,
+    horizontal_lines=None):
     """
     General helper for plotting lineplots in our style.
     """
 
-    # Make the saved image physically larger (viewer size) + higher-res (dpi).
+    # Default matplotlib output is often ~640x480 (dpi=100). Increase dpi so
+    # saved images are higher resolution without changing plot physical size.
     plt.figure(figsize=figsize, dpi=dpi)
     sns.set_theme(style="darkgrid",font_scale=font_scale)
 
@@ -66,6 +90,8 @@ def make_lineplot_df(
         dashes = False
     if markers is None:
         markers = False
+    if legend_loc is None:
+        legend_loc = "lower right"
 
     sns.lineplot(
         data=df, 
@@ -87,36 +113,43 @@ def make_lineplot_df(
         plt.xlabel(x_axis_lab)
     if y_axis_lab is not None:
         plt.ylabel(y_axis_lab)
+    if horizontal_lines is not None:
+        for y in horizontal_lines:
+            plt.axhline(y=y, color='k', linestyle='--')
     if vertical_lines is not None:
         for x in vertical_lines:
             plt.axvline(x=x, color='k', linestyle='--')
     if legend_lab is not None:
-        plt.legend(loc="lower right", title=legend_lab)
+        plt.legend(loc=legend_loc, title=legend_lab)
     if y_axis_range is not None:
         plt.gca().set_ylim(y_axis_range)
     if not use_legend:
         plt.gca().get_legend().remove()
+    if x_log_scale:
+        plt.xscale('log')
+    if y_log_scale:
+        plt.yscale('log')
 
+    plt.tight_layout()
     if filename is not None:
-        plt.tight_layout()
         plt.savefig(filename, dpi=dpi, bbox_inches="tight")
     else:
         plt.show()
     plt.close()
 
-def fix_eval_file(filename):
-    """
-    Had a typo missed in C++ code, causing errorneous header line of CSV, rather than re-running, temporarilty including
-    this to fix it
-    """
-    with open(filename, 'r') as f:
-        data = f.readlines()
-    data[3] = "replicate,search_time,num_trials,mc_eval_utility_mean,mc_eval_utility_std,mc_eval_normalised_utility_mean,mc_eval_normalised_utility_std\n"
-    with open(filename, "w") as f:
-        f.writelines(data)
+def read_hpopt_file_to_df(filename):
+    df = pd.read_csv(filename)
+    df = df.rename(columns={"eval(mc_estimate_expected_utility)": "V"})
+    return df
+
+def subdf(df, key, val):
+    subdf = df[df[key] == val]
+    return subdf
 
 def read_eval_file_to_df(filename,num_trials_scale):
     """
+    TODO: this file needs updating w.r.t. current log files (manual) 
+
     Reads the eval file from 'filename'
     Appends results in this eval file to the arrays: alg_ids, replicates, search_times, num_trialss, 
 
@@ -126,32 +159,57 @@ def read_eval_file_to_df(filename,num_trials_scale):
     Then uses pandas to read 2nd half, which is a csv file
     And adds an additional collumn with the algorithm name
     """
-    # TODO: delete following line once all files fixed
-    fix_eval_file(filename)
 
     alg_id = None
     with open(filename) as f:
+        
+        # first two lines are for human readability
+        f.readline()
+        f.readline()
+
+        # next two lines are xpr level params
+        _xpr_param_ids = f.readline().strip().split(",")
+        _xpr_param_vals = f.readline().strip().split(",")
+        
+        # next three lines are for human readability
+        f.readline()
+        f.readline()
+        f.readline()
+        
+        # Then next two lines are the values that we care about 
         param_ids = f.readline().strip().split(",")
         param_vals = f.readline().strip().split(",")
 
         # At the moment we just care about which algorithm this was, rather than the params it was run with
         for param_id, val in zip(param_ids,param_vals):
-            if param_id == "alg":
+            if param_id == "alg_id":
                 alg_id = val
     
-    df = pd.read_csv(filepath_or_buffer=filename, header=3, index_col=False, skip_blank_lines=False)
+    df = pd.read_csv(filepath_or_buffer=filename, header=12, index_col=False, skip_blank_lines=False)
     df["alg_id"] = alg_id
     df["num_trials"] /= num_trials_scale
 
     df = df.rename(columns={
         "alg_id": "alg_id",
-        "replicate": "replicate",
-        "search_time": "search_time",
+
+        "run_idx": "run_idx",
+        "search_budget_consumed": "search_time",
         "num_trials": "num_trials",
-        "mc_eval_utility_mean": "utility",
-        "mc_eval_utility_std": "utility_std",
-        "mc_eval_normalised_utility_mean": "norm_utility",
-        "mc_eval_normalised_utility_std": "norm_utility_std",
+        "num_backups": "num_backups",
+
+        "ctx_mean": "utility",
+        "ctx_std_dev": "utility_std",
+        "reweighted_ctx_mean": "reweighted_utility",
+        "reweighted_ctx_std_dev": "reweighted_utility_std",
+        "normalised_ctx_mean": "norm_utility",
+        "normalised_ctx_std_dev": "norm_utility_std",
+
+        "hypervolume": "hypervolume",
+        "additive_eps_metric": "additive_eps_metric",
+        "sparsity_metric": "sparsity_metric",
+        "normalised_hypervolume": "normalised_hypervolume",
+        "normalised_additive_eps_metric": "normalised_additive_eps_metric",
+        "normalised_sparsity_metric": "normalised_sparsity_metric",
     }, errors="raise")
     
     return df
@@ -205,7 +263,7 @@ def read_eval_files_to_df(filenames,num_trials_scale):
         dfs.append(df)
     return pd.concat(dfs, ignore_index=True)
 
-def make_eum_plot(
+def make_eval_plot(
     filenames, 
     plot_filename, 
     hue_key=None, 
@@ -223,11 +281,25 @@ def make_eum_plot(
     markevery=1,
     use_legend=True,
     alpha=1.0,
-    num_trials_scale=1):
+    num_trials_scale=1,
+    horizontal_lines=None,
+    continuous_hue=False,
+    continuous_hue_key_is_logarithmic=False,
+    add_dashes=False,
+    legend_loc=None,
+    font_scale=1.2,
+    ):
     """
-    Makes an eum plot using the data in the given filenames
-    Can make a non eum plot by specifying y_axis_key
+    Makes an eval plot using the data in the given filenames
+    Can make a non eum plot by specifying y_axis_key.
+    If continuous_hue is set (e.g. "heuristic_value"), line colour varies smoothly
+    from a lighter version of the algorithm colour (low param) to black (high param).
+    If continuous_hue_key_is_logarithmic is True, the parameter is normalised on a log scale for the palette.
     """
+
+    if (len(filenames) == 0):
+        print(f"Skipping plot {plot_filename} because no files found")
+        return
 
     # Default params
     if hue_key is None:
@@ -250,17 +322,40 @@ def make_eum_plot(
         x_axis_lab += " (x{scale})".format(scale=num_trials_scale)
 
     # Read in data + make algorithm names more pretty
+    chvi_str = "CHVI"
+    chvi_ordered_str = "CHVI(t=0->H)"
+    chvi_reversed_str = "CHVI(t=H->0)"
     czt_str = "CZT"
-    chmcst_str = "CHMCTS"
-    smbts_str = "SM-BTS"
-    smdents_str = "SM-DENTS"
+    czt_doubling_str = "CZT(Doubling)"
+    ch_uct_str = "CH-UCT"
+    ch_czt_str = "CH-CZT"
+    ch_czt_doubling_str = "CH-CZT(Doubling)"
+    ch_bts_str = "CH-BTS"
+    ch_hvuct_str = "CH-HVUCT"
+    ch_pareto_str = "CH-PARETO"
+    ch_cheby_str = "CH-CHEBY"
+    ch_standard_cheby_str = "CH-CHEBY(Standard)"
+    sm_bts_str = "SM-BTS"
+    sm_dents_str = "SM-DENTS"
+
 
     df = read_eval_files_to_df(filenames, num_trials_scale)
     df["alg_id"] = df["alg_id"].map({
+        "chvi": chvi_str,
+        "chvi_ordered": chvi_ordered_str,
+        "chvi_reversed": chvi_reversed_str,
         "czt": czt_str,
-        "chmcts": chmcst_str,
-        "smbts": smbts_str,
-        "smdents": smdents_str,
+        "czt_doubling": czt_doubling_str,
+        "ch_uct": ch_uct_str,
+        "ch_czt": ch_czt_str,
+        "ch_czt_doubling": ch_czt_doubling_str,
+        "ch_bts": ch_bts_str,
+        "ch_hvuct": ch_hvuct_str,
+        "ch_pareto": ch_pareto_str,
+        "ch_cheby": ch_cheby_str,
+        "ch_standard_cheby": ch_standard_cheby_str,
+        "sm_bts": sm_bts_str,
+        "sm_dents": sm_dents_str,
     })
 
     # Get the set of alg ids working with
@@ -271,26 +366,115 @@ def make_eum_plot(
     # Currently using dict for mapping using colours from: https://seaborn.pydata.org/generated/seaborn.color_palette.html#seaborn.color_palette
     palette = {}
     for alg_id in alg_id_set:
-        if czt_str in alg_id:
-            palette[alg_id] = "tab:green"
-        if smdents_str in alg_id:
-            palette[alg_id] = "tab:blue"
-        if smbts_str in alg_id:
-            palette[alg_id] = "tab:orange"
-        if chmcst_str in alg_id:
-            palette[alg_id] = "tab:purple"
-        # other colours I used
-        # palette[alg_id] = "tab:gray"
-        # palette[alg_id] = "tab:red"
-        # palette[alg_id] = "tab:brown"
-        # palette[alg_id] = "tab:grey"
+        if chvi_str in alg_id:
+            palette[alg_id] = "#7f7f7f"  # tab:gray
+        if chvi_ordered_str in alg_id:
+            palette[alg_id] = "#9467bd"  # tab:purple
+        if chvi_reversed_str in alg_id:
+            palette[alg_id] = "#e377c2"  # tab:pink
 
-    # Define line styles - dashes (currently unused, but dont want del setup)
-    # "Dashes are specified as in matplotlib: a tuple of (segment, gap) lengths, or an empty string to draw a solid line."
-    dashes = {}
-    for alg_id in alg_id_set:
-        dashes[alg_id] = ""
-        # dashes[alg_id] = (4,2)
+        if czt_str in alg_id:
+            palette[alg_id] = "#2ca02c"  # tab:green
+        if czt_doubling_str in alg_id:
+            palette[alg_id] = "#d62728"  # tab:red
+        if ch_czt_str in alg_id:
+            palette[alg_id] = "#98df8a"  # light green
+        if ch_czt_doubling_str in alg_id:
+            palette[alg_id] = "#ff9896"  # light red
+
+        
+        if ch_hvuct_str in alg_id:
+            palette[alg_id] = "#c5b0d5"  # light purple
+        if ch_pareto_str in alg_id:
+            palette[alg_id] = "#c49c94"  # light brown
+        if ch_cheby_str in alg_id:
+            palette[alg_id] = "#f7b6d2"  # light pink
+        if ch_standard_cheby_str in alg_id:
+            palette[alg_id] = "#dbdb8d"  # light olive
+            
+        if ch_uct_str in alg_id:
+            palette[alg_id] = "#ffbb78"  # light orange
+            
+
+        if ch_bts_str in alg_id:
+            palette[alg_id] = "#aec7e8"  # light blue
+        if sm_bts_str in alg_id:
+            palette[alg_id] = "#1f77b4"  # tab:blue
+        if sm_dents_str in alg_id:
+            palette[alg_id] = "#ff7f0e"  # tab:orange
+
+    # Currently unused tab20 colours
+    # palette[alg_id] = "#8c564b"  # tab:brown
+    # palette[alg_id] = "#c7c7c7"  # light gray
+    # palette[alg_id] = "#bcbd22"  # tab:olive
+    # palette[alg_id] = "#17becf"  # tab:cyan
+    # palette[alg_id] = "#9edae5"  # light cyan
+
+    # Sort hue key lexicographically so legend order is deterministic
+    sorted_hue_vals = sorted(df[hue_key].unique())
+    df[hue_key] = pd.Categorical(df[hue_key], categories=sorted_hue_vals, ordered=True)
+
+    
+    # Define line styles - dashes
+    # When add_dashes is True, algorithms with multiple bias/temp values get
+    # separate lines distinguished by dash pattern (same base colour).
+    dashes = None
+    if add_dashes:
+        algs_with_multi_bias = set()
+        algs_with_multi_temp = set()
+        for aid in df["alg_id"].unique():
+            adf = df[df["alg_id"] == aid]
+            if "bias" in adf.columns and adf["bias"].dropna().nunique() > 1:
+                algs_with_multi_bias.add(aid)
+            if "temp" in adf.columns and adf["temp"].dropna().nunique() > 1:
+                algs_with_multi_temp.add(aid)
+
+        def _make_alg_label(row):
+            base = row["alg_id"]
+            if base in algs_with_multi_bias and pd.notna(row.get("bias")):
+                return f"{base} (b={row['bias']:g})"
+            if base in algs_with_multi_temp and pd.notna(row.get("temp")):
+                return f"{base} (t={row['temp']:g})"
+            return base
+
+        df["alg_label"] = df.apply(_make_alg_label, axis=1)
+        hue_key = "alg_label"
+
+        sorted_alg_ids = sorted(palette.keys(), key=len, reverse=True)
+        new_palette = {}
+        for label in df["alg_label"].unique():
+            for aid in sorted_alg_ids:
+                if label.startswith(aid):
+                    new_palette[label] = palette[aid]
+                    break
+        palette = new_palette
+
+        dash_patterns = [
+            "",
+            (8, 4),
+            (2, 4),
+            # (4, 2, 1, 2),
+            # (6, 2, 1, 2, 1, 2),
+            # (8, 2),
+            # (2, 4),
+        ]
+        multi_param_algs = algs_with_multi_bias | algs_with_multi_temp
+
+        unique_labels = sorted(df["alg_label"].unique())
+        df["alg_label"] = pd.Categorical(df["alg_label"], categories=unique_labels, ordered=True)
+
+        dashes = {}
+        dash_counters = {}
+        for label in unique_labels:
+            is_multi = any(label.startswith(a) for a in multi_param_algs)
+            if is_multi:
+                base = next(a for a in multi_param_algs if label.startswith(a))
+                idx = dash_counters.get(base, 0)
+                dashes[label] = dash_patterns[idx % len(dash_patterns)]
+                dash_counters[base] = idx + 1
+            else:
+                dashes[label] = ""
+
 
     # Define line styles - markers (currently unused, but dont want del setup)
     # N.B. see following for valid values: https://matplotlib.org/stable/api/markers_api.html
@@ -306,9 +490,27 @@ def make_eum_plot(
     #         if "DENTS" in alg_id:
     #             markers[alg_id] = 6
 
-    # Concatenate x_axis if want
+    # Truncate x_axis if want
     if x_axis_truncate is not None:
         df = df[df[x_axis_key] <= x_axis_truncate]
+
+    # Continuous hue: one line per value of hue_key, colour from light(alg) to black
+    if continuous_hue:
+        # check only one alg id is in the data
+        if len(df["alg_id"].unique()) > 1:
+            raise ValueError("Continuous hue is only supported for single-alg data")
+        
+        # create a new palette for the continuous hue
+        alg_base_colour = palette[df["alg_id"].unique()[0]]
+        param_vals = df[hue_key].dropna().unique()
+        pmin, pmax = float(np.nanmin(param_vals)), float(np.nanmax(param_vals))
+        if continuous_hue_key_is_logarithmic and pmin > 0 and pmax > 0:
+            log_min, log_max = np.log(pmin), np.log(pmax)
+            log_span = (log_max - log_min) if log_max > log_min else 1.0
+            palette = {v: _param_to_colour(alg_base_colour, (np.log(float(v)) - log_min) / log_span) for v in param_vals}
+        else:
+            span = (pmax - pmin) if pmax > pmin else 1.0
+            palette = {v: _param_to_colour(alg_base_colour, (float(v) - pmin) / span) for v in param_vals}
 
     # Call our actual make plot function
     make_lineplot_df(
@@ -330,7 +532,10 @@ def make_eum_plot(
         markers=markers,
         markevery=markevery,
         use_legend=use_legend,
-        alpha=alpha)
+        legend_loc=legend_loc,
+        alpha=alpha,
+        font_scale=font_scale,
+        horizontal_lines=horizontal_lines)
     
 def make_num_trials_plot(
     filenames, 
@@ -615,11 +820,125 @@ def get_piecwise_linear_inverse_transform(min_y,mid_y,scaled_y,max_y):
 
 
 
+def make_many_eval_plots(filenames, fname_base):
+    make_eval_plot(
+        filenames=filenames,
+        plot_filename=f"mo_plots/{fname_base}_0_eum.png",
+        # legend_loc="lower left",
+    )
+    make_eval_plot(
+        filenames=filenames,
+        plot_filename=f"mo_plots/{fname_base}_1_normalised_utility.png",
+        y_axis_key="norm_utility",
+        y_axis_lab="Normalised Expected Utility Metric", 
+        # legend_loc="lower left",
+    )
+    make_eval_plot(
+        filenames=filenames,
+        plot_filename=f"mo_plots/{fname_base}_2_hypervolume.png",
+        y_axis_key="hypervolume",
+        y_axis_lab="Hypervolume", 
+        # legend_loc="lower left",
+    )
+    make_eval_plot(
+        filenames=filenames,
+        plot_filename=f"mo_plots/{fname_base}_3_normalised_hypervolume.png",
+        y_axis_key="normalised_hypervolume",
+        y_axis_lab="Normalised Hypervolume", 
+        # legend_loc="lower left",
+    )
+    make_eval_plot(
+        filenames=filenames,
+        plot_filename=f"mo_plots/{fname_base}_4_num_trials.png",
+        y_axis_key="num_trials",
+        y_axis_lab="Num Trials", 
+        # legend_loc="lower left",
+    )
+    make_eval_plot(
+        filenames=filenames,
+        plot_filename=f"mo_plots/{fname_base}_5_num_backups.png",
+        y_axis_key="num_backups",
+        y_axis_lab="Num Backups", 
+        # legend_loc="lower left",
+    )
+    make_eval_plot(
+        filenames=filenames,
+        plot_filename=f"mo_plots/{fname_base}_6_additive_eps_metric.png",
+        y_axis_key="additive_eps_metric",
+        y_axis_lab="Additive Epsilon Metric", 
+        # legend_loc="lower left",
+    )
+    make_eval_plot(
+        filenames=filenames,
+        plot_filename=f"mo_plots/{fname_base}_7_sparsity_metric.png",
+        y_axis_key="sparsity_metric",
+        y_axis_lab="Sparsity Metric", 
+        # legend_loc="lower left",
+    )
+
+
+
+
 
 if __name__ == "__main__":
-    if not os.path.exists("plots"):
-        os.makedirs("plots")
+    if not os.path.exists("mo_plots"):
+        os.makedirs("mo_plots")
 
+    # ------------------------------------------------------------------------------------------------------------------
+    # DST
+    # ------------------------------------------------------------------------------------------------------------------
+    
+    if "400" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
+        print("Plotting: ", "400")
+        filenames = glob.glob("mo_eval_logs/400_*/**/eval_log.txt", recursive=True)
+        fname_base = "400_dst"
+        make_many_eval_plots(filenames, fname_base)
+    
+    if "401" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
+        print("Plotting: ", "401")
+        filenames = glob.glob("mo_eval_logs/401_*/**/eval_log.txt", recursive=True)
+        fname_base = "401_dst_gym"
+        make_many_eval_plots(filenames, fname_base)
+
+    if "410" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
+        print("Plotting: ", "410")
+        filenames = glob.glob("mo_eval_logs/410_*/**/eval_log.txt", recursive=True)
+        fname_base = "410_dst_stoch"
+        make_many_eval_plots(filenames, fname_base)
+
+    if "440" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
+        print("Plotting: ", "440")
+        filenames = glob.glob("mo_eval_logs/440_*/**/eval_log.txt", recursive=True)
+        fname_base = "440_dst_improved"
+        make_many_eval_plots(filenames, fname_base)
+
+    if "450" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
+        print("Plotting: ", "450")
+        filenames = glob.glob("mo_eval_logs/450_*/**/eval_log.txt", recursive=True)
+        fname_base = "450_dst_improved_stoch"
+        make_many_eval_plots(filenames, fname_base)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Gym envs
+    # ------------------------------------------------------------------------------------------------------------------
+
+    if "500" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
+        print("Plotting: ", "500")
+        filenames = glob.glob("mo_eval_logs/500_*/**/eval_log.txt", recursive=True)
+        fname_base = "500_hpopt_fruit_tree"
+        make_many_eval_plots(filenames, fname_base)
+
+
+
+
+
+
+
+
+
+
+
+def old_plots_main():
     # ------------------------------------------------------------------------------------------------------------------
     # Scalability plots
     # ------------------------------------------------------------------------------------------------------------------

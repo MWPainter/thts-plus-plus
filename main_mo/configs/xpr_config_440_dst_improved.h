@@ -1,0 +1,98 @@
+#pragma once
+
+#include "main_mo/configs/config_map.h"
+
+#include "main_mo/configs/constants_algorithms.h"
+#include "main_mo/configs/constants_experiments.h"
+
+static const std::vector<ConfigMap> CONFIG_440 =
+{
+    // xpr params
+    {
+        {XPR_OR_ALG_ID_TAG,                             XPR_PARAMS_ID_TAG},
+        {XPR_PARAM_ID_NAME,                             "440_dst_improved"},
+        {XPR_PARAM_ID_ENV,                              ENV_ID_IMPROVED_DST},
+        {XPR_PARAM_ID_ENV_SIZE,                         NO_ENV_SIZE},
+        {XPR_PARAM_ID_MCTS_MODE,                        false},
+        {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
+        {XPR_PARAM_ID_VECTOR_VISIT_COUNTS,              false},
+        {XPR_PARAM_ID_MAX_TRIAL_LENGTH,                 26*2}, 
+        {XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,          0.0},
+        {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,           0.0},
+        {XPR_PARAM_ID_RUNTIME_BOUNDED,                  true}, 
+        {XPR_PARAM_ID_TERMINATION_BOUND,                60.0},
+        {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            10},
+        {XPR_PARAM_ID_SEARCH_THREADS,                   16},
+        {XPR_PARAM_ID_EVAL_DELTA,                       0.5}, 
+        {XPR_PARAM_ID_EVAL_ROLLOUTS,                    256},
+        {XPR_PARAM_ID_EVAL_THREADS,                     16},
+        {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,             15},
+        {XPR_PARAM_ID_CONVEX_HULL_TOLERANCE,            1e-9},
+        {XPR_PARAM_ID_USE_SOLVED_LABELLING,             true},
+        {XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE, 0.05},
+        {XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE,       0.1},
+
+        {XPR_PARAM_ID_SM_PUSH_RADIUS,                                       10}, 
+        {XPR_PARAM_ID_SM_MAX_NEIGHBOURS_TO_PUSH_TO,                         -1},
+        {XPR_PARAM_ID_SM_MIN_SIMPLEX_RADIUS,                                0.01},
+        {XPR_PARAM_ID_SM_SIMPLEX_SPLIT_COUNTER_THRESHOLD,                   10},
+        {XPR_PARAM_ID_SM_USE_APPROX_NEAREST_VERTEX,                         false},
+        {XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,                 true},
+        {XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,      true},
+    },
+    // czt params - 0.670682
+    {
+        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
+        {ALG_PARAM_ID_BIAS,                         5.15885},
+        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  5},
+    },
+    // ch standard cheby params - 0.617706
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_STANDARD_CHEBY},
+        {ALG_PARAM_ID_BIAS,                 100.0},
+    },
+    // ch hvuct params - 0.620222
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_HVUCT},
+        {ALG_PARAM_ID_BIAS,                 274.245},
+    },
+    // ch pareto params - 0.625383
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_PARETO},
+        {ALG_PARAM_ID_BIAS,                 1.69469},
+    },
+    // ch uct params - 0.639628
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_UCT},
+        {ALG_PARAM_ID_BIAS,                 3.46244},
+    },
+    // ch czt params - 0.579097
+    {
+        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT},
+        {ALG_PARAM_ID_BIAS,                         55.9519},
+        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  102},
+    },
+    // ch bts params - 0.644048
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,            1e-05},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,      0.001},
+        {ALG_PARAM_ID_EPSILON,              1.0},
+    },
+    // sm bts params - 0.609781
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_SM_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,            0.0142827},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,      0.676429},
+        {ALG_PARAM_ID_EPSILON,              1.0},
+    },
+    // sm dents params - 0.617731
+    {
+        {XPR_OR_ALG_ID_TAG,                     ALG_ID_SM_DENTS},
+        {ALG_PARAM_ID_INIT_TEMP,                0.0144087},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,          99.9944},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.00780202},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    974.6},
+        {ALG_PARAM_ID_EPSILON,                  0.874472},
+    },
+};

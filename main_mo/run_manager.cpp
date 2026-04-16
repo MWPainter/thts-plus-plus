@@ -46,6 +46,8 @@ using namespace thts::python;
 
 namespace py = pybind11;
 
+static double EPS12 = 1e-12;
+
 namespace thts {
 
     /**
@@ -130,6 +132,8 @@ namespace thts {
         set<string> alg_ids =
         {
             ALG_ID_CHVI,
+            ALG_ID_CHVI_ORDERED,
+            ALG_ID_CHVI_REVERSED,
             ALG_ID_CZT, 
             ALG_ID_CZT_DOUBLING, 
             ALG_ID_CH_UCT, 
@@ -292,7 +296,9 @@ namespace thts {
      * Getters - alg level config
      */
     string RunManager::get_alg_id()                         { return get_config_value<std::string>(alg_config, XPR_OR_ALG_ID_TAG); }
-    bool RunManager::is_chvi()                              { return get_alg_id() == ALG_ID_CHVI; }
+    bool RunManager::is_chvi()                              { return get_alg_id() == ALG_ID_CHVI || get_alg_id() == ALG_ID_CHVI_ORDERED || get_alg_id() == ALG_ID_CHVI_REVERSED; }
+    bool RunManager::is_chvi_ordered()                      { return get_alg_id() == ALG_ID_CHVI_ORDERED; }
+    bool RunManager::is_chvi_reversed()                     { return get_alg_id() == ALG_ID_CHVI_REVERSED; }
     double RunManager::get_bias()                           { return get_config_value<double>(alg_config, ALG_PARAM_ID_BIAS); }
     double RunManager::get_czt_ball_split_visit_thresh()    { return get_config_value<double>(alg_config, ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH); }
     double RunManager::get_min_log2_N()                     { return get_config_value<double>(alg_config, ALG_PARAM_ID_MIN_LOG2_N); }
@@ -311,7 +317,7 @@ namespace thts {
         string env_id = get_env_id();
         return (PY_ENVS.contains(env_id) 
             || GYM_ENVS.contains(env_id)
-            || TIMED_GYM_ENVS.contains(env_id)
+            || TIMED_GYM_ENVS_TO_BASE_ENV.contains(env_id)
             || DST_PY_ENVS.contains(env_id));
     }
 
@@ -339,23 +345,33 @@ namespace thts {
             return make_shared<PortedResourceGatheringThtsEnv>(timed);
         }
 
-        if (TIMED_GYM_ENVS.contains(env_id)) {
+        if (TIMED_GYM_ENVS_TO_BASE_ENV.contains(env_id)) {
+            string base_env_id = TIMED_GYM_ENVS_TO_BASE_ENV.at(env_id);
             shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
-            return make_shared<TimedMoGymMultiprocessingThtsEnv>(pickle_wrapper, unique_filename, env_id);
+            return make_shared<TimedMoGymMultiprocessingThtsEnv>(pickle_wrapper, unique_filename, base_env_id);
         }
 
         if (DST_ENVS.contains(env_id)) 
         {
             if (env_id == ENV_ID_VAMPLEW_DST_10_CPP 
                 || env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP
+                || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP
                 || env_id == ENV_ID_VAMPLEW_DST_VARIABLE_CPP 
-                || env_id == ENV_ID_VAMPLEW_STOCH_DST_VARIABLE_CPP)
+                || env_id == ENV_ID_VAMPLEW_STOCH_DST_VARIABLE_CPP
+                || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_VARIABLE_CPP)
             {
-                bool swept_by_current = (env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP);
-                double swept_by_current_prob = swept_by_current ? 0.2 : 0.0;
+                double swept_by_current_prob = 0.0;
+                if (env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP || env_id == ENV_ID_VAMPLEW_STOCH_DST_VARIABLE_CPP)
+                {
+                    swept_by_current_prob = 0.2;
+                }
+                else if (env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_VARIABLE_CPP)
+                {
+                    swept_by_current_prob = 0.025;
+                }
                 int max_timestep = this->get_max_trial_length();
                 int map_id = this->get_env_size();
-                if (env_id == ENV_ID_VAMPLEW_DST_10_CPP || env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP)
+                if (env_id == ENV_ID_VAMPLEW_DST_10_CPP || env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP)
                 {
                     map_id = 10;
                 }
@@ -373,13 +389,20 @@ namespace thts {
             }
 
             py::gil_scoped_acquire acq;
-    
-            bool swept_by_current = STOCH_PY_DST_ENVS.contains(env_id);
-            double swept_by_current_prob = swept_by_current ? 0.2 : 0.0;
+            
+            double swept_by_current_prob = 0.0;
+            if (STOCH_PY_DST_ENVS.contains(env_id))
+            {
+                swept_by_current_prob = 0.2;
+            }
+            else if (CLM_STOCH_PY_DST_ENVS.contains(env_id))
+            {
+                swept_by_current_prob = 0.025;
+            }
+
             bool is_vamplew = VAMPLEW_PY_DST_ENVS.contains(env_id);
             int map_id = 1;
-
-            if (env_id == ENV_ID_VAMPLEW_DST_10 || env_id == ENV_ID_VAMPLEW_STOCH_DST_10) 
+            if (env_id == ENV_ID_VAMPLEW_DST_10 || env_id == ENV_ID_VAMPLEW_STOCH_DST_10 || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10) 
             { 
                 map_id = 10; 
             }
@@ -596,7 +619,8 @@ namespace thts {
         }
 
         if (env_id == ENV_ID_VAMPLEW_DST
-            || env_id == ENV_ID_VAMPLEW_STOCH_DST)
+            || env_id == ENV_ID_VAMPLEW_STOCH_DST
+            || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST)
         {
             Eigen::ArrayXd max_val = Eigen::ArrayXd::Zero(2);
             max_val[0] = 124.0; 
@@ -605,7 +629,8 @@ namespace thts {
         }
 
         if (env_id == ENV_ID_IMPROVED_DST
-            || env_id == ENV_ID_IMPROVED_STOCH_DST)
+            || env_id == ENV_ID_IMPROVED_STOCH_DST
+            || env_id == ENV_ID_IMPROVED_CLM_STOCH_DST)
         {
             Eigen::ArrayXd max_val = Eigen::ArrayXd::Zero(3);
             max_val[0] = 124.0; 
@@ -615,7 +640,8 @@ namespace thts {
         }
 
         if (env_id == ENV_ID_VAMPLEW_DST_MO_GYM
-            || env_id == ENV_ID_VAMPLEW_STOCH_DST_MO_GYM)
+            || env_id == ENV_ID_VAMPLEW_STOCH_DST_MO_GYM
+            || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_MO_GYM)
         {
             Eigen::ArrayXd max_val = Eigen::ArrayXd::Zero(2);
             max_val[0] = 23.7; 
@@ -624,7 +650,8 @@ namespace thts {
         }
 
         if (env_id == ENV_ID_VAMPLEW_DST_10
-            || env_id == ENV_ID_VAMPLEW_STOCH_DST_10)
+            || env_id == ENV_ID_VAMPLEW_STOCH_DST_10
+            || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10)
         {
             Eigen::ArrayXd max_val = Eigen::ArrayXd::Zero(2);
             max_val[0] = 50.0; 
@@ -633,7 +660,8 @@ namespace thts {
         }
 
         if (env_id == ENV_ID_VAMPLEW_DST_10_CPP
-            || env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP)
+            || env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP
+            || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP)
         {
             Eigen::ArrayXd max_val = Eigen::ArrayXd::Zero(2);
             max_val[0] = 50.0; 
@@ -768,12 +796,16 @@ namespace thts {
 
         if (env_id == ENV_ID_VAMPLEW_DST
             || env_id == ENV_ID_VAMPLEW_STOCH_DST
+            || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST
             || env_id == ENV_ID_VAMPLEW_DST_MO_GYM
             || env_id == ENV_ID_VAMPLEW_STOCH_DST_MO_GYM
+            || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_MO_GYM
             || env_id == ENV_ID_VAMPLEW_DST_10
             || env_id == ENV_ID_VAMPLEW_STOCH_DST_10
+            || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10
             || env_id == ENV_ID_VAMPLEW_DST_10_CPP
-            || env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP)
+            || env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP
+            || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP)
         {
             double max_steps = get_max_trial_length();
             Eigen::ArrayXd r_min = Eigen::ArrayXd::Zero(2);
@@ -792,7 +824,8 @@ namespace thts {
         }
 
         if (env_id == ENV_ID_IMPROVED_DST
-            || env_id == ENV_ID_IMPROVED_STOCH_DST)
+            || env_id == ENV_ID_IMPROVED_STOCH_DST
+            || env_id == ENV_ID_IMPROVED_CLM_STOCH_DST)
         {
             double max_steps = get_max_trial_length();
             Eigen::ArrayXd r_min = Eigen::ArrayXd::Zero(3);
@@ -825,13 +858,13 @@ namespace thts {
             || env_id == ENV_ID_RESOURCE_GATHER_TIMED_CPP)
         {
             Eigen::ArrayXd min_val = Eigen::ArrayXd(3);
-            if (env_id == ENV_ID_RESOURCE_GATHER_TIMED) {
+            if (env_id == ENV_ID_RESOURCE_GATHER_TIMED || env_id == ENV_ID_RESOURCE_GATHER_TIMED_CPP) {
                 min_val = Eigen::ArrayXd(4);
             }
             min_val[0] = -1.0;
             min_val[1] = 0.0;
             min_val[2] = 0.0;
-            if (env_id == ENV_ID_RESOURCE_GATHER_TIMED) {
+            if (env_id == ENV_ID_RESOURCE_GATHER_TIMED || env_id == ENV_ID_RESOURCE_GATHER_TIMED_CPP) {
                 min_val[3] = -1.0 * get_max_trial_length();
             }
             return min_val;
@@ -928,7 +961,7 @@ namespace thts {
         string alg_id = get_alg_id();
         shared_ptr<MoThtsManager> thts_manager = nullptr;
 
-        if (alg_id == ALG_ID_CHVI) {
+        if (alg_id == ALG_ID_CHVI || alg_id == ALG_ID_CHVI_ORDERED || alg_id == ALG_ID_CHVI_REVERSED) {
             MoThtsManagerArgs manager_args(env);
             _add_thts_manager_params_to_args(manager_args,env);
             return make_shared<MoThtsManager>(manager_args);
@@ -989,7 +1022,9 @@ namespace thts {
         {
             ChHvUctManagerArgs manager_args(env);
             manager_args.bias = get_bias();
-            manager_args.hv_reference_point = make_shared<Vec>(get_env_value_lower_bound());
+            Vec reference_point = get_env_value_lower_bound();
+            reference_point += -EPS12; // subtract small epsilon to avoid numerical issues
+            manager_args.hv_reference_point = make_shared<Vec>(reference_point);
             _add_thts_manager_params_to_args(manager_args,env);
             return make_shared<ChHvUctManager>(manager_args);
         }
@@ -1013,7 +1048,9 @@ namespace thts {
             ChChebyUctManagerArgs manager_args(env);
             manager_args.bias = get_bias();
             manager_args.use_standard_cheby_scalarization = true;
-            manager_args.standard_cheby_reference_point = make_shared<Vec>(get_env_value_lower_bound());
+            Vec reference_point = get_env_value_lower_bound();
+            reference_point += -EPS12; // subtract small epsilon to avoid numerical issues
+            manager_args.standard_cheby_reference_point = make_shared<Vec>(reference_point);
             _add_thts_manager_params_to_args(manager_args,env);
             return make_shared<ChChebyUctManager>(manager_args);
         }

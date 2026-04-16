@@ -112,8 +112,8 @@ namespace thts {
             ConvexHull expected_next_value = ConvexHull(Vec::Zero(dim), convex_hull_max_size, convex_hull_tolerance);
 
             for (const auto& [next_state, prob] : next_state_probs) {
-                // Get the value of the next state
-                ConvexHull next_value = *chvi_values.at(next_state);
+                const VMap& read_values = use_gauss_seidel ? chvi_values_next : chvi_values;
+                ConvexHull next_value = *read_values.at(next_state);
                 
                 // Scale by transition probability
                 ConvexHull scaled_next_value = next_value.scale(prob);
@@ -365,6 +365,51 @@ namespace thts {
 
     int Chvi::get_total_backups() const {
         return total_backups_completed.load();
+    }
+
+    /**
+     * ChviOrdered Implementation
+     */
+
+    StateSet ChviOrdered::to_state_set(const OrderedStateVec& vec) {
+        return StateSet(vec.begin(), vec.end());
+    }
+
+    ChviOrdered::ChviOrdered(
+        int num_threads,
+        int dim,
+        shared_ptr<const State> start_state,
+        OrderedStateVec ordered_states,
+        OrderedStateVec ordered_sink_states,
+        TransitionProbs transition_probs,
+        RewardMap reward_map,
+        int convex_hull_max_size,
+        double convex_hull_tolerance,
+        bool gauss_seidel) :
+            Chvi(
+                num_threads,
+                dim,
+                std::move(start_state),
+                to_state_set(ordered_states),
+                to_state_set(ordered_sink_states),
+                std::move(transition_probs),
+                std::move(reward_map),
+                convex_hull_max_size,
+                convex_hull_tolerance)
+    {
+        use_gauss_seidel = gauss_seidel;
+        if (gauss_seidel) {
+            this->num_threads = 1;
+        }
+
+        // Rebuild non_sink_states preserving the order from ordered_states
+        StateSet sink_set = to_state_set(ordered_sink_states);
+        non_sink_states.clear();
+        for (const auto& state : ordered_states) {
+            if (!sink_set.contains(state)) {
+                non_sink_states.push_back(state);
+            }
+        }
     }
 
     /**

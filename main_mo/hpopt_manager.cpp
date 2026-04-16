@@ -147,11 +147,12 @@ namespace thts {
             HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES,
             HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ,
             HPOPT_PARAM_ID_BAYESOPT_USE_GPML,
+            HPOPT_PARAM_ID_USE_HYPERVOLUME_AS_METRIC,
         };
 
-        if (xpr_config.size() != 33)
+        if (xpr_config.size() != 34)
         {
-            throw runtime_error("Expecting 33 entries in the xpr level config.");
+            throw runtime_error("Expecting 34 entries in the xpr level config.");
         }
 
         for (string& xpr_param_id : xpr_param_ids) 
@@ -356,6 +357,7 @@ namespace thts {
     int HpoptManager::get_hpopt_total_samples()                     { return get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES); }
     int HpoptManager::get_hpopt_init_random_samples()               { return get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES); }
     int HpoptManager::get_hpopt_relearn_freq()                      { return get_config_value<int>(xpr_config, HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ); }
+    bool HpoptManager::get_hpopt_use_hypervolume_as_metric() { return get_config_value<bool>(xpr_config, HPOPT_PARAM_ID_USE_HYPERVOLUME_AS_METRIC); }
 
     /**
      * Helper function to compute mean and std of vector of evals
@@ -419,6 +421,7 @@ namespace thts {
      */
     double HpoptManager::evaluateSample(const bayesopt::vectord& query)
     {
+        bool use_hypervolume_as_metric = get_hpopt_use_hypervolume_as_metric();
         int repeats_run = 0;
         vector<double> evals;
         double mean_eval = 0.0;
@@ -466,7 +469,12 @@ namespace thts {
             // Chose normalised hypervolume as eval metric
             // This should have much lower variance than ctx_mean, as it doesn't depend on sampled outcomes that may 
             // leave the tree and resort to following random policies
+
             double eval = mo_eval_metrics.normalised_hypervolume;
+            if (!use_hypervolume_as_metric) 
+            {
+                eval = mo_eval_metrics.normalised_ctx_mean;
+            }
             evals.push_back(eval);
             _update_statistics_(evals, mean_eval, std_eval, std_mean_eval);
             repeats_run++;

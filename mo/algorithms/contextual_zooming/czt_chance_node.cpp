@@ -46,8 +46,8 @@ namespace thts {
     {  
         // Backup handled in decision nodes
 
-        // and update solved value
-        update_solved_value();
+        // dont use solved value for czt (it needs to be greedy to get correct avg return estimates)
+        // update_solved_value();
     }
 
     string CztCNode::get_pretty_print_val() const 

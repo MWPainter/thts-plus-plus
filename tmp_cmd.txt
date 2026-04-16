@@ -167,47 +167,143 @@ Mo stuff
 -------
 
 
-make && clear &&
-./run_memory_limited 16G ./moexpr eval 060 &&
-./run_memory_limited 16G ./moexpr eval 061 &&
-./run_memory_limited 16G ./moexpr eval 062 &&
-./run_memory_limited 16G ./moexpr eval 070 &&
-./run_memory_limited 16G ./moexpr eval 071 &&
-./run_memory_limited 16G ./moexpr eval 072
 
 
-Finished:
-./run_memory_limited 16G ./moexpr opt 100 &&     // accidetnally ran with time limit =1.0, eval delta = 5.0 => time limit really 5.0
-
-
-
-
-make && clear &&
+---
+dst hpopt (finished)
+---
+make && clear && 
+./run_memory_limited 16G ./moexpr opt 100 &&  
 ./run_memory_limited 16G ./moexpr opt 110 &&
-./run_memory_limited 16G ./moexpr opt 140 &&
-./run_memory_limited 16G ./moexpr opt 150 &&
+./run_memory_limited 16G ./moexpr opt 120 &&
+./run_memory_limited 16G ./moexpr opt 140 &&  
+./run_memory_limited 16G ./moexpr opt 150 &&  
+./run_memory_limited 16G ./moexpr opt 160
+
+
+
+
+
+---
+mo gymnasium hpopt (finished)
+---
 ./run_memory_limited 16G ./moexpr opt 200 &&
-./run_memory_limited 16G ./moexpr opt 210 &&
 ./run_memory_limited 16G ./moexpr opt 220 &&
 ./run_memory_limited 16G ./moexpr opt 230 &&
 ./run_memory_limited 16G ./moexpr opt 240 &&
 ./run_memory_limited 16G ./moexpr opt 250 &&
 ./run_memory_limited 16G ./moexpr opt 260 &&
-./run_memory_limited 16G ./moexpr opt 270 &&
 ./run_memory_limited 16G ./moexpr opt 280 &&
-./run_memory_limited 16G ./moexpr opt 290 
+./run_memory_limited 16G ./moexpr opt 290 &&
 
 
-These ones are less interesting overall and repeats of 100 + 110 with different treasure vals, so either reuse 100 + 110 params or run later:
-./run_memory_limited 16G ./moexpr opt 120 &&
-./run_memory_limited 16G ./moexpr opt 130 &&
+
+---
+mo gymnasium hpopt (partially finished)
+---
+
+./run_memory_limited 16G ./moexpr opt 210  // 7D + stochastic => CH really slow
 
 
-TODO: setup evals
-- 1min per repeat?
-- start with 3-5 repeats
-- make sure can continue like in aux xpr
 
 
-TODO: setup scalable improved DTS env 
-TODO: setup toy envs for scaling tests
+---
+dst eval (mostly good - maybe some reruns required)
+---
+make && clear &&
+./run_memory_limited 16G ./moexpr eval 400_ &&
+./run_memory_limited 16G ./moexpr eval 400a_ &&
+./run_memory_limited 16G ./moexpr eval 410_ &&
+./run_memory_limited 16G ./moexpr eval 410a_ &&
+./run_memory_limited 16G ./moexpr eval 420_ &&
+./run_memory_limited 16G ./moexpr eval 420a_ &&
+./run_memory_limited 16G ./moexpr eval 440 &&   
+./run_memory_limited 16G ./moexpr eval 450 &&   
+./run_memory_limited 16G ./moexpr eval 460 &&
+python plot_mo.py 400 410 420 440 450 460
+
+
+
+
+
+
+
+
+---
+cur 
+---
+make && clear &&
+./run_memory_limited 16G ./moexpr eval 520 &&
+./run_memory_limited 16G ./moexpr eval 530 &&
+./run_memory_limited 16G ./moexpr eval 540 &&
+./run_memory_limited 16G ./moexpr eval 550 &&
+./run_memory_limited 16G ./moexpr eval 560 &&
+./run_memory_limited 16G ./moexpr eval 570 &&
+./run_memory_limited 16G ./moexpr eval 580 &&
+./run_memory_limited 16G ./moexpr eval 590 &&
+python plot_mo.py 520 530 540 550 560 570 580 590 &&
+./run_memory_limited 16G ./moexpr eval 700_ &&
+./run_memory_limited 16G ./moexpr eval 700a_ &&
+./run_memory_limited 16G ./moexpr eval 710_ &&
+./run_memory_limited 16G ./moexpr eval 710a_ &&
+./run_memory_limited 16G ./moexpr eval 720_ &&
+./run_memory_limited 16G ./moexpr eval 720a_ &&
+python plot_mo.py 700 710 720 &&
+./run_memory_limited 16G ./moexpr eval 500 500_fruit_tree_1776352374 &&
+./run_memory_limited 16G ./moexpr opt 210 &&
+python plot_mo.py 500 510
+
+
+
+
+make && clear &&
+./run_memory_limited 16G ./moexpr eval 510 &&
+python plot_mo.py 510
+
+
+
+
+
+
+---
+Mo gym evals
+---
+make && clear &&
+./run_memory_limited 16G ./moexpr eval 500 &&
+./run_memory_limited 16G ./moexpr eval 510 &&
+./run_memory_limited 16G ./moexpr eval 520 &&
+./run_memory_limited 16G ./moexpr eval 530 &&
+./run_memory_limited 16G ./moexpr eval 540 &&
+./run_memory_limited 16G ./moexpr eval 550 &&
+./run_memory_limited 16G ./moexpr eval 560 &&
+./run_memory_limited 16G ./moexpr eval 570 &&
+./run_memory_limited 16G ./moexpr eval 580 &&
+./run_memory_limited 16G ./moexpr eval 590 &&
+python plot_mo.py 500 510 520 530 540 550 560 570 580 590
+
+
+
+
+
+
+---
+DST scalability
+---
+make && clear &&
+./run_memory_limited 16G ./moexpr eval 700_ &&
+./run_memory_limited 16G ./moexpr eval 700a_ &&
+./run_memory_limited 16G ./moexpr eval 710_ &&
+./run_memory_limited 16G ./moexpr eval 710a_ &&
+./run_memory_limited 16G ./moexpr eval 720_ &&
+./run_memory_limited 16G ./moexpr eval 720a_ &&
+python plot_mo.py 700 710 720
+
+
+
+---
+TODO: tree envs, scalability in reward dim
+---
+
+
+
+

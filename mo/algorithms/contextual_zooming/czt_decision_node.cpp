@@ -7,6 +7,8 @@
 #include <limits>
 #include <sstream>
 
+#include <iostream>
+
 using namespace std; 
 
 namespace thts {
@@ -25,8 +27,8 @@ namespace thts {
                 decision_timestep,
                 static_pointer_cast<const BlThtsCNode>(parent),
                 eval_mo_heuristic),
-            _action_ctx_key(),
-            _ball_ctx_key()
+            _action_ctx_key("action_stack"),
+            _ball_ctx_key("ball_stack")
     {
         stringstream ss_a;
         ss_a << "a_" << decision_depth;
@@ -139,8 +141,25 @@ namespace thts {
         shared_ptr<const Action> result_action = helper::get_max_key_break_ties_randomly(cz_values, *thts_manager);
 
         // Put action and ball in context
-        ctx.put_value_const<Action>(_action_ctx_key, result_action);
-        ctx.put_value<CzBall>(_ball_ctx_key, cz_balls[result_action]);
+        // ctx.put_value_const<Action>(_action_ctx_key, result_action);
+        // ctx.put_value<CzBall>(_ball_ctx_key, cz_balls[result_action]);
+
+        // Make stacks if not already present
+        if (!ctx.context_map_contains(_action_ctx_key)) 
+        {
+            shared_ptr<vector<shared_ptr<const Action>>> action_stack = make_shared<vector<shared_ptr<const Action>>>();
+            ctx.put_value<vector<shared_ptr<const Action>>>(_action_ctx_key, action_stack);
+        }
+        if (!ctx.context_map_contains(_ball_ctx_key)) 
+        {
+            shared_ptr<vector<shared_ptr<CzBall>>> ball_stack = make_shared<vector<shared_ptr<CzBall>>>();
+            ctx.put_value<vector<shared_ptr<CzBall>>>(_ball_ctx_key, ball_stack);
+        }
+
+        // Push action and ball onto stacks
+        ctx.get_value_ptr<vector<shared_ptr<const Action>>>(_action_ctx_key)->push_back(result_action);
+        ctx.get_value_ptr<vector<shared_ptr<CzBall>>>(_ball_ctx_key)->push_back(cz_balls[result_action]);
+        
 
         // Remember to create the child node if it doesnt exist!
         if (!has_child_node_itfc(result_action)) {
@@ -178,8 +197,19 @@ namespace thts {
         const Eigen::ArrayXd trial_cumulative_return,
         MoThtsContext& ctx) 
     {
-        shared_ptr<const Action> chosen_action = ctx.get_value_ptr_const<Action>(_action_ctx_key);
-        shared_ptr<CzBall> chosen_ball = ctx.get_value_ptr<CzBall>(_ball_ctx_key);
+        // shared_ptr<const Action> chosen_action = ctx.get_value_ptr_const<Action>(_action_ctx_key);
+        // shared_ptr<CzBall> chosen_ball = ctx.get_value_ptr<CzBall>(_ball_ctx_key);
+
+        // Get action and ball from stacks
+        shared_ptr<vector<shared_ptr<const Action>>> action_stack = ctx.get_value_ptr<vector<shared_ptr<const Action>>>(_action_ctx_key);
+        shared_ptr<vector<shared_ptr<CzBall>>> ball_stack = ctx.get_value_ptr<vector<shared_ptr<CzBall>>>(_ball_ctx_key);
+        shared_ptr<const Action> chosen_action = action_stack->back();
+        shared_ptr<CzBall> chosen_ball = ball_stack->back();
+
+        // Pop action and ball from stacks
+        action_stack->pop_back();
+        ball_stack->pop_back();
+
         CztCNode& child = *get_child_node(chosen_action);
         if (chosen_ball == nullptr) {
             // if nullptr, means we made the child node this trial. Get initial ball made in new ball list in new child
@@ -188,8 +218,8 @@ namespace thts {
         child.ball_list.avg_return_update_ball_list(
             trial_cumulative_return_after_node, ctx.context_weight.vec, chosen_ball);
 
-        // and update solved value 
-        update_solved_value();
+        // dont use solved value for czt (it needs to be greedy to get correct avg return estimates)
+        // update_solved_value();
     }
 
     string CztDNode::get_pretty_print_val() const {

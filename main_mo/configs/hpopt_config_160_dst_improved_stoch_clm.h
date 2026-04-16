@@ -5,13 +5,13 @@
 #include "main_mo/configs/constants_algorithms.h"
 #include "main_mo/configs/constants_experiments.h"
 
-static const std::vector<HpoptConfigMap> HPOPT_CONFIG_120 =
+static const std::vector<HpoptConfigMap> HPOPT_CONFIG_160 =
 {
     // xpr params
     {
         {XPR_OR_ALG_ID_TAG,                             HPOPT_PARAMS_ID_TAG},
-        {XPR_PARAM_ID_NAME,                             "120_hpopt_dst_gym"},
-        {XPR_PARAM_ID_ENV,                              ENV_ID_VAMPLEW_DST_MO_GYM},
+        {XPR_PARAM_ID_NAME,                             "160_hpopt_dst_improved_stoch_clm"},
+        {XPR_PARAM_ID_ENV,                              ENV_ID_IMPROVED_CLM_STOCH_DST},
         // {XPR_PARAM_ID_ENV_SIZE,                         NO_ENV_SIZE},
         {XPR_PARAM_ID_MCTS_MODE,                        false},
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
@@ -24,13 +24,13 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_120 =
         // {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            2},
         {XPR_PARAM_ID_SEARCH_THREADS,                   16},
         {XPR_PARAM_ID_EVAL_DELTA,                       1.0}, 
-        {XPR_PARAM_ID_EVAL_ROLLOUTS,                    1024},
+        {XPR_PARAM_ID_EVAL_ROLLOUTS,                    128}, 
         {XPR_PARAM_ID_EVAL_THREADS,                     16},
-        {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,             25},
+        {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,             15},
         {XPR_PARAM_ID_CONVEX_HULL_TOLERANCE,            1e-9},
         {XPR_PARAM_ID_USE_SOLVED_LABELLING,             true},
-        {XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE, 0.05},
-        {XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE,       0.1},
+        {XPR_PARAM_ID_SOLVED_LABELLING_FAIL_CONFIDENCE, 0.15},
+        {XPR_PARAM_ID_SOLVED_LABELLING_TOLERANCE,       0.3},
 
         {XPR_PARAM_ID_SM_PUSH_RADIUS,                                       10}, 
         {XPR_PARAM_ID_SM_MAX_NEIGHBOURS_TO_PUSH_TO,                         -1},
@@ -46,25 +46,14 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_120 =
         {HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES,     10},
         {HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ,          20},
         {HPOPT_PARAM_ID_BAYESOPT_USE_GPML,              0},
+        {HPOPT_PARAM_ID_USE_HYPERVOLUME_AS_METRIC,      false},
     },
-    // czt params
-    {
-        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
-        {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-5,  1.0e5)},
-        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1.0,     1024.0)},
-    },
-    // czt doubling params
-    {
-        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT_DOUBLING},
-        {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-5,  1.0e5)},
-        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1.0,     1024.0)},
-        {ALG_PARAM_ID_MIN_LOG2_N,                   std::make_pair(0.0,     10.0)},
-    },
-    // ch cheby params
-    {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_CHEBY},
-        {ALG_PARAM_ID_BIAS,                 std::make_pair(1.0e-5,   1.0e5)},
-    },
+    // // czt params
+    // {
+    //     {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
+    //     {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-5,  1.0e5)},
+    //     {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1.0,     1024.0)},
+    // },
     // ch standard cheby params
     {
         {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_STANDARD_CHEBY},
@@ -85,19 +74,12 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_120 =
         {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_UCT},
         {ALG_PARAM_ID_BIAS,                 std::make_pair(1.0e-5,   1.0e5)},
     },
-    // ch czt params
-    {
-        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT},
-        {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-5,   1.0e5)},
-        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1.0,     1024.0)},
-    },
-    // ch czt doubling params
-    {
-        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT_DOUBLING},
-        {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-5,   1.0e5)},
-        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1.0,     1024.0)},
-        {ALG_PARAM_ID_MIN_LOG2_N,                   std::make_pair(0.0,     10.0)},
-    },
+    // // ch czt params
+    // {
+    //     {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT},
+    //     {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-5,   1.0e5)},
+    //     {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1.0,     1024.0)},
+    // },
     // ch bts params
     {
         {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_BTS},

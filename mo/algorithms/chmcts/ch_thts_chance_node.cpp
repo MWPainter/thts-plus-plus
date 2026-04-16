@@ -45,23 +45,32 @@ namespace thts {
         const Eigen::ArrayXd trial_cumulative_return,
         MoThtsContext& ctx)
     {
-        // compute total backups from children
-        int total_child_backups = 0;
+        // Use empirical_distribution for child weighting (not num_backups).
+        // Terminal/sink children are never backed up so their num_backups stays 0,
+        // which would give non-terminal children 100% weight instead of their true
+        // empirical probability. empirical_distribution correctly tracks all sampled
+        // outcomes including terminal ones.
+        double total_child_selections = 0;
         for (pair<const shared_ptr<const Observation>,shared_ptr<ThtsDNode>>& child_pair : children) {
-            ChThtsDNode& ch_child = (ChThtsDNode&) *child_pair.second;
-            total_child_backups += ch_child.num_backups; 
+            shared_ptr<const Observation> observation = child_pair.first;
+            auto it = empirical_distribution.find(observation);
+            if (it != empirical_distribution.end()) {
+                total_child_selections += it->second;
+            }
         }
         
-        // use empirical distribution to take an average of child ch values
-        // If havent visited any children yet then convex hull of child values is just the zero vector
         MoThtsManager& manager = static_cast<MoThtsManager&>(*thts_manager);
         convex_hull = ConvexHull(manager.convex_hull_max_size, manager.convex_hull_tolerance);
         convex_hull_local = ConvexHull(manager.convex_hull_max_size, manager.convex_hull_tolerance);
-        if (total_child_backups > 0) {
+        if (total_child_selections > 0) {
             for (pair<const shared_ptr<const Observation>,shared_ptr<ThtsDNode>>& child_pair : children) {
+                shared_ptr<const Observation> observation = child_pair.first;
                 ChThtsDNode& ch_child = (ChThtsDNode&) *child_pair.second;
-                convex_hull += ch_child.convex_hull * (ch_child.num_backups / total_child_backups);
-                convex_hull_local += ch_child.convex_hull_local * (ch_child.num_backups / total_child_backups);
+                auto it = empirical_distribution.find(observation);
+                double child_n_selections = (it != empirical_distribution.end()) ? it->second : 0;
+                if (child_n_selections == 0) continue;
+                convex_hull += ch_child.convex_hull * (child_n_selections / total_child_selections);
+                convex_hull_local += ch_child.convex_hull_local * (child_n_selections / total_child_selections);
             }
         } else {
             Vec zero_vec = (Vec) Eigen::ArrayXd::Zero(manager.reward_dim);

@@ -31,6 +31,8 @@ namespace py = pybind11;
 using namespace thts;
 using namespace thts::python;
 
+static double EPS12 = 1e-12;
+
 namespace thts {
 
     /**
@@ -38,7 +40,7 @@ namespace thts {
      * Checks if any run's need python
      * If so, makes an interpreter and releases gil
      */
-    void main_xpr(string xpr_id_prefix, string xpr_dir_override)
+    void main_xpr(string xpr_id_prefix, string xpr_dir_override, int repeats_already_run)
     {
         // Read in config
         time_t xpr_timestamp = std::time(nullptr);
@@ -66,7 +68,7 @@ namespace thts {
 
         // Actually run experiments
         for (RunManager& run_manager : run_managers) {
-            run_searches(run_manager);
+            run_searches(run_manager, false, true, true, repeats_already_run);
         }
     }
 
@@ -74,7 +76,7 @@ namespace thts {
      * Performs all of the (replicated) searches corresponding to 'run_id'
      * If hpopt is true, then dont run any logging, and only return the final mc eval
     */
-    MoEvalMetrics run_searches(RunManager& run_manager, bool hpopt, bool log_trees, bool log_convex_hulls)
+    MoEvalMetrics run_searches(RunManager& run_manager, bool hpopt, bool log_trees, bool log_convex_hulls, int repeats_already_run)
     {
         // CHVI integration (appreciate not search, but want everything to call run_searches)
         if (run_manager.is_chvi()) {
@@ -86,14 +88,17 @@ namespace thts {
         if (!hpopt)
         {
             eval_log_fs = run_manager.get_eval_log_filestream();
-            run_manager.write_eval_log_header(eval_log_fs);
+            if (repeats_already_run == 0) 
+            {
+                run_manager.write_eval_log_header(eval_log_fs);
+            }
         }
 
         // final eval to return
         MoEvalMetrics final_mo_eval_metrics = MoEvalMetrics(); 
         
         // Run the perscribed number of repeats
-        for (int run_idx=0; run_idx < run_manager.get_repeated_runs_per_alg(); run_idx++)
+        for (int run_idx=repeats_already_run; run_idx < run_manager.get_repeated_runs_per_alg(); run_idx++)
         {
             // cout so know we're doing something
             if (!hpopt)
@@ -255,17 +260,20 @@ namespace thts {
         shared_ptr<MoThtsManager> thts_manager = run_manager.get_thts_manager(env);
 
         // Get all states (and checks that env has this implemented)
+        OrderedStateVec ordered_states;
         StateSet states;
         {
             shared_ptr<PortedDeepSeaTreasureThtsEnv> ported_env = dynamic_pointer_cast<PortedDeepSeaTreasureThtsEnv>(env);
             if (ported_env != nullptr) {
-                states = ported_env->get_all_states();
+                ordered_states = ported_env->get_all_states();
+                states = StateSet(ordered_states.begin(), ordered_states.end());
             } 
         }
         {
             shared_ptr<PortedResourceGatheringThtsEnv> ported_env = dynamic_pointer_cast<PortedResourceGatheringThtsEnv>(env);
             if (ported_env != nullptr) {
-                states = ported_env->get_all_states();
+                ordered_states = ported_env->get_all_states();
+                states = StateSet(ordered_states.begin(), ordered_states.end());
             } 
         }
         if (states.empty()) {
@@ -274,13 +282,16 @@ namespace thts {
 
 
         // extract info from env in tabular form
+        OrderedStateVec ordered_sink_states;
         StateSet sink_states;
         TransitionProbs transition_probs;
         RewardMap reward_map;
 
-        for (shared_ptr<const State> state : states) {
+        for (shared_ptr<const State> state : ordered_states) {
             ThtsContext ctx;
-            if (env->is_sink_state_itfc(state, ctx)) {
+            if (env->is_sink_state_itfc(state, ctx)) 
+            {
+                ordered_sink_states.push_back(state);
                 sink_states.insert(state);
                 continue;
             }
@@ -291,16 +302,39 @@ namespace thts {
             }
         }
 
-        shared_ptr<Chvi> chvi = make_shared<Chvi>(
-            run_manager.get_num_search_threads(), 
-            env->get_reward_dim(), 
-            env->get_initial_state_itfc(), 
-            states, 
-            sink_states, 
-            transition_probs, 
-            reward_map,
-            run_manager.get_convex_hull_max_size(),
-            run_manager.get_convex_hull_tolerance());
+        shared_ptr<Chvi> chvi = nullptr;
+        
+        if (run_manager.is_chvi_ordered() || run_manager.is_chvi_reversed()) 
+        {
+            if (run_manager.is_chvi_reversed()) 
+            {
+                std::reverse(ordered_states.begin(), ordered_states.end());
+                std::reverse(ordered_sink_states.begin(), ordered_sink_states.end());
+            }
+            chvi = make_shared<ChviOrdered>(
+                run_manager.get_num_search_threads(), 
+                env->get_reward_dim(), 
+                env->get_initial_state_itfc(), 
+                ordered_states, 
+                ordered_sink_states, 
+                transition_probs, 
+                reward_map,
+                run_manager.get_convex_hull_max_size(),
+                run_manager.get_convex_hull_tolerance());
+        } 
+        else 
+        {
+            chvi = make_shared<Chvi>(
+                run_manager.get_num_search_threads(), 
+                env->get_reward_dim(), 
+                env->get_initial_state_itfc(), 
+                states, 
+                sink_states, 
+                transition_probs, 
+                reward_map,
+                run_manager.get_convex_hull_max_size(),
+                run_manager.get_convex_hull_tolerance());
+        }
 
         // Eval at 0 trials
         double eval_mean = 0.0, eval_std = 0.0;
@@ -410,36 +444,51 @@ namespace thts {
         // Eval policy and min/max values
         Vec value_lower_bound = run_manager.get_env_value_lower_bound();
         Vec value_upper_bound = run_manager.get_env_value_upper_bound();
+        
 
-        // Contextual return and reweighted contextual return
-        MoMCEvaluator unnormalised_evaluator(
-            eval_policy, 
-            run_manager.get_max_trial_length(), 
-            thts_manager, 
-            value_lower_bound, 
-            value_upper_bound,
-            true,
-            false
-        );
-        unnormalised_evaluator.run_rollouts(run_manager.get_num_eval_rollouts(), run_manager.get_num_eval_threads());
-        mo_eval_metrics.ctx_mean = unnormalised_evaluator.get_mo_ctx_return_mean();
-        mo_eval_metrics.ctx_std_dev = unnormalised_evaluator.get_mo_ctx_return_variance();
-        mo_eval_metrics.reweighted_ctx_mean = unnormalised_evaluator.get_reweighted_mo_ctx_return_mean();
-        mo_eval_metrics.reweighted_ctx_std_dev = unnormalised_evaluator.get_reweighted_mo_ctx_return_variance();
+        mo_eval_metrics.ctx_mean = 0.0;
+        mo_eval_metrics.ctx_std_dev = 0.0;
+        mo_eval_metrics.reweighted_ctx_mean = 0.0;
+        mo_eval_metrics.reweighted_ctx_std_dev = 0.0;
+        mo_eval_metrics.normalised_ctx_mean = 0.0;
+        mo_eval_metrics.normalised_ctx_std_dev = 0.0;
 
-        // Normalised contextual return
-        MoMCEvaluator normalised_evaluator(
-            eval_policy, 
-            run_manager.get_max_trial_length(), 
-            thts_manager, 
-            value_lower_bound, 
-            value_upper_bound,
-            true,
-            true
-        );
-        normalised_evaluator.run_rollouts(run_manager.get_num_eval_rollouts(), run_manager.get_num_eval_threads());
-        mo_eval_metrics.normalised_ctx_mean = normalised_evaluator.get_mo_ctx_return_mean();
-        mo_eval_metrics.normalised_ctx_std_dev = normalised_evaluator.get_mo_ctx_return_variance();
+        if (run_manager.get_num_eval_rollouts() > 0) 
+        {
+            // Contextual return and reweighted contextual return
+            MoMCEvaluator unnormalised_evaluator(
+                eval_policy, 
+                run_manager.get_max_trial_length(), 
+                thts_manager, 
+                value_lower_bound, 
+                value_upper_bound,
+                true,
+                false
+            );
+
+            unnormalised_evaluator.run_rollouts(run_manager.get_num_eval_rollouts(), run_manager.get_num_eval_threads());
+
+            mo_eval_metrics.ctx_mean = unnormalised_evaluator.get_mo_ctx_return_mean();
+            mo_eval_metrics.ctx_std_dev = unnormalised_evaluator.get_mo_ctx_return_variance();
+            mo_eval_metrics.reweighted_ctx_mean = unnormalised_evaluator.get_reweighted_mo_ctx_return_mean();
+            mo_eval_metrics.reweighted_ctx_std_dev = unnormalised_evaluator.get_reweighted_mo_ctx_return_variance();
+
+            // Normalised contextual return
+            MoMCEvaluator normalised_evaluator(
+                eval_policy, 
+                run_manager.get_max_trial_length(), 
+                thts_manager, 
+                value_lower_bound, 
+                value_upper_bound,
+                true,
+                true
+            );
+            
+            normalised_evaluator.run_rollouts(run_manager.get_num_eval_rollouts(), run_manager.get_num_eval_threads());
+            
+            mo_eval_metrics.normalised_ctx_mean = normalised_evaluator.get_mo_ctx_return_mean();
+            mo_eval_metrics.normalised_ctx_std_dev = normalised_evaluator.get_mo_ctx_return_variance();
+        }
         
         ConvexHull convex_hull;
         shared_ptr<const ThtsDNode> root_node = eval_policy->get_root_node();
@@ -455,6 +504,9 @@ namespace thts {
             shared_ptr<Chvi> chvi = chvi_eval_policy->chvi;
             convex_hull = chvi->get_root_chvi_value();
         }
+
+        value_lower_bound += -EPS12; // subtract small epsilon to avoid numerical issues
+
         mo_eval_metrics.hypervolume = convex_hull.hypervolume(value_lower_bound);
         mo_eval_metrics.additive_eps_metric = convex_hull.additive_eps_metric();
         mo_eval_metrics.sparsity_metric = convex_hull.sparsity_metric();

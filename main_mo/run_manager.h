@@ -125,6 +125,8 @@ namespace thts {
              */
             std::string get_alg_id();
             bool is_chvi();
+            bool is_chvi_ordered();
+            bool is_chvi_reversed();
             double get_bias();
             double get_czt_ball_split_visit_thresh();
             double get_min_log2_N();

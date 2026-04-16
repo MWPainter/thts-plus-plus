@@ -17,6 +17,8 @@
 // ---------------------------------------------------------------------------------------------------------------------
 
 static const std::string ALG_ID_CHVI = "chvi";
+static const std::string ALG_ID_CHVI_ORDERED = "chvi_ordered";
+static const std::string ALG_ID_CHVI_REVERSED = "chvi_reversed";
 
 static const std::string ALG_ID_CZT = "czt";
 static const std::string ALG_ID_CZT_DOUBLING = "czt_doubling";
@@ -54,6 +56,14 @@ static const std::string ALG_PARAM_ID_EPSILON = "epsilon";                      
 static const std::unordered_map<std::string,std::vector<std::string>> ALG_ID_TO_ALG_PARAM_IDS =
 {
     {ALG_ID_CHVI,
+        {
+        },
+    },
+    {ALG_ID_CHVI_ORDERED,
+        {
+        },
+    },
+    {ALG_ID_CHVI_REVERSED,
         {
         },
     },

@@ -148,6 +148,7 @@ namespace thts {
             int get_hpopt_total_samples();
             int get_hpopt_init_random_samples();
             int get_hpopt_relearn_freq();
+            bool get_hpopt_use_hypervolume_as_metric();
 
             /**
              * Bayesopt intefrace.

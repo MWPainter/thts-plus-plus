@@ -41,6 +41,36 @@
 #include "main_mo/configs/xpr_config_071_debug.h"
 #include "main_mo/configs/xpr_config_072_debug.h"
 
+#include "main_mo/configs/xpr_config_400_dst.h"
+#include "main_mo/configs/xpr_config_400a_dst.h"
+#include "main_mo/configs/xpr_config_401_debug.h"
+#include "main_mo/configs/xpr_config_410_dst_stoch.h"
+#include "main_mo/configs/xpr_config_410a_dst_stoch.h"
+#include "main_mo/configs/xpr_config_411_debug.h"
+#include "main_mo/configs/xpr_config_420_dst_stoch_clm.h"
+#include "main_mo/configs/xpr_config_420a_dst_stoch_clm.h"
+
+#include "main_mo/configs/xpr_config_440_dst_improved.h"
+#include "main_mo/configs/xpr_config_450_dst_improved_stoch.h"
+#include "main_mo/configs/xpr_config_460_dst_improved_stoch_clm.h"
+
+#include "main_mo/configs/xpr_config_500_fruit_tree.h"
+#include "main_mo/configs/xpr_config_510_fruit_tree_stoch.h"
+#include "main_mo/configs/xpr_config_520_resource_gather.h"
+#include "main_mo/configs/xpr_config_530_resource_gather_timed.h"
+#include "main_mo/configs/xpr_config_540_breakable_bottles.h"
+#include "main_mo/configs/xpr_config_550_four_room.h"
+#include "main_mo/configs/xpr_config_560_four_room_timed.h"
+#include "main_mo/configs/xpr_config_580_resource_gather_cpp.h"
+#include "main_mo/configs/xpr_config_590_resource_gather_timed_cpp.h"
+
+#include "main_mo/configs/xpr_config_700_dst.h"
+#include "main_mo/configs/xpr_config_700a_dst.h"
+#include "main_mo/configs/xpr_config_710_dst_stoch.h"
+#include "main_mo/configs/xpr_config_710a_dst_stoch.h"
+#include "main_mo/configs/xpr_config_720_dst_stoch_clm.h"
+#include "main_mo/configs/xpr_config_720a_dst_stoch_clm.h"
+
 // ---------------------------------------------------------------------------------------------------------------------
 // List of all configs
 // ---------------------------------------------------------------------------------------------------------------------
@@ -80,4 +110,34 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     CONFIG_070,
     CONFIG_071,
     CONFIG_072,
+
+    CONFIG_400,
+    CONFIG_400a,
+    CONFIG_401,
+    CONFIG_410,
+    CONFIG_410a,
+    CONFIG_411,
+    CONFIG_420,
+    CONFIG_420a,
+    
+    CONFIG_440,
+    CONFIG_450,
+    CONFIG_460,
+
+    CONFIG_500,
+    CONFIG_510,
+    CONFIG_520,
+    CONFIG_530,
+    CONFIG_540,
+    CONFIG_550,
+    CONFIG_560,
+    CONFIG_580,
+    CONFIG_590,
+    
+    CONFIG_700,
+    CONFIG_700a,
+    CONFIG_710,
+    CONFIG_710a,
+    CONFIG_720,
+    CONFIG_720a,
 };
