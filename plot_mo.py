@@ -187,7 +187,8 @@ def read_eval_file_to_df(filename,num_trials_scale):
     
     df = pd.read_csv(filepath_or_buffer=filename, header=12, index_col=False, skip_blank_lines=False)
     df["alg_id"] = alg_id
-    df["num_trials"] /= num_trials_scale
+    # df["num_trials"] /= num_trials_scale
+    df["search_budget_consumed"] /= num_trials_scale
 
     df = df.rename(columns={
         "alg_id": "alg_id",
@@ -288,6 +289,7 @@ def make_eval_plot(
     add_dashes=False,
     legend_loc=None,
     font_scale=1.2,
+    df=None,
     ):
     """
     Makes an eval plot using the data in the given filenames
@@ -295,10 +297,14 @@ def make_eval_plot(
     If continuous_hue is set (e.g. "heuristic_value"), line colour varies smoothly
     from a lighter version of the algorithm colour (low param) to black (high param).
     If continuous_hue_key_is_logarithmic is True, the parameter is normalised on a log scale for the palette.
+    If df is provided, it is used directly (skipping loading from filenames); otherwise filenames is used to load the data.
     """
 
-    if (len(filenames) == 0):
+    if df is None and filenames is not None and len(filenames) == 0:
         print(f"Skipping plot {plot_filename} because no files found")
+        return
+    if df is None and filenames is None:
+        print(f"Skipping plot {plot_filename} because no data provided")
         return
 
     # Default params
@@ -321,6 +327,13 @@ def make_eval_plot(
     if num_trials_scale > 1:
         x_axis_lab += " (x{scale})".format(scale=num_trials_scale)
 
+
+    if df is None:
+        df = read_eval_files_to_df(filenames, num_trials_scale)
+    else:
+        df = df.copy()
+
+
     # Read in data + make algorithm names more pretty
     chvi_str = "CHVI"
     chvi_ordered_str = "CHVI(t=0->H)"
@@ -338,8 +351,6 @@ def make_eval_plot(
     sm_bts_str = "SM-BTS"
     sm_dents_str = "SM-DENTS"
 
-
-    df = read_eval_files_to_df(filenames, num_trials_scale)
     df["alg_id"] = df["alg_id"].map({
         "chvi": chvi_str,
         "chvi_ordered": chvi_ordered_str,
@@ -537,238 +548,238 @@ def make_eval_plot(
         font_scale=font_scale,
         horizontal_lines=horizontal_lines)
     
-def make_num_trials_plot(
-    filenames, 
-    plot_filename, 
-    hue_key=None, 
-    title=None, 
-    x_axis_key=None,
-    x_axis_lab=None, 
-    y_axis_key=None,
-    y_axis_lab=None, 
-    legend_lab=None, 
-    x_axis_truncate=None,
-    y_scale_transform_forward=None,
-    y_scale_transform_inverse=None,
-    y_axis_range=None,
-    add_markers=False,
-    markevery=1,
-    use_legend=True,
-    alpha=1.0,
-    num_trials_scale=1):
-    """
-    Essentially an overload for make_eum_plot, but plotting the number of trials instead
-    """
-    # Default (differing) params
-    if y_axis_key is None:
-        y_axis_key = "num_trials"
-    if y_axis_lab is None:
-        y_axis_lab = "Num Trials"
+# def make_num_trials_plot(
+#     filenames, 
+#     plot_filename, 
+#     hue_key=None, 
+#     title=None, 
+#     x_axis_key=None,
+#     x_axis_lab=None, 
+#     y_axis_key=None,
+#     y_axis_lab=None, 
+#     legend_lab=None, 
+#     x_axis_truncate=None,
+#     y_scale_transform_forward=None,
+#     y_scale_transform_inverse=None,
+#     y_axis_range=None,
+#     add_markers=False,
+#     markevery=1,
+#     use_legend=True,
+#     alpha=1.0,
+#     num_trials_scale=1):
+#     """
+#     Essentially an overload for make_eum_plot, but plotting the number of trials instead
+#     """
+#     # Default (differing) params
+#     if y_axis_key is None:
+#         y_axis_key = "num_trials"
+#     if y_axis_lab is None:
+#         y_axis_lab = "Num Trials"
 
-    # Forward function call
-    make_eum_plot(
-        filenames=filenames,
-        plot_filename=plot_filename,
-        hue_key=hue_key,
-        title=title,
-        x_axis_key=x_axis_key,
-        x_axis_lab=x_axis_lab,
-        y_axis_key=y_axis_key,
-        y_axis_lab=y_axis_lab,
-        legend_lab=legend_lab,
-        x_axis_truncate=x_axis_truncate,
-        y_scale_transform_forward=y_scale_transform_forward,
-        y_scale_transform_inverse=y_scale_transform_inverse,
-        y_axis_range=y_axis_range,
-        add_markers=add_markers,
-        markevery=markevery,
-        use_legend=use_legend,
-        alpha=alpha,
-        num_trials_scale=num_trials_scale,
-    )
+#     # Forward function call
+#     make_eum_plot(
+#         filenames=filenames,
+#         plot_filename=plot_filename,
+#         hue_key=hue_key,
+#         title=title,
+#         x_axis_key=x_axis_key,
+#         x_axis_lab=x_axis_lab,
+#         y_axis_key=y_axis_key,
+#         y_axis_lab=y_axis_lab,
+#         legend_lab=legend_lab,
+#         x_axis_truncate=x_axis_truncate,
+#         y_scale_transform_forward=y_scale_transform_forward,
+#         y_scale_transform_inverse=y_scale_transform_inverse,
+#         y_axis_range=y_axis_range,
+#         add_markers=add_markers,
+#         markevery=markevery,
+#         use_legend=use_legend,
+#         alpha=alpha,
+#         num_trials_scale=num_trials_scale,
+#     )
 
-def make_eum_scalability_plot(
-    filenames, 
-    plot_filename, 
-    hue_key=None, 
-    title=None, 
-    x_axis_key=None,
-    x_axis_lab=None, 
-    y_axis_key=None,
-    y_axis_lab=None, 
-    legend_lab=None, 
-    x_axis_truncate=None,
-    y_scale_transform_forward=None,
-    y_scale_transform_inverse=None,
-    y_axis_range=None,
-    add_markers=False,
-    markevery=1,
-    use_legend=True,
-    alpha=1.0,
-    num_trials_scale=1):
-    """
-    Makes an scalability plot using the data in the given filenames
-    Adapted from make_eum_plot (changes marked with SCALE_DIFF comment)
-    Takes results from a bunch of runs over varying environments and plots performance scaling
-    Can make a non eum plot by specifying y_axis_key
-    """
+# def make_eum_scalability_plot(
+#     filenames, 
+#     plot_filename, 
+#     hue_key=None, 
+#     title=None, 
+#     x_axis_key=None,
+#     x_axis_lab=None, 
+#     y_axis_key=None,
+#     y_axis_lab=None, 
+#     legend_lab=None, 
+#     x_axis_truncate=None,
+#     y_scale_transform_forward=None,
+#     y_scale_transform_inverse=None,
+#     y_axis_range=None,
+#     add_markers=False,
+#     markevery=1,
+#     use_legend=True,
+#     alpha=1.0,
+#     num_trials_scale=1):
+#     """
+#     Makes an scalability plot using the data in the given filenames
+#     Adapted from make_eum_plot (changes marked with SCALE_DIFF comment)
+#     Takes results from a bunch of runs over varying environments and plots performance scaling
+#     Can make a non eum plot by specifying y_axis_key
+#     """
 
-    # SCALE_DIFF: Default params
-    if hue_key is None:
-        hue_key = "alg_id"
-    if x_axis_key is None:
-        raise Exception("Running make_eum_scalability_plot without providing x_axis_key argument")
-    if x_axis_lab is None:
-        raise Exception("Running make_eum_scalability_plot without providing x_axis_lab argument")
-    if y_axis_key is None:
-        y_axis_key = "utility"
-    if y_axis_lab is None:
-        y_axis_lab = "Expected Utility Metric"
-    if title is None:
-        title = y_axis_lab + " vs " + x_axis_lab
-    if legend_lab is None and use_legend:
-        legend_lab = "Algorithm"
+#     # SCALE_DIFF: Default params
+#     if hue_key is None:
+#         hue_key = "alg_id"
+#     if x_axis_key is None:
+#         raise Exception("Running make_eum_scalability_plot without providing x_axis_key argument")
+#     if x_axis_lab is None:
+#         raise Exception("Running make_eum_scalability_plot without providing x_axis_lab argument")
+#     if y_axis_key is None:
+#         y_axis_key = "utility"
+#     if y_axis_lab is None:
+#         y_axis_lab = "Expected Utility Metric"
+#     if title is None:
+#         title = y_axis_lab + " vs " + x_axis_lab
+#     if legend_lab is None and use_legend:
+#         legend_lab = "Algorithm"
 
-    # Update x_axis lable if applying scaling
-    if num_trials_scale > 1:
-        x_axis_lab += " (x{scale})".format(scale=num_trials_scale)
+#     # Update x_axis lable if applying scaling
+#     if num_trials_scale > 1:
+#         x_axis_lab += " (x{scale})".format(scale=num_trials_scale)
 
-    # Read in data + make algorithm names more pretty
-    czt_str = "CZT"
-    chmcst_str = "CHMCTS"
-    smbts_str = "SM-BTS"
-    smdents_str = "SM-DENTS"
+#     # Read in data + make algorithm names more pretty
+#     czt_str = "CZT"
+#     chmcst_str = "CHMCTS"
+#     smbts_str = "SM-BTS"
+#     smdents_str = "SM-DENTS"
 
-    df = read_eval_files_to_df(filenames, num_trials_scale)
-    df["alg_id"] = df["alg_id"].map({
-        "czt": czt_str,
-        "chmcts": chmcst_str,
-        "smbts": smbts_str,
-        "smdents": smdents_str,
-    })
+#     df = read_eval_files_to_df(filenames, num_trials_scale)
+#     df["alg_id"] = df["alg_id"].map({
+#         "czt": czt_str,
+#         "chmcts": chmcst_str,
+#         "smbts": smbts_str,
+#         "smdents": smdents_str,
+#     })
 
-    # SCALE_DIFF: only care about the final results after the search (assumes all experiments run for same search time)
-    experiment_search_time = df["search_time"].max()
-    df = df[df["search_time"] == experiment_search_time]
+#     # SCALE_DIFF: only care about the final results after the search (assumes all experiments run for same search time)
+#     experiment_search_time = df["search_time"].max()
+#     df = df[df["search_time"] == experiment_search_time]
 
-    # Get the set of alg ids working with
-    alg_id_set = set(df["alg_id"])
+#     # Get the set of alg ids working with
+#     alg_id_set = set(df["alg_id"])
     
-    # Define line styles - (colour) palette
-    # N.B. palette can be a colourmap: https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html#matplotlib.colors.Colormap
-    # Currently using dict for mapping using colours from: https://seaborn.pydata.org/generated/seaborn.color_palette.html#seaborn.color_palette
-    palette = {}
-    for alg_id in alg_id_set:
-        if czt_str in alg_id:
-            palette[alg_id] = "tab:green"
-        if smdents_str in alg_id:
-            palette[alg_id] = "tab:blue"
-        if smbts_str in alg_id:
-            palette[alg_id] = "tab:orange"
-        if chmcst_str in alg_id:
-            palette[alg_id] = "tab:purple"
-        # other colours I used
-        # palette[alg_id] = "tab:gray"
-        # palette[alg_id] = "tab:red"
-        # palette[alg_id] = "tab:brown"
-        # palette[alg_id] = "tab:grey"
+#     # Define line styles - (colour) palette
+#     # N.B. palette can be a colourmap: https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html#matplotlib.colors.Colormap
+#     # Currently using dict for mapping using colours from: https://seaborn.pydata.org/generated/seaborn.color_palette.html#seaborn.color_palette
+#     palette = {}
+#     for alg_id in alg_id_set:
+#         if czt_str in alg_id:
+#             palette[alg_id] = "tab:green"
+#         if smdents_str in alg_id:
+#             palette[alg_id] = "tab:blue"
+#         if smbts_str in alg_id:
+#             palette[alg_id] = "tab:orange"
+#         if chmcst_str in alg_id:
+#             palette[alg_id] = "tab:purple"
+#         # other colours I used
+#         # palette[alg_id] = "tab:gray"
+#         # palette[alg_id] = "tab:red"
+#         # palette[alg_id] = "tab:brown"
+#         # palette[alg_id] = "tab:grey"
 
-    # Define line styles - dashes (currently unused, but dont want del setup)
-    # "Dashes are specified as in matplotlib: a tuple of (segment, gap) lengths, or an empty string to draw a solid line."
-    dashes = {}
-    for alg_id in alg_id_set:
-        dashes[alg_id] = ""
-        # dashes[alg_id] = (4,2)
+#     # Define line styles - dashes (currently unused, but dont want del setup)
+#     # "Dashes are specified as in matplotlib: a tuple of (segment, gap) lengths, or an empty string to draw a solid line."
+#     dashes = {}
+#     for alg_id in alg_id_set:
+#         dashes[alg_id] = ""
+#         # dashes[alg_id] = (4,2)
 
-    # Define line styles - markers (currently unused, but dont want del setup)
-    # N.B. see following for valid values: https://matplotlib.org/stable/api/markers_api.html
-    markers = None
-    # if add_markers:
-    #     markers = {}
-    #     for alg_id in alg_set:
-    #         markers[alg_id] = ""
-    #         if "UCT" in alg_id:
-    #             markers[alg_id] = 5
-    #         if "MENTS" in alg_id:
-    #             markers[alg_id] = 7
-    #         if "DENTS" in alg_id:
-    #             markers[alg_id] = 6
+#     # Define line styles - markers (currently unused, but dont want del setup)
+#     # N.B. see following for valid values: https://matplotlib.org/stable/api/markers_api.html
+#     markers = None
+#     # if add_markers:
+#     #     markers = {}
+#     #     for alg_id in alg_set:
+#     #         markers[alg_id] = ""
+#     #         if "UCT" in alg_id:
+#     #             markers[alg_id] = 5
+#     #         if "MENTS" in alg_id:
+#     #             markers[alg_id] = 7
+#     #         if "DENTS" in alg_id:
+#     #             markers[alg_id] = 6
 
-    # Concatenate x_axis if want
-    if x_axis_truncate is not None:
-        df = df[df[x_axis_key] <= x_axis_truncate]
+#     # Concatenate x_axis if want
+#     if x_axis_truncate is not None:
+#         df = df[df[x_axis_key] <= x_axis_truncate]
 
-    # Call our actual make plot function
-    make_lineplot_df(
-        df=df, 
-        x_axis_key=x_axis_key, 
-        y_axis_key=y_axis_key, 
-        title=title,
-        hue_key=hue_key,
-        palette=palette,
-        style_key=hue_key,
-        dashes=dashes,
-        x_axis_lab=x_axis_lab,
-        y_axis_lab=y_axis_lab,
-        y_scale_transform_forward=y_scale_transform_forward,
-        y_scale_transform_inverse=y_scale_transform_inverse,
-        legend_lab=legend_lab,
-        filename=plot_filename,
-        y_axis_range=y_axis_range,
-        markers=markers,
-        markevery=markevery,
-        use_legend=use_legend,
-        alpha=alpha)
+#     # Call our actual make plot function
+#     make_lineplot_df(
+#         df=df, 
+#         x_axis_key=x_axis_key, 
+#         y_axis_key=y_axis_key, 
+#         title=title,
+#         hue_key=hue_key,
+#         palette=palette,
+#         style_key=hue_key,
+#         dashes=dashes,
+#         x_axis_lab=x_axis_lab,
+#         y_axis_lab=y_axis_lab,
+#         y_scale_transform_forward=y_scale_transform_forward,
+#         y_scale_transform_inverse=y_scale_transform_inverse,
+#         legend_lab=legend_lab,
+#         filename=plot_filename,
+#         y_axis_range=y_axis_range,
+#         markers=markers,
+#         markevery=markevery,
+#         use_legend=use_legend,
+#         alpha=alpha)
 
-def make_num_trials_scalability_plot(
-    filenames, 
-    plot_filename, 
-    hue_key=None, 
-    title=None, 
-    x_axis_key=None,
-    x_axis_lab=None, 
-    y_axis_key=None,
-    y_axis_lab=None, 
-    legend_lab=None, 
-    x_axis_truncate=None,
-    y_scale_transform_forward=None,
-    y_scale_transform_inverse=None,
-    y_axis_range=None,
-    add_markers=False,
-    markevery=1,
-    use_legend=True,
-    alpha=1.0,
-    num_trials_scale=1):
-    """
-    Essentially an overload for make_eum_scalability_plot, but plotting the number of trials instead
-    """
-    # Default (differing) params
-    if y_axis_key is None:
-        y_axis_key = "num_trials"
-    if y_axis_lab is None:
-        y_axis_lab = "Num Trials"
+# def make_num_trials_scalability_plot(
+#     filenames, 
+#     plot_filename, 
+#     hue_key=None, 
+#     title=None, 
+#     x_axis_key=None,
+#     x_axis_lab=None, 
+#     y_axis_key=None,
+#     y_axis_lab=None, 
+#     legend_lab=None, 
+#     x_axis_truncate=None,
+#     y_scale_transform_forward=None,
+#     y_scale_transform_inverse=None,
+#     y_axis_range=None,
+#     add_markers=False,
+#     markevery=1,
+#     use_legend=True,
+#     alpha=1.0,
+#     num_trials_scale=1):
+#     """
+#     Essentially an overload for make_eum_scalability_plot, but plotting the number of trials instead
+#     """
+#     # Default (differing) params
+#     if y_axis_key is None:
+#         y_axis_key = "num_trials"
+#     if y_axis_lab is None:
+#         y_axis_lab = "Num Trials"
 
-    # Forward function call
-    make_eum_scalability_plot(
-        filenames=filenames,
-        plot_filename=plot_filename,
-        hue_key=hue_key,
-        title=title,
-        x_axis_key=x_axis_key,
-        x_axis_lab=x_axis_lab,
-        y_axis_key=y_axis_key,
-        y_axis_lab=y_axis_lab,
-        legend_lab=legend_lab,
-        x_axis_truncate=x_axis_truncate,
-        y_scale_transform_forward=y_scale_transform_forward,
-        y_scale_transform_inverse=y_scale_transform_inverse,
-        y_axis_range=y_axis_range,
-        add_markers=add_markers,
-        markevery=markevery,
-        use_legend=use_legend,
-        alpha=alpha,
-        num_trials_scale=num_trials_scale,
-    )
+#     # Forward function call
+#     make_eum_scalability_plot(
+#         filenames=filenames,
+#         plot_filename=plot_filename,
+#         hue_key=hue_key,
+#         title=title,
+#         x_axis_key=x_axis_key,
+#         x_axis_lab=x_axis_lab,
+#         y_axis_key=y_axis_key,
+#         y_axis_lab=y_axis_lab,
+#         legend_lab=legend_lab,
+#         x_axis_truncate=x_axis_truncate,
+#         y_scale_transform_forward=y_scale_transform_forward,
+#         y_scale_transform_inverse=y_scale_transform_inverse,
+#         y_axis_range=y_axis_range,
+#         add_markers=add_markers,
+#         markevery=markevery,
+#         use_legend=use_legend,
+#         alpha=alpha,
+#         num_trials_scale=num_trials_scale,
+#     )
 
 
     
@@ -820,14 +831,56 @@ def get_piecwise_linear_inverse_transform(min_y,mid_y,scaled_y,max_y):
 
 
 
-def make_many_eval_plots(filenames, fname_base):
+FILTER_ALGS_CH5 = [
+    "chvi",
+    # "chvi_reversed",
+    "czt",
+    "ch_uct",
+    "ch_czt",
+    "ch_bts",
+    "ch_hvuct",
+    "ch_pareto"
+    "ch_standard_cheby",
+]
+
+
+FILTER_ALGS_CH6 = [
+    "chvi",
+    # "chvi_reversed",
+    "czt",
+    "ch_uct",
+    "ch_bts",
+    "sm_bts",
+    "sm_dents",
+]
+
+
+def make_many_eval_plots(filenames, fname_base, filter_algs=None, chvi_reversed_filenames=None):
+    if len(filenames) == 0:
+        print(f"Skipping plots {fname_base} because no files found")
+        return
+
+    df = read_eval_files_to_df(filenames, num_trials_scale=1)
+
+    if filter_algs is None:
+        filter_algs = FILTER_ALGS_CH5
+
+    df = df[df["alg_id"].isin(filter_algs)]
+
+    if chvi_reversed_filenames is not None:
+        chvi_reversed_df = read_eval_files_to_df(chvi_reversed_filenames, num_trials_scale=16.0)
+        chvi_reversed_df = chvi_reversed_df[chvi_reversed_df["alg_id"] == "chvi_reversed"]
+        df = pd.concat([df, chvi_reversed_df])
+
     make_eval_plot(
         filenames=filenames,
+        df=df,
         plot_filename=f"mo_plots/{fname_base}_0_eum.png",
         # legend_loc="lower left",
     )
     make_eval_plot(
         filenames=filenames,
+        df=df,
         plot_filename=f"mo_plots/{fname_base}_1_normalised_utility.png",
         y_axis_key="norm_utility",
         y_axis_lab="Normalised Expected Utility Metric", 
@@ -835,6 +888,7 @@ def make_many_eval_plots(filenames, fname_base):
     )
     make_eval_plot(
         filenames=filenames,
+        df=df,
         plot_filename=f"mo_plots/{fname_base}_2_hypervolume.png",
         y_axis_key="hypervolume",
         y_axis_lab="Hypervolume", 
@@ -842,6 +896,7 @@ def make_many_eval_plots(filenames, fname_base):
     )
     make_eval_plot(
         filenames=filenames,
+        df=df,
         plot_filename=f"mo_plots/{fname_base}_3_normalised_hypervolume.png",
         y_axis_key="normalised_hypervolume",
         y_axis_lab="Normalised Hypervolume", 
@@ -849,6 +904,7 @@ def make_many_eval_plots(filenames, fname_base):
     )
     make_eval_plot(
         filenames=filenames,
+        df=df,
         plot_filename=f"mo_plots/{fname_base}_4_num_trials.png",
         y_axis_key="num_trials",
         y_axis_lab="Num Trials", 
@@ -856,25 +912,28 @@ def make_many_eval_plots(filenames, fname_base):
     )
     make_eval_plot(
         filenames=filenames,
+        df=df,
         plot_filename=f"mo_plots/{fname_base}_5_num_backups.png",
         y_axis_key="num_backups",
         y_axis_lab="Num Backups", 
         # legend_loc="lower left",
     )
-    make_eval_plot(
-        filenames=filenames,
-        plot_filename=f"mo_plots/{fname_base}_6_additive_eps_metric.png",
-        y_axis_key="additive_eps_metric",
-        y_axis_lab="Additive Epsilon Metric", 
-        # legend_loc="lower left",
-    )
-    make_eval_plot(
-        filenames=filenames,
-        plot_filename=f"mo_plots/{fname_base}_7_sparsity_metric.png",
-        y_axis_key="sparsity_metric",
-        y_axis_lab="Sparsity Metric", 
-        # legend_loc="lower left",
-    )
+    # make_eval_plot(
+    #     filenames=filenames,
+    #     df=df,
+    #     plot_filename=f"mo_plots/{fname_base}_6_additive_eps_metric.png",
+    #     y_axis_key="additive_eps_metric",
+    #     y_axis_lab="Additive Epsilon Metric", 
+    #     # legend_loc="lower left",
+    # )
+    # make_eval_plot(
+    #     filenames=filenames,
+    #     df=df,
+    #     plot_filename=f"mo_plots/{fname_base}_7_sparsity_metric.png",
+    #     y_axis_key="sparsity_metric",
+    #     y_axis_lab="Sparsity Metric", 
+    #     # legend_loc="lower left",
+    # )
 
 
 
@@ -883,6 +942,18 @@ def make_many_eval_plots(filenames, fname_base):
 if __name__ == "__main__":
     if not os.path.exists("mo_plots"):
         os.makedirs("mo_plots")
+    if not os.path.exists("mo_plots/dst"):
+        os.makedirs("mo_plots/dst")
+    if not os.path.exists("mo_plots/improved_dst"):
+        os.makedirs("mo_plots/improved_dst")
+    if not os.path.exists("mo_plots/fruit"):
+        os.makedirs("mo_plots/fruit")
+    if not os.path.exists("mo_plots/resource_gather"):
+        os.makedirs("mo_plots/resource_gather")
+    if not os.path.exists("mo_plots/breakable_bottles"):
+        os.makedirs("mo_plots/breakable_bottles")
+    if not os.path.exists("mo_plots/four_room"):
+        os.makedirs("mo_plots/four_room")
 
     # ------------------------------------------------------------------------------------------------------------------
     # DST
@@ -891,31 +962,52 @@ if __name__ == "__main__":
     if "400" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
         print("Plotting: ", "400")
         filenames = glob.glob("mo_eval_logs/400_*/**/eval_log.txt", recursive=True)
-        fname_base = "400_dst"
-        make_many_eval_plots(filenames, fname_base)
+        chvi_reversed_filenames = glob.glob("mo_eval_logs/400a_*/**/eval_log.txt", recursive=True)
+        fname_base = "dst/400_dst_ch5"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5, chvi_reversed_filenames=chvi_reversed_filenames)
+        fname_base = "dst/400_dst_ch6"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6, chvi_reversed_filenames=chvi_reversed_filenames)
     
     if "401" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
         print("Plotting: ", "401")
         filenames = glob.glob("mo_eval_logs/401_*/**/eval_log.txt", recursive=True)
-        fname_base = "401_dst_gym"
+        fname_base = "dst/401_dst_gym"
         make_many_eval_plots(filenames, fname_base)
 
     if "410" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
         print("Plotting: ", "410")
         filenames = glob.glob("mo_eval_logs/410_*/**/eval_log.txt", recursive=True)
-        fname_base = "410_dst_stoch"
-        make_many_eval_plots(filenames, fname_base)
+        chvi_reversed_filenames = glob.glob("mo_eval_logs/410a_*/**/eval_log.txt", recursive=True)
+        fname_base = "dst/410_dst_stoch_ch5"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5, chvi_reversed_filenames=chvi_reversed_filenames)
+        fname_base = "dst/410_dst_stoch_ch6"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6, chvi_reversed_filenames=chvi_reversed_filenames)
+
+    if "420" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
+        print("Plotting: ", "420")
+        filenames = glob.glob("mo_eval_logs/420_*/**/eval_log.txt", recursive=True)
+        chvi_reversed_filenames = glob.glob("mo_eval_logs/420a_*/**/eval_log.txt", recursive=True)
+        fname_base = "dst/420_dst_calm_stoch_ch5"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5, chvi_reversed_filenames=chvi_reversed_filenames)
+        fname_base = "dst/420_dst_calm_stoch_ch6"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6, chvi_reversed_filenames=chvi_reversed_filenames)
 
     if "440" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
         print("Plotting: ", "440")
         filenames = glob.glob("mo_eval_logs/440_*/**/eval_log.txt", recursive=True)
-        fname_base = "440_dst_improved"
+        fname_base = "improved_dst/440_dst_improved"
         make_many_eval_plots(filenames, fname_base)
 
     if "450" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
         print("Plotting: ", "450")
         filenames = glob.glob("mo_eval_logs/450_*/**/eval_log.txt", recursive=True)
-        fname_base = "450_dst_improved_stoch"
+        fname_base = "improved_dst/450_dst_improved_stoch"
+        make_many_eval_plots(filenames, fname_base)
+
+    if "450" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
+        print("Plotting: ", "460")
+        filenames = glob.glob("mo_eval_logs/460_*/**/eval_log.txt", recursive=True)
+        fname_base = "improved_dst/460_dst_improved_calm_stoch"
         make_many_eval_plots(filenames, fname_base)
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -925,7 +1017,61 @@ if __name__ == "__main__":
     if "500" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
         print("Plotting: ", "500")
         filenames = glob.glob("mo_eval_logs/500_*/**/eval_log.txt", recursive=True)
-        fname_base = "500_hpopt_fruit_tree"
+        fname_base = "fruit/500_fruit_tree"
+        make_many_eval_plots(filenames, fname_base)
+
+    if "510" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
+        print("Plotting: ", "510")
+        filenames = glob.glob("mo_eval_logs/510_*/**/eval_log.txt", recursive=True)
+        fname_base = "fruit/510fruit_tree_stoch"
+        make_many_eval_plots(filenames, fname_base)
+
+
+
+    if "520" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
+        print("Plotting: ", "520")
+        filenames = glob.glob("mo_eval_logs/520_*/**/eval_log.txt", recursive=True)
+        fname_base = "resource_gather/520_gym_resource_gather"
+        make_many_eval_plots(filenames, fname_base)
+
+    if "530" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
+        print("Plotting: ", "530")
+        filenames = glob.glob("mo_eval_logs/530_*/**/eval_log.txt", recursive=True)
+        fname_base = "resource_gather/530_gym_resource_gather_timed"
+        make_many_eval_plots(filenames, fname_base)
+
+    if "580" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
+        print("Plotting: ", "580")
+        filenames = glob.glob("mo_eval_logs/580_*/**/eval_log.txt", recursive=True)
+        fname_base = "resource_gather/580_cpp_resource_gather"
+        make_many_eval_plots(filenames, fname_base)
+
+    if "590" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
+        print("Plotting: ", "590")
+        filenames = glob.glob("mo_eval_logs/590_*/**/eval_log.txt", recursive=True)
+        fname_base = "resource_gather/590_cpp_resource_gather_timed"
+        make_many_eval_plots(filenames, fname_base)
+
+
+
+    if "540" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
+        print("Plotting: ", "540")
+        filenames = glob.glob("mo_eval_logs/540_*/**/eval_log.txt", recursive=True)
+        fname_base = "breakable_bottles/540_breakable_bottles"
+        make_many_eval_plots(filenames, fname_base)
+
+
+
+    if "550" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
+        print("Plotting: ", "550")
+        filenames = glob.glob("mo_eval_logs/550_*/**/eval_log.txt", recursive=True)
+        fname_base = "four_room/550_four_room"
+        make_many_eval_plots(filenames, fname_base)
+
+    if "560" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
+        print("Plotting: ", "560")
+        filenames = glob.glob("mo_eval_logs/560_*/**/eval_log.txt", recursive=True)
+        fname_base = "four_room/560_four_room_timed"
         make_many_eval_plots(filenames, fname_base)
 
 

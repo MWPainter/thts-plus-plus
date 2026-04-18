@@ -170,9 +170,9 @@ TEST(SimplexMap_SMEdge, get_edge_partition_leaf_returns_self) {
     shared_ptr<SMVertex> v0 = registry.get_or_create_vertex(make_vec(1.0, 0.0), value, 0.0);
     shared_ptr<SMVertex> v1 = registry.get_or_create_vertex(make_vec(0.0, 1.0), value, 0.0);
     shared_ptr<SMEdge> edge = registry.get_or_create_edge(v0, v1);
-    shared_ptr<unordered_set<shared_ptr<SMEdge>>> partition = edge->get_edge_partition();
-    EXPECT_EQ(partition->size(), 1u);
-    EXPECT_TRUE(partition->count(edge) > 0);
+    unordered_set<shared_ptr<SMEdge>> partition = edge->get_edge_partition();
+    EXPECT_EQ(partition.size(), 1u);
+    EXPECT_TRUE(partition.count(edge) > 0);
 }
 
 TEST(SimplexMap_SMEdge, split_creates_midpoint_and_two_children) {

@@ -34,6 +34,7 @@ namespace thts {
     */
     SMVertex::SMVertex(const Vec& weight, const Vec& heuristic_value_estimate, double entropy_estimate) :
         weight(weight),
+        cached_hash(std::hash<Vec>()(this->weight)),
         num_direct_updates(0),
         num_updates(0),
         value_estimate(Vec::Zero(weight.dim())),
@@ -48,6 +49,7 @@ namespace thts {
     */
     SMVertex::SMVertex(shared_ptr<SMVertex> v0, shared_ptr<SMVertex> v1, double ratio) : 
         weight(ratio * v0->weight + (1.0-ratio) * v1->weight),
+        cached_hash(std::hash<Vec>()(this->weight)),
         num_direct_updates(0),
         num_updates(1), // count this initialisation as a message passing update
         value_estimate(v0->value_estimate),
@@ -73,7 +75,7 @@ namespace thts {
      */
     size_t SMVertex::hash() const 
     {
-        return std::hash<Vec>()(weight);
+        return cached_hash;
     };
 
     bool SMVertex::equals(const SMVertex& other) const 
@@ -136,9 +138,10 @@ namespace thts {
         while (!vertex_queue.empty() && current_push_radius < max_push_radius) {
             shared_ptr<SMVertex> current_vertex = vertex_queue.front();
             vertex_queue.pop_front();
-            for (shared_ptr<SMVertex> neighbour_ptr : *current_vertex->neighbours) {
-                if (visited_vertices.contains(neighbour_ptr)) continue;
-                visited_vertices.insert(neighbour_ptr); // we are about to "visit" (try to push to) this vertex
+            for (const shared_ptr<SMVertex>& neighbour_ptr : *current_vertex->neighbours) {
+                // insert returns {iterator, inserted}; if not inserted, we've already visited
+                auto [vit, inserted] = visited_vertices.insert(neighbour_ptr);
+                if (!inserted) continue;
                 bool success = share_values_message_passing_helper(*current_vertex, *neighbour_ptr);
                 if (success) 
                 {
@@ -323,7 +326,7 @@ namespace thts {
     {
         double closest_dist = std::numeric_limits<double>::max();
         shared_ptr<SMVertex> closest_vertex;
-        for (shared_ptr<SMVertex> vertex : vertices) {
+        for (const shared_ptr<SMVertex>& vertex : vertices) {
             double dist = vertex->weight.dist(weight);
             if (dist < closest_dist) {
                 closest_dist = dist;
@@ -366,11 +369,19 @@ namespace thts {
             return this->split_vertex;
         }
          
-        // Create vector of all vertices common to both children
+        // Create vector of all vertices common to both children.
+        // N.B. we compare raw pointer identity here rather than the
+        // overloaded shared_ptr operator!= (which dispatches to
+        // SMVertex::equals and an O(dim) Vec comparison). SMRegistry
+        // canonicalises SMVertex instances, so pointer identity is
+        // exactly the right semantic and is O(1).
         vector<shared_ptr<SMVertex>> common_vertices;
         common_vertices.push_back(this->split_vertex);
-        for (shared_ptr<SMVertex> vertex : vertices) {
-            if ((*vertex != *normal_vertex) && (*vertex != *opposite_vertex))
+        SMVertex* normal_raw = normal_vertex.get();
+        SMVertex* opposite_raw = opposite_vertex.get();
+        for (const shared_ptr<SMVertex>& vertex : vertices) {
+            SMVertex* vraw = vertex.get();
+            if (vraw != normal_raw && vraw != opposite_raw)
             {
                 common_vertices.push_back(vertex);
             }
@@ -437,8 +448,9 @@ namespace thts {
      */
     bool SMSimplex::vertexes_contain_multiple_unique_values() const
     {
-        for (shared_ptr<SMVertex> vertex : vertices) {
-            if (vertex->value_estimate != vertices[0]->value_estimate) {
+        const Vec& first_value = vertices[0]->value_estimate;
+        for (const shared_ptr<SMVertex>& vertex : vertices) {
+            if (vertex->value_estimate != first_value) {
                 return true;
             }
         }
@@ -511,13 +523,14 @@ namespace thts {
         v1(v1),
         midpoint(nullptr),
         child_edge_0(nullptr),
-        child_edge_1(nullptr)
+        child_edge_1(nullptr),
+        cached_hash(thts::helper::unordered_hash(*v0, *v1))
     {
     }
 
     size_t SMEdge::hash() const
     {
-        return thts::helper::unordered_hash(*v0,*v1);
+        return cached_hash;
     }
 
     bool SMEdge::equals(const SMEdge& other) const
@@ -536,22 +549,30 @@ namespace thts {
         return !equals(other);
     }
 
-    void SMEdge::split(SMRegistry& registry)
+    bool SMEdge::split(SMRegistry& registry)
     {
+        // If already split, return false
+        if (this->midpoint != nullptr) {
+            return false;
+        }
+
         // Create the midpoint vertex and half edges
         this->midpoint = registry.get_or_create_vertex(this->v0, this->v1, 0.5);
         this->child_edge_0 = registry.get_or_create_edge(this->v0, this->midpoint);
         this->child_edge_1 = registry.get_or_create_edge(this->midpoint, this->v1);
+        return true;
     }
 
-    shared_ptr<unordered_set<shared_ptr<SMEdge>>> SMEdge::get_edge_partition() const
+    unordered_set<shared_ptr<SMEdge>> SMEdge::get_edge_partition() const
     {
-        shared_ptr<unordered_set<shared_ptr<SMEdge>>> partition = make_shared<unordered_set<shared_ptr<SMEdge>>>();
-        this->get_edge_partition_helper(std::const_pointer_cast<SMEdge>(shared_from_this()), *partition);
+        // Return by value; RVO/NRVO avoids a copy, and we skip a heap
+        // allocation (previously the set was wrapped in a shared_ptr).
+        unordered_set<shared_ptr<SMEdge>> partition;
+        this->get_edge_partition_helper(std::const_pointer_cast<SMEdge>(shared_from_this()), partition);
         return partition;
     }
 
-    void SMEdge::get_edge_partition_helper(std::shared_ptr<SMEdge> edge, std::unordered_set<std::shared_ptr<SMEdge>>& partition) const
+    void SMEdge::get_edge_partition_helper(const std::shared_ptr<SMEdge>& edge, std::unordered_set<std::shared_ptr<SMEdge>>& partition) const
     {
         if (edge->child_edge_0 != nullptr && edge->child_edge_1 != nullptr) 
         {
@@ -620,21 +641,23 @@ namespace thts {
 
     shared_ptr<SMVertex> SMRegistry::lookup_unique_vertex(shared_ptr<SMVertex> vertex)
     {
-        if (vertex_map.contains(vertex)) {
-            return vertex_map.at(vertex);
+        // Single hash lookup: find() returns an iterator that we can branch
+        // on without paying for a second hash+probe via contains()/at().
+        auto it = vertex_map.find(vertex);
+        if (it != vertex_map.end()) {
+            return it->second;
         }
-        // new vertex, add to map and return it
-        vertex_map[vertex] = vertex;
+        vertex_map.emplace(vertex, vertex);
         return vertex;
     }
 
     shared_ptr<SMEdge> SMRegistry::lookup_unique_edge(shared_ptr<SMEdge> edge)
     {
-        if (edge_map.contains(edge)) {
-            return edge_map.at(edge);
+        auto it = edge_map.find(edge);
+        if (it != edge_map.end()) {
+            return it->second;
         }
-        // new edge, add to map and return it
-        edge_map[edge] = edge;
+        edge_map.emplace(edge, edge);
         return edge;
     }
 }
@@ -675,7 +698,7 @@ namespace thts {
      */
     SMMesh::~SMMesh() 
     {
-        for (shared_ptr<SMVertex> vertex : this->all_vertices_vector) {
+        for (const shared_ptr<SMVertex>& vertex : this->all_vertices_vector) {
             vertex->neighbours.reset();
         }
     }
@@ -694,7 +717,7 @@ namespace thts {
         this->root_simplex = make_shared<SMSimplex>(dim, unit_simplex_vertices, 0);
 
         // Initialise the all_vertices_set and all_vertices_vector
-        for (shared_ptr<SMVertex> vertex : unit_simplex_vertices) {
+        for (const shared_ptr<SMVertex>& vertex : unit_simplex_vertices) {
             this->all_vertices_set.insert(vertex);
             this->all_vertices_vector.push_back(vertex);
         }
@@ -772,19 +795,20 @@ namespace thts {
         adjacent_simplices.insert(simplex);
 
         // Loop through edges of simplex
-        for (shared_ptr<SMEdge> edge : this->simplex_to_edge_map.at(simplex)) 
+        for (const shared_ptr<SMEdge>& edge : this->simplex_to_edge_map.at(simplex)) 
         {
             // Then simplices adjacent to this edge
-            for (shared_ptr<SMSimplex> adjacent_simplex : this->edge_to_simplex_map.at(edge)) 
+            for (const shared_ptr<SMSimplex>& adjacent_simplex : this->edge_to_simplex_map.at(edge)) 
             {
-                // If already seen this simplex, then skip
-                if (adjacent_simplices.contains(adjacent_simplex)) 
+                // Single hash lookup: insert returns {it, inserted}. If
+                // inserted is false we've already processed this simplex.
+                auto [ait, inserted] = adjacent_simplices.insert(adjacent_simplex);
+                if (!inserted)
                 {
                     continue;
                 }
-                adjacent_simplices.insert(adjacent_simplex);
                 // Then add all vertices of this simplex to the list (that we haven't already checked)
-                for (shared_ptr<SMVertex> vertex : adjacent_simplex->vertices) 
+                for (const shared_ptr<SMVertex>& vertex : adjacent_simplex->vertices) 
                 {
                     if (simplex->contains_vertex(vertex))
                     {
@@ -879,7 +903,7 @@ namespace thts {
         stringstream ss;
         ss << "Simplex map pretty print: {" << endl;
         ss << "Weight // Value" << endl;
-        for (shared_ptr<SMVertex> v : this->all_vertices_vector) {
+        for (const shared_ptr<SMVertex>& v : this->all_vertices_vector) {
             ss << "[";
             for (int i=0; i<v->weight.size(); i++) {
                 ss << v->weight[i] << ",";
@@ -901,7 +925,7 @@ namespace thts {
     ConvexHull SMMesh::get_approximate_convex_hull() const
     {
         unordered_set<Vec> ch_points;
-        for (shared_ptr<SMVertex> vertex : this->all_vertices_vector) {
+        for (const shared_ptr<SMVertex>& vertex : this->all_vertices_vector) {
             if (vertex->num_updates <= 0) 
             {
                 continue;
@@ -956,11 +980,14 @@ namespace thts {
         // First get the simplex to create its children
         shared_ptr<SMVertex> split_vertex = simplex->create_children(this->registry);
 
-        // Add the split vertex to sets
-        if (!this->all_vertices_set.contains(split_vertex)) 
+        // Add the split vertex to sets (single hash lookup: insert returns
+        // {it, inserted}).
         {
-            this->all_vertices_set.insert(split_vertex);
-            this->all_vertices_vector.push_back(split_vertex);
+            auto [it, inserted] = this->all_vertices_set.insert(split_vertex);
+            if (inserted)
+            {
+                this->all_vertices_vector.push_back(split_vertex);
+            }
         }
 
         // Get the edge corresponding to the longest edge of the simplex
@@ -972,7 +999,7 @@ namespace thts {
         // Split the edge to create two child edges
         // This updates the graph of vertices
         // N.B. This is splitting the edge in half along the splitting hyperplane
-        longest_edge->split(this->registry);
+        bool edge_split_performed = longest_edge->split(this->registry);
 
         // If 2d, then we just need to make sure vertex graph is updated correctly and then we are done
         if (is_2d()) {
@@ -994,16 +1021,28 @@ namespace thts {
         // Now remove the parent simplex from the mesh graph
         this->remove_simplex_from_mesh_graph(simplex);
 
-        // Check if this edge is currently in the mesh graph
-        // If it is not, then it has already been split by a previous subdivision
-        if (this->edge_to_simplex_map.contains(longest_edge)) 
-        {
+        // longest_edge should be in the current mesh graph iff we just performed the split
+        // If we just split and edge, then we need to perform a bunch of mesh graph maintainence
+        if (edge_split_performed) 
+        {   
+            // Get the new edges
             shared_ptr<SMEdge> child_edge_0 = longest_edge->child_edge_0;
             shared_ptr<SMEdge> child_edge_1 = longest_edge->child_edge_1;
 
+            // Assert that longest_edge is in the mesh graph.
+            // assert(this->edge_to_simplex_map.contains(longest_edge));
+
+            // Look up once and snapshot the adjacency set so that both
+            // inherit_parent_edge_connections calls can share the same
+            // copy (previously each call did its own .at() lookup and
+            // copy of the same set).
+            auto parent_it = this->edge_to_simplex_map.find(longest_edge);
+            assert(parent_it != this->edge_to_simplex_map.end());
+            unordered_set<shared_ptr<SMSimplex>> parent_adjacent_simplices = parent_it->second;
+
             // insert these new edges into the mesh graph, by inheriting connections from the parent edge
-            this->inherit_parent_edge_connections(child_edge_0, longest_edge);
-            this->inherit_parent_edge_connections(child_edge_1, longest_edge);
+            this->inherit_parent_edge_connections(child_edge_0, parent_adjacent_simplices);
+            this->inherit_parent_edge_connections(child_edge_1, parent_adjacent_simplices);
 
             // Remove the parent edge from the mesh graph
             this->remove_edge_from_mesh_graph(longest_edge);
@@ -1030,29 +1069,43 @@ namespace thts {
             simplex->opposite_child, min_radius, max_depth, split_counter_threshold);
     }
 
-    void SMMesh::inherit_parent_edge_connections(shared_ptr<SMEdge> new_edge, shared_ptr<SMEdge> parent_edge)
+    void SMMesh::inherit_parent_edge_connections(
+        const shared_ptr<SMEdge>& new_edge,
+        const unordered_set<shared_ptr<SMSimplex>>& adjacent_simplices)
     {
-        // Copy edge -> simplex connections
-        unordered_set<shared_ptr<SMSimplex>> adjacent_simplices = this->edge_to_simplex_map.at(parent_edge);
-        this->edge_to_simplex_map[new_edge] = adjacent_simplices;
-
-        // Add simplex -> edge connections
-        for (shared_ptr<SMSimplex> simplex : adjacent_simplices)
-        {
+        // UNION (not overwrite) into edge_to_simplex_map[new_edge]. new_edge may
+        // already be a key in the mesh graph due to a geometric midpoint
+        // coincidence: when SMEdge::split computes the midpoint of parent_edge,
+        // registry.get_or_create_vertex may return an existing vertex whose
+        // weight bit-exactly equals (v0+v1)/2, and registry.get_or_create_edge
+        // may then return an existing SMEdge (new_edge) that was previously
+        // registered as an inter-vertex edge of some other simplex in the
+        // mesh graph. In that case we must preserve new_edge's pre-existing
+        // adjacencies and add parent_edge's adjacencies on top of them.
+        auto& dst = this->edge_to_simplex_map[new_edge];
+        for (const shared_ptr<SMSimplex>& simplex : adjacent_simplices) {
+            dst.insert(simplex);
             this->simplex_to_edge_map[simplex].insert(new_edge);
         }
     }
 
     void SMMesh::remove_edge_from_mesh_graph(shared_ptr<SMEdge> edge)
     {
-        // Remove pointers to this edge
-        for (shared_ptr<SMSimplex> simplex : this->edge_to_simplex_map.at(edge)) 
+        // Single lookup of edge_to_simplex_map[edge]: iterate off the
+        // iterator, then erase via the iterator at the end.
+        auto edge_it = this->edge_to_simplex_map.find(edge);
+        if (edge_it == this->edge_to_simplex_map.end()) {
+            return;
+        }
+        for (const shared_ptr<SMSimplex>& simplex : edge_it->second) 
         {  
             // Removes the edge from the simplex's set of edges
-            this->simplex_to_edge_map.at(simplex).erase(edge);
+            auto s_it = this->simplex_to_edge_map.find(simplex);
+            if (s_it != this->simplex_to_edge_map.end()) {
+                s_it->second.erase(edge);
+            }
         }
-        // And then remove this edge (remove the entire entry from edge, so the entire set of simplices is removed)
-        this->edge_to_simplex_map.erase(edge);
+        this->edge_to_simplex_map.erase(edge_it);
     }
 
     void SMMesh::update_non_conformity_for_new_edge(
@@ -1061,8 +1114,11 @@ namespace thts {
         int max_depth, 
         int split_counter_threshold)
     {
-        unordered_set<shared_ptr<SMSimplex>> adjacent_simplices = this->edge_to_simplex_map.at(new_edge);
-        for (shared_ptr<SMSimplex> simplex : adjacent_simplices) 
+        // Iterate directly off edge_to_simplex_map[new_edge] rather than
+        // taking a copy; we do not mutate this entry in the loop body.
+        const unordered_set<shared_ptr<SMSimplex>>& adjacent_simplices =
+            this->edge_to_simplex_map.at(new_edge);
+        for (const shared_ptr<SMSimplex>& simplex : adjacent_simplices) 
         {
             if (simplex->is_non_conforming)
             {
@@ -1083,23 +1139,34 @@ namespace thts {
 
     void SMMesh::remove_simplex_from_mesh_graph(shared_ptr<SMSimplex> simplex)
     {
-        // Remove pointers to this simplex
-        for (shared_ptr<SMEdge> edge : this->simplex_to_edge_map.at(simplex)) 
+        // Single lookup of simplex_to_edge_map[simplex]: iterate off the
+        // iterator, then erase via the iterator at the end.
+        auto s_it = this->simplex_to_edge_map.find(simplex);
+        if (s_it != this->simplex_to_edge_map.end())
         {
-            // Removes the simplex from the edge's set of simplices
-            this->edge_to_simplex_map.at(edge).erase(simplex);
-        }
-        // And then remove this simplex (remove the entire entry from simplex, so the entire set of edges is removed)
-        this->simplex_to_edge_map.erase(simplex);
-
-        // Also this simplex was in the non-conforming set, remove it from there
-        if (this->non_conforming_simplices.contains(simplex)) 
-        {
-            this->non_conforming_simplices.erase(simplex);
-            this->non_conforming_simplices_by_depth[simplex->depth].erase(simplex);
-            if (this->non_conforming_simplices_by_depth[simplex->depth].empty()) 
+            for (const shared_ptr<SMEdge>& edge : s_it->second) 
             {
-                this->non_conforming_simplices_by_depth.erase(simplex->depth);
+                auto e_it = this->edge_to_simplex_map.find(edge);
+                if (e_it != this->edge_to_simplex_map.end()) {
+                    e_it->second.erase(simplex);
+                }
+            }
+            this->simplex_to_edge_map.erase(s_it);
+        }
+
+        // Also this simplex was in the non-conforming set, remove it from
+        // there. Use erase(key) which returns the count removed, avoiding
+        // the extra contains() probe.
+        if (this->non_conforming_simplices.erase(simplex) > 0) 
+        {
+            auto d_it = this->non_conforming_simplices_by_depth.find(simplex->depth);
+            if (d_it != this->non_conforming_simplices_by_depth.end())
+            {
+                d_it->second.erase(simplex);
+                if (d_it->second.empty()) 
+                {
+                    this->non_conforming_simplices_by_depth.erase(d_it);
+                }
             }
         }
     }
@@ -1119,20 +1186,20 @@ namespace thts {
             }
         }
 
-        // Get edges in mesh graph along the same lines as simplex
+        // Walk every edge's partition exactly once and, for each newly
+        // discovered mesh edge, perform all downstream work in the same
+        // iteration: update the vertex graph, add the simplex to the
+        // edge->simplex map. Previously this required three separate
+        // passes over mesh_graph_edges.
         unordered_set<shared_ptr<SMEdge>> mesh_graph_edges;
-        for (shared_ptr<SMEdge> edge : edges) {
-            shared_ptr<unordered_set<shared_ptr<SMEdge>>> edge_partition = edge->get_edge_partition();
-            for (shared_ptr<SMEdge> edge_partition_edge : *edge_partition) {
-                mesh_graph_edges.insert(edge_partition_edge);
+        for (const shared_ptr<SMEdge>& edge : edges) {
+            unordered_set<shared_ptr<SMEdge>> edge_partition = edge->get_edge_partition();
+            for (const shared_ptr<SMEdge>& edge_partition_edge : edge_partition) {
+                auto [mit, inserted] = mesh_graph_edges.insert(edge_partition_edge);
+                if (!inserted) continue;
+                edge_partition_edge->v0->add_bidirectional_connection(edge_partition_edge->v1);
+                this->edge_to_simplex_map[edge_partition_edge].insert(simplex);
             }
-        }
-
-        // SMEdge objects in the mesh graph should have their vertices connected in the vertex graph
-        // So ensure that this is the case
-        for (shared_ptr<SMEdge> edge : mesh_graph_edges)
-        {
-            edge->v0->add_bidirectional_connection(edge->v1);
         }
 
         // Update non-conformity for the new simplex
@@ -1147,14 +1214,9 @@ namespace thts {
             this->non_conforming_simplices_by_depth[simplex->depth].insert(simplex);
         }
 
-        // For each mesh edge, add pointers to this simplex
-        for (shared_ptr<SMEdge> edge : mesh_graph_edges) 
-        {
-            this->edge_to_simplex_map[edge].insert(simplex);
-        }
-
-        // And add the pointers to mesh edges from this simplex
-        this->simplex_to_edge_map[simplex] = mesh_graph_edges;
+        // And add the pointers to mesh edges from this simplex. std::move
+        // avoids a copy since mesh_graph_edges is not used afterwards.
+        this->simplex_to_edge_map[simplex] = std::move(mesh_graph_edges);
     }
 }
 

@@ -233,8 +233,11 @@ python plot_mo.py 400 410 420 440 450 460
 cur 
 ---
 make && clear &&
-./run_memory_limited 16G ./moexpr eval 520 &&
-./run_memory_limited 16G ./moexpr eval 530 &&
+./run_memory_limited 16G ./moexpr eval 530 530_resource_gather_timed_1776400990 &&
+./run_memory_limited 16G ./moexpr eval 460 &&
+./run_memory_limited 16G ./moexpr eval 440 440_dst_improved_1776251678 &&   
+./run_memory_limited 16G ./moexpr eval 450 450_dst_improved_stoch_1776262648 &&   
+./run_memory_limited 16G ./moexpr eval 520 520_resource_gather_1776389823 &&
 ./run_memory_limited 16G ./moexpr eval 540 &&
 ./run_memory_limited 16G ./moexpr eval 550 &&
 ./run_memory_limited 16G ./moexpr eval 560 &&
@@ -249,7 +252,7 @@ python plot_mo.py 520 530 540 550 560 570 580 590 &&
 ./run_memory_limited 16G ./moexpr eval 720_ &&
 ./run_memory_limited 16G ./moexpr eval 720a_ &&
 python plot_mo.py 700 710 720 &&
-./run_memory_limited 16G ./moexpr eval 500 500_fruit_tree_1776352374 &&
+./run_memory_limited 16G ./moexpr eval 500 &&
 ./run_memory_limited 16G ./moexpr opt 210 &&
 python plot_mo.py 500 510
 

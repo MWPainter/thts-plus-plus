@@ -272,6 +272,12 @@ namespace thts {
 
         Vec weight;
 
+        // Cached hash of weight, computed once at construction. SMVertex is
+        // used heavily as a hash map key (directly and transitively through
+        // SMEdge) and Vec::hash is O(dim), so caching avoids a large amount
+        // of recomputation.
+        size_t cached_hash;
+
         int num_direct_updates;
         int num_updates;
         Vec value_estimate;
@@ -502,6 +508,12 @@ namespace thts {
         std::shared_ptr<SMEdge> child_edge_0;
         std::shared_ptr<SMEdge> child_edge_1;
 
+        // Cached hash, computed once at construction (depends only on v0/v1
+        // and is order-independent). SMEdge is used as a hash map key
+        // heavily in the mesh graph, so caching avoids recomputing the
+        // underlying Vec-based hashes.
+        size_t cached_hash;
+
         // Constructor (use create() instead)
         // Wanted private, but make_shared needs it to be public, and dont care enough to sort it out right now
         // Because we just care that thesee are only made via the registry, we double checked directly that only make_shared<SMEdge> is called from SMRegistry
@@ -515,12 +527,12 @@ namespace thts {
         bool operator==(const SMEdge& other) const;
         bool operator!=(const SMEdge& other) const;
 
-        // Split this edge + update the graph of vertices
-        void split(SMRegistry& registry);
+        // Split this edge + update the graph of vertices (+ return true if split performed, and false if already split)
+        bool split(SMRegistry& registry);
 
         // Get the set of smallest edges that partition this edge
-        std::shared_ptr<std::unordered_set<std::shared_ptr<SMEdge>>> get_edge_partition() const;
-        void get_edge_partition_helper(std::shared_ptr<SMEdge> edge, std::unordered_set<std::shared_ptr<SMEdge>>& partition) const;
+        std::unordered_set<std::shared_ptr<SMEdge>> get_edge_partition() const;
+        void get_edge_partition_helper(const std::shared_ptr<SMEdge>& edge, std::unordered_set<std::shared_ptr<SMEdge>>& partition) const;
 
         // Find closest point on the edge to a given point
         Vec find_closest_point_on_edge(const Vec& point) const;
@@ -668,8 +680,12 @@ namespace thts {
             int max_depth, 
             int split_counter_threshold);
 
-        // Helper to maybe add a new edge to the graph, and inherit connections (to simplices) from the parent edge
-        void inherit_parent_edge_connections(std::shared_ptr<SMEdge> new_edge, std::shared_ptr<SMEdge> parent_edge);
+        // Helper to maybe add a new edge to the graph, and inherit connections (to simplices) from the parent edge.
+        // adjacent_simplices is the set previously associated with the parent edge; pre-computing it once by
+        // the caller avoids copying the same adjacency set for every child edge.
+        void inherit_parent_edge_connections(
+            const std::shared_ptr<SMEdge>& new_edge,
+            const std::unordered_set<std::shared_ptr<SMSimplex>>& adjacent_simplices);
 
         // Helper to remove an edge from the mesh graph
         void remove_edge_from_mesh_graph(std::shared_ptr<SMEdge> edge);

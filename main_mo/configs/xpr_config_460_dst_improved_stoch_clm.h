@@ -24,7 +24,7 @@ static const std::vector<ConfigMap> CONFIG_460 =
         {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            10},
         {XPR_PARAM_ID_SEARCH_THREADS,                   16},
         {XPR_PARAM_ID_EVAL_DELTA,                       0.5},
-        {XPR_PARAM_ID_EVAL_ROLLOUTS,                    256},
+        {XPR_PARAM_ID_EVAL_ROLLOUTS,                    128},
         {XPR_PARAM_ID_EVAL_THREADS,                     16},
         {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,             15},
         {XPR_PARAM_ID_CONVEX_HULL_TOLERANCE,            1e-9},
@@ -39,18 +39,6 @@ static const std::vector<ConfigMap> CONFIG_460 =
         {XPR_PARAM_ID_SM_USE_APPROX_NEAREST_VERTEX,                         false},
         {XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,                 true},
         {XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,      true},
-    },
-    // chvi
-    {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI},
-    },
-    // chvi ordered
-    {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI_ORDERED},
-    },
-    // chvi reversed
-    {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI_REVERSED},
     },
     // czt params - 0.664511
     {

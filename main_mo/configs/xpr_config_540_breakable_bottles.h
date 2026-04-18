@@ -24,7 +24,7 @@ static const std::vector<ConfigMap> CONFIG_540 =
         {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            10},
         {XPR_PARAM_ID_SEARCH_THREADS,                   16},
         {XPR_PARAM_ID_EVAL_DELTA,                       0.5}, // log every 1 second
-        {XPR_PARAM_ID_EVAL_ROLLOUTS,                    1024},
+        {XPR_PARAM_ID_EVAL_ROLLOUTS,                    128},
         {XPR_PARAM_ID_EVAL_THREADS,                     16},
         {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,             15},
         {XPR_PARAM_ID_CONVEX_HULL_TOLERANCE,            1e-9},

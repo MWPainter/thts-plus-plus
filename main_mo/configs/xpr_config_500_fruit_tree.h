@@ -24,7 +24,7 @@ static const std::vector<ConfigMap> CONFIG_500 =
         {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            10},
         {XPR_PARAM_ID_SEARCH_THREADS,                   16},
         {XPR_PARAM_ID_EVAL_DELTA,                       0.5}, // log every 1 second
-        {XPR_PARAM_ID_EVAL_ROLLOUTS,                    1024},
+        {XPR_PARAM_ID_EVAL_ROLLOUTS,                    128},
         {XPR_PARAM_ID_EVAL_THREADS,                     16},
         {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,             15},
         {XPR_PARAM_ID_CONVEX_HULL_TOLERANCE,            1e-9},
@@ -40,17 +40,17 @@ static const std::vector<ConfigMap> CONFIG_500 =
         {XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,                 true},
         {XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,      true},
     },
-    // // czt params - 0.473101
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
-    //     {ALG_PARAM_ID_BIAS,                         1000},
-    //     {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  123},
-    // },
-    // // ch standard cheby params - 0.521883
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_STANDARD_CHEBY},
-    //     {ALG_PARAM_ID_BIAS,                 1000},
-    // },
+    // czt params - 0.473101
+    {
+        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
+        {ALG_PARAM_ID_BIAS,                         1000},
+        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  123},
+    },
+    // ch standard cheby params - 0.521883
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_STANDARD_CHEBY},
+        {ALG_PARAM_ID_BIAS,                 1000},
+    },
     // ch hvuct params - 0.497854
     {
         {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_HVUCT},
