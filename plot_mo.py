@@ -222,23 +222,20 @@ def get_env_id(filename):
     """
     return filename.split("/")[2]
 
-def is_tree_env(filename):
-    """
-    Checks if a filename corresponds to a run on trees
-    filenames are of the form results/<expr_id>/<env_id>/<alg_id>/<alg_param_1>/.../<alg_param_N>/eval.txt
-    on tree envs the params are delimited with 
-    """
-    return "|" in filename
 
-def get_tree_env_params(filename):
+def get_env_size_from_filename(filename):
     """
-    filenames are of the form results/<expr_id>/<env_id>/<alg_id>/<alg_param_1>/.../<alg_param_N>/eval.txt
-    In this case, the <env_id> is of the form <tree_env_id>|<num_steps>|<reward_dim>|<num_actions>
-    Returns the 4 parts of the env_id
+    filenames are of the form results/<expr_id>/<env_id>/env_size=<env_size>/<alg_id>/<alg_param_1>/.../<alg_param_N>/eval.txt
+    In this case we want to extract <env_size> from the filename
     """
-    env_id = get_env_id(filename)
-    tree_env_id, num_steps_str, reward_dim_str, num_actions_str = env_id.split("|")
-    return tree_env_id, int(num_steps_str), int(reward_dim_str), int(num_actions_str)
+    env_size_part = filename.split("/")[3]
+    if not env_size_part.startswith("env_size="):
+        raise ValueError(f"Expected 'env_size=<env_size>' at index 3 of filename, got '{env_size_part}' (filename: {filename})")
+    env_size_str = env_size_part[len("env_size="):]
+    try:
+        return int(env_size_str)
+    except ValueError:
+        return env_size_str
 
 
 def read_eval_files_to_df(filenames,num_trials_scale):
@@ -251,16 +248,10 @@ def read_eval_files_to_df(filenames,num_trials_scale):
     dfs = []
     for filename in filenames:
         df = read_eval_file_to_df(filename,num_trials_scale)
-        env_id = None
-        if is_tree_env(filename):
-            env_id, num_steps, reward_dim, num_actions = get_tree_env_params(filename)
-            df["num_steps"] = num_steps
-            df["reward_dim"] = reward_dim
-            df["num_actions"] = num_actions
-        else:
-            env_id = get_env_id(filename)
+        env_id = get_env_id(filename)
+        env_size = get_env_size_from_filename(filename)
         df["env_id"] = env_id
-
+        df["env_size"] = env_size
         dfs.append(df)
     return pd.concat(dfs, ignore_index=True)
 
@@ -598,188 +589,258 @@ def make_eval_plot(
 #         num_trials_scale=num_trials_scale,
 #     )
 
-# def make_eum_scalability_plot(
-#     filenames, 
-#     plot_filename, 
-#     hue_key=None, 
-#     title=None, 
-#     x_axis_key=None,
-#     x_axis_lab=None, 
-#     y_axis_key=None,
-#     y_axis_lab=None, 
-#     legend_lab=None, 
-#     x_axis_truncate=None,
-#     y_scale_transform_forward=None,
-#     y_scale_transform_inverse=None,
-#     y_axis_range=None,
-#     add_markers=False,
-#     markevery=1,
-#     use_legend=True,
-#     alpha=1.0,
-#     num_trials_scale=1):
-#     """
-#     Makes an scalability plot using the data in the given filenames
-#     Adapted from make_eum_plot (changes marked with SCALE_DIFF comment)
-#     Takes results from a bunch of runs over varying environments and plots performance scaling
-#     Can make a non eum plot by specifying y_axis_key
-#     """
+def make_scalability_plot(
+    filenames, 
+    plot_filename, 
+    hue_key=None, 
+    title=None, 
+    x_axis_key=None,
+    x_axis_lab=None, 
+    y_axis_key=None,
+    y_axis_lab=None, 
+    t_axis_key=None, # the time key, which we take a max over (i.e. search_budget_consumed)
+    legend_lab=None, 
+    x_axis_truncate=None,
+    y_scale_transform_forward=None,
+    y_scale_transform_inverse=None,
+    y_axis_range=None,
+    add_markers=False,
+    markevery=1,
+    use_legend=True,
+    alpha=1.0,
+    num_trials_scale=1,
+    horizontal_lines=None,
+    continuous_hue=False,
+    continuous_hue_key_is_logarithmic=False,
+    add_dashes=False,
+    legend_loc=None,
+    font_scale=1.2,
+    df=None,
+    ):
+    """
+    Makes a scalability plot using the data in the given filenames.
+    Adapted from make_eval_plot (changes marked with SCALE_DIFF comment).
+    Takes results from a bunch of runs over varying environments and plots performance scaling.
+    Can make a non eum plot by specifying y_axis_key.
+    If df is provided, it is used directly (skipping loading from filenames); otherwise filenames is used to load the data.
+    """
 
-#     # SCALE_DIFF: Default params
-#     if hue_key is None:
-#         hue_key = "alg_id"
-#     if x_axis_key is None:
-#         raise Exception("Running make_eum_scalability_plot without providing x_axis_key argument")
-#     if x_axis_lab is None:
-#         raise Exception("Running make_eum_scalability_plot without providing x_axis_lab argument")
-#     if y_axis_key is None:
-#         y_axis_key = "utility"
-#     if y_axis_lab is None:
-#         y_axis_lab = "Expected Utility Metric"
-#     if title is None:
-#         title = y_axis_lab + " vs " + x_axis_lab
-#     if legend_lab is None and use_legend:
-#         legend_lab = "Algorithm"
+    if df is None and filenames is not None and len(filenames) == 0:
+        print(f"Skipping plot {plot_filename} because no files found")
+        return
+    if df is None and filenames is None:
+        print(f"Skipping plot {plot_filename} because no data provided")
+        return
 
-#     # Update x_axis lable if applying scaling
-#     if num_trials_scale > 1:
-#         x_axis_lab += " (x{scale})".format(scale=num_trials_scale)
+    # SCALE_DIFF: x_axis_key and x_axis_lab are required (no sensible default for scalability)
+    if hue_key is None:
+        hue_key = "alg_id"
+    if x_axis_key is None:
+        x_axis_key = "env_size"
+    if x_axis_lab is None:
+        x_axis_lab = "Environment Size"
+    if y_axis_key is None:
+        y_axis_key = "utility"
+    if y_axis_lab is None:
+        y_axis_lab = "Expected Utility Metric"
+    if t_axis_key is None:
+        t_axis_key = "search_time"
+    if title is None:
+        title = y_axis_lab + " vs " + x_axis_lab
+    if legend_lab is None and use_legend:
+        legend_lab = "Algorithm"
 
-#     # Read in data + make algorithm names more pretty
-#     czt_str = "CZT"
-#     chmcst_str = "CHMCTS"
-#     smbts_str = "SM-BTS"
-#     smdents_str = "SM-DENTS"
+    if num_trials_scale > 1:
+        x_axis_lab += " (x{scale})".format(scale=num_trials_scale)
 
-#     df = read_eval_files_to_df(filenames, num_trials_scale)
-#     df["alg_id"] = df["alg_id"].map({
-#         "czt": czt_str,
-#         "chmcts": chmcst_str,
-#         "smbts": smbts_str,
-#         "smdents": smdents_str,
-#     })
 
-#     # SCALE_DIFF: only care about the final results after the search (assumes all experiments run for same search time)
-#     experiment_search_time = df["search_time"].max()
-#     df = df[df["search_time"] == experiment_search_time]
+    if df is None:
+        df = read_eval_files_to_df(filenames, num_trials_scale)
+    else:
+        df = df.copy()
 
-#     # Get the set of alg ids working with
-#     alg_id_set = set(df["alg_id"])
-    
-#     # Define line styles - (colour) palette
-#     # N.B. palette can be a colourmap: https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html#matplotlib.colors.Colormap
-#     # Currently using dict for mapping using colours from: https://seaborn.pydata.org/generated/seaborn.color_palette.html#seaborn.color_palette
-#     palette = {}
-#     for alg_id in alg_id_set:
-#         if czt_str in alg_id:
-#             palette[alg_id] = "tab:green"
-#         if smdents_str in alg_id:
-#             palette[alg_id] = "tab:blue"
-#         if smbts_str in alg_id:
-#             palette[alg_id] = "tab:orange"
-#         if chmcst_str in alg_id:
-#             palette[alg_id] = "tab:purple"
-#         # other colours I used
-#         # palette[alg_id] = "tab:gray"
-#         # palette[alg_id] = "tab:red"
-#         # palette[alg_id] = "tab:brown"
-#         # palette[alg_id] = "tab:grey"
 
-#     # Define line styles - dashes (currently unused, but dont want del setup)
-#     # "Dashes are specified as in matplotlib: a tuple of (segment, gap) lengths, or an empty string to draw a solid line."
-#     dashes = {}
-#     for alg_id in alg_id_set:
-#         dashes[alg_id] = ""
-#         # dashes[alg_id] = (4,2)
+    chvi_str = "CHVI"
+    chvi_ordered_str = "CHVI(t=0->H)"
+    chvi_reversed_str = "CHVI(t=H->0)"
+    czt_str = "CZT"
+    czt_doubling_str = "CZT(Doubling)"
+    ch_uct_str = "CH-UCT"
+    ch_czt_str = "CH-CZT"
+    ch_czt_doubling_str = "CH-CZT(Doubling)"
+    ch_bts_str = "CH-BTS"
+    ch_hvuct_str = "CH-HVUCT"
+    ch_pareto_str = "CH-PARETO"
+    ch_cheby_str = "CH-CHEBY"
+    ch_standard_cheby_str = "CH-CHEBY(Standard)"
+    sm_bts_str = "SM-BTS"
+    sm_dents_str = "SM-DENTS"
 
-#     # Define line styles - markers (currently unused, but dont want del setup)
-#     # N.B. see following for valid values: https://matplotlib.org/stable/api/markers_api.html
-#     markers = None
-#     # if add_markers:
-#     #     markers = {}
-#     #     for alg_id in alg_set:
-#     #         markers[alg_id] = ""
-#     #         if "UCT" in alg_id:
-#     #             markers[alg_id] = 5
-#     #         if "MENTS" in alg_id:
-#     #             markers[alg_id] = 7
-#     #         if "DENTS" in alg_id:
-#     #             markers[alg_id] = 6
+    df["alg_id"] = df["alg_id"].map({
+        "chvi": chvi_str,
+        "chvi_ordered": chvi_ordered_str,
+        "chvi_reversed": chvi_reversed_str,
+        "czt": czt_str,
+        "czt_doubling": czt_doubling_str,
+        "ch_uct": ch_uct_str,
+        "ch_czt": ch_czt_str,
+        "ch_czt_doubling": ch_czt_doubling_str,
+        "ch_bts": ch_bts_str,
+        "ch_hvuct": ch_hvuct_str,
+        "ch_pareto": ch_pareto_str,
+        "ch_cheby": ch_cheby_str,
+        "ch_standard_cheby": ch_standard_cheby_str,
+        "sm_bts": sm_bts_str,
+        "sm_dents": sm_dents_str,
+    })
 
-#     # Concatenate x_axis if want
-#     if x_axis_truncate is not None:
-#         df = df[df[x_axis_key] <= x_axis_truncate]
+    # SCALE_DIFF: only care about the final results after the search
+    # (assumes all experiments run for the same search time)
+    t_axis_max = df[t_axis_key].max()
+    df = df[df[t_axis_key] == t_axis_max]
 
-#     # Call our actual make plot function
-#     make_lineplot_df(
-#         df=df, 
-#         x_axis_key=x_axis_key, 
-#         y_axis_key=y_axis_key, 
-#         title=title,
-#         hue_key=hue_key,
-#         palette=palette,
-#         style_key=hue_key,
-#         dashes=dashes,
-#         x_axis_lab=x_axis_lab,
-#         y_axis_lab=y_axis_lab,
-#         y_scale_transform_forward=y_scale_transform_forward,
-#         y_scale_transform_inverse=y_scale_transform_inverse,
-#         legend_lab=legend_lab,
-#         filename=plot_filename,
-#         y_axis_range=y_axis_range,
-#         markers=markers,
-#         markevery=markevery,
-#         use_legend=use_legend,
-#         alpha=alpha)
+    alg_id_set = set(df["alg_id"])
 
-# def make_num_trials_scalability_plot(
-#     filenames, 
-#     plot_filename, 
-#     hue_key=None, 
-#     title=None, 
-#     x_axis_key=None,
-#     x_axis_lab=None, 
-#     y_axis_key=None,
-#     y_axis_lab=None, 
-#     legend_lab=None, 
-#     x_axis_truncate=None,
-#     y_scale_transform_forward=None,
-#     y_scale_transform_inverse=None,
-#     y_axis_range=None,
-#     add_markers=False,
-#     markevery=1,
-#     use_legend=True,
-#     alpha=1.0,
-#     num_trials_scale=1):
-#     """
-#     Essentially an overload for make_eum_scalability_plot, but plotting the number of trials instead
-#     """
-#     # Default (differing) params
-#     if y_axis_key is None:
-#         y_axis_key = "num_trials"
-#     if y_axis_lab is None:
-#         y_axis_lab = "Num Trials"
+    palette = {}
+    for alg_id in alg_id_set:
+        if chvi_str in alg_id:
+            palette[alg_id] = "#7f7f7f"  # tab:gray
+        if chvi_ordered_str in alg_id:
+            palette[alg_id] = "#9467bd"  # tab:purple
+        if chvi_reversed_str in alg_id:
+            palette[alg_id] = "#e377c2"  # tab:pink
 
-#     # Forward function call
-#     make_eum_scalability_plot(
-#         filenames=filenames,
-#         plot_filename=plot_filename,
-#         hue_key=hue_key,
-#         title=title,
-#         x_axis_key=x_axis_key,
-#         x_axis_lab=x_axis_lab,
-#         y_axis_key=y_axis_key,
-#         y_axis_lab=y_axis_lab,
-#         legend_lab=legend_lab,
-#         x_axis_truncate=x_axis_truncate,
-#         y_scale_transform_forward=y_scale_transform_forward,
-#         y_scale_transform_inverse=y_scale_transform_inverse,
-#         y_axis_range=y_axis_range,
-#         add_markers=add_markers,
-#         markevery=markevery,
-#         use_legend=use_legend,
-#         alpha=alpha,
-#         num_trials_scale=num_trials_scale,
-#     )
+        if czt_str in alg_id:
+            palette[alg_id] = "#2ca02c"  # tab:green
+        if czt_doubling_str in alg_id:
+            palette[alg_id] = "#d62728"  # tab:red
+        if ch_czt_str in alg_id:
+            palette[alg_id] = "#98df8a"  # light green
+        if ch_czt_doubling_str in alg_id:
+            palette[alg_id] = "#ff9896"  # light red
+
+        
+        if ch_hvuct_str in alg_id:
+            palette[alg_id] = "#c5b0d5"  # light purple
+        if ch_pareto_str in alg_id:
+            palette[alg_id] = "#c49c94"  # light brown
+        if ch_cheby_str in alg_id:
+            palette[alg_id] = "#f7b6d2"  # light pink
+        if ch_standard_cheby_str in alg_id:
+            palette[alg_id] = "#dbdb8d"  # light olive
+            
+        if ch_uct_str in alg_id:
+            palette[alg_id] = "#ffbb78"  # light orange
+            
+
+        if ch_bts_str in alg_id:
+            palette[alg_id] = "#aec7e8"  # light blue
+        if sm_bts_str in alg_id:
+            palette[alg_id] = "#1f77b4"  # tab:blue
+        if sm_dents_str in alg_id:
+            palette[alg_id] = "#ff7f0e"  # tab:orange
+
+    sorted_hue_vals = sorted(df[hue_key].unique())
+    df[hue_key] = pd.Categorical(df[hue_key], categories=sorted_hue_vals, ordered=True)
+
+
+    dashes = None
+    if add_dashes:
+        algs_with_multi_bias = set()
+        algs_with_multi_temp = set()
+        for aid in df["alg_id"].unique():
+            adf = df[df["alg_id"] == aid]
+            if "bias" in adf.columns and adf["bias"].dropna().nunique() > 1:
+                algs_with_multi_bias.add(aid)
+            if "temp" in adf.columns and adf["temp"].dropna().nunique() > 1:
+                algs_with_multi_temp.add(aid)
+
+        def _make_alg_label(row):
+            base = row["alg_id"]
+            if base in algs_with_multi_bias and pd.notna(row.get("bias")):
+                return f"{base} (b={row['bias']:g})"
+            if base in algs_with_multi_temp and pd.notna(row.get("temp")):
+                return f"{base} (t={row['temp']:g})"
+            return base
+
+        df["alg_label"] = df.apply(_make_alg_label, axis=1)
+        hue_key = "alg_label"
+
+        sorted_alg_ids = sorted(palette.keys(), key=len, reverse=True)
+        new_palette = {}
+        for label in df["alg_label"].unique():
+            for aid in sorted_alg_ids:
+                if label.startswith(aid):
+                    new_palette[label] = palette[aid]
+                    break
+        palette = new_palette
+
+        dash_patterns = [
+            "",
+            (8, 4),
+            (2, 4),
+        ]
+        multi_param_algs = algs_with_multi_bias | algs_with_multi_temp
+
+        unique_labels = sorted(df["alg_label"].unique())
+        df["alg_label"] = pd.Categorical(df["alg_label"], categories=unique_labels, ordered=True)
+
+        dashes = {}
+        dash_counters = {}
+        for label in unique_labels:
+            is_multi = any(label.startswith(a) for a in multi_param_algs)
+            if is_multi:
+                base = next(a for a in multi_param_algs if label.startswith(a))
+                idx = dash_counters.get(base, 0)
+                dashes[label] = dash_patterns[idx % len(dash_patterns)]
+                dash_counters[base] = idx + 1
+            else:
+                dashes[label] = ""
+
+
+    markers = None
+
+    if x_axis_truncate is not None:
+        df = df[df[x_axis_key] <= x_axis_truncate]
+
+    if continuous_hue:
+        if len(df["alg_id"].unique()) > 1:
+            raise ValueError("Continuous hue is only supported for single-alg data")
+
+        alg_base_colour = palette[df["alg_id"].unique()[0]]
+        param_vals = df[hue_key].dropna().unique()
+        pmin, pmax = float(np.nanmin(param_vals)), float(np.nanmax(param_vals))
+        if continuous_hue_key_is_logarithmic and pmin > 0 and pmax > 0:
+            log_min, log_max = np.log(pmin), np.log(pmax)
+            log_span = (log_max - log_min) if log_max > log_min else 1.0
+            palette = {v: _param_to_colour(alg_base_colour, (np.log(float(v)) - log_min) / log_span) for v in param_vals}
+        else:
+            span = (pmax - pmin) if pmax > pmin else 1.0
+            palette = {v: _param_to_colour(alg_base_colour, (float(v) - pmin) / span) for v in param_vals}
+
+    make_lineplot_df(
+        df=df, 
+        x_axis_key=x_axis_key, 
+        y_axis_key=y_axis_key, 
+        title=title,
+        hue_key=hue_key,
+        palette=palette,
+        style_key=hue_key,
+        dashes=dashes,
+        x_axis_lab=x_axis_lab,
+        y_axis_lab=y_axis_lab,
+        y_scale_transform_forward=y_scale_transform_forward,
+        y_scale_transform_inverse=y_scale_transform_inverse,
+        legend_lab=legend_lab,
+        filename=plot_filename,
+        y_axis_range=y_axis_range,
+        markers=markers,
+        markevery=markevery,
+        use_legend=use_legend,
+        legend_loc=legend_loc,
+        alpha=alpha,
+        font_scale=font_scale,
+        horizontal_lines=horizontal_lines)
 
 
     
@@ -939,11 +1000,98 @@ def make_many_eval_plots(filenames, fname_base, filter_algs=None, chvi_reversed_
 
 
 
+
+def make_many_scalability_plots(filenames, fname_base, filter_algs=None, chvi_reversed_filenames=None):
+    if len(filenames) == 0:
+        print(f"Skipping plots {fname_base} because no files found")
+        return
+
+    df = read_eval_files_to_df(filenames, num_trials_scale=1)
+
+    if filter_algs is None:
+        filter_algs = FILTER_ALGS_CH5
+
+    df = df[df["alg_id"].isin(filter_algs)]
+
+    if chvi_reversed_filenames is not None:
+        chvi_reversed_df = read_eval_files_to_df(chvi_reversed_filenames, num_trials_scale=16.0)
+        chvi_reversed_df = chvi_reversed_df[chvi_reversed_df["alg_id"] == "chvi_reversed"]
+        df = pd.concat([df, chvi_reversed_df])
+
+    make_scalability_plot(
+        filenames=filenames,
+        df=df,
+        plot_filename=f"mo_plots/{fname_base}_0_eum.png",
+        # legend_loc="lower left",
+    )
+    make_scalability_plot(
+        filenames=filenames,
+        df=df,
+        plot_filename=f"mo_plots/{fname_base}_1_normalised_utility.png",
+        y_axis_key="norm_utility",
+        y_axis_lab="Normalised Expected Utility Metric", 
+        # legend_loc="lower left",
+    )
+    make_scalability_plot(
+        filenames=filenames,
+        df=df,
+        plot_filename=f"mo_plots/{fname_base}_2_hypervolume.png",
+        y_axis_key="hypervolume",
+        y_axis_lab="Hypervolume", 
+        # legend_loc="lower left",
+    )
+    make_scalability_plot(
+        filenames=filenames,
+        df=df,
+        plot_filename=f"mo_plots/{fname_base}_3_normalised_hypervolume.png",
+        y_axis_key="normalised_hypervolume",
+        y_axis_lab="Normalised Hypervolume", 
+        # legend_loc="lower left",
+    )
+    make_scalability_plot(
+        filenames=filenames,
+        df=df,
+        plot_filename=f"mo_plots/{fname_base}_4_num_trials.png",
+        y_axis_key="num_trials",
+        y_axis_lab="Num Trials", 
+        # legend_loc="lower left",
+    )
+    make_scalability_plot(
+        filenames=filenames,
+        df=df,
+        plot_filename=f"mo_plots/{fname_base}_5_num_backups.png",
+        y_axis_key="num_backups",
+        y_axis_lab="Num Backups", 
+        # legend_loc="lower left",
+    )
+    # make_eval_plot(
+    #     filenames=filenames,
+    #     df=df,
+    #     plot_filename=f"mo_plots/{fname_base}_6_additive_eps_metric.png",
+    #     y_axis_key="additive_eps_metric",
+    #     y_axis_lab="Additive Epsilon Metric", 
+    #     # legend_loc="lower left",
+    # )
+    # make_eval_plot(
+    #     filenames=filenames,
+    #     df=df,
+    #     plot_filename=f"mo_plots/{fname_base}_7_sparsity_metric.png",
+    #     y_axis_key="sparsity_metric",
+    #     y_axis_lab="Sparsity Metric", 
+    #     # legend_loc="lower left",
+    # )
+
+
+
+
+
 if __name__ == "__main__":
     if not os.path.exists("mo_plots"):
         os.makedirs("mo_plots")
     if not os.path.exists("mo_plots/dst"):
         os.makedirs("mo_plots/dst")
+    if not os.path.exists("mo_plots/dst_scale"):
+        os.makedirs("mo_plots/dst_scale")
     if not os.path.exists("mo_plots/improved_dst"):
         os.makedirs("mo_plots/improved_dst")
     if not os.path.exists("mo_plots/fruit"):
@@ -1009,6 +1157,38 @@ if __name__ == "__main__":
         filenames = glob.glob("mo_eval_logs/460_*/**/eval_log.txt", recursive=True)
         fname_base = "improved_dst/460_dst_improved_calm_stoch"
         make_many_eval_plots(filenames, fname_base)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # DST - scalability plots
+    # ------------------------------------------------------------------------------------------------------------------
+
+    if "700" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
+        print("Plotting: ", "700")
+        filenames = glob.glob("mo_eval_logs/700_*/**/eval_log.txt", recursive=True)
+        chvi_reversed_filenames = None #glob.glob("mo_eval_logs/700a_*/**/eval_log.txt", recursive=True)
+        fname_base = "dst_scale/700_dst_scaling_ch5"
+        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5, chvi_reversed_filenames=chvi_reversed_filenames)
+        fname_base = "dst_scale/700_dst_scaling_ch6"
+        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6, chvi_reversed_filenames=chvi_reversed_filenames)
+
+    if "710" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
+        print("Plotting: ", "710")
+        filenames = glob.glob("mo_eval_logs/710_*/**/eval_log.txt", recursive=True)
+        chvi_reversed_filenames = glob.glob("mo_eval_logs/710a_*/**/eval_log.txt", recursive=True)
+        fname_base = "dst_scale/710_dst_scaling_stoch_ch5"
+        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5, chvi_reversed_filenames=chvi_reversed_filenames)
+        fname_base = "dst_scale/710_dst_scaling_stoch_ch6"
+        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6, chvi_reversed_filenames=chvi_reversed_filenames)
+
+    if "720" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
+        print("Plotting: ", "720")
+        filenames = glob.glob("mo_eval_logs/720_*/**/eval_log.txt", recursive=True)
+        chvi_reversed_filenames = glob.glob("mo_eval_logs/720a_*/**/eval_log.txt", recursive=True)
+        fname_base = "dst_scale/720_dst_scaling_stoch_calm_ch5"
+        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5, chvi_reversed_filenames=chvi_reversed_filenames)
+        fname_base = "dst_scale/720_dst_scaling_stoch_calm_ch6"
+        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6, chvi_reversed_filenames=chvi_reversed_filenames)
+
 
     # ------------------------------------------------------------------------------------------------------------------
     # Gym envs
