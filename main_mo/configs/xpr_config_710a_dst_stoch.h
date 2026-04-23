@@ -12,7 +12,7 @@ static const std::vector<ConfigMap> CONFIG_710a =
         {XPR_OR_ALG_ID_TAG,                             XPR_PARAMS_ID_TAG},
         {XPR_PARAM_ID_NAME,                             "710a_dst_stoch_scaling"},
         {XPR_PARAM_ID_ENV,                              ENV_ID_VAMPLEW_STOCH_DST_VARIABLE_CPP},
-        {XPR_PARAM_ID_ENV_SIZE,                         std::vector<int>{10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100}},
+        {XPR_PARAM_ID_ENV_SIZE,                         std::vector<int>{10,15,20,25,30,35,40,45,50,55,60,65,70,75}},
         {XPR_PARAM_ID_MCTS_MODE,                        false},
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
         {XPR_PARAM_ID_VECTOR_VISIT_COUNTS,              false},
@@ -40,10 +40,10 @@ static const std::vector<ConfigMap> CONFIG_710a =
         {XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,                 true},
         {XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,      true},
     },
-    // chvi ordered
-    {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI_ORDERED},
-    },
+    // // chvi ordered
+    // {
+    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI_ORDERED},
+    // },
     // chvi reversed
     {
         {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI_REVERSED},

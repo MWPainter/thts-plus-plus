@@ -40,12 +40,12 @@ static const std::vector<ConfigMap> CONFIG_500 =
         {XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,                 true},
         {XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,      true},
     },
-    // czt params - 0.473101
-    {
-        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
-        {ALG_PARAM_ID_BIAS,                         1000},
-        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  123},
-    },
+    // // czt params - 0.473101
+    // {
+    //     {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
+    //     {ALG_PARAM_ID_BIAS,                         1000},
+    //     {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  123},
+    // },
     // ch standard cheby params - 0.521883
     {
         {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_STANDARD_CHEBY},

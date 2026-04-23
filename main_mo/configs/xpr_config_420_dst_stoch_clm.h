@@ -44,14 +44,14 @@ static const std::vector<ConfigMap> CONFIG_420 =
     {
         {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI},
     },
-    // chvi ordered
-    {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI_ORDERED},
-    },
-    // chvi reversed
-    {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI_REVERSED},
-    },
+    // // chvi ordered
+    // {
+    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI_ORDERED},
+    // },
+    // // chvi reversed
+    // {
+    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI_REVERSED},
+    // },
     // czt params - 0.634691
     {
         {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},

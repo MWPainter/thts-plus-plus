@@ -1143,20 +1143,26 @@ if __name__ == "__main__":
     if "440" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
         print("Plotting: ", "440")
         filenames = glob.glob("mo_eval_logs/440_*/**/eval_log.txt", recursive=True)
-        fname_base = "improved_dst/440_dst_improved"
-        make_many_eval_plots(filenames, fname_base)
+        fname_base = "improved_dst/440_dst_improved_ch5"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        fname_base = "improved_dst/440_dst_improved_ch6"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
     if "450" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
         print("Plotting: ", "450")
         filenames = glob.glob("mo_eval_logs/450_*/**/eval_log.txt", recursive=True)
-        fname_base = "improved_dst/450_dst_improved_stoch"
-        make_many_eval_plots(filenames, fname_base)
+        fname_base = "improved_dst/450_dst_improved_stoch_ch5"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        fname_base = "improved_dst/450_dst_improved_stoch_ch6"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
     if "450" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
         print("Plotting: ", "460")
         filenames = glob.glob("mo_eval_logs/460_*/**/eval_log.txt", recursive=True)
-        fname_base = "improved_dst/460_dst_improved_calm_stoch"
-        make_many_eval_plots(filenames, fname_base)
+        fname_base = "improved_dst/460_dst_improved_calm_stoch_ch5"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        fname_base = "improved_dst/460_dst_improved_calm_stoch_ch6"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
     # ------------------------------------------------------------------------------------------------------------------
     # DST - scalability plots
@@ -1197,62 +1203,80 @@ if __name__ == "__main__":
     if "500" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
         print("Plotting: ", "500")
         filenames = glob.glob("mo_eval_logs/500_*/**/eval_log.txt", recursive=True)
-        fname_base = "fruit/500_fruit_tree"
-        make_many_eval_plots(filenames, fname_base)
+        fname_base = "fruit/500_fruit_tree_ch5"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        fname_base = "fruit/500_fruit_tree_ch6"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
     if "510" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
         print("Plotting: ", "510")
         filenames = glob.glob("mo_eval_logs/510_*/**/eval_log.txt", recursive=True)
-        fname_base = "fruit/510fruit_tree_stoch"
-        make_many_eval_plots(filenames, fname_base)
+        fname_base = "fruit/510fruit_tree_stoch_ch5"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        fname_base = "fruit/510fruit_tree_stoch_ch6"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
 
 
     if "520" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
         print("Plotting: ", "520")
         filenames = glob.glob("mo_eval_logs/520_*/**/eval_log.txt", recursive=True)
-        fname_base = "resource_gather/520_gym_resource_gather"
-        make_many_eval_plots(filenames, fname_base)
+        fname_base = "resource_gather/520_gym_resource_gather_ch5"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        fname_base = "resource_gather/520_gym_resource_gather_ch6"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
     if "530" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
         print("Plotting: ", "530")
         filenames = glob.glob("mo_eval_logs/530_*/**/eval_log.txt", recursive=True)
-        fname_base = "resource_gather/530_gym_resource_gather_timed"
-        make_many_eval_plots(filenames, fname_base)
+        fname_base = "resource_gather/530_gym_resource_gather_timed_ch5"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        fname_base = "resource_gather/530_gym_resource_gather_timed_ch6"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
     if "580" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
         print("Plotting: ", "580")
         filenames = glob.glob("mo_eval_logs/580_*/**/eval_log.txt", recursive=True)
-        fname_base = "resource_gather/580_cpp_resource_gather"
-        make_many_eval_plots(filenames, fname_base)
+        fname_base = "resource_gather/580_cpp_resource_gather_ch5"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        fname_base = "resource_gather/580_cpp_resource_gather_ch6"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
     if "590" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
         print("Plotting: ", "590")
         filenames = glob.glob("mo_eval_logs/590_*/**/eval_log.txt", recursive=True)
-        fname_base = "resource_gather/590_cpp_resource_gather_timed"
-        make_many_eval_plots(filenames, fname_base)
+        fname_base = "resource_gather/590_cpp_resource_gather_timed_ch5"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        fname_base = "resource_gather/590_cpp_resource_gather_timed_ch6"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
 
 
     if "540" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
         print("Plotting: ", "540")
         filenames = glob.glob("mo_eval_logs/540_*/**/eval_log.txt", recursive=True)
-        fname_base = "breakable_bottles/540_breakable_bottles"
-        make_many_eval_plots(filenames, fname_base)
+        fname_base = "breakable_bottles/540_breakable_bottles_ch5"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        fname_base = "breakable_bottles/540_breakable_bottles_ch6"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
 
 
     if "550" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
         print("Plotting: ", "550")
         filenames = glob.glob("mo_eval_logs/550_*/**/eval_log.txt", recursive=True)
-        fname_base = "four_room/550_four_room"
-        make_many_eval_plots(filenames, fname_base)
+        fname_base = "four_room/550_four_room_ch5"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        fname_base = "four_room/550_four_room_ch6"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
     if "560" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
         print("Plotting: ", "560")
         filenames = glob.glob("mo_eval_logs/560_*/**/eval_log.txt", recursive=True)
-        fname_base = "four_room/560_four_room_timed"
-        make_many_eval_plots(filenames, fname_base)
+        fname_base = "four_room/560_four_room_timed_ch5"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        fname_base = "four_room/560_four_room_timed_ch6"
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
 
 

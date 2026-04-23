@@ -49,13 +49,14 @@ namespace thts {
         }
     }
 
-    vector<shared_ptr<const Action>> MoThtsDNode::get_actions_to_consider(ThtsContext& ctx) const {
+    vector<shared_ptr<const Action>> MoThtsDNode::get_actions_to_consider(ThtsContext& ctx, bool for_recommendation) const {
         MoThtsManager& mo_thts_manager = static_cast<MoThtsManager&>(*thts_manager);
         ThtsEnv& thts_env = *mo_thts_manager.thts_env();
         shared_ptr<ActionVector> all_actions = thts_env.get_valid_actions_itfc(this->state, ctx);
 
         // If not using solved labelling, return all actions
-        if (!mo_thts_manager.use_solved_labelling) {
+        // Or when recommending we want to consider all actions
+        if (!mo_thts_manager.use_solved_labelling || for_recommendation) {
             return *all_actions;
         }
         

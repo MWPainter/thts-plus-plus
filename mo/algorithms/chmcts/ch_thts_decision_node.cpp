@@ -38,7 +38,7 @@ namespace thts {
         unordered_map<shared_ptr<const Action>,double> utilities;
         bool for_backup = false;
         double default_q_value = numeric_limits<double>::min();
-        fill_contextual_q_values(utilities, ctx, for_backup, default_q_value);
+        fill_contextual_q_values(utilities, ctx, for_backup, default_q_value, true);
         return thts::helper::get_max_key_break_ties_randomly(utilities, *thts_manager);
     }
     // shared_ptr<const Action> ChThtsDNode::recommend_action(MoThtsContext& ctx) const 
@@ -120,9 +120,10 @@ namespace thts {
         unordered_map<shared_ptr<const Action>,double>& q_values, 
         MoThtsContext& ctx, 
         bool for_backup,
-        double default_q_value) const
+        double default_q_value,
+        bool for_recommendation) const
     {
-        ActionVector actions = this->get_actions_to_consider(ctx);
+        ActionVector actions = this->get_actions_to_consider(ctx, for_recommendation);
         for (shared_ptr<const Action> action : actions) {
             if (!has_child_node_itfc(action)) {
                 q_values[action] = default_q_value;

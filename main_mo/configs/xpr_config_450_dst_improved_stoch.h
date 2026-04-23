@@ -40,45 +40,45 @@ static const std::vector<ConfigMap> CONFIG_450 =
         {XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,                 true},
         {XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,      true},
     },
-    // // czt params - 0.637819
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
-    //     {ALG_PARAM_ID_BIAS,                         4.3356},
-    //     {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  32},
-    // },
-    // // ch standard cheby params - 0.552496
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_STANDARD_CHEBY},
-    //     {ALG_PARAM_ID_BIAS,                 5.48522},
-    // },
-    // // ch hvuct params - 0.557135
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_HVUCT},
-    //     {ALG_PARAM_ID_BIAS,                 13.4251},
-    // },
-    // // ch pareto params - 0.550656
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_PARETO},
-    //     {ALG_PARAM_ID_BIAS,                 0.0674134},
-    // },
-    // // ch uct params - 0.552959
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_UCT},
-    //     {ALG_PARAM_ID_BIAS,                 8.28801},
-    // },
-    // // ch czt params - 0.545707
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT},
-    //     {ALG_PARAM_ID_BIAS,                         102.3487},
-    //     {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  253},
-    // },
-    // // ch bts params - 0.551291
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_BTS},
-    //     {ALG_PARAM_ID_INIT_TEMP,            1.11189},
-    //     {ALG_PARAM_ID_TEMP_DECAY_RATE,      10.00107},
-    //     {ALG_PARAM_ID_EPSILON,              0.999874},
-    // },
+    // czt params - 0.637819
+    {
+        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
+        {ALG_PARAM_ID_BIAS,                         4.3356},
+        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  32},
+    },
+    // ch standard cheby params - 0.552496
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_STANDARD_CHEBY},
+        {ALG_PARAM_ID_BIAS,                 5.48522},
+    },
+    // ch hvuct params - 0.557135
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_HVUCT},
+        {ALG_PARAM_ID_BIAS,                 13.4251},
+    },
+    // ch pareto params - 0.550656
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_PARETO},
+        {ALG_PARAM_ID_BIAS,                 0.0674134},
+    },
+    // ch uct params - 0.552959
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_UCT},
+        {ALG_PARAM_ID_BIAS,                 8.28801},
+    },
+    // ch czt params - 0.545707
+    {
+        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT},
+        {ALG_PARAM_ID_BIAS,                         102.3487},
+        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  253},
+    },
+    // ch bts params - 0.551291
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,            1.11189},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,      10.00107},
+        {ALG_PARAM_ID_EPSILON,              0.999874},
+    },
     // sm bts params - 0.560355
     {
         {XPR_OR_ALG_ID_TAG,                 ALG_ID_SM_BTS},

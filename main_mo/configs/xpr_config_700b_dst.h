@@ -5,14 +5,14 @@
 #include "main_mo/configs/constants_algorithms.h"
 #include "main_mo/configs/constants_experiments.h"
 
-static const std::vector<ConfigMap> CONFIG_700a =
+static const std::vector<ConfigMap> CONFIG_700b =
 {
     // xpr params
     {
         {XPR_OR_ALG_ID_TAG,                             XPR_PARAMS_ID_TAG},
-        {XPR_PARAM_ID_NAME,                             "700a_dst_scaling"},
+        {XPR_PARAM_ID_NAME,                             "700b_dst_scaling"},
         {XPR_PARAM_ID_ENV,                              ENV_ID_VAMPLEW_DST_VARIABLE_CPP},
-        {XPR_PARAM_ID_ENV_SIZE,                         std::vector<int>{10,15,20,25,30,35,40,45,50,55,60,65,70}},//,75}},
+        {XPR_PARAM_ID_ENV_SIZE,                         std::vector<int>{10,15,20,25,30,35,40,45,50,55,60,65,70,75}},
         {XPR_PARAM_ID_MCTS_MODE,                        false},
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
         {XPR_PARAM_ID_VECTOR_VISIT_COUNTS,              false},
@@ -20,10 +20,10 @@ static const std::vector<ConfigMap> CONFIG_700a =
         {XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,          0.0},
         {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,           0.0},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,                  true}, 
-        {XPR_PARAM_ID_TERMINATION_BOUND,                240.0},
+        {XPR_PARAM_ID_TERMINATION_BOUND,                15.0},
         {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            10},
         {XPR_PARAM_ID_SEARCH_THREADS,                   16},
-        {XPR_PARAM_ID_EVAL_DELTA,                       80.0}, 
+        {XPR_PARAM_ID_EVAL_DELTA,                       5.0}, 
         {XPR_PARAM_ID_EVAL_ROLLOUTS,                    128},
         {XPR_PARAM_ID_EVAL_THREADS,                     16},
         {XPR_PARAM_ID_CONVEX_HULL_MAX_SIZE,             15},
@@ -40,8 +40,8 @@ static const std::vector<ConfigMap> CONFIG_700a =
         {XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,                 true},
         {XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,      true},
     },
-    // chvi reversed
+    // chvi
     {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI_REVERSED},
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI},
     },
 };

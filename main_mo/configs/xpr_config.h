@@ -66,10 +66,13 @@
 
 #include "main_mo/configs/xpr_config_700_dst.h"
 #include "main_mo/configs/xpr_config_700a_dst.h"
+#include "main_mo/configs/xpr_config_700b_dst.h"
 #include "main_mo/configs/xpr_config_710_dst_stoch.h"
 #include "main_mo/configs/xpr_config_710a_dst_stoch.h"
+#include "main_mo/configs/xpr_config_710b_dst_stoch.h"
 #include "main_mo/configs/xpr_config_720_dst_stoch_clm.h"
 #include "main_mo/configs/xpr_config_720a_dst_stoch_clm.h"
+#include "main_mo/configs/xpr_config_720b_dst_stoch_clm.h"
 
 // ---------------------------------------------------------------------------------------------------------------------
 // List of all configs
@@ -136,8 +139,11 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     
     CONFIG_700,
     CONFIG_700a,
+    CONFIG_700b,
     CONFIG_710,
     CONFIG_710a,
+    CONFIG_710b,
     CONFIG_720,
     CONFIG_720a,
+    CONFIG_720b,
 };

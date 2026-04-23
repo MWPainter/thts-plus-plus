@@ -62,7 +62,8 @@ namespace thts {
                 std::unordered_map<std::shared_ptr<const Action>,double>& q_values, 
                 MoThtsContext& ctx, 
                 bool for_backup,
-                double default_q_value=0) const;
+                double default_q_value=0,
+                bool for_recommendation=false) const;
 
         public:
             virtual ConvexHull get_convex_hull() const override;

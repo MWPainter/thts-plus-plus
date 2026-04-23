@@ -40,18 +40,6 @@ static const std::vector<ConfigMap> CONFIG_720 =
         {XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,                 true},
         {XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,      true},
     },
-    // chvi
-    {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI},
-    },
-    // chvi ordered
-    {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI_ORDERED},
-    },
-    // chvi reversed
-    {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CHVI_REVERSED},
-    },
     // czt params - 0.634691
     {
         {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
