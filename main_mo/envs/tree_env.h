@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <tuple>
 
 #include <Eigen/Dense>
 
@@ -33,10 +34,12 @@ namespace thts{
          * Core ToyTreeEnv implementaion.
          */
         public:
-            int num_actions;
-            int tree_depth;
-            bool sparse;
-            std::vector<Eigen::ArrayXd> reward_vectors;
+            int total_actions;
+            int num_xtra_actions;
+            float reward_scale;
+            int horizon;
+            std::vector<std::pair<float,float>> xtra_action_rewards;
+            std::vector<std::pair<int,int>> xtra_reward_dims;
 
 
 
@@ -47,7 +50,7 @@ namespace thts{
             /**
              * Constructor
              */
-            ToyTreeEnv(int num_rewards, int num_actions, int tree_depth, bool sparse);
+            ToyTreeEnv(int reward_dim, int num_xtra_actions, float axis_reward_ratio=0.9);
             ToyTreeEnv(const ToyTreeEnv& other);
             virtual std::shared_ptr<ThtsEnv> clone();
 
@@ -62,7 +65,7 @@ namespace thts{
              * Returns:
              *      Initial state for this environment instance
              */
-            std::shared_ptr<const IntVectorState> get_initial_state() const;
+            std::shared_ptr<const IntState> get_initial_state() const;
 
             /**
              * Returns if a state is a sink state.
@@ -73,7 +76,7 @@ namespace thts{
              * Returns:
              *      True if 'state' is a sink state and false otherwise
              */
-            bool is_sink_state(std::shared_ptr<const IntVectorState> state) const;
+            bool is_sink_state(std::shared_ptr<const IntState> state) const;
 
             /**
              * Returns a list of actions that are valid in a given state.
@@ -84,13 +87,13 @@ namespace thts{
              * Returns:
              *      Returns a list of actions available from 'state'
              */
-            std::shared_ptr<IntActionVector> get_valid_actions(std::shared_ptr<const IntVectorState> state) const;
+            std::shared_ptr<IntActionVector> get_valid_actions(std::shared_ptr<const IntState> state) const;
 
             /**
              * Returns next state for taking given action
              */
-            std::shared_ptr<IntVectorState> get_next_state(
-                std::shared_ptr<const IntVectorState> state, std::shared_ptr<const IntAction> action) const;
+            std::shared_ptr<IntState> get_next_state(
+                std::shared_ptr<const IntState> state, std::shared_ptr<const IntAction> action) const;
 
             /**
              * Returns a distribution over successor states from a state action pair.
@@ -106,8 +109,8 @@ namespace thts{
              * Returns:
              *      Returns a successor state distribution from taking 'action' in state 'state'.
              */
-            std::shared_ptr<IntVectorStateDistr> get_transition_distribution(
-                std::shared_ptr<const IntVectorState> state, std::shared_ptr<const IntAction> action) const;
+            std::shared_ptr<IntStateDistr> get_transition_distribution(
+                std::shared_ptr<const IntState> state, std::shared_ptr<const IntAction> action) const;
 
             /**
              * Samples an successor state when taking an action from a state.
@@ -122,8 +125,8 @@ namespace thts{
              * Returns:
              *      Returns an successor state sampled from taking 'action' from 'state'
              */
-            std::shared_ptr<const IntVectorState> sample_transition_distribution(
-                std::shared_ptr<const IntVectorState> state, 
+            std::shared_ptr<const IntState> sample_transition_distribution(
+                std::shared_ptr<const IntState> state, 
                 std::shared_ptr<const IntAction> action, 
                 RandManager& rand_manager) const;
             
@@ -144,7 +147,7 @@ namespace thts{
              *      The reward for taking 'action' from 'state' (and sampling 'observation')
              */
             Eigen::ArrayXd get_mo_reward(
-                std::shared_ptr<const IntVectorState> state, 
+                std::shared_ptr<const IntState> state, 
                 std::shared_ptr<const IntAction> action) const;
 
 

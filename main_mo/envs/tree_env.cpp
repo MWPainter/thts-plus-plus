@@ -11,26 +11,45 @@
 
 #include <mo/mo_helper.h>
 
+#include <cmath>
+
 using namespace std; 
 namespace py = pybind11;
 
 
 namespace thts {
-    ToyTreeEnv::ToyTreeEnv(int num_rewards, int num_actions, int tree_depth, bool sparse) : 
-        MoThtsEnv(num_rewards, true),
-        num_actions(num_actions),
-        tree_depth(tree_depth),
-        sparse(sparse),
-        reward_vectors(thts::helper::get_well_spaced_hyperphere_points(num_actions,num_rewards))
+    ToyTreeEnv::ToyTreeEnv(int reward_dim, int num_xtra_actions, float axis_reward_ratio) : 
+        MoThtsEnv(reward_dim, true),
+        total_actions(reward_dim + num_xtra_actions),
+        num_xtra_actions(num_xtra_actions),
+        reward_scale(axis_reward_ratio),
+        horizon(reward_dim * (reward_dim - 1) / 2),
+        xtra_action_rewards(),
+        xtra_reward_dims()
     {
+        for (int i=0; i<reward_dim; i++) 
+        {
+            for (int j=i+1; j<reward_dim; j++) 
+            {
+                xtra_reward_dims.push_back(make_pair(i,j));
+            }
+        }
+
+        for (int i=0; i<num_xtra_actions; i++) 
+        {
+            float angle = 0.5 * M_PI * i / num_xtra_actions;
+            xtra_action_rewards.push_back(make_pair(cos(angle),sin(angle)));
+        }
     }
 
     ToyTreeEnv::ToyTreeEnv(const ToyTreeEnv& other) :
         MoThtsEnv(other.reward_dim, true),
-        num_actions(other.num_actions),
-        tree_depth(other.tree_depth),
-        sparse(other.sparse),
-        reward_vectors(other.reward_vectors)
+        total_actions(other.total_actions),
+        num_xtra_actions(other.num_xtra_actions),
+        reward_scale(other.reward_scale),
+        horizon(other.horizon),
+        xtra_action_rewards(other.xtra_action_rewards),
+        xtra_reward_dims(other.xtra_reward_dims)
     {
     }
 
@@ -41,69 +60,65 @@ namespace thts {
     /**
      * Returns a vector full of zeros
      */
-    shared_ptr<const IntVectorState> ToyTreeEnv::get_initial_state() const 
+    shared_ptr<const IntState> ToyTreeEnv::get_initial_state() const 
     {
-        vector<int> init_state_list(num_actions+1, 0);
-        return make_shared<const IntVectorState>(init_state_list);
+        return make_shared<const IntState>(0);
     }
 
-    bool ToyTreeEnv::is_sink_state(shared_ptr<const IntVectorState> state) const 
+    bool ToyTreeEnv::is_sink_state(shared_ptr<const IntState> state) const 
     {
-        return state->state[0] == tree_depth;
+        return state->state == horizon;
     }
 
-    shared_ptr<IntActionVector> ToyTreeEnv::get_valid_actions(shared_ptr<const IntVectorState> state) const 
+    shared_ptr<IntActionVector> ToyTreeEnv::get_valid_actions(shared_ptr<const IntState> state) const 
     {
         shared_ptr<IntActionVector> valid_actions = make_shared<IntActionVector>();
-        valid_actions->reserve(num_actions);
-        for (int i=0; i<num_actions; i++) {
+        valid_actions->reserve(total_actions);
+        for (int i=0; i<total_actions; i++) {
             valid_actions->push_back(make_shared<IntAction>(i));
         }
         return valid_actions;
     }
 
-    shared_ptr<IntVectorState> ToyTreeEnv::get_next_state(
-        shared_ptr<const IntVectorState> state, shared_ptr<const IntAction> action) const
+    shared_ptr<IntState> ToyTreeEnv::get_next_state(
+        shared_ptr<const IntState> state, shared_ptr<const IntAction> action) const
     {
-        vector<int> next_state_list(state->state);
-        next_state_list[0]++;
-        next_state_list[action->action+1]++;
-        return make_shared<IntVectorState>(next_state_list);   
+        return make_shared<IntState>(state->state + 1);   
     }
 
-    shared_ptr<IntVectorStateDistr> ToyTreeEnv::get_transition_distribution(
-        shared_ptr<const IntVectorState> state, shared_ptr<const IntAction> action) const 
+    shared_ptr<IntStateDistr> ToyTreeEnv::get_transition_distribution(
+        shared_ptr<const IntState> state, shared_ptr<const IntAction> action) const 
     {
-        shared_ptr<IntVectorStateDistr> distr;
-        shared_ptr<IntVectorState> next_state = get_next_state(state,action);
+        shared_ptr<IntStateDistr> distr;
+        shared_ptr<IntState> next_state = get_next_state(state,action);
         distr->insert_or_assign(next_state,1.0);
         return distr;
     }
 
-    shared_ptr<const IntVectorState> ToyTreeEnv::sample_transition_distribution(
-        shared_ptr<const IntVectorState> state, shared_ptr<const IntAction> action, RandManager& rand_manager) const 
+    shared_ptr<const IntState> ToyTreeEnv::sample_transition_distribution(
+        shared_ptr<const IntState> state, shared_ptr<const IntAction> action, RandManager& rand_manager) const 
     {
         return get_next_state(state,action);
     }
  
     Eigen::ArrayXd ToyTreeEnv::get_mo_reward(
-        shared_ptr<const IntVectorState> state, 
+        shared_ptr<const IntState> state, 
         shared_ptr<const IntAction> action) const 
     {
-        if (!sparse) {
-            return reward_vectors[action->action] / tree_depth;
+        Eigen::ArrayXd reward = Eigen::ArrayXd::Zero(reward_dim);
+
+        int action_idx = action->action;
+        if (action_idx < reward_dim) {
+            reward[action_idx] = 1.0;
+        } else {
+            int timestep = state->state;
+            int xtra_action_idx = action_idx - reward_dim;
+            reward[xtra_reward_dims[timestep].first] = xtra_action_rewards[xtra_action_idx].first;
+            reward[xtra_reward_dims[timestep].second] = xtra_action_rewards[xtra_action_idx].second;
         }
 
-        int depth = state->state[0];
-        if (depth != tree_depth-1) {
-            return Eigen::ArrayXd::Zero(reward_dim);
-        }
-
-        Eigen::ArrayXd final_reward = Eigen::ArrayXd::Zero(reward_dim);
-        for (int i=0; i<num_actions; i++) {
-            final_reward += reward_vectors[i] * state->state[i+1] / tree_depth;
-        }
-        return final_reward;
+        reward *= reward_scale;
+        return reward;
     }
 }
 
@@ -117,20 +132,20 @@ namespace thts {
     
     shared_ptr<const State> ToyTreeEnv::get_initial_state_itfc() const 
     {
-        shared_ptr<const IntVectorState> init_state = get_initial_state();
+        shared_ptr<const IntState> init_state = get_initial_state();
         return static_pointer_cast<const State>(init_state);
     }
 
     bool ToyTreeEnv::is_sink_state_itfc(shared_ptr<const State> state, ThtsContext& ctx) const 
     {
-        shared_ptr<const IntVectorState> state_itfc = static_pointer_cast<const IntVectorState>(state);
+        shared_ptr<const IntState> state_itfc = static_pointer_cast<const IntState>(state);
         return is_sink_state(state_itfc);
     }
 
     shared_ptr<ActionVector> ToyTreeEnv::get_valid_actions_itfc(
         shared_ptr<const State> state, ThtsContext& ctx) const 
     {
-        shared_ptr<const IntVectorState> state_itfc = static_pointer_cast<const IntVectorState>(state);
+        shared_ptr<const IntState> state_itfc = static_pointer_cast<const IntState>(state);
         shared_ptr<vector<shared_ptr<const IntAction>>> valid_actions_itfc = get_valid_actions(state_itfc);
 
         shared_ptr<ActionVector> valid_actions = make_shared<ActionVector>();
@@ -143,12 +158,12 @@ namespace thts {
     shared_ptr<StateDistr> ToyTreeEnv::get_transition_distribution_itfc(
         shared_ptr<const State> state, shared_ptr<const Action> action, ThtsContext& ctx) const 
     {
-        shared_ptr<const IntVectorState> state_itfc = static_pointer_cast<const IntVectorState>(state);
+        shared_ptr<const IntState> state_itfc = static_pointer_cast<const IntState>(state);
         shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);
-        shared_ptr<IntVectorStateDistr> distr_itfc = get_transition_distribution(state_itfc, action_itfc);
+        shared_ptr<IntStateDistr> distr_itfc = get_transition_distribution(state_itfc, action_itfc);
         
         shared_ptr<StateDistr> distr = make_shared<StateDistr>(); 
-        for (pair<shared_ptr<const IntVectorState>,double> key_val_pair : *distr_itfc) {
+        for (pair<shared_ptr<const IntState>,double> key_val_pair : *distr_itfc) {
             shared_ptr<const State> obsv = static_pointer_cast<const State>(key_val_pair.first);
             double prob = key_val_pair.second;
             distr->insert_or_assign(obsv, prob);
@@ -162,9 +177,9 @@ namespace thts {
        RandManager& rand_manager, 
        ThtsContext& ctx) const 
     {
-        shared_ptr<const IntVectorState> state_itfc = static_pointer_cast<const IntVectorState>(state);
+        shared_ptr<const IntState> state_itfc = static_pointer_cast<const IntState>(state);
         shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);
-        shared_ptr<const IntVectorState> obsv = sample_transition_distribution(state_itfc, action_itfc, rand_manager);
+        shared_ptr<const IntState> obsv = sample_transition_distribution(state_itfc, action_itfc, rand_manager);
         return static_pointer_cast<const State>(obsv);
     }
 
@@ -173,7 +188,7 @@ namespace thts {
         shared_ptr<const Action> action,
         ThtsContext& ctx) const
     {
-        shared_ptr<const IntVectorState> state_itfc = static_pointer_cast<const IntVectorState>(state);
+        shared_ptr<const IntState> state_itfc = static_pointer_cast<const IntState>(state);
         shared_ptr<const IntAction> action_itfc = static_pointer_cast<const IntAction>(action);
         return get_mo_reward(state_itfc, action_itfc);
     }

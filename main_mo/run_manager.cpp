@@ -232,6 +232,10 @@ namespace thts {
                     int max_xy_distance = get_max_xy_for_width(env_size);
                     xpr_config[XPR_PARAM_ID_MAX_TRIAL_LENGTH] = max_xy_distance * 2;
                 }
+                else if (env_id == ENV_ID_TOY_VARIABLE_SIZE)
+                {
+                    xpr_config[XPR_PARAM_ID_MAX_TRIAL_LENGTH] = env_size * (env_size - 1) / 2;
+                }
                 else 
                 {
                     throw runtime_error("Max trial length not overridden variable sizes env" + env_id);
@@ -333,6 +337,15 @@ namespace thts {
             unique_filename = get_eval_logs_dir();
         }
         string env_id = get_env_id();
+
+        if (env_id == ENV_ID_TOY_VARIABLE_SIZE) 
+        {
+            int size = this->get_env_size();
+            int reward_dim = size;
+            int num_xtra_actions = 5;
+            float axis_reward_ratio = 0.9;
+            return make_shared<ToyTreeEnv>(reward_dim, num_xtra_actions, axis_reward_ratio);
+        }
 
         if (GYM_ENVS.contains(env_id)) {
             shared_ptr<PickleWrapper> pickle_wrapper = make_shared<PickleWrapper>();
@@ -561,13 +574,13 @@ namespace thts {
                 kw_args_ptr);
         }
 
-        if (env_id == ENV_ID_TOY_TREE_DENSE)
+        if (env_id == ENV_ID_TOY_TREE_DENSE
+            || env_id == ENV_ID_TOY_TREE_SPARSE)
         {
-            return make_shared<ToyTreeEnv>(2, 5, 10, false);
-        }
-        if (env_id == ENV_ID_TOY_TREE_SPARSE)
-        {
-            return make_shared<ToyTreeEnv>(2, 5, 10, true);
+            int reward_dim = 2;
+            int num_xtra_actions = 5;
+            float axis_reward_ratio = 0.9f;
+            return make_shared<ToyTreeEnv>(reward_dim, num_xtra_actions, axis_reward_ratio);
         }
 
         stringstream ss;
@@ -616,6 +629,12 @@ namespace thts {
             double max_steps = 10.0;
             Eigen::ArrayXd r_min = Eigen::ArrayXd::Ones(2);
             return max_steps * r_min;
+        }
+
+        if (env_id == ENV_ID_TOY_VARIABLE_SIZE) 
+        {
+            int size = this->get_env_size();
+            return Eigen::ArrayXd::Ones(size);
         }
 
         if (env_id == ENV_ID_VAMPLEW_DST
@@ -792,6 +811,12 @@ namespace thts {
             double max_steps = 10.0;
             Eigen::ArrayXd r_min = Eigen::ArrayXd::Zero(2);
             return max_steps * r_min;
+        }
+
+        if (env_id == ENV_ID_TOY_VARIABLE_SIZE) 
+        {
+            int size = this->get_env_size();
+            return Eigen::ArrayXd::Zero(size);
         }
 
         if (env_id == ENV_ID_VAMPLEW_DST

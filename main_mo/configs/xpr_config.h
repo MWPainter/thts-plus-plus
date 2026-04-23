@@ -74,6 +74,8 @@
 #include "main_mo/configs/xpr_config_720a_dst_stoch_clm.h"
 #include "main_mo/configs/xpr_config_720b_dst_stoch_clm.h"
 
+#include "main_mo/configs/xpr_config_800_dim_scaling.h"
+
 // ---------------------------------------------------------------------------------------------------------------------
 // List of all configs
 // ---------------------------------------------------------------------------------------------------------------------
@@ -146,4 +148,6 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     CONFIG_720,
     CONFIG_720a,
     CONFIG_720b,
+
+    CONFIG_800,
 };

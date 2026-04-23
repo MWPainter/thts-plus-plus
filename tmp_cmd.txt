@@ -201,14 +201,22 @@ mo gymnasium hpopt (finished)
 ---
 mo gymnasium hpopt (partially finished)
 ---
+make && clear &&
+./run_memory_limited 16G ./moexpr opt 210  // 6D + stochastic => CH really slow
 
-./run_memory_limited 16G ./moexpr opt 210  // 7D + stochastic => CH really slow
+
+---
+Mo gym evals (skipped, slow + uneccessary)
+---
+make && clear &&
+./run_memory_limited 16G ./moexpr eval 510 &&
+python plot_mo.py 510
 
 
 
 
 ---
-dst eval (mostly good - maybe some reruns required)
+dst eval (finished)
 ---
 make && clear &&
 ./run_memory_limited 16G ./moexpr eval 400_ &&
@@ -241,12 +249,6 @@ python plot_mo.py 500 510 520 530 540 550 560 570 580 590
 
 
 
----
-Mo gym evals (finished) - skipped, slow + uneccessary
----
-make && clear &&
-./run_memory_limited 16G ./moexpr eval 510 &&
-python plot_mo.py 510
 
 
 
@@ -268,37 +270,19 @@ python plot_mo.py 700 710 720
 
 
 ---
-re-run - bug in recommend
+Final runs #1
 ---
 make && clear &&
-./run_memory_limited 16G ./moexpr eval 400_ ;
-./run_memory_limited 16G ./moexpr eval 400a_ ;
-./run_memory_limited 16G ./moexpr eval 410_ ;
-./run_memory_limited 16G ./moexpr eval 410a_ ;
-./run_memory_limited 16G ./moexpr eval 420_ ;
-./run_memory_limited 16G ./moexpr eval 420a_ ;
-./run_memory_limited 16G ./moexpr eval 440 ;   
-./run_memory_limited 16G ./moexpr eval 450 ;   
-./run_memory_limited 16G ./moexpr eval 460 ;
-python plot_mo.py 400 410 420 440 450 460 ;
-./run_memory_limited 16G ./moexpr eval 500 ;
-./run_memory_limited 16G ./moexpr eval 520 ;
-./run_memory_limited 16G ./moexpr eval 540 ;
-./run_memory_limited 16G ./moexpr eval 550 ;
-./run_memory_limited 16G ./moexpr eval 580 ;
-python plot_mo.py 500 520 540 550 570 580 ;
-./run_memory_limited 16G ./moexpr eval 700_ ;
-./run_memory_limited 16G ./moexpr eval 700a_ ;
-./run_memory_limited 16G ./moexpr eval 700b_ ;
-./run_memory_limited 16G ./moexpr eval 710_ ;
-./run_memory_limited 16G ./moexpr eval 710a_ ;
-./run_memory_limited 16G ./moexpr eval 710b_ ;
-./run_memory_limited 16G ./moexpr eval 720_ ;
-./run_memory_limited 16G ./moexpr eval 720a_ ;
-./run_memory_limited 16G ./moexpr eval 720b_ ;
-python plot_mo.py 700 710 720 ;
+./run_memory_limited 16G ./moexpr eval 800 ;
+python plot_mo.py 800;
 
 
+
+---
+Final runs #2
+---
+make && clear &&
+./run_memory_limited 16G ./moexpr eval 500 500_fruit_tree_1776787137 
 
 
 
