@@ -270,19 +270,13 @@ python plot_mo.py 700 710 720
 
 
 ---
-Final runs #1
+Final runs
 ---
 make && clear &&
-./run_memory_limited 16G ./moexpr eval 800 ;
-python plot_mo.py 800;
-
-
-
----
-Final runs #2
----
-make && clear &&
-./run_memory_limited 16G ./moexpr eval 500 500_fruit_tree_1776787137 
+./run_memory_limited 16G ./moexpr eval 800 &&
+python plot_mo.py 800 &&
+./run_memory_limited 16G ./moexpr eval 500 500_fruit_tree_1776787137 &&
+python plot_mo.py 500
 
 
 

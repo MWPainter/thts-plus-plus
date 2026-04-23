@@ -1195,6 +1195,18 @@ if __name__ == "__main__":
         fname_base = "dst_scale/720_dst_scaling_stoch_calm_ch6"
         make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6, chvi_reversed_filenames=chvi_reversed_filenames)
 
+    # ------------------------------------------------------------------------------------------------------------------
+    # DST - scalability plots
+    # ------------------------------------------------------------------------------------------------------------------
+
+    if "800" in sys.argv or "all" in sys.argv or "dim_scaling" in sys.argv:
+        print("Plotting: ", "800")
+        filenames = glob.glob("mo_eval_logs/800_*/**/eval_log.txt", recursive=True)
+        fname_base = "dim_scaling/800_dim_scaling_ch5"
+        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        fname_base = "dim_scaling/800_dim_scaling_ch6"
+        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
+
 
     # ------------------------------------------------------------------------------------------------------------------
     # Gym envs
