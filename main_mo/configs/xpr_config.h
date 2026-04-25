@@ -75,6 +75,13 @@
 #include "main_mo/configs/xpr_config_720b_dst_stoch_clm.h"
 
 #include "main_mo/configs/xpr_config_800_dim_scaling.h"
+#include "main_mo/configs/xpr_config_801_dim_scaling.h"
+#include "main_mo/configs/xpr_config_802_dim_scaling.h"
+#include "main_mo/configs/xpr_config_810_dim_scaling.h"
+#include "main_mo/configs/xpr_config_811_dim_scaling.h"
+#include "main_mo/configs/xpr_config_812_dim_scaling.h"
+#include "main_mo/configs/xpr_config_821_dim_scaling.h"
+#include "main_mo/configs/xpr_config_822_dim_scaling.h"
 
 // ---------------------------------------------------------------------------------------------------------------------
 // List of all configs
@@ -150,4 +157,11 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     CONFIG_720b,
 
     CONFIG_800,
+    CONFIG_801,
+    CONFIG_802,
+    CONFIG_810,
+    CONFIG_811,
+    CONFIG_812,
+    CONFIG_821,
+    CONFIG_822,
 };

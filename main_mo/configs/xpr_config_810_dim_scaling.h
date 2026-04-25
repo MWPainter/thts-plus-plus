@@ -5,13 +5,13 @@
 #include "main_mo/configs/constants_algorithms.h"
 #include "main_mo/configs/constants_experiments.h"
 
-static const std::vector<ConfigMap> CONFIG_800 =
+static const std::vector<ConfigMap> CONFIG_810 =
 {
     // xpr params
     {
         {XPR_OR_ALG_ID_TAG,                             XPR_PARAMS_ID_TAG},
-        {XPR_PARAM_ID_NAME,                             "800_reward_dim_scaling"},
-        {XPR_PARAM_ID_ENV,                              ENV_ID_TOY_VARIABLE_SIZE},
+        {XPR_PARAM_ID_NAME,                             "810_reward_dim_scaling"},
+        {XPR_PARAM_ID_ENV,                              ENV_ID_TOY_STOCH_VARIABLE_SIZE},
         {XPR_PARAM_ID_ENV_SIZE,                         std::vector<int>{2,3,4,5,6,7}},
         {XPR_PARAM_ID_MCTS_MODE,                        false},
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},

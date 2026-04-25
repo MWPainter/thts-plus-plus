@@ -30,6 +30,7 @@ static const std::string ENV_ID_TOY_TREE_SPARSE = "toy_tree_sparse";
 // TODO: variable sized toy tree for scalability
 
 static const std::string ENV_ID_TOY_VARIABLE_SIZE = "toy_vary";
+static const std::string ENV_ID_TOY_STOCH_VARIABLE_SIZE = "toy_vary_stoch";
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Environment id's - DST (vamplew = original)

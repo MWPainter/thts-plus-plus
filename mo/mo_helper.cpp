@@ -127,6 +127,8 @@ namespace thts::helper {
         cout  << ", " << dim << "dims, " << num_points 
             << "points) for the first time. This may take a little while." << endl;
 
+        cout << "Outputting to file: " << filename << endl;
+
         // Ensure a python interpreter exists and gil acquired
         unique_ptr<py::scoped_interpreter> py_interpreter;
         std::unique_ptr<py::gil_scoped_acquire> acquire;

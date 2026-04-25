@@ -5,6 +5,8 @@
 #include "thts_types.h"
 
 #include <memory>
+#include <mutex>
+#include <random>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -36,10 +38,20 @@ namespace thts{
         public:
             int total_actions;
             int num_xtra_actions;
-            float reward_scale;
+            double reward_scale;
             int horizon;
-            std::vector<std::pair<float,float>> xtra_action_rewards;
+            double random_action_prob;
+            std::vector<std::pair<double,double>> xtra_action_rewards;
             std::vector<std::pair<int,int>> xtra_reward_dims;
+
+        /**
+         * Internal RNG used to sample the random-action substitution inside get_mo_reward.
+         * 'get_mo_reward' is const (and may be called concurrently from multiple search
+         * threads) so the generator and mutex are mutable.
+         */
+        private:
+            mutable std::mutex rand_action_rng_mutex;
+            mutable std::mt19937 rand_action_rng;
 
 
 
@@ -49,8 +61,16 @@ namespace thts{
         public:
             /**
              * Constructor
+             *
+             * random_action_prob: probability in [0,1] that, when computing a reward,
+             * the agent's chosen action is replaced by a uniformly random action drawn
+             * from the full action set. Defaults to 0 (deterministic, original behaviour).
              */
-            ToyTreeEnv(int reward_dim, int num_xtra_actions, float axis_reward_ratio=0.9);
+            ToyTreeEnv(
+                int reward_dim,
+                int num_xtra_actions,
+                double axis_reward_ratio=0.9,
+                double random_action_prob=0.0f);
             ToyTreeEnv(const ToyTreeEnv& other);
             virtual std::shared_ptr<ThtsEnv> clone();
 

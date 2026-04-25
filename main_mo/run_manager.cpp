@@ -232,7 +232,7 @@ namespace thts {
                     int max_xy_distance = get_max_xy_for_width(env_size);
                     xpr_config[XPR_PARAM_ID_MAX_TRIAL_LENGTH] = max_xy_distance * 2;
                 }
-                else if (env_id == ENV_ID_TOY_VARIABLE_SIZE)
+                else if (env_id == ENV_ID_TOY_VARIABLE_SIZE || env_id == ENV_ID_TOY_STOCH_VARIABLE_SIZE)
                 {
                     xpr_config[XPR_PARAM_ID_MAX_TRIAL_LENGTH] = env_size * (env_size - 1) / 2;
                 }
@@ -338,13 +338,18 @@ namespace thts {
         }
         string env_id = get_env_id();
 
-        if (env_id == ENV_ID_TOY_VARIABLE_SIZE) 
+        if (env_id == ENV_ID_TOY_VARIABLE_SIZE || env_id == ENV_ID_TOY_STOCH_VARIABLE_SIZE) 
         {
             int size = this->get_env_size();
             int reward_dim = size;
             int num_xtra_actions = 5;
-            float axis_reward_ratio = 0.9;
-            return make_shared<ToyTreeEnv>(reward_dim, num_xtra_actions, axis_reward_ratio);
+            double axis_reward_ratio = 0.9;
+            double random_action_prob = 0.0;
+            if (env_id == ENV_ID_TOY_STOCH_VARIABLE_SIZE)
+            {
+                random_action_prob = 0.1;
+            }
+            return make_shared<ToyTreeEnv>(reward_dim, num_xtra_actions, axis_reward_ratio, random_action_prob);
         }
 
         if (GYM_ENVS.contains(env_id)) {
@@ -631,7 +636,7 @@ namespace thts {
             return max_steps * r_min;
         }
 
-        if (env_id == ENV_ID_TOY_VARIABLE_SIZE) 
+        if (env_id == ENV_ID_TOY_VARIABLE_SIZE || env_id == ENV_ID_TOY_STOCH_VARIABLE_SIZE) 
         {
             int size = this->get_env_size();
             return Eigen::ArrayXd::Ones(size);
@@ -813,7 +818,7 @@ namespace thts {
             return max_steps * r_min;
         }
 
-        if (env_id == ENV_ID_TOY_VARIABLE_SIZE) 
+        if (env_id == ENV_ID_TOY_VARIABLE_SIZE || env_id == ENV_ID_TOY_STOCH_VARIABLE_SIZE) 
         {
             int size = this->get_env_size();
             return Eigen::ArrayXd::Zero(size);

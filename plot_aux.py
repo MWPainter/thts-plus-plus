@@ -115,10 +115,12 @@ def make_lineplot_df(
         plt.ylabel(y_axis_lab)
     if horizontal_lines is not None:
         for y in horizontal_lines:
-            plt.axhline(y=y, color='k', linestyle='--')
+            # zorder below the default lineplot zorder (~2) so the dashed
+            # reference lines render beneath the plotted data lines
+            plt.axhline(y=y, color='k', linestyle='--', zorder=1.5)
     if vertical_lines is not None:
         for x in vertical_lines:
-            plt.axvline(x=x, color='k', linestyle='--')
+            plt.axvline(x=x, color='k', linestyle='--', zorder=1.5)
     if legend_lab is not None:
         plt.legend(loc=legend_loc, title=legend_lab)
     if y_axis_range is not None:
@@ -326,6 +328,8 @@ def make_eval_plot(
 
     df["path_len"] = np.log(df["mc_val"]) / np.log(0.99)
     df.loc[df["mc_val"] == 0.0, "path_len"] = max_path_len
+    df.loc[df["path_len"] >= max_path_len, "path_len"] = max_path_len
+    df.loc[df["path_len"] < max_path_len, "path_len"] -= 1.0 # correct for off by 1 error in c++ impl
 
     # Get the set of alg ids working with
     alg_id_set = set(df["alg_id"])
@@ -768,63 +772,63 @@ if __name__ == "__main__":
     if not os.path.exists("plots"):
         os.makedirs("plots")
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # Debug
-    # ------------------------------------------------------------------------------------------------------------------
+    # # ------------------------------------------------------------------------------------------------------------------
+    # # Debug
+    # # ------------------------------------------------------------------------------------------------------------------
     
-    if "010" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
-        print("Plotting: ", "010")
-        filenames = glob.glob("aux_eval_logs/010_*/**/eval_log.txt", recursive=True)
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/010_debug_fl_dense.png",
-            # legend_loc="lower left",
-        )
+    # if "010" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
+    #     print("Plotting: ", "010")
+    #     filenames = glob.glob("aux_eval_logs/010_*/**/eval_log.txt", recursive=True)
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/010_debug_fl_dense.png",
+    #         # legend_loc="lower left",
+    #     )
     
-    if "011" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
-        print("Plotting: ", "011")
-        filenames = glob.glob("aux_eval_logs/011_*/**/eval_log.txt", recursive=True)
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/011_debug_fl_sparse.png",
-            # legend_loc="lower left",
-        )
+    # if "011" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
+    #     print("Plotting: ", "011")
+    #     filenames = glob.glob("aux_eval_logs/011_*/**/eval_log.txt", recursive=True)
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/011_debug_fl_sparse.png",
+    #         # legend_loc="lower left",
+    #     )
     
-    if "012" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
-        print("Plotting: ", "012")
-        filenames = glob.glob("aux_eval_logs/012_*/**/eval_log.txt", recursive=True)
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/012_debug_fl_slippy.png",
-            # legend_loc="lower left",
-        )
+    # if "012" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
+    #     print("Plotting: ", "012")
+    #     filenames = glob.glob("aux_eval_logs/012_*/**/eval_log.txt", recursive=True)
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/012_debug_fl_slippy.png",
+    #         # legend_loc="lower left",
+    #     )
     
-    if "013" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
-        print("Plotting: ", "013")
-        filenames = glob.glob("aux_eval_logs/013_*/**/eval_log.txt", recursive=True)
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/013_debug_sailing.png",
-            # legend_loc="lower left",
-        )
+    # if "013" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
+    #     print("Plotting: ", "013")
+    #     filenames = glob.glob("aux_eval_logs/013_*/**/eval_log.txt", recursive=True)
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/013_debug_sailing.png",
+    #         # legend_loc="lower left",
+    #     )
     
-    if "040" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
-        print("Plotting: ", "040")
-        filenames = glob.glob("aux_eval_logs/040_*/**/eval_log.txt", recursive=True)
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/040_debug_fl_sparse_big.png",
-            # legend_loc="lower left",
-        )
+    # if "040" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
+    #     print("Plotting: ", "040")
+    #     filenames = glob.glob("aux_eval_logs/040_*/**/eval_log.txt", recursive=True)
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/040_debug_fl_sparse_big.png",
+    #         # legend_loc="lower left",
+    #     )
 
-    if "999" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
-        print("Plotting: ", "999")
-        filenames = glob.glob("aux_eval_logs/999_*/**/eval_log.txt", recursive=True)
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/999_debug.png",
-            # legend_loc="lower left",
-        )
+    # if "999" in sys.argv or "all" in sys.argv or "debug" in sys.argv:
+    #     print("Plotting: ", "999")
+    #     filenames = glob.glob("aux_eval_logs/999_*/**/eval_log.txt", recursive=True)
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/999_debug.png",
+    #         # legend_loc="lower left",
+    #     )
 
     # ------------------------------------------------------------------------------------------------------------------
     # FL Dense No Hole (Ch4.1)
@@ -835,13 +839,13 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/100_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/100_intro_ssp_gridworld_eval_vs_biastemp.png",
+            plot_filename="plots/cr_100_intro.png",
             seperate_plots=False,
             legend_loc="lower left",
             font_scale=1.7,
-            title="Reward Along Recommended Path vs Bias/Temperature",
+            title="Path Value vs Bias/Temperature",
             x_axis_lab="Bias/Temperature",
-            y_axis_lab="Reward Along Recommended Path",
+            y_axis_lab="Path Value",
         )
 
     if "101" in sys.argv or "all" in sys.argv or "intro" in sys.argv:
@@ -849,12 +853,12 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/101_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/101_intro_ssp_gridworld_temp=1_eval_vs_numtrials.png",
+            plot_filename="plots/cr_101_intro.png",
             add_dashes=True,
             font_scale=1.7,
-            title="Reward Along Recommended Path vs Num Trials",
-            x_axis_lab="Num Trials",
-            y_axis_lab="Reward Along Recommended Path",
+            title="Path Value vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Path Value",
             # legend_loc="lower left",
         )
 
@@ -866,9 +870,14 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/110_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/110_dchain_10_vs_tempbias.png",
+            plot_filename="plots/cr_110_dchain.png",
             seperate_plots=False,
-            legend_loc="lower left",
+            # legend_loc="upper left",
+            font_scale=1.7,
+            title="Value vs Bias/Temperature",
+            x_axis_lab="Bias/Temperature",
+            y_axis_lab="Value",
+            y_axis_range=(0.0, 1.1),
         )
         # make_param_sens_plot(
         #     filenames=filenames,
@@ -882,9 +891,14 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/111_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/111_mod_dchain_10_vs_tempbias.png",
+            plot_filename="plots/cr_111_mod_dchain.png",
             seperate_plots=False,
             legend_loc="lower left",
+            font_scale=1.7,
+            title="Value vs Bias/Temperature",
+            x_axis_lab="Bias/Temperature",
+            y_axis_lab="Value",
+            y_axis_range=(0.0, 1.1),
         )
 
     if "112" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
@@ -892,9 +906,14 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/112_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/112_entropy_trap_10_vs_tempbias_5k_trials.png",
+            plot_filename="plots/cr_112_entropy_trap_10_vs_tempbias_5k_trials.png",
             seperate_plots=False,
             legend_loc="lower left",
+            font_scale=1.7,
+            title="Value vs Bias/Temperature",
+            x_axis_lab="Bias/Temperature",
+            y_axis_lab="Value",
+            # y_axis_range=(0.0, 1.1),
         )
 
     if "113" in sys.argv or "all" in sys.argv or "dchain" in sys.argv:
@@ -902,9 +921,14 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/113_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/113_entropy_trap_15_vs_tempbias_500k_trials.png",
+            plot_filename="plots/cr_113_entropy_trap_15_vs_tempbias_500k_trials.png",
             seperate_plots=False,
             legend_loc="lower left",
+            font_scale=1.7,
+            title="Value vs Bias/Temperature",
+            x_axis_lab="Bias/Temperature",
+            y_axis_lab="Value",
+            # y_axis_range=(0.0, 1.1),
         )
 
 
@@ -978,15 +1002,26 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/420_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/420_FL_sparse_8x8+graph+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_420_FL_sparse_8x8+graph+heuristic_weight_local=1.png",
             # legend_loc="lower left",
+            # legend_loc="lower left",
+            font_scale=1.7,
+            title="Value vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Value",
+            horizontal_lines=[0.99**14],
         )
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/420_FL_sparse_8x8_PATH+graph+heuristic_weight_local=1.png",
-            # legend_loc="lower left",
+            plot_filename="plots/cr_420_fl_8x8.png",
+            legend_loc="upper right",
             path_len_plot=True,
             max_path_len=100,
+            font_scale=1.7,
+            title="Path Length vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Path Length",
+            horizontal_lines=[14.0],
         )
 
     # if "421" in sys.argv or "all" in sys.argv or "fl_sparse_big_heuristic" in sys.argv:
@@ -1003,15 +1038,26 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/422_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/422_FL_sparse_8x16+graph+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_422_FL_sparse_8x16+graph+heuristic_weight_local=1.png",
             # legend_loc="lower left",
+            # legend_loc="lower left",
+            font_scale=1.7,
+            title="Value vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Value",
+            horizontal_lines=[0.99**22],
         )
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/422_FL_sparse_8x16_PATH+graph+heuristic_weight_local=1.png",
-            # legend_loc="lower left",
+            plot_filename="plots/cr_422_fl_8x16.png",
             path_len_plot=True,
             max_path_len=100,
+            legend_loc="upper right",
+            font_scale=1.7,
+            title="Path Length vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Path Length",
+            horizontal_lines=[22.0],
         )
 
     # if "423" in sys.argv or "all" in sys.argv or "fl_sparse_big_heuristic" in sys.argv:
@@ -1034,15 +1080,28 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/424_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/424_FL_sparse_8x24+graph+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_424_FL_sparse_8x24+graph+heuristic_weight_local=1.png",
             # legend_loc="lower left",
+            # legend_loc="lower left",
+            font_scale=1.7,
+            title="Value vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Value",
+            horizontal_lines=[0.99**30],
         )
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/424_FL_sparse_8x24_PATH+graph+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_424_fl_8x24.png",
             # legend_loc="lower left",
             path_len_plot=True,
             max_path_len=100,
+            legend_loc="upper right",
+            font_scale=1.7,
+            title="Path Length vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Path Length",
+            horizontal_lines=[30.0],
+            use_legend=False,
         )
 
     if "425" in sys.argv or "all" in sys.argv or "fl_sparse_big_heuristic" in sys.argv:
@@ -1050,34 +1109,46 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/425_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/425_FL_sparse_8x32+graph+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_425_FL_sparse_8x32+graph+heuristic_weight_local=1.png",
             # legend_loc="lower left",
             max_path_len=150,
+            font_scale=1.7,
+            title="Value vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Value",
+            horizontal_lines=[0.99**40],
         )
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/425_FL_sparse_8x32_PATH+graph+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_425_fl_8x32.png",
             # legend_loc="lower left",
             path_len_plot=True,
             max_path_len=150,
+            legend_loc="upper right",
+            font_scale=1.7,
+            title="Path Length vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Path Length",
+            horizontal_lines=[40.0],
+            use_legend=False,
         )
 
-    if "425a" in sys.argv or "all" in sys.argv or "fl_sparse_big_heuristic" in sys.argv:
-        print("Plotting: ", "425a")
-        filenames = glob.glob("aux_eval_logs/425a_*/**/eval_log.txt", recursive=True)
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/425a_FL_sparse_8x32+graph+heuristic_weight_local=1.png",
-            # legend_loc="lower left",
-            max_path_len=150,
-        )
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/425a_FL_sparse_8x32_PATH+graph+heuristic_weight_local=1.png",
-            # legend_loc="lower left",
-            path_len_plot=True,
-            max_path_len=150,
-        )
+    # if "425a" in sys.argv or "all" in sys.argv or "fl_sparse_big_heuristic" in sys.argv:
+    #     print("Plotting: ", "425a")
+    #     filenames = glob.glob("aux_eval_logs/425a_*/**/eval_log.txt", recursive=True)
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/425a_FL_sparse_8x32+graph+heuristic_weight_local=1.png",
+    #         # legend_loc="lower left",
+    #         max_path_len=150,
+    #     )
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/425a_FL_sparse_8x32_PATH+graph+heuristic_weight_local=1.png",
+    #         # legend_loc="lower left",
+    #         path_len_plot=True,
+    #         max_path_len=150,
+    #     )
 
 
     # # ------------------------------------------------------------------------------------------------------------------
@@ -1218,124 +1289,124 @@ if __name__ == "__main__":
     #     )
 
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # Eval - Frozen Lake Sparse + mcts mode
-    # ------------------------------------------------------------------------------------------------------------------
-    if "460" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
-        print("Plotting: ", "460")
-        filenames = glob.glob("aux_eval_logs/460_*/**/eval_log.txt", recursive=True)
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/460_FL_sparse_8x8+mcts.png",
-            # legend_loc="lower left",
-        )
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/460_FL_sparse_8x8_PATH+mcts.png",
-            # legend_loc="lower left",
-            path_len_plot=True,
-            max_path_len=100,
-        )
+    # # ------------------------------------------------------------------------------------------------------------------
+    # # Eval - Frozen Lake Sparse + mcts mode
+    # # ------------------------------------------------------------------------------------------------------------------
+    # if "460" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
+    #     print("Plotting: ", "460")
+    #     filenames = glob.glob("aux_eval_logs/460_*/**/eval_log.txt", recursive=True)
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/460_FL_sparse_8x8+mcts.png",
+    #         # legend_loc="lower left",
+    #     )
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/460_FL_sparse_8x8_PATH+mcts.png",
+    #         # legend_loc="lower left",
+    #         path_len_plot=True,
+    #         max_path_len=100,
+    #     )
 
-    if "462" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
-        print("Plotting: ", "462")
-        filenames = glob.glob("aux_eval_logs/462_*/**/eval_log.txt", recursive=True)
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/462_FL_sparse_8x16+mcts.png",
-            # legend_loc="lower left",
-        )
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/462_FL_sparse_8x16_PATH+mcts.png",
-            # legend_loc="lower left",
-            path_len_plot=True,
-            max_path_len=100,
-        )
+    # if "462" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
+    #     print("Plotting: ", "462")
+    #     filenames = glob.glob("aux_eval_logs/462_*/**/eval_log.txt", recursive=True)
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/462_FL_sparse_8x16+mcts.png",
+    #         # legend_loc="lower left",
+    #     )
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/462_FL_sparse_8x16_PATH+mcts.png",
+    #         # legend_loc="lower left",
+    #         path_len_plot=True,
+    #         max_path_len=100,
+    #     )
 
-    if "464" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
-        print("Plotting: ", "464")
-        filenames = glob.glob("aux_eval_logs/464_*/**/eval_log.txt", recursive=True)
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/464_FL_sparse_8x24+mcts.png",
-            # legend_loc="lower left",
-        )
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/464_FL_sparse_8x24_PATH+mcts.png",
-            # legend_loc="lower left",
-            path_len_plot=True,
-            max_path_len=100,
-        )
+    # if "464" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
+    #     print("Plotting: ", "464")
+    #     filenames = glob.glob("aux_eval_logs/464_*/**/eval_log.txt", recursive=True)
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/464_FL_sparse_8x24+mcts.png",
+    #         # legend_loc="lower left",
+    #     )
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/464_FL_sparse_8x24_PATH+mcts.png",
+    #         # legend_loc="lower left",
+    #         path_len_plot=True,
+    #         max_path_len=100,
+    #     )
 
-    if "465" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
-        print("Plotting: ", "465")
-        filenames = glob.glob("aux_eval_logs/465_*/**/eval_log.txt", recursive=True)
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/465_FL_sparse_8x32+mcts.png",
-            # legend_loc="lower left",
-        )
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/465_FL_sparse_8x32_PATH+mcts.png",
-            # legend_loc="lower left",
-            path_len_plot=True,
-            max_path_len=150,
-        )
+    # if "465" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
+    #     print("Plotting: ", "465")
+    #     filenames = glob.glob("aux_eval_logs/465_*/**/eval_log.txt", recursive=True)
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/465_FL_sparse_8x32+mcts.png",
+    #         # legend_loc="lower left",
+    #     )
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/465_FL_sparse_8x32_PATH+mcts.png",
+    #         # legend_loc="lower left",
+    #         path_len_plot=True,
+    #         max_path_len=150,
+    #     )
 
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # Eval - Frozen Lake Sparse + mcts mode + graph mode
-    # ------------------------------------------------------------------------------------------------------------------
-    if "470" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
-        print("Plotting: ", "470")
-        filenames = glob.glob("aux_eval_logs/470_*/**/eval_log.txt", recursive=True)
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/470_FL_sparse_8x8+mcts+graph.png",
-            # legend_loc="lower left",
-        )
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/470_FL_sparse_8x8_PATH+mcts+graph.png",
-            # legend_loc="lower left",
-            path_len_plot=True,
-            max_path_len=100,
-        )
+    # # ------------------------------------------------------------------------------------------------------------------
+    # # Eval - Frozen Lake Sparse + mcts mode + graph mode
+    # # ------------------------------------------------------------------------------------------------------------------
+    # if "470" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
+    #     print("Plotting: ", "470")
+    #     filenames = glob.glob("aux_eval_logs/470_*/**/eval_log.txt", recursive=True)
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/470_FL_sparse_8x8+mcts+graph.png",
+    #         # legend_loc="lower left",
+    #     )
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/470_FL_sparse_8x8_PATH+mcts+graph.png",
+    #         # legend_loc="lower left",
+    #         path_len_plot=True,
+    #         max_path_len=100,
+    #     )
 
-    if "471" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
-        print("Plotting: ", "471")
-        filenames = glob.glob("aux_eval_logs/471_*/**/eval_log.txt", recursive=True)
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/471_FL_sparse_8x12+mcts+graph.png",
-            # legend_loc="lower left",
-        )
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/471_FL_sparse_8x12_PATH+mcts+graph.png",
-            # legend_loc="lower left",
-            path_len_plot=True,
-            max_path_len=100,
-        )
+    # if "471" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
+    #     print("Plotting: ", "471")
+    #     filenames = glob.glob("aux_eval_logs/471_*/**/eval_log.txt", recursive=True)
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/471_FL_sparse_8x12+mcts+graph.png",
+    #         # legend_loc="lower left",
+    #     )
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/471_FL_sparse_8x12_PATH+mcts+graph.png",
+    #         # legend_loc="lower left",
+    #         path_len_plot=True,
+    #         max_path_len=100,
+    #     )
 
-    if "472" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
-        print("Plotting: ", "472")
-        filenames = glob.glob("aux_eval_logs/472_*/**/eval_log.txt", recursive=True)
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/472_FL_sparse_8x16+mcts+graph.png",
-            # legend_loc="lower left",
-        )
-        make_eval_plot(
-            filenames=filenames,
-            plot_filename="plots/472_FL_sparse_8x16_PATH+mcts+graph.png",
-            # legend_loc="lower left",
-            path_len_plot=True,
-            max_path_len=100,
-        )
+    # if "472" in sys.argv or "all" in sys.argv or "fl_sparse_mcts" in sys.argv:
+    #     print("Plotting: ", "472")
+    #     filenames = glob.glob("aux_eval_logs/472_*/**/eval_log.txt", recursive=True)
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/472_FL_sparse_8x16+mcts+graph.png",
+    #         # legend_loc="lower left",
+    #     )
+    #     make_eval_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/472_FL_sparse_8x16_PATH+mcts+graph.png",
+    #         # legend_loc="lower left",
+    #         path_len_plot=True,
+    #         max_path_len=100,
+    #     )
 
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -1346,8 +1417,14 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/480_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/480_FL_slippy_4x4+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_480_slippy_4x4.png",
             # legend_loc="lower left",
+            font_scale=1.7,
+            title="Pr(Reach Goal) vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Pr(Reach Goal)",
+            horizontal_lines=[0.7442],
+            use_legend=False,
         )
 
     if "481" in sys.argv or "all" in sys.argv or "fl_slippy_heuristic" in sys.argv:
@@ -1355,8 +1432,13 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/481_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/481_FL_slippy_4x8+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_481_slippy_4x8.png",
             # legend_loc="lower left",
+            font_scale=1.7,
+            title="Pr(Reach Goal) vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Pr(Reach Goal)",
+            horizontal_lines=[0.6343],
         )
 
     if "482" in sys.argv or "all" in sys.argv or "fl_slippy_heuristic" in sys.argv:
@@ -1364,8 +1446,14 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/482_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/482_FL_slippy_4x12+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_482_slippy_4x12.png",
             # legend_loc="lower left",
+            font_scale=1.7,
+            title="Pr(Reach Goal) vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Pr(Reach Goal)",
+            horizontal_lines=[0.5734],
+            use_legend=False,
         )
 
     if "483" in sys.argv or "all" in sys.argv or "fl_slippy_heuristic" in sys.argv:
@@ -1373,8 +1461,14 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/483_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/483_FL_slippy_4x16+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_483_slippy_4x16.png",
             # legend_loc="lower left",
+            font_scale=1.7,
+            title="Pr(Reach Goal) vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Pr(Reach Goal)",
+            horizontal_lines=[0.3500],
+            use_legend=False,
         )
 
     # if "484" in sys.argv or "all" in sys.argv or "fl_slippy_heuristic" in sys.argv:
@@ -1422,8 +1516,12 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/490_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/490_sailing_north_8x8+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_490_sail_north_8x8.png",
             # legend_loc="lower left",
+            font_scale=1.7,
+            title="Value vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Value",
         )
 
     if "491" in sys.argv or "all" in sys.argv or "sailing_north_heuristic" in sys.argv:
@@ -1431,8 +1529,12 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/491_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/491_sailing_north_8x16+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_491_sail_north_8x16.png",
             # legend_loc="lower left",
+            font_scale=1.7,
+            title="Value vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Value",
         )
 
     if "492" in sys.argv or "all" in sys.argv or "sailing_north_heuristic" in sys.argv:
@@ -1440,8 +1542,12 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/492_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/492_sailing_north_16x16+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_492_sail_north_16x16.png",
             # legend_loc="lower left",
+            font_scale=1.7,
+            title="Value vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Value",
         )
 
 
@@ -1453,8 +1559,12 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/500_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/500_sailing_south_east_8x8+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_500_sail_se_8x8.png",
             # legend_loc="lower left",
+            font_scale=1.7,
+            title="Value vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Value",
         )
 
     if "501" in sys.argv or "all" in sys.argv or "sailing_south_east_heuristic" in sys.argv:
@@ -1462,8 +1572,12 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/501_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/501_sailing_south_east_8x16+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_501_sail_se_8x16.png",
             # legend_loc="lower left",
+            font_scale=1.7,
+            title="Value vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Value",
         )
 
     if "502" in sys.argv or "all" in sys.argv or "sailing_south_east_heuristic" in sys.argv:
@@ -1471,8 +1585,12 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/502_*/**/eval_log.txt", recursive=True)
         make_eval_plot(
             filenames=filenames,
-            plot_filename="plots/502_sailing_south_east_16x16+heuristic_weight_local=1.png",
+            plot_filename="plots/cr_502_sail_se_16x16.png",
             # legend_loc="lower left",
+            font_scale=1.7,
+            title="Value vs #Trials",
+            x_axis_lab="#Trials",
+            y_axis_lab="Value",
         )
 
 
@@ -1521,10 +1639,14 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/700_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/700_fl_sparse_8x8_eps=0.0.png",
+            plot_filename="plots/cr_700_fl_8x8_param_e0_dt0.png",
             legend_loc="lower left",
             seperate_plots=False,
-            horizontal_lines=[0.99**15],
+            font_scale=1.7,
+            title="Value vs Bias/Temperature",
+            x_axis_lab="Bias/Temperature",
+            y_axis_lab="Value",
+            horizontal_lines=[0.99**14],
         )
 
     if "701" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
@@ -1532,10 +1654,15 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/701_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/701_fl_sparse_8x8_eps=0.0_decay_temp=0.01.png",
+            plot_filename="plots/cr_701_fl_8x8_param_e0_dt1.png",
             legend_loc="lower left",
             seperate_plots=False,
-            horizontal_lines=[0.99**19],
+            # horizontal_lines=[0.99**19],
+            # legend_loc="upper left",
+            font_scale=1.7,
+            title="Value vs Bias/Temperature",
+            x_axis_lab="Bias/Temperature",
+            y_axis_lab="Value",
         )
 
     if "710" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
@@ -1543,71 +1670,102 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/710_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/710_fl_sparse_8x8_eps=1.0.png",
+            plot_filename="plots/cr_710_fl_8x8_param_e1_dt0.png",
             legend_loc="lower left",
             seperate_plots=False,
-            horizontal_lines=[0.99**15],
+            # horizontal_lines=[0.99**15],
+            # legend_loc="upper left",
+            font_scale=1.7,
+            title="Value vs Bias/Temperature",
+            x_axis_lab="Bias/Temperature",
+            y_axis_lab="Value",
+            # use_legend=False,
         )
 
-    if "711" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "711")
-        filenames = glob.glob("aux_eval_logs/711_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/711_fl_sparse_8x8_eps=1.0_decay_temp=0.01.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-            horizontal_lines=[0.99**19],
-        )
+    # if "711" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "711")
+    #     filenames = glob.glob("aux_eval_logs/711_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/cr_711_fl_8x8_param_e1_dt1.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #         # horizontal_lines=[0.99**19],
+    #         # legend_loc="upper left",
+    #         font_scale=1.7,
+    #         title="Value vs Bias/Temperature",
+    #         x_axis_lab="Bias/Temperature",
+    #         y_axis_lab="Value",
+    #     )
 
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # Hpopt/aux - temperature vs performance - fl sparse
-    # ------------------------------------------------------------------------------------------------------------------
+    # # ------------------------------------------------------------------------------------------------------------------
+    # # Hpopt/aux - temperature vs performance - fl sparse
+    # # ------------------------------------------------------------------------------------------------------------------
 
-    if "750" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "750")
-        filenames = glob.glob("aux_eval_logs/750_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/750_fl_sparse_8x16_eps=0.0_heuristic_weight_local=1.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-            horizontal_lines=[0.99**23],
-        )
+    # if "750" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "750")
+    #     filenames = glob.glob("aux_eval_logs/750_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/750_fl_sparse_8x16_eps=0.0_heuristic_weight_local=1.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #         # horizontal_lines=[0.99**23],
+    #         # legend_loc="upper left",
+    #         font_scale=1.7,
+    #         title="Value vs Bias/Temperature",
+    #         x_axis_lab="Bias/Temperature",
+    #         y_axis_lab="Value",
+    #     )
 
-    if "751" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "751")
-        filenames = glob.glob("aux_eval_logs/751_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/751_fl_sparse_8x16_eps=0.0_heuristic_weight_local=1_decay_temp=0.01.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-            horizontal_lines=[0.99**23],
-        )
+    # if "751" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "751")
+    #     filenames = glob.glob("aux_eval_logs/751_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/751_fl_sparse_8x16_eps=0.0_heuristic_weight_local=1_decay_temp=0.01.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #         # horizontal_lines=[0.99**23],
+    #         # legend_loc="upper left",
+    #         font_scale=1.7,
+    #         title="Value vs Bias/Temperature",
+    #         x_axis_lab="Bias/Temperature",
+    #         y_axis_lab="Value",
+    #     )
 
-    if "760" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "760")
-        filenames = glob.glob("aux_eval_logs/760_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/760_fl_sparse_8x16_eps=1.0_heuristic_weight_local=1.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-            horizontal_lines=[0.99**23],
-        )
+    # if "760" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "760")
+    #     filenames = glob.glob("aux_eval_logs/760_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/760_fl_sparse_8x16_eps=1.0_heuristic_weight_local=1.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #         # horizontal_lines=[0.99**23],
+    #         # legend_loc="upper left",
+    #         font_scale=1.7,
+    #         title="Value vs Bias/Temperature",
+    #         x_axis_lab="Bias/Temperature",
+    #         y_axis_lab="Value",
+    #     )
 
-    if "761" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "761")
-        filenames = glob.glob("aux_eval_logs/761_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/761_fl_sparse_8x16_eps=1.0_heuristic_weight_local=1_decay_temp=0.01.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-            horizontal_lines=[0.99**23],
-        )
+    # if "761" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "761")
+    #     filenames = glob.glob("aux_eval_logs/761_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/761_fl_sparse_8x16_eps=1.0_heuristic_weight_local=1_decay_temp=0.01.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #         # horizontal_lines=[0.99**23],
+    #         # legend_loc="upper left",
+    #         font_scale=1.7,
+    #         title="Value vs Bias/Temperature",
+    #         x_axis_lab="Bias/Temperature",
+    #         y_axis_lab="Value",
+    #     )
 
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -1618,181 +1776,244 @@ if __name__ == "__main__":
         filenames = glob.glob("aux_eval_logs/800_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/800_fl_slippy_4x4_eps=0.0.png",
+            plot_filename="plots/cr_800_slippy_4x4_param_e0_dt0.png",
             legend_loc="lower left",
             seperate_plots=False,
+            # horizontal_lines=[0.7442],
+            # legend_loc="upper left",
+            font_scale=1.7,
+            title="Value vs Bias/Temperature",
+            x_axis_lab="Bias/Temperature",
+            y_axis_lab="Value",
+            use_legend=False,
             horizontal_lines=[0.7442],
         )
 
-    if "801" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "801")
-        filenames = glob.glob("aux_eval_logs/801_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/801_fl_slippy_4x4_eps=0.0_decay_temp=0.01.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-            horizontal_lines=[0.7442],
-        )
+    # if "801" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "801")
+    #     filenames = glob.glob("aux_eval_logs/801_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/cr_801_slippy_4x4_param_e0_dt1.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #         # horizontal_lines=[0.7442],
+    #         # legend_loc="upper left",
+    #         font_scale=1.7,
+    #         title="Value vs Bias/Temperature",
+    #         x_axis_lab="Bias/Temperature",
+    #         y_axis_lab="Value",
+    #     )
 
     if "810" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
         print("Plotting: ", "810")
         filenames = glob.glob("aux_eval_logs/810_*/**/eval_log.txt", recursive=True)
         make_param_sens_plot(
             filenames=filenames,
-            plot_filename="plots/810_fl_slippy_4x4_eps=1.0.png",
+            plot_filename="plots/cr_810_slippy_4x4_param_e1_dt0.png",
             legend_loc="lower left",
             seperate_plots=False,
+            # horizontal_lines=[0.7442],
+            # legend_loc="upper left",
+            font_scale=1.7,
+            title="Value vs Bias/Temperature",
+            x_axis_lab="Bias/Temperature",
+            y_axis_lab="Value",
             horizontal_lines=[0.7442],
         )
 
-    if "811" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "811")
-        filenames = glob.glob("aux_eval_logs/811_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/811_fl_slippy_4x4_eps=1.0_decay_temp=0.01.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-            horizontal_lines=[0.7442],
-        )
+    # if "811" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "811")
+    #     filenames = glob.glob("aux_eval_logs/811_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/cr_811_slippy_4x4_param_e1_dt1.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #         # horizontal_lines=[0.7442],
+    #         # legend_loc="upper left",
+    #         font_scale=1.7,
+    #         title="Value vs Bias/Temperature",
+    #         x_axis_lab="Bias/Temperature",
+    #         y_axis_lab="Value",
+    #     )
 
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # Hpopt/aux - temperature vs performance - fl slippy
-    # ------------------------------------------------------------------------------------------------------------------
+    # # ------------------------------------------------------------------------------------------------------------------
+    # # Hpopt/aux - temperature vs performance - fl slippy
+    # # ------------------------------------------------------------------------------------------------------------------
 
-    if "850" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "850")
-        filenames = glob.glob("aux_eval_logs/850_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/850_fl_slippy_6x6_eps=0.0_heuristic_weight_local=1.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-            horizontal_lines=[0.8165],
-        )
+    # if "850" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "850")
+    #     filenames = glob.glob("aux_eval_logs/850_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/850_fl_slippy_6x6_eps=0.0_heuristic_weight_local=1.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #         # horizontal_lines=[0.8165],
+    #         # legend_loc="upper left",
+    #         font_scale=1.7,
+    #         title="Value vs Bias/Temperature",
+    #         x_axis_lab="Bias/Temperature",
+    #         y_axis_lab="Value",
+    #     )
 
-    if "851" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "851")
-        filenames = glob.glob("aux_eval_logs/851_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/851_fl_slippy_6x6_eps=0.0_heuristic_weight_local=1_decay_temp=0.01.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-            horizontal_lines=[0.8165],
-        )
+    # if "851" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "851")
+    #     filenames = glob.glob("aux_eval_logs/851_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/851_fl_slippy_6x6_eps=0.0_heuristic_weight_local=1_decay_temp=0.01.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #         # horizontal_lines=[0.8165],
+    #         # legend_loc="upper left",
+    #         font_scale=1.7,
+    #         title="Value vs Bias/Temperature",
+    #         x_axis_lab="Bias/Temperature",
+    #         y_axis_lab="Value",
+    #     )
 
-    if "860" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "860")
-        filenames = glob.glob("aux_eval_logs/860_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/860_fl_slippy_6x6_eps=1.0_heuristic_weight_local=1.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-            horizontal_lines=[0.8165],
-        )
+    # if "860" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "860")
+    #     filenames = glob.glob("aux_eval_logs/860_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/860_fl_slippy_6x6_eps=1.0_heuristic_weight_local=1.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #         # horizontal_lines=[0.8165],
+    #         # legend_loc="upper left",
+    #         font_scale=1.7,
+    #         title="Value vs Bias/Temperature",
+    #         x_axis_lab="Bias/Temperature",
+    #         y_axis_lab="Value",
+    #     )
 
-    if "861" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "861")
-        filenames = glob.glob("aux_eval_logs/861_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/861_fl_slippy_6x6_eps=1.0_heuristic_weight_local=1_decay_temp=0.01.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-            horizontal_lines=[0.8165],
-        )
+    # if "861" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "861")
+    #     filenames = glob.glob("aux_eval_logs/861_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/861_fl_slippy_6x6_eps=1.0_heuristic_weight_local=1_decay_temp=0.01.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #         # horizontal_lines=[0.8165],
+    #         # legend_loc="upper left",
+    #         font_scale=1.7,
+    #         title="Value vs Bias/Temperature",
+    #         x_axis_lab="Bias/Temperature",
+    #         y_axis_lab="Value",
+    #     )
 
 
     # ------------------------------------------------------------------------------------------------------------------
     # Hpopt/aux - temperature vs performance - sailing
     # ------------------------------------------------------------------------------------------------------------------
-    if "900" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "900")
-        filenames = glob.glob("aux_eval_logs/900_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/900_sailing_north_8x8_eps=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
+    # if "900" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "900")
+    #     filenames = glob.glob("aux_eval_logs/900_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/cr_900_sail_n_8x8_param_e0_dt0.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #         # legend_loc="upper left",
+    #         font_scale=1.7,
+    #         title="Value vs Bias/Temperature",
+    #         x_axis_lab="Bias/Temperature",
+    #         y_axis_lab="Value",
+    #     )
 
-    if "901" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "901")
-        filenames = glob.glob("aux_eval_logs/901_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/901_sailing_north_8x8_eps=0.0_decay_temp=0.01.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
+    # if "901" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "901")
+    #     filenames = glob.glob("aux_eval_logs/901_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/cr_901_sail_n_8x8_param_e0_dt1.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #         # legend_loc="upper left",
+    #         font_scale=1.7,
+    #         title="Value vs Bias/Temperature",
+    #         x_axis_lab="Bias/Temperature",
+    #         y_axis_lab="Value",
+    #     )
 
-    if "910" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "910")
-        filenames = glob.glob("aux_eval_logs/910_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/910_sailing_north_8x8_eps=1.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
+    # if "910" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "910")
+    #     filenames = glob.glob("aux_eval_logs/910_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/cr_910_sail_n_8x8_param_e1_dt0.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #         # legend_loc="upper left",
+    #         font_scale=1.7,
+    #         title="Value vs Bias/Temperature",
+    #         x_axis_lab="Bias/Temperature",
+    #         y_axis_lab="Value",
+    #     )
 
-    if "911" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "911")
-        filenames = glob.glob("aux_eval_logs/911_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/911_sailing_north_8x8_eps=1.0_decay_temp=0.01.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
+    # if "911" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "911")
+    #     filenames = glob.glob("aux_eval_logs/911_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/cr_911_sail_n_8x8_param_e1_dt1.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #         # legend_loc="upper left",
+    #         font_scale=1.7,
+    #         title="Value vs Bias/Temperature",
+    #         x_axis_lab="Bias/Temperature",
+    #         y_axis_lab="Value",
+    #     )
 
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # Hpopt/aux - temperature vs performance - sailing
-    # ------------------------------------------------------------------------------------------------------------------
-    if "950" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "950")
-        filenames = glob.glob("aux_eval_logs/950_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/950_sailing_south_east_8x16_eps=0.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
+    # # ------------------------------------------------------------------------------------------------------------------
+    # # Hpopt/aux - temperature vs performance - sailing
+    # # ------------------------------------------------------------------------------------------------------------------
+    # if "950" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "950")
+    #     filenames = glob.glob("aux_eval_logs/950_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/950_sailing_south_east_8x16_eps=0.0.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #     )
 
-    if "951" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "951")
-        filenames = glob.glob("aux_eval_logs/951_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/951_sailing_south_east_8x16_eps=0.0_decay_temp=0.01.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
+    # if "951" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "951")
+    #     filenames = glob.glob("aux_eval_logs/951_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/951_sailing_south_east_8x16_eps=0.0_decay_temp=0.01.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #     )
 
-    if "960" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "960")
-        filenames = glob.glob("aux_eval_logs/960_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/960_sailing_south_east_8x16_eps=1.0.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
+    # if "960" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "960")
+    #     filenames = glob.glob("aux_eval_logs/960_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/960_sailing_south_east_8x16_eps=1.0.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #     )
 
-    if "961" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
-        print("Plotting: ", "961")
-        filenames = glob.glob("aux_eval_logs/961_*/**/eval_log.txt", recursive=True)
-        make_param_sens_plot(
-            filenames=filenames,
-            plot_filename="plots/961_sailing_south_east_8x16_eps=1.0_decay_temp=0.01.png",
-            legend_loc="lower left",
-            seperate_plots=False,
-        )
+    # if "961" in sys.argv or "all" in sys.argv or "temp" in sys.argv:
+    #     print("Plotting: ", "961")
+    #     filenames = glob.glob("aux_eval_logs/961_*/**/eval_log.txt", recursive=True)
+    #     make_param_sens_plot(
+    #         filenames=filenames,
+    #         plot_filename="plots/961_sailing_south_east_8x16_eps=1.0_decay_temp=0.01.png",
+    #         legend_loc="lower left",
+    #         seperate_plots=False,
+    #     )
 
 
                            

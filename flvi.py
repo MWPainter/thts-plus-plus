@@ -13,10 +13,28 @@ except ImportError:
 # Maps from main_aux/envs/frozen_lake.h (same layout: S=Start, F=Frozen, H=Hole, G=Goal)
 MAPS = {
     "4x4": [
-        "SFFF",
-        "FHFH",
-        "FFFH",
-        "HFFG",
+        "SFFF", 
+        "FHFH", 
+        "FFFH", 
+        "HFFG"
+    ],
+    "4x8": [
+        "SFFFHFFF",
+        "FHFFFFFF",
+        "FHFFHFFF",
+        "FFFFFFHG",
+    ],
+    "4x12": [
+        "SFFHFFFFFFFH",
+        "FFFFFHFFFFFF",
+        "FFFFHFFFFFFF",
+        "FFFFFFFFFFHG",
+    ],
+    "4x16": [
+        "SFFFFHFFFFFFFFFF",
+        "HFFFFFFFFHFFHHFF",
+        "FFHHHFHFFFHHHFFF",
+        "FFHHFFFFFFFFHFFG",
     ],
     "8x8": [
         "SFFFFFFF",
@@ -28,48 +46,7 @@ MAPS = {
         "FHFFHFHF",
         "FFFHFFFG",
     ],
-    "6x6_no_hole": [
-        "SFFFFF",
-        "FFFFFF",
-        "FFFFFF",
-        "FFFFFF",
-        "FFFFFF",
-        "FFFFFG",
-    ],
-    "gen_5x5": [
-        "SFFFF",
-        "HFFFH",
-        "HHFFF",
-        "FFFFF",
-        "FFFHG",
-    ],
-    "gen_6x6": [
-        "SFFFFF",
-        "FHFHFF",
-        "FFFFFF",
-        "FFHFFF",
-        "FFFFHH",
-        "FFFFFG",
-    ],
-    "gen_4x8": [
-        "SFFFHFFF",
-        "FHFFFFFF",
-        "FHFFHFFF",
-        "FFFFFFHG",
-    ],
-    "gen_4x12": [
-        "SFFHFFFFFFFH",
-        "FFFFFHFFFFFF",
-        "FFFFHFFFFFFF",
-        "FFFFFFFFFFHG",
-    ],
-    "gen_4x16": [
-        "SFFFFHFFFFFFFFFF",
-        "HFFFFFFFFHFFHHFF",
-        "FFHHHFHFFFHHHFFF",
-        "FFHHFFFFFFFFHFFG",
-    ],
-    "gen_8x16": [
+    "8x16": [
         "SFFFFFFFFFFFFFHF",
         "FHHFFFHFHHFFFHFF",
         "FHFFHFFFHFFFFFFF",
@@ -79,23 +56,25 @@ MAPS = {
         "FFFFFFFFFFFFFFHF",
         "FFFFFHFFHHFFHHFG",
     ],
-    "gen_16x16": [
-        "SFFHFHFFHFFFFFFF",
-        "FFHHFHFFFHFFFHFF",
-        "FFFFHFHFHFHHFFFF",
-        "FFFHFFFFFHFFFFFF",
-        "FFFFHFFFFFFHFHFF",
-        "FFFFHFFFHFFFFFFF",
-        "FFHHHFHHFHFFHFHH",
-        "FFFFFFFFFFFFFFFF",
-        "FFFFFFFFFFFFFFHF",
-        "HFFFFHHFHFFFHFHF",
-        "FFFHFFFFFFFFHFFF",
-        "FFFFFFFHFHFFFFFF",
-        "FFHHFFHHHHFFFFFF",
-        "FFHFFFFHFFFFFFFH",
-        "FFFFFFFFFFHFHFFF",
-        "FFHFHFHHFFHFFFFG",
+    "8x24": [
+        "SFFFFHFHFFFFFFHHFFFHHFFH",
+        "HFFHFFHFFFFFFFHFFFFFHFHF",
+        "FFFFFFHFFHHFFFFFFFFFHFFF",
+        "FFHHFFFFFFFFFFFFHFFHFFFH",
+        "FFFHFFFFFHFFHFFHFHFHFFFF",
+        "FFHFFFFFFFFHFHFFFFFFFFFF",
+        "HHFFFFFFFFFFFFFHFFFHFFFF",
+        "FFFFFFHFFFFFFFFFHFFHHFFG",
+    ],
+    "8x32": [
+        "SFHFFFFHFFFFFFFFFHFHHFHFHFHHFHFF",
+        "FFFFFFHFFFHHFFHFFFFHFHFFFHFFFFFH",
+        "HFFFFFFFFFFFFFFFFFHFFHHHFFFHFFFF",
+        "FFHHHFHFFHHFHFFFFHFFFFFFFFHFFHFF",
+        "FFFFHFFFFHFHHFHFFFFFHHFHFHFFFFFH",
+        "FHFHFFHHFFFHFFFHFFFFFFFFFFFFHFFH",
+        "FHFFFFHFHFFFFFHFFFFFFFFFFFFHFFFF",
+        "HFFFFHFFHHFFFHHFFFFFFFFFFFHFHFFG",
     ],
 }
 
@@ -158,6 +137,16 @@ def value_iteration(env, gamma=0.99, theta=1e-8, time_bound=None):
 
     return V
 
+
+    
+# python flvi.py --init-state-only --map "4x4" --slippery --gamma 1.0 --time-bound 100
+# python flvi.py --init-state-only --map "4x8" --slippery --gamma 1.0 --time-bound 100
+# python flvi.py --init-state-only --map "4x12" --slippery --gamma 1.0 --time-bound 100
+# python flvi.py --init-state-only --map "4x16" --slippery --gamma 1.0 --time-bound 200
+# python flvi.py --init-state-only --map "8x8" --no-slippery --gamma 0.99 --time-bound 100
+# python flvi.py --init-state-only --map "8x16" --no-slippery --gamma 0.99 --time-bound 100
+# python flvi.py --init-state-only --map "8x24" --no-slippery --gamma 0.99 --time-bound 100
+# python flvi.py --init-state-only --map "8x32" --no-slippery --gamma 0.99 --time-bound 150
 
 def main():
     parser = argparse.ArgumentParser(
@@ -222,6 +211,8 @@ def main():
         env, gamma=args.gamma, theta=args.theta, time_bound=time_bound
     )
 
+    V_opt *= args.gamma # account for off by one error
+
     height, width = len(desc), len(desc[0])
 
     if V_opt.ndim == 1:
@@ -238,7 +229,8 @@ def main():
         col = s % width
         if args.init_state_only and (row != 0 or col != 0):
             continue
-        print(f"  ({row}, {col}): {v:.4f}")
+        pl = np.log(v) / np.log(args.gamma)
+        print(f"  ({row}, {col}): {v:.4f} / {pl}")
 
 
 if __name__ == "__main__":

@@ -270,18 +270,19 @@ python plot_mo.py 700 710 720
 
 
 ---
-Final runs
+Final runs (TOY ENVS, D scaling)
 ---
 make && clear &&
-./run_memory_limited 16G ./moexpr eval 800 &&
-python plot_mo.py 800 &&
-./run_memory_limited 16G ./moexpr eval 500 500_fruit_tree_1776787137 &&
-python plot_mo.py 500
+./run_memory_limited 16G ./moexpr eval 822 &&   
+./run_memory_limited 16G ./moexpr eval 821 && 
+./run_memory_limited 16G ./moexpr eval 801 &&
+python plot_mo.py 800 810 820
 
 
 
 
 
+./run_memory_limited 16G ./moexpr eval 801 &&
 
 
 

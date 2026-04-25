@@ -264,33 +264,36 @@ def generate_and_cache_hypersphere_points(num_points, dim):
 
 
 if __name__ == "__main__":
-  print("10 well spaced points on 2D simplex:")
-  print(generate_well_spaced_points(10,2,project_and_clip_simplex))
-  print()
+  for i in range(8,21):
+    generate_and_cache_simplex_points(128,i)
 
-  print("10 well spaced points on 2D hypersphere:")
-  print(generate_well_spaced_points(10,2,project_and_clip_hypersphere))
-  print()
+  # print("10 well spaced points on 2D simplex:")
+  # print(generate_well_spaced_points(10,2,project_and_clip_simplex))
+  # print()
 
-  print("10 well spaced points on 3D simplex:")
-  print(generate_well_spaced_points(10,3,project_and_clip_simplex))
-  print()
+  # print("10 well spaced points on 2D hypersphere:")
+  # print(generate_well_spaced_points(10,2,project_and_clip_hypersphere))
+  # print()
 
-  print("10 well spaced points on 3D hypersphere:")
-  print(generate_well_spaced_points(10,3,project_and_clip_hypersphere))
-  print()
+  # print("10 well spaced points on 3D simplex:")
+  # print(generate_well_spaced_points(10,3,project_and_clip_simplex))
+  # print()
 
-  print("100 well spaced points on 3D simplex:")
-  thousand_well_spaced_points = generate_well_spaced_points(1000,3,project_and_clip_simplex)
-  dists = distance_matrix(thousand_well_spaced_points)
-  print(thousand_well_spaced_points)
-  dists += jnp.eye(1000) * 1000
-  min_dists = jnp.min(dists, axis=1)
-  print("Distances to closest point from each z_i")
-  print(min_dists)
-  print("And min distance between any two points is:")
-  print(jnp.min(min_dists))
-  print()
+  # print("10 well spaced points on 3D hypersphere:")
+  # print(generate_well_spaced_points(10,3,project_and_clip_hypersphere))
+  # print()
+
+  # print("100 well spaced points on 3D simplex:")
+  # thousand_well_spaced_points = generate_well_spaced_points(1000,3,project_and_clip_simplex)
+  # dists = distance_matrix(thousand_well_spaced_points)
+  # print(thousand_well_spaced_points)
+  # dists += jnp.eye(1000) * 1000
+  # min_dists = jnp.min(dists, axis=1)
+  # print("Distances to closest point from each z_i")
+  # print(min_dists)
+  # print("And min distance between any two points is:")
+  # print(jnp.min(min_dists))
+  # print()
   
   # generate_and_cache_simplex_points(10, 2)
   # generate_and_cache_simplex_points(10, 3)

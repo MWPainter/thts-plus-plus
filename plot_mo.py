@@ -115,10 +115,12 @@ def make_lineplot_df(
         plt.ylabel(y_axis_lab)
     if horizontal_lines is not None:
         for y in horizontal_lines:
-            plt.axhline(y=y, color='k', linestyle='--')
+            # zorder below the default lineplot zorder (~2) so the dashed
+            # reference lines render beneath the plotted data lines
+            plt.axhline(y=y, color='k', linestyle='--', zorder=0.5)
     if vertical_lines is not None:
         for x in vertical_lines:
-            plt.axvline(x=x, color='k', linestyle='--')
+            plt.axvline(x=x, color='k', linestyle='--', zorder=0.5)
     if legend_lab is not None:
         plt.legend(loc=legend_loc, title=legend_lab)
     if y_axis_range is not None:
@@ -328,17 +330,17 @@ def make_eval_plot(
     # Read in data + make algorithm names more pretty
     chvi_str = "CHVI"
     chvi_ordered_str = "CHVI(t=0->H)"
-    chvi_reversed_str = "CHVI(t=H->0)"
+    chvi_reversed_str = "CHVI(PS)"
     czt_str = "CZT"
     czt_doubling_str = "CZT(Doubling)"
     ch_uct_str = "CH-UCT"
     ch_czt_str = "CH-CZT"
     ch_czt_doubling_str = "CH-CZT(Doubling)"
     ch_bts_str = "CH-BTS"
-    ch_hvuct_str = "CH-HVUCT"
-    ch_pareto_str = "CH-PARETO"
-    ch_cheby_str = "CH-CHEBY"
-    ch_standard_cheby_str = "CH-CHEBY(Standard)"
+    ch_hvuct_str = "H-CHMCTS"
+    ch_pareto_str = "P-CHMCTS"
+    ch_cheby_str = "C-CHMCTS"
+    ch_standard_cheby_str = "C-CHMCTS"
     sm_bts_str = "SM-BTS"
     sm_dents_str = "SM-DENTS"
 
@@ -369,41 +371,39 @@ def make_eval_plot(
     palette = {}
     for alg_id in alg_id_set:
         if chvi_str in alg_id:
-            palette[alg_id] = "#7f7f7f"  # tab:gray
-        if chvi_ordered_str in alg_id:
-            palette[alg_id] = "#9467bd"  # tab:purple
+            palette[alg_id] = "tab:grey"  # light grey
+        # if chvi_ordered_str in alg_id:
+        #     palette[alg_id] = "#9467bd"  # tab:purple
         if chvi_reversed_str in alg_id:
-            palette[alg_id] = "#e377c2"  # tab:pink
+            palette[alg_id] = "black"  # tab:pink
 
         if czt_str in alg_id:
-            palette[alg_id] = "#2ca02c"  # tab:green
-        if czt_doubling_str in alg_id:
-            palette[alg_id] = "#d62728"  # tab:red
+            palette[alg_id] = "tab:green"  # tab:green
+        # if czt_doubling_str in alg_id:
+        #     palette[alg_id] = "#d62728"  # tab:red
         if ch_czt_str in alg_id:
-            palette[alg_id] = "#98df8a"  # light green
-        if ch_czt_doubling_str in alg_id:
-            palette[alg_id] = "#ff9896"  # light red
+            palette[alg_id] = "tab:olive"  # light green
+        # if ch_czt_doubling_str in alg_id:
+        #     palette[alg_id] = "#ff9896"  # light red
 
-        
         if ch_hvuct_str in alg_id:
-            palette[alg_id] = "#c5b0d5"  # light purple
+            palette[alg_id] = "tab:brown"  # light purple
         if ch_pareto_str in alg_id:
-            palette[alg_id] = "#c49c94"  # light brown
-        if ch_cheby_str in alg_id:
-            palette[alg_id] = "#f7b6d2"  # light pink
+            palette[alg_id] = "tab:pink"  # light brown
+        # if ch_cheby_str in alg_id:
+        #     palette[alg_id] = "#f7b6d2"  # light pink
         if ch_standard_cheby_str in alg_id:
-            palette[alg_id] = "#dbdb8d"  # light olive
-            
-        if ch_uct_str in alg_id:
-            palette[alg_id] = "#ffbb78"  # light orange
-            
+            palette[alg_id] = "tab:purple"  # light olive
 
+        if ch_uct_str in alg_id:
+            palette[alg_id] = "tab:red"  # light orange
+            
         if ch_bts_str in alg_id:
-            palette[alg_id] = "#aec7e8"  # light blue
+            palette[alg_id] = "tab:blue"  # light blue
         if sm_bts_str in alg_id:
-            palette[alg_id] = "#1f77b4"  # tab:blue
+            palette[alg_id] = "tab:cyan"  # tab:blue
         if sm_dents_str in alg_id:
-            palette[alg_id] = "#ff7f0e"  # tab:orange
+            palette[alg_id] = "tab:orange"  # tab:orange
 
     # Currently unused tab20 colours
     # palette[alg_id] = "#8c564b"  # tab:brown
@@ -662,17 +662,17 @@ def make_scalability_plot(
 
     chvi_str = "CHVI"
     chvi_ordered_str = "CHVI(t=0->H)"
-    chvi_reversed_str = "CHVI(t=H->0)"
+    chvi_reversed_str = "CHVI(PS)"
     czt_str = "CZT"
     czt_doubling_str = "CZT(Doubling)"
     ch_uct_str = "CH-UCT"
     ch_czt_str = "CH-CZT"
     ch_czt_doubling_str = "CH-CZT(Doubling)"
     ch_bts_str = "CH-BTS"
-    ch_hvuct_str = "CH-HVUCT"
-    ch_pareto_str = "CH-PARETO"
-    ch_cheby_str = "CH-CHEBY"
-    ch_standard_cheby_str = "CH-CHEBY(Standard)"
+    ch_hvuct_str = "H-CHMCTS"
+    ch_pareto_str = "P-CHMCTS"
+    ch_cheby_str = "C-CHMCTS"
+    ch_standard_cheby_str = "C-CHMCTS"
     sm_bts_str = "SM-BTS"
     sm_dents_str = "SM-DENTS"
 
@@ -704,41 +704,41 @@ def make_scalability_plot(
     palette = {}
     for alg_id in alg_id_set:
         if chvi_str in alg_id:
-            palette[alg_id] = "#7f7f7f"  # tab:gray
-        if chvi_ordered_str in alg_id:
-            palette[alg_id] = "#9467bd"  # tab:purple
+            palette[alg_id] = "tab:grey"  # light grey
+        # if chvi_ordered_str in alg_id:
+        #     palette[alg_id] = "#9467bd"  # tab:purple
         if chvi_reversed_str in alg_id:
-            palette[alg_id] = "#e377c2"  # tab:pink
+            palette[alg_id] = "black"  # tab:pink
 
         if czt_str in alg_id:
-            palette[alg_id] = "#2ca02c"  # tab:green
-        if czt_doubling_str in alg_id:
-            palette[alg_id] = "#d62728"  # tab:red
+            palette[alg_id] = "tab:green"  # tab:green
+        # if czt_doubling_str in alg_id:
+        #     palette[alg_id] = "#d62728"  # tab:red
         if ch_czt_str in alg_id:
-            palette[alg_id] = "#98df8a"  # light green
-        if ch_czt_doubling_str in alg_id:
-            palette[alg_id] = "#ff9896"  # light red
+            palette[alg_id] = "tab:olive"  # light green
+        # if ch_czt_doubling_str in alg_id:
+        #     palette[alg_id] = "#ff9896"  # light red
 
-        
         if ch_hvuct_str in alg_id:
-            palette[alg_id] = "#c5b0d5"  # light purple
+            palette[alg_id] = "tab:brown"  # light purple
         if ch_pareto_str in alg_id:
-            palette[alg_id] = "#c49c94"  # light brown
-        if ch_cheby_str in alg_id:
-            palette[alg_id] = "#f7b6d2"  # light pink
+            palette[alg_id] = "tab:pink"  # light brown
+        # if ch_cheby_str in alg_id:
+        #     palette[alg_id] = "#f7b6d2"  # light pink
         if ch_standard_cheby_str in alg_id:
-            palette[alg_id] = "#dbdb8d"  # light olive
-            
-        if ch_uct_str in alg_id:
-            palette[alg_id] = "#ffbb78"  # light orange
-            
+            palette[alg_id] = "tab:purple"  # light olive
 
+        if ch_uct_str in alg_id:
+            palette[alg_id] = "tab:red"  # light orange
+            
         if ch_bts_str in alg_id:
-            palette[alg_id] = "#aec7e8"  # light blue
+            palette[alg_id] = "tab:blue"  # light blue
         if sm_bts_str in alg_id:
-            palette[alg_id] = "#1f77b4"  # tab:blue
+            palette[alg_id] = "tab:cyan"  # tab:blue
         if sm_dents_str in alg_id:
-            palette[alg_id] = "#ff7f0e"  # tab:orange
+            palette[alg_id] = "tab:orange"  # tab:orange
+
+
 
     sorted_hue_vals = sorted(df[hue_key].unique())
     df[hue_key] = pd.Categorical(df[hue_key], categories=sorted_hue_vals, ordered=True)
@@ -891,7 +891,6 @@ def get_piecwise_linear_inverse_transform(min_y,mid_y,scaled_y,max_y):
 
 
 
-
 FILTER_ALGS_CH5 = [
     "chvi",
     # "chvi_reversed",
@@ -900,7 +899,7 @@ FILTER_ALGS_CH5 = [
     "ch_czt",
     "ch_bts",
     "ch_hvuct",
-    "ch_pareto"
+    "ch_pareto",
     "ch_standard_cheby",
 ]
 
@@ -916,10 +915,18 @@ FILTER_ALGS_CH6 = [
 ]
 
 
-def make_many_eval_plots(filenames, fname_base, filter_algs=None, chvi_reversed_filenames=None):
+CHVI_ALGS = [
+    "chvi",
+    "chvi_reversed",
+]
+
+def make_many_eval_plots(filenames, fname_base, filter_algs=None, chvi_reversed_filenames=None, add_legends=None):
     if len(filenames) == 0:
         print(f"Skipping plots {fname_base} because no files found")
         return
+
+    if add_legends is None:
+        add_legends = [True, True, True, True]
 
     df = read_eval_files_to_df(filenames, num_trials_scale=1)
 
@@ -938,46 +945,69 @@ def make_many_eval_plots(filenames, fname_base, filter_algs=None, chvi_reversed_
         df=df,
         plot_filename=f"mo_plots/{fname_base}_0_eum.png",
         # legend_loc="lower left",
+        font_scale=1.7,
+        title="EUM vs Search Time",
+        x_axis_lab="Search Time",
+        y_axis_lab="EUM",
+        use_legend=add_legends[0],
     )
-    make_eval_plot(
-        filenames=filenames,
-        df=df,
-        plot_filename=f"mo_plots/{fname_base}_1_normalised_utility.png",
-        y_axis_key="norm_utility",
-        y_axis_lab="Normalised Expected Utility Metric", 
-        # legend_loc="lower left",
-    )
+    # make_eval_plot(
+    #     filenames=filenames,
+    #     df=df,
+    #     plot_filename=f"mo_plots/{fname_base}_1_normalised_utility.png",
+    #     y_axis_key="norm_utility",
+    #     y_axis_lab="Normalised Expected Utility Metric", 
+    #     # legend_loc="lower left",
+    # )
     make_eval_plot(
         filenames=filenames,
         df=df,
         plot_filename=f"mo_plots/{fname_base}_2_hypervolume.png",
         y_axis_key="hypervolume",
-        y_axis_lab="Hypervolume", 
+        # y_axis_lab="Hypervolume", 
         # legend_loc="lower left",
+        font_scale=1.7,
+        title="Hypervolume vs Search Time",
+        x_axis_lab="Search Time",
+        y_axis_lab="Hypervolume",
+        use_legend=add_legends[1],
     )
-    make_eval_plot(
-        filenames=filenames,
-        df=df,
-        plot_filename=f"mo_plots/{fname_base}_3_normalised_hypervolume.png",
-        y_axis_key="normalised_hypervolume",
-        y_axis_lab="Normalised Hypervolume", 
-        # legend_loc="lower left",
-    )
-    make_eval_plot(
-        filenames=filenames,
-        df=df,
-        plot_filename=f"mo_plots/{fname_base}_4_num_trials.png",
-        y_axis_key="num_trials",
-        y_axis_lab="Num Trials", 
-        # legend_loc="lower left",
-    )
+    # make_eval_plot(
+    #     filenames=filenames,
+    #     df=df,
+    #     plot_filename=f"mo_plots/{fname_base}_3_normalised_hypervolume.png",
+    #     y_axis_key="normalised_hypervolume",
+    #     y_axis_lab="Normalised Hypervolume", 
+    #     # legend_loc="lower left",
+    # )
     make_eval_plot(
         filenames=filenames,
         df=df,
         plot_filename=f"mo_plots/{fname_base}_5_num_backups.png",
         y_axis_key="num_backups",
-        y_axis_lab="Num Backups", 
-        # legend_loc="lower left",
+        # y_axis_lab="Num Backups", 
+        legend_loc="upper left",
+        font_scale=1.7,
+        title="#Backups vs Search Time",
+        x_axis_lab="Search Time",
+        y_axis_lab="#Backups",
+        use_legend=add_legends[2],
+    )
+
+
+    df = df[~df["alg_id"].isin(CHVI_ALGS)]
+    make_eval_plot(
+        filenames=filenames,
+        df=df,
+        plot_filename=f"mo_plots/{fname_base}_4_num_trials.png",
+        y_axis_key="num_trials",
+        # y_axis_lab="Num Trials", 
+        legend_loc="upper left",
+        font_scale=1.7,
+        title="#Trials vs Search Time",
+        x_axis_lab="Search Time",
+        y_axis_lab="#Trials",
+        use_legend=add_legends[3],
     )
     # make_eval_plot(
     #     filenames=filenames,
@@ -1001,10 +1031,13 @@ def make_many_eval_plots(filenames, fname_base, filter_algs=None, chvi_reversed_
 
 
 
-def make_many_scalability_plots(filenames, fname_base, filter_algs=None, chvi_reversed_filenames=None):
+def make_many_scalability_plots(filenames, fname_base, filter_algs=None, chvi_reversed_filenames=None, add_legends=None):
     if len(filenames) == 0:
         print(f"Skipping plots {fname_base} because no files found")
         return
+
+    if add_legends is None:
+        add_legends = [True, True, True, True]
 
     df = read_eval_files_to_df(filenames, num_trials_scale=1)
 
@@ -1023,46 +1056,81 @@ def make_many_scalability_plots(filenames, fname_base, filter_algs=None, chvi_re
         df=df,
         plot_filename=f"mo_plots/{fname_base}_0_eum.png",
         # legend_loc="lower left",
+        font_scale=1.7,
+        title="EUM vs Search Time",
+        x_axis_lab="Search Time",
+        y_axis_lab="EUM",
+        use_legend=add_legends[0],
     )
-    make_scalability_plot(
-        filenames=filenames,
-        df=df,
-        plot_filename=f"mo_plots/{fname_base}_1_normalised_utility.png",
-        y_axis_key="norm_utility",
-        y_axis_lab="Normalised Expected Utility Metric", 
-        # legend_loc="lower left",
-    )
+    # make_scalability_plot(
+    #     filenames=filenames,
+    #     df=df,
+    #     plot_filename=f"mo_plots/{fname_base}_1_normalised_utility.png",
+    #     y_axis_key="norm_utility",
+    #     y_axis_lab="Normalised Expected Utility Metric", 
+    #     # legend_loc="lower left",
+    # )
+    # make_scalability_plot(
+    #     filenames=filenames,
+    #     df=df,
+    #     plot_filename=f"mo_plots/{fname_base}_2_hypervolume.png",
+    #     y_axis_key="hypervolume",
+    #     # y_axis_lab="Hypervolume", 
+    #     # legend_loc="lower left",
+    #     font_scale=1.7,
+    #     title="Hypervolume vs Search Time",
+    #     x_axis_lab="Search Time",
+    #     y_axis_lab="Hypervolume",
+    #     use_legend=add_legends[1],
+    # )
     make_scalability_plot(
         filenames=filenames,
         df=df,
         plot_filename=f"mo_plots/{fname_base}_2_hypervolume.png",
-        y_axis_key="hypervolume",
-        y_axis_lab="Hypervolume", 
-        # legend_loc="lower left",
-    )
-    make_scalability_plot(
-        filenames=filenames,
-        df=df,
-        plot_filename=f"mo_plots/{fname_base}_3_normalised_hypervolume.png",
         y_axis_key="normalised_hypervolume",
-        y_axis_lab="Normalised Hypervolume", 
-        # legend_loc="lower left",
+        # y_axis_lab="Hypervolume", 
+        legend_loc="upper right",
+        font_scale=1.7,
+        title="Normalised Hypervolume vs Search Time",
+        x_axis_lab="Search Time",
+        y_axis_lab="Normalised Hypervolume",
+        use_legend=add_legends[1],
     )
-    make_scalability_plot(
-        filenames=filenames,
-        df=df,
-        plot_filename=f"mo_plots/{fname_base}_4_num_trials.png",
-        y_axis_key="num_trials",
-        y_axis_lab="Num Trials", 
-        # legend_loc="lower left",
-    )
+    # make_scalability_plot(
+    #     filenames=filenames,
+    #     df=df,
+    #     plot_filename=f"mo_plots/{fname_base}_3_normalised_hypervolume.png",
+    #     y_axis_key="normalised_hypervolume",
+    #     y_axis_lab="Normalised Hypervolume", 
+    #     # legend_loc="lower left",
+    # )
     make_scalability_plot(
         filenames=filenames,
         df=df,
         plot_filename=f"mo_plots/{fname_base}_5_num_backups.png",
         y_axis_key="num_backups",
-        y_axis_lab="Num Backups", 
-        # legend_loc="lower left",
+        # y_axis_lab="Num Backups", 
+        legend_loc="upper left",
+        font_scale=1.7,
+        title="#Backups vs Search Time",
+        x_axis_lab="Search Time",
+        y_axis_lab="#Backups",
+        use_legend=add_legends[2],
+    )
+
+    df = df[~df["alg_id"].isin(CHVI_ALGS)]
+    make_scalability_plot(
+        filenames=filenames,
+        df=df,
+        plot_filename=f"mo_plots/{fname_base}_4_num_trials.png",
+        y_axis_key="num_trials",
+        # y_axis_lab="Num Trials", 
+        legend_loc="upper left",
+        font_scale=1.7,
+        title="#Trials vs Search Time",
+        x_axis_lab="Search Time",
+        y_axis_lab="#Trials",
+        use_legend=add_legends[3],
     )
     # make_eval_plot(
     #     filenames=filenames,
@@ -1092,8 +1160,8 @@ if __name__ == "__main__":
         os.makedirs("mo_plots/dst")
     if not os.path.exists("mo_plots/dst_scale"):
         os.makedirs("mo_plots/dst_scale")
-    if not os.path.exists("mo_plots/improved_dst"):
-        os.makedirs("mo_plots/improved_dst")
+    # if not os.path.exists("mo_plots/improved_dst"):
+    #     os.makedirs("mo_plots/improved_dst")
     if not os.path.exists("mo_plots/fruit"):
         os.makedirs("mo_plots/fruit")
     if not os.path.exists("mo_plots/resource_gather"):
@@ -1102,6 +1170,8 @@ if __name__ == "__main__":
         os.makedirs("mo_plots/breakable_bottles")
     if not os.path.exists("mo_plots/four_room"):
         os.makedirs("mo_plots/four_room")
+    # if not os.path.exists("mo_plots/dim_scaling"):
+    #     os.makedirs("mo_plots/dim_scaling")
 
     # ------------------------------------------------------------------------------------------------------------------
     # DST
@@ -1112,57 +1182,87 @@ if __name__ == "__main__":
         filenames = glob.glob("mo_eval_logs/400_*/**/eval_log.txt", recursive=True)
         chvi_reversed_filenames = glob.glob("mo_eval_logs/400a_*/**/eval_log.txt", recursive=True)
         fname_base = "dst/400_dst_ch5"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5, chvi_reversed_filenames=chvi_reversed_filenames)
+        make_many_eval_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH5, 
+            chvi_reversed_filenames=chvi_reversed_filenames,
+            add_legends=[False, True, True, True])
         fname_base = "dst/400_dst_ch6"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6, chvi_reversed_filenames=chvi_reversed_filenames)
+        make_many_eval_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH6, 
+            chvi_reversed_filenames=chvi_reversed_filenames,
+            add_legends=[False, True, True, True])
     
-    if "401" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
-        print("Plotting: ", "401")
-        filenames = glob.glob("mo_eval_logs/401_*/**/eval_log.txt", recursive=True)
-        fname_base = "dst/401_dst_gym"
-        make_many_eval_plots(filenames, fname_base)
+    # if "401" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
+    #     print("Plotting: ", "401")
+    #     filenames = glob.glob("mo_eval_logs/401_*/**/eval_log.txt", recursive=True)
+    #     fname_base = "dst/401_dst_gym"
+    #     make_many_eval_plots(filenames, fname_base)
 
     if "410" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
         print("Plotting: ", "410")
         filenames = glob.glob("mo_eval_logs/410_*/**/eval_log.txt", recursive=True)
         chvi_reversed_filenames = glob.glob("mo_eval_logs/410a_*/**/eval_log.txt", recursive=True)
         fname_base = "dst/410_dst_stoch_ch5"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5, chvi_reversed_filenames=chvi_reversed_filenames)
+        make_many_eval_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH5, 
+            chvi_reversed_filenames=chvi_reversed_filenames,
+            add_legends=[False, False, True, True])
         fname_base = "dst/410_dst_stoch_ch6"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6, chvi_reversed_filenames=chvi_reversed_filenames)
+        make_many_eval_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH6, 
+            chvi_reversed_filenames=chvi_reversed_filenames,
+            add_legends=[False, False, True, True])
 
     if "420" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
         print("Plotting: ", "420")
         filenames = glob.glob("mo_eval_logs/420_*/**/eval_log.txt", recursive=True)
         chvi_reversed_filenames = glob.glob("mo_eval_logs/420a_*/**/eval_log.txt", recursive=True)
         fname_base = "dst/420_dst_calm_stoch_ch5"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5, chvi_reversed_filenames=chvi_reversed_filenames)
+        make_many_eval_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH5, 
+            chvi_reversed_filenames=chvi_reversed_filenames,
+            add_legends=[False, False, True, True])
         fname_base = "dst/420_dst_calm_stoch_ch6"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6, chvi_reversed_filenames=chvi_reversed_filenames)
+        make_many_eval_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH6, 
+            chvi_reversed_filenames=chvi_reversed_filenames,
+            add_legends=[False, False, True, True])
 
-    if "440" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
-        print("Plotting: ", "440")
-        filenames = glob.glob("mo_eval_logs/440_*/**/eval_log.txt", recursive=True)
-        fname_base = "improved_dst/440_dst_improved_ch5"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
-        fname_base = "improved_dst/440_dst_improved_ch6"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
+    # if "440" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
+    #     print("Plotting: ", "440")
+    #     filenames = glob.glob("mo_eval_logs/440_*/**/eval_log.txt", recursive=True)
+    #     fname_base = "improved_dst/440_dst_improved_ch5"
+    #     make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+    #     fname_base = "improved_dst/440_dst_improved_ch6"
+    #     make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
-    if "450" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
-        print("Plotting: ", "450")
-        filenames = glob.glob("mo_eval_logs/450_*/**/eval_log.txt", recursive=True)
-        fname_base = "improved_dst/450_dst_improved_stoch_ch5"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
-        fname_base = "improved_dst/450_dst_improved_stoch_ch6"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
+    # if "450" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
+    #     print("Plotting: ", "450")
+    #     filenames = glob.glob("mo_eval_logs/450_*/**/eval_log.txt", recursive=True)
+    #     fname_base = "improved_dst/450_dst_improved_stoch_ch5"
+    #     make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+    #     fname_base = "improved_dst/450_dst_improved_stoch_ch6"
+    #     make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
-    if "450" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
-        print("Plotting: ", "460")
-        filenames = glob.glob("mo_eval_logs/460_*/**/eval_log.txt", recursive=True)
-        fname_base = "improved_dst/460_dst_improved_calm_stoch_ch5"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
-        fname_base = "improved_dst/460_dst_improved_calm_stoch_ch6"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
+    # if "450" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
+    #     print("Plotting: ", "460")
+    #     filenames = glob.glob("mo_eval_logs/460_*/**/eval_log.txt", recursive=True)
+    #     fname_base = "improved_dst/460_dst_improved_calm_stoch_ch5"
+    #     make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+    #     fname_base = "improved_dst/460_dst_improved_calm_stoch_ch6"
+    #     make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
     # ------------------------------------------------------------------------------------------------------------------
     # DST - scalability plots
@@ -1171,41 +1271,95 @@ if __name__ == "__main__":
     if "700" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
         print("Plotting: ", "700")
         filenames = glob.glob("mo_eval_logs/700_*/**/eval_log.txt", recursive=True)
-        chvi_reversed_filenames = None #glob.glob("mo_eval_logs/700a_*/**/eval_log.txt", recursive=True)
+        filenames += glob.glob("mo_eval_logs/700b_*/**/eval_log.txt", recursive=True)
+        chvi_reversed_filenames = glob.glob("mo_eval_logs/700a_*/**/eval_log.txt", recursive=True)
         fname_base = "dst_scale/700_dst_scaling_ch5"
-        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5, chvi_reversed_filenames=chvi_reversed_filenames)
+        make_many_scalability_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH5, 
+            chvi_reversed_filenames=chvi_reversed_filenames,
+            add_legends=[False, False, True, True])
         fname_base = "dst_scale/700_dst_scaling_ch6"
-        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6, chvi_reversed_filenames=chvi_reversed_filenames)
+        make_many_scalability_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH6, 
+            chvi_reversed_filenames=chvi_reversed_filenames,
+            add_legends=[False, False, True, True])
 
     if "710" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
         print("Plotting: ", "710")
         filenames = glob.glob("mo_eval_logs/710_*/**/eval_log.txt", recursive=True)
+        filenames += glob.glob("mo_eval_logs/710b_*/**/eval_log.txt", recursive=True)
         chvi_reversed_filenames = glob.glob("mo_eval_logs/710a_*/**/eval_log.txt", recursive=True)
         fname_base = "dst_scale/710_dst_scaling_stoch_ch5"
-        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5, chvi_reversed_filenames=chvi_reversed_filenames)
+        make_many_scalability_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH5, 
+            chvi_reversed_filenames=chvi_reversed_filenames,
+            add_legends=[False, True, True, True])
         fname_base = "dst_scale/710_dst_scaling_stoch_ch6"
-        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6, chvi_reversed_filenames=chvi_reversed_filenames)
+        make_many_scalability_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH6, 
+            chvi_reversed_filenames=chvi_reversed_filenames,
+            add_legends=[False, True, True, True])
 
     if "720" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
         print("Plotting: ", "720")
         filenames = glob.glob("mo_eval_logs/720_*/**/eval_log.txt", recursive=True)
         chvi_reversed_filenames = glob.glob("mo_eval_logs/720a_*/**/eval_log.txt", recursive=True)
         fname_base = "dst_scale/720_dst_scaling_stoch_calm_ch5"
-        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5, chvi_reversed_filenames=chvi_reversed_filenames)
+        make_many_scalability_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH5, 
+            chvi_reversed_filenames=chvi_reversed_filenames,
+            add_legends=[False, False, True, True])
         fname_base = "dst_scale/720_dst_scaling_stoch_calm_ch6"
-        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6, chvi_reversed_filenames=chvi_reversed_filenames)
+        make_many_scalability_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH6, 
+            chvi_reversed_filenames=chvi_reversed_filenames,
+            add_legends=[False, True, True, True])
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # DST - scalability plots
-    # ------------------------------------------------------------------------------------------------------------------
+    # # ------------------------------------------------------------------------------------------------------------------
+    # # dimension scalability plots
+    # # ------------------------------------------------------------------------------------------------------------------
 
-    if "800" in sys.argv or "all" in sys.argv or "dim_scaling" in sys.argv:
-        print("Plotting: ", "800")
-        filenames = glob.glob("mo_eval_logs/800_*/**/eval_log.txt", recursive=True)
-        fname_base = "dim_scaling/800_dim_scaling_ch5"
-        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
-        fname_base = "dim_scaling/800_dim_scaling_ch6"
-        make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
+    # if "800" in sys.argv or "all" in sys.argv or "dim_scaling" in sys.argv:
+    #     print("Plotting: ", "800")
+    #     filenames = glob.glob("mo_eval_logs/800_*/**/eval_log.txt", recursive=True)
+    #     filenames += glob.glob("mo_eval_logs/801_*/**/eval_log.txt", recursive=True)
+    #     filenames += glob.glob("mo_eval_logs/802_*/**/eval_log.txt", recursive=True)
+    #     fname_base = "dim_scaling/800_dim_scaling_ch5"
+    #     make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+    #     fname_base = "dim_scaling/800_dim_scaling_ch6"
+    #     make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
+
+    # if "810" in sys.argv or "all" in sys.argv or "dim_scaling" in sys.argv:
+    #     print("Plotting: ", "810")
+    #     filenames = glob.glob("mo_eval_logs/810_*/**/eval_log.txt", recursive=True)
+    #     filenames += glob.glob("mo_eval_logs/811_*/**/eval_log.txt", recursive=True)
+    #     filenames += glob.glob("mo_eval_logs/812_*/**/eval_log.txt", recursive=True)
+    #     fname_base = "dim_scaling/810_dim_scaling_ch5"
+    #     make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+    #     fname_base = "dim_scaling/810_dim_scaling_ch6"
+    #     make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
+
+    # if "820" in sys.argv or "all" in sys.argv or "dim_scaling" in sys.argv:
+    #     print("Plotting: ", "820")
+    #     filenames = glob.glob("mo_eval_logs/820_*/**/eval_log.txt", recursive=True)
+    #     filenames += glob.glob("mo_eval_logs/821_*/**/eval_log.txt", recursive=True)
+    #     filenames += glob.glob("mo_eval_logs/822_*/**/eval_log.txt", recursive=True)
+    #     fname_base = "dim_scaling/820_dim_scaling_ch5"
+    #     make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+    #     fname_base = "dim_scaling/820_dim_scaling_ch6"
+    #     make_many_scalability_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -1216,17 +1370,29 @@ if __name__ == "__main__":
         print("Plotting: ", "500")
         filenames = glob.glob("mo_eval_logs/500_*/**/eval_log.txt", recursive=True)
         fname_base = "fruit/500_fruit_tree_ch5"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        make_many_eval_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH5,
+            add_legends=[True, False, True, True])
         fname_base = "fruit/500_fruit_tree_ch6"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
+        make_many_eval_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH6,
+            add_legends=[True, True, True, True])
 
-    if "510" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
-        print("Plotting: ", "510")
-        filenames = glob.glob("mo_eval_logs/510_*/**/eval_log.txt", recursive=True)
-        fname_base = "fruit/510fruit_tree_stoch_ch5"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
-        fname_base = "fruit/510fruit_tree_stoch_ch6"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
+    # if "510" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
+    #     print("Plotting: ", "510")
+    #     filenames = glob.glob("mo_eval_logs/510_*/**/eval_log.txt", recursive=True)
+    #     fname_base = "fruit/510fruit_tree_stoch_ch5"
+    #     make_many_eval_plots(
+    #         filenames, 
+    #         fname_base, 
+    #         filter_algs=FILTER_ALGS_CH5,
+    #         add_legends=[False, True, True, True])
+    #     fname_base = "fruit/510fruit_tree_stoch_ch6"
+    #     make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
 
 
@@ -1234,33 +1400,41 @@ if __name__ == "__main__":
         print("Plotting: ", "520")
         filenames = glob.glob("mo_eval_logs/520_*/**/eval_log.txt", recursive=True)
         fname_base = "resource_gather/520_gym_resource_gather_ch5"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        make_many_eval_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH5,
+            add_legends=[True, False, True, True])
         fname_base = "resource_gather/520_gym_resource_gather_ch6"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
+        make_many_eval_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH6,
+            add_legends=[True, False, True, True])
 
-    if "530" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
-        print("Plotting: ", "530")
-        filenames = glob.glob("mo_eval_logs/530_*/**/eval_log.txt", recursive=True)
-        fname_base = "resource_gather/530_gym_resource_gather_timed_ch5"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
-        fname_base = "resource_gather/530_gym_resource_gather_timed_ch6"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
+    # if "530" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
+    #     print("Plotting: ", "530")
+    #     filenames = glob.glob("mo_eval_logs/530_*/**/eval_log.txt", recursive=True)
+    #     fname_base = "resource_gather/530_gym_resource_gather_timed_ch5"
+    #     make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+    #     fname_base = "resource_gather/530_gym_resource_gather_timed_ch6"
+    #     make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
-    if "580" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
-        print("Plotting: ", "580")
-        filenames = glob.glob("mo_eval_logs/580_*/**/eval_log.txt", recursive=True)
-        fname_base = "resource_gather/580_cpp_resource_gather_ch5"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
-        fname_base = "resource_gather/580_cpp_resource_gather_ch6"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
+    # if "580" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
+    #     print("Plotting: ", "580")
+    #     filenames = glob.glob("mo_eval_logs/580_*/**/eval_log.txt", recursive=True)
+    #     fname_base = "resource_gather/580_cpp_resource_gather_ch5"
+    #     make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+    #     fname_base = "resource_gather/580_cpp_resource_gather_ch6"
+    #     make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
-    if "590" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
-        print("Plotting: ", "590")
-        filenames = glob.glob("mo_eval_logs/590_*/**/eval_log.txt", recursive=True)
-        fname_base = "resource_gather/590_cpp_resource_gather_timed_ch5"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
-        fname_base = "resource_gather/590_cpp_resource_gather_timed_ch6"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
+    # if "590" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
+    #     print("Plotting: ", "590")
+    #     filenames = glob.glob("mo_eval_logs/590_*/**/eval_log.txt", recursive=True)
+    #     fname_base = "resource_gather/590_cpp_resource_gather_timed_ch5"
+    #     make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+    #     fname_base = "resource_gather/590_cpp_resource_gather_timed_ch6"
+    #     make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
 
 
@@ -1268,9 +1442,11 @@ if __name__ == "__main__":
         print("Plotting: ", "540")
         filenames = glob.glob("mo_eval_logs/540_*/**/eval_log.txt", recursive=True)
         fname_base = "breakable_bottles/540_breakable_bottles_ch5"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5,
+            add_legends=[True, True, True, True])
         fname_base = "breakable_bottles/540_breakable_bottles_ch6"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6,
+            add_legends=[True, True, True, True])
 
 
 
@@ -1278,20 +1454,19 @@ if __name__ == "__main__":
         print("Plotting: ", "550")
         filenames = glob.glob("mo_eval_logs/550_*/**/eval_log.txt", recursive=True)
         fname_base = "four_room/550_four_room_ch5"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5,
+            add_legends=[True, False, True, True])
         fname_base = "four_room/550_four_room_ch6"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
+        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6,
+            add_legends=[True, False, True, True])
 
-    if "560" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
-        print("Plotting: ", "560")
-        filenames = glob.glob("mo_eval_logs/560_*/**/eval_log.txt", recursive=True)
-        fname_base = "four_room/560_four_room_timed_ch5"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
-        fname_base = "four_room/560_four_room_timed_ch6"
-        make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
-
-
-
+    # if "560" in sys.argv or "all" in sys.argv or "gym" in sys.argv:
+    #     print("Plotting: ", "560")
+    #     filenames = glob.glob("mo_eval_logs/560_*/**/eval_log.txt", recursive=True)
+    #     fname_base = "four_room/560_four_room_timed_ch5"
+    #     make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH5)
+    #     fname_base = "four_room/560_four_room_timed_ch6"
+    #     make_many_eval_plots(filenames, fname_base, filter_algs=FILTER_ALGS_CH6)
 
 
 
@@ -1300,155 +1475,4 @@ if __name__ == "__main__":
 
 
 
-def old_plots_main():
-    # ------------------------------------------------------------------------------------------------------------------
-    # Scalability plots
-    # ------------------------------------------------------------------------------------------------------------------
-
-    ###
-    # Scalability tests - 200_dense_dimension_scalability
-    ###
-    if "200" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/200_dense_dimension_scalability_1736165498/**/eval.txt", recursive=True)
-        make_eum_scalability_plot(
-            filenames=filenames,
-            plot_filename="plots/200_scalability_util_vs_reward_dimension.png",
-            x_axis_key="reward_dim",
-            x_axis_lab="Reward Dimension",
-        )
-        make_num_trials_scalability_plot(
-            filenames=filenames,
-            plot_filename="plots/200_scalability_num_trials_vs_reward_dimension.png",
-            x_axis_key="reward_dim",
-            x_axis_lab="Reward Dimension",
-        )
-
-    ###
-    # Scalability tests - 210_dense_actions_scalability
-    ###
-    if "210" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/210_dense_actions_scalability_1736167326/**/eval.txt", recursive=True)
-        make_eum_scalability_plot(
-            filenames=filenames,
-            plot_filename="plots/210_scalability_util_vs_ch_size.png",
-            x_axis_key="num_actions",
-            x_axis_lab="#Actions (Size of Optimal Convex Hull)",
-        )
-        make_num_trials_scalability_plot(
-            filenames=filenames,
-            plot_filename="plots/210_scalability_num_trials_vs_ch_size.png",
-            x_axis_key="num_actions",
-            x_axis_lab="#Actions (Size of Optimal Convex Hull)",
-        )
-
-    
-
-
-
-    # ------------------------------------------------------------------------------------------------------------------
-    # EUM Eval plots
-    # ------------------------------------------------------------------------------------------------------------------
-
-    # ###
-    # # 600_deep_sea_treasure
-    # ###
-    # if "600" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-    #     filenames = glob.glob("results/TODO/**/eval.txt", recursive=True)
-    #     make_eum_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/TODO.png",
-    #     )
-    #     make_num_trials_plot(
-    #         filenames=filenames,
-    #         plot_filename="plots/TODO.png",
-    #     )
-
-
-
-    ###
-    # 611_fruit_tree (stoch, size=default)
-    # - run with 1 repitition and algorithms tuned on gym's dst env
-    ###  
-    if "611" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/611_deep_sea_treasure_stoch_1739211378/**/eval.txt", recursive=True)
-        make_eum_plot(
-            filenames=filenames,
-            plot_filename="plots/611_dst_stoch_eum.png",
-            title="EUM vs Search Time (Deep Sea Treasure, swept_prob=0.01)",
-        )
-        make_num_trials_plot(
-            filenames=filenames,
-            plot_filename="plots/611_dst_stoch_num_trials.png",
-            title="Num Trials vs Search Time (Deep Sea Treasure, swept_prob=0.01)",
-        )
-
-
-
-    ###
-    # 612_fruit_tree (stoch, size=default)
-    # - run with 25 repitition and algorithms tuned on gym's dst env (with making l_inf_thresh much bigger (0.05))
-    # and set chmcts to use the same more reasonable bias as czt
-    ###  
-    if "612" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/612_deep_sea_treasure_stoch_1739213842/**/eval.txt", recursive=True)
-        make_eum_plot(
-            filenames=filenames,
-            plot_filename="plots/612_dst_stoch_eum.png",
-            title="EUM vs Search Time (Deep Sea Treasure, swept_prob=0.01)",
-        )
-        make_num_trials_plot(
-            filenames=filenames,
-            plot_filename="plots/612_dst_stoch_num_trials.png",
-            title="Num Trials vs Search Time (Deep Sea Treasure, swept_prob=0.01)",
-        )
-
-
-
-    ###
-    # 640_fruit_tree (det, depth=7)
-    ###  
-    if "640" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/640_fruit_tree_1736139636/**/eval.txt", recursive=True)
-        make_eum_plot(
-            filenames=filenames,
-            plot_filename="plots/640_fruit_tree_7_eum.png",
-            title="EUM vs Search Time (Fruit-Tree, depth=7)",
-        )
-        make_num_trials_plot(
-            filenames=filenames,
-            plot_filename="plots/640_fruit_tree_7_num_trials.png",
-            title="Num Trials vs Search Time (Fruit-Tree, depth=7)",
-        )
-        
-    ###
-    # 650_fruit_tree_stoch_5 (stoch, depth=5)
-    ###  
-    if "650" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/650_fruit_tree_stoch_5_1736149191/**/eval.txt", recursive=True)
-        make_eum_plot(
-            filenames=filenames,
-            plot_filename="plots/650_fruit_tree_stoch_5_eum.png",
-            title="EUM vs Search Time (Stochastic-Fruit-Tree, depth=5)",
-        )
-        make_num_trials_plot(
-            filenames=filenames,
-            plot_filename="plots/650_fruit_tree_stoch_5_num_trials.png",
-            title="Num Trials vs Search Time (Stochastic-Fruit-Tree, depth=5)",
-        )
-        
-    ###
-    # 660_fruit_tree_stoch_7 (stoch, depth=7)
-    ###  
-    if "660" in sys.argv or "all" in sys.argv or "all_figs" in sys.argv:
-        filenames = glob.glob("results/660_fruit_tree_stoch_7_1736156862/**/eval.txt", recursive=True)
-        make_eum_plot(
-            filenames=filenames,
-            plot_filename="plots/660_fruit_tree_stoch_7_eum.png",
-            title="EUM vs Search Time (Stochastic-Fruit-Tree, depth=7)",
-        )
-        make_num_trials_plot(
-            filenames=filenames,
-            plot_filename="plots/660_fruit_tree_stoch_7_num_trials.png",
-            title="Num Trials vs Search Time (Stochastic-Fruit-Tree, depth=7)",
-        )
 

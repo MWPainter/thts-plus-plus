@@ -18,14 +18,18 @@ namespace py = pybind11;
 
 
 namespace thts {
-    ToyTreeEnv::ToyTreeEnv(int reward_dim, int num_xtra_actions, float axis_reward_ratio) : 
+    ToyTreeEnv::ToyTreeEnv(
+        int reward_dim, int num_xtra_actions, double axis_reward_ratio, double random_action_prob) : 
         MoThtsEnv(reward_dim, true),
         total_actions(reward_dim + num_xtra_actions),
         num_xtra_actions(num_xtra_actions),
         reward_scale(axis_reward_ratio),
         horizon(reward_dim * (reward_dim - 1) / 2),
+        random_action_prob(random_action_prob),
         xtra_action_rewards(),
-        xtra_reward_dims()
+        xtra_reward_dims(),
+        rand_action_rng_mutex(),
+        rand_action_rng(std::random_device{}())
     {
         for (int i=0; i<reward_dim; i++) 
         {
@@ -37,7 +41,7 @@ namespace thts {
 
         for (int i=0; i<num_xtra_actions; i++) 
         {
-            float angle = 0.5 * M_PI * i / num_xtra_actions;
+            double angle = 0.5 * M_PI * i / num_xtra_actions;
             xtra_action_rewards.push_back(make_pair(cos(angle),sin(angle)));
         }
     }
@@ -48,8 +52,11 @@ namespace thts {
         num_xtra_actions(other.num_xtra_actions),
         reward_scale(other.reward_scale),
         horizon(other.horizon),
+        random_action_prob(other.random_action_prob),
         xtra_action_rewards(other.xtra_action_rewards),
-        xtra_reward_dims(other.xtra_reward_dims)
+        xtra_reward_dims(other.xtra_reward_dims),
+        rand_action_rng_mutex(),
+        rand_action_rng(std::random_device{}())
     {
     }
 
@@ -108,8 +115,22 @@ namespace thts {
         Eigen::ArrayXd reward = Eigen::ArrayXd::Zero(reward_dim);
 
         int action_idx = action->action;
+
+        // With probability 'random_action_prob', replace the chosen action by a
+        // uniformly random action in [0, total_actions). This makes the env stochastic
+        // w.r.t. rewards while keeping the (deterministic) state-transition dynamics.
+        if (random_action_prob > 0.0f) {
+            std::lock_guard<std::mutex> lg(rand_action_rng_mutex);
+            std::uniform_real_distribution<double> unit(0.0f, 1.0f);
+            if (unit(rand_action_rng) < random_action_prob) {
+                std::uniform_int_distribution<int> act_distr(0, total_actions - 1);
+                action_idx = act_distr(rand_action_rng);
+            }
+        }
+
         if (action_idx < reward_dim) {
             reward[action_idx] = 1.0;
+            reward *= reward_scale;
         } else {
             int timestep = state->state;
             int xtra_action_idx = action_idx - reward_dim;
@@ -117,7 +138,8 @@ namespace thts {
             reward[xtra_reward_dims[timestep].second] = xtra_action_rewards[xtra_action_idx].second;
         }
 
-        reward *= reward_scale;
+        double horizon_scaling = 1.0 / double(horizon);
+        reward *= horizon_scaling;
         return reward;
     }
 }

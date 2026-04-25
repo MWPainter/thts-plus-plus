@@ -308,7 +308,7 @@ namespace thts {
      */
     ConvexHull CzBallList::get_approximate_convex_hull() const 
     {
-        int num_random_weights = 100;
+        int num_random_weights = 128;
         vector<Eigen::ArrayXd> random_weights = thts::helper::get_well_spaced_simplex_points(
             num_random_weights, _dim);
 
