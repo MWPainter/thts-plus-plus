@@ -40,38 +40,38 @@ static const std::vector<ConfigMap> CONFIG_500 =
         {XPR_PARAM_ID_SM_EVENTUALLY_CONFORMING_SIMPLEX_MAP,                 true},
         {XPR_PARAM_ID_SM_ALWAYS_ALLOW_NON_CONFORMING_SIMPLEX_TO_SPLIT,      true},
     },
-    // // czt params - 0.473101
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
-    //     {ALG_PARAM_ID_BIAS,                         1000},
-    //     {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  123},
-    // },
-    // // ch standard cheby params - 0.521883
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_STANDARD_CHEBY},
-    //     {ALG_PARAM_ID_BIAS,                 1000},
-    // },
-    // // ch hvuct params - 0.497854
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_HVUCT},
-    //     {ALG_PARAM_ID_BIAS,                 1000},
-    // },
-    // // ch pareto params - 0.51694
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_PARETO},
-    //     {ALG_PARAM_ID_BIAS,                 1000},
-    // },
-    // // ch uct params - 0.521787
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_UCT},
-    //     {ALG_PARAM_ID_BIAS,                 1000},
-    // },
-    // // ch czt params - 0.520503
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT},
-    //     {ALG_PARAM_ID_BIAS,                         994.5},
-    //     {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  125},
-    // },
+    // czt params - 0.473101
+    {
+        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
+        {ALG_PARAM_ID_BIAS,                         1000},
+        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  123},
+    },
+    // ch standard cheby params - 0.521883
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_STANDARD_CHEBY},
+        {ALG_PARAM_ID_BIAS,                 1000},
+    },
+    // ch hvuct params - 0.497854
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_HVUCT},
+        {ALG_PARAM_ID_BIAS,                 1000},
+    },
+    // ch pareto params - 0.51694
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_PARETO},
+        {ALG_PARAM_ID_BIAS,                 1000},
+    },
+    // ch uct params - 0.521787
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_UCT},
+        {ALG_PARAM_ID_BIAS,                 1000},
+    },
+    // ch czt params - 0.520503
+    {
+        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT},
+        {ALG_PARAM_ID_BIAS,                         994.5},
+        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  125},
+    },
     // ch bts params - 0.519451
     {
         {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_BTS},

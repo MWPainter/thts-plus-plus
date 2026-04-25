@@ -91,7 +91,7 @@ static const std::vector<ConfigMap> CONFIG_720 =
         {XPR_OR_ALG_ID_TAG,                     ALG_ID_SM_DENTS},
         {ALG_PARAM_ID_INIT_TEMP,                0.0111483},
         {ALG_PARAM_ID_TEMP_DECAY_RATE,          99.9197},
-        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.0182551},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.0132351},
         {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    2598.62},
         {ALG_PARAM_ID_EPSILON,                  0.474472},
     },
