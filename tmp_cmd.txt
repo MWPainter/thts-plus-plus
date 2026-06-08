@@ -296,3 +296,26 @@ TODO: tree envs, scalability in reward dim
 
 
 
+
+
+
+
+
+
+
+
+make && clear &&
+./run_memory_limited 8G ./moexpr opt 120
+
+
+< update eval configs >
+
+
+make && clear && 
+./run_memory_limited 8G ./moexpr eval 420 &&
+./run_memory_limited 8G ./moexpr eval 420a &&
+./run_memory_limited 8G ./moexpr eval 720 &&
+./run_memory_limited 8G ./moexpr eval 720a &&
+./run_memory_limited 8G ./moexpr eval 720b
+
+< hand tune and rerun if needed, remember getting good results on no stochastic + high stochastic, so re-using one of those should work if necessary >

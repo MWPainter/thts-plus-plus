@@ -42,18 +42,18 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_120 =
 
         {HPOPT_PARAM_ID_MIN_REPEATS,                    10},
         {HPOPT_PARAM_ID_ESTIMATE_CONFIDENCE_THRESHOLD,  0.025},
-        {HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES,         50}, // initially try 50 samples, do more if get bad results on some envs?
+        {HPOPT_PARAM_ID_BAYESOPT_TOTAL_SAMPLES,         100}, // initially try 50 samples, do more if get bad results on some envs?
         {HPOPT_PARAM_ID_BAYESOPT_INIT_RAND_SAMPLES,     10},
         {HPOPT_PARAM_ID_BAYESOPT_RELEARN_FREQ,          20},
         {HPOPT_PARAM_ID_BAYESOPT_USE_GPML,              0},
         {HPOPT_PARAM_ID_USE_HYPERVOLUME_AS_METRIC,      false},
     },
-    // // czt params
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
-    //     {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-5,  1.0e5)},
-    //     {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1.0,     1024.0)},
-    // },
+    // czt params
+    {
+        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CZT},
+        {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-5,  1.0e5)},
+        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1.0,     1024.0)},
+    },
     // ch standard cheby params
     {
         {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_STANDARD_CHEBY},
@@ -74,12 +74,12 @@ static const std::vector<HpoptConfigMap> HPOPT_CONFIG_120 =
         {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_UCT},
         {ALG_PARAM_ID_BIAS,                 std::make_pair(1.0e-5,   1.0e5)},
     },
-    // // ch czt params
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT},
-    //     {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-5,   1.0e5)},
-    //     {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1.0,     1024.0)},
-    // },
+    // ch czt params
+    {
+        {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT},
+        {ALG_PARAM_ID_BIAS,                         std::make_pair(1.0e-5,   1.0e5)},
+        {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  std::make_pair(1.0,     1024.0)},
+    },
     // ch bts params
     {
         {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_BTS},
