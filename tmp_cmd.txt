@@ -316,6 +316,36 @@ make && clear &&
 ./run_memory_limited 8G ./moexpr eval 420a &&
 ./run_memory_limited 8G ./moexpr eval 720 &&
 ./run_memory_limited 8G ./moexpr eval 720a &&
-./run_memory_limited 8G ./moexpr eval 720b
+./run_memory_limited 8G ./moexpr eval 720b &&
+python plot_mo.py 420 720
 
 < hand tune and rerun if needed, remember getting good results on no stochastic + high stochastic, so re-using one of those should work if necessary >
+
+
+
+
+
+python plot_mo.py 700 710 720 &&
+make && clear && 
+./run_memory_limited 16G ./moexpr eval 421 &&
+python plot_mo.py 421
+
+
+
+
+make && clear && 
+./run_memory_limited 16G ./moexpr eval 520 &&
+python plot_mo.py 520 &&
+./run_memory_limited 16G ./moexpr eval 550 &&
+python plot_mo.py 550 &&
+./run_memory_limited 16G ./moexpr eval 720 &&
+python plot_mo.py 720 &&
+./run_memory_limited 16G ./moexpr eval 500 &&
+python plot_mo.py 500 &&
+./run_memory_limited 16G ./moexpr eval 421 &&
+python plot_mo.py 421
+
+
+
+./run_memory_limited 16G ./moexpr eval 420 &&
+python plot_mo.py 420 &&

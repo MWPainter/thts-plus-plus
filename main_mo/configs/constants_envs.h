@@ -54,6 +54,8 @@ static const std::string ENV_ID_VAMPLEW_CLM_STOCH_DST_10 = "deep-sea-treasure-va
 static const std::string ENV_ID_VAMPLEW_DST_10_CPP = "deep-sea-treasure-vamplew-010-cpp";
 static const std::string ENV_ID_VAMPLEW_STOCH_DST_10_CPP = "deep-sea-treasure-vamplew-stoch-010-cpp";
 static const std::string ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP = "deep-sea-treasure-vamplew-clm-stoch-010-cpp";
+static const std::string ENV_ID_VAMPLEW_CLM_STOCH_DST_100_CPP = "deep-sea-treasure-vamplew-clm-stoch-100-cpp";
+
 // Variable sized Vamplew DST
 static const std::string ENV_ID_VAMPLEW_DST_VARIABLE = "deep-sea-treasure-vamplew-variable";
 static const std::string ENV_ID_VAMPLEW_STOCH_DST_VARIABLE = "deep-sea-treasure-vamplew-stoch-variable";
@@ -191,6 +193,7 @@ static const std::unordered_set<std::string> DST_ENVS =
     ENV_ID_VAMPLEW_DST_10_CPP,           // set used to load env, cpp port needs to be different
     ENV_ID_VAMPLEW_STOCH_DST_10_CPP,     // set used to load env, cpp port needs to be different
     ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP, // set used to load env, cpp port needs to be different
+    ENV_ID_VAMPLEW_CLM_STOCH_DST_100_CPP,
     
     ENV_ID_VAMPLEW_DST_VARIABLE,
     ENV_ID_VAMPLEW_STOCH_DST_VARIABLE,
@@ -281,6 +284,7 @@ static const std::unordered_set<std::string> CLM_STOCH_PY_DST_ENVS =
     ENV_ID_VAMPLEW_CLM_STOCH_DST_MO_GYM,
     ENV_ID_VAMPLEW_CLM_STOCH_DST_10,
     ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP,
+    ENV_ID_VAMPLEW_CLM_STOCH_DST_100_CPP,
 
     ENV_ID_VAMPLEW_CLM_STOCH_DST_VARIABLE,
     ENV_ID_VAMPLEW_CLM_STOCH_DST_VARIABLE_CPP,

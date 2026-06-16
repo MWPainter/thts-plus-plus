@@ -374,6 +374,7 @@ namespace thts {
             if (env_id == ENV_ID_VAMPLEW_DST_10_CPP 
                 || env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP
                 || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP
+                || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_100_CPP
                 || env_id == ENV_ID_VAMPLEW_DST_VARIABLE_CPP 
                 || env_id == ENV_ID_VAMPLEW_STOCH_DST_VARIABLE_CPP
                 || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_VARIABLE_CPP)
@@ -383,15 +384,23 @@ namespace thts {
                 {
                     swept_by_current_prob = 0.2;
                 }
-                else if (env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_VARIABLE_CPP)
+                else if (env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP 
+                        || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_100_CPP 
+                        || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_VARIABLE_CPP)
                 {
                     swept_by_current_prob = 0.025;
                 }
                 int max_timestep = this->get_max_trial_length();
                 int map_id = this->get_env_size();
-                if (env_id == ENV_ID_VAMPLEW_DST_10_CPP || env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP)
+                if (env_id == ENV_ID_VAMPLEW_DST_10_CPP 
+                    || env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP 
+                    || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP)
                 {
                     map_id = 10;
+                }
+                if (env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_100_CPP)
+                {
+                    map_id = 100;
                 }
                 return make_shared<PortedDeepSeaTreasureThtsEnv>(map_id, swept_by_current_prob, max_timestep);
             }
@@ -693,6 +702,14 @@ namespace thts {
             return max_val;
         }
 
+        if (env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_100_CPP)
+        {
+            Eigen::ArrayXd max_val = Eigen::ArrayXd::Zero(2);
+            max_val[0] = 540.0; 
+            max_val[1] = 0.0;
+            return max_val;
+        }
+
         if (VARIABLE_SIZED_VAMPLEW_DST_ENVS.contains(env_id))
         {
             Eigen::ArrayXd max_val = Eigen::ArrayXd::Zero(2);
@@ -835,7 +852,8 @@ namespace thts {
             || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10
             || env_id == ENV_ID_VAMPLEW_DST_10_CPP
             || env_id == ENV_ID_VAMPLEW_STOCH_DST_10_CPP
-            || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP)
+            || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP
+            || env_id == ENV_ID_VAMPLEW_CLM_STOCH_DST_100_CPP)
         {
             double max_steps = get_max_trial_length();
             Eigen::ArrayXd r_min = Eigen::ArrayXd::Zero(2);

@@ -46,39 +46,39 @@ static const std::vector<ConfigMap> CONFIG_500 =
         {ALG_PARAM_ID_BIAS,                         1000},
         {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  123},
     },
-    // ch standard cheby params - 0.521883
-    {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_STANDARD_CHEBY},
-        {ALG_PARAM_ID_BIAS,                 1000},
-    },
-    // ch hvuct params - 0.497854
-    {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_HVUCT},
-        {ALG_PARAM_ID_BIAS,                 1000},
-    },
-    // ch pareto params - 0.51694
-    {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_PARETO},
-        {ALG_PARAM_ID_BIAS,                 1000},
-    },
-    // ch uct params - 0.521787
-    {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_UCT},
-        {ALG_PARAM_ID_BIAS,                 1000},
-    },
+    // // ch standard cheby params - 0.521883
+    // {
+    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_STANDARD_CHEBY},
+    //     {ALG_PARAM_ID_BIAS,                 1000},
+    // },
+    // // ch hvuct params - 0.497854
+    // {
+    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_HVUCT},
+    //     {ALG_PARAM_ID_BIAS,                 1000},
+    // },
+    // // ch pareto params - 0.51694
+    // {
+    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_PARETO},
+    //     {ALG_PARAM_ID_BIAS,                 1000},
+    // },
+    // // ch uct params - 0.521787
+    // {
+    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_UCT},
+    //     {ALG_PARAM_ID_BIAS,                 1000},
+    // },
     // ch czt params - 0.520503
     {
         {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT},
         {ALG_PARAM_ID_BIAS,                         994.5},
         {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  125},
     },
-    // ch bts params - 0.519451
-    {
-        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_BTS},
-        {ALG_PARAM_ID_INIT_TEMP,            100},
-        {ALG_PARAM_ID_TEMP_DECAY_RATE,      100},
-        {ALG_PARAM_ID_EPSILON,              1},
-    },
+    // // ch bts params - 0.519451
+    // {
+    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_BTS},
+    //     {ALG_PARAM_ID_INIT_TEMP,            100},
+    //     {ALG_PARAM_ID_TEMP_DECAY_RATE,      100},
+    //     {ALG_PARAM_ID_EPSILON,              1},
+    // },
     // // sm bts params - 0.503475
     // {
     //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_SM_BTS},

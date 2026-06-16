@@ -12,7 +12,7 @@ static const std::vector<ConfigMap> CONFIG_720b =
         {XPR_OR_ALG_ID_TAG,                             XPR_PARAMS_ID_TAG},
         {XPR_PARAM_ID_NAME,                             "720b_dst_stoch_clm_scaling"},
         {XPR_PARAM_ID_ENV,                              ENV_ID_VAMPLEW_CLM_STOCH_DST_VARIABLE_CPP},
-        {XPR_PARAM_ID_ENV_SIZE,                         std::vector<int>{10,15,20,25,30,35,40,45,50,55,60,65,70,75}},
+        {XPR_PARAM_ID_ENV_SIZE,                         std::vector<int>{10,15,20,25,30,35,40,45,50,55,60,65,70,75}}, // 80,85,90,95,100}},
         {XPR_PARAM_ID_MCTS_MODE,                        false},
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
         {XPR_PARAM_ID_VECTOR_VISIT_COUNTS,              false},

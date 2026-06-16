@@ -5,22 +5,22 @@
 #include "main_mo/configs/constants_algorithms.h"
 #include "main_mo/configs/constants_experiments.h"
 
-static const std::vector<ConfigMap> CONFIG_420 =
+static const std::vector<ConfigMap> CONFIG_421 =
 {
     // xpr params
     {
         {XPR_OR_ALG_ID_TAG,                             XPR_PARAMS_ID_TAG},
-        {XPR_PARAM_ID_NAME,                             "420_dst_stoch_clm"},
-        {XPR_PARAM_ID_ENV,                              ENV_ID_VAMPLEW_CLM_STOCH_DST_10_CPP},
+        {XPR_PARAM_ID_NAME,                             "421_dst_stoch_clm"},
+        {XPR_PARAM_ID_ENV,                              ENV_ID_VAMPLEW_CLM_STOCH_DST_100_CPP},
         {XPR_PARAM_ID_ENV_SIZE,                         NO_ENV_SIZE},
         {XPR_PARAM_ID_MCTS_MODE,                        false},
         {XPR_PARAM_ID_GRAPH_SEARCH,                     true},
         {XPR_PARAM_ID_VECTOR_VISIT_COUNTS,              false},
-        {XPR_PARAM_ID_MAX_TRIAL_LENGTH,                 26*2}, 
+        {XPR_PARAM_ID_MAX_TRIAL_LENGTH,                 270*2}, 
         {XPR_PARAM_ID_HEURISTIC_WEIGHT_GLOBAL,          0.0},
         {XPR_PARAM_ID_HEURISTIC_WEIGHT_LOCAL,           0.0},
         {XPR_PARAM_ID_RUNTIME_BOUNDED,                  true}, 
-        {XPR_PARAM_ID_TERMINATION_BOUND,                15.0}, 
+        {XPR_PARAM_ID_TERMINATION_BOUND,                60.0}, 
         {XPR_PARAM_ID_REPEATED_RUNS_PER_ALG,            10},
         {XPR_PARAM_ID_SEARCH_THREADS,                   16},
         {XPR_PARAM_ID_EVAL_DELTA,                       0.05}, 
@@ -84,27 +84,27 @@ static const std::vector<ConfigMap> CONFIG_420 =
         {ALG_PARAM_ID_BIAS,                         200.676},
         {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  222},
     },
-    // // ch bts params - 0.645296
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_BTS},
-    //     {ALG_PARAM_ID_INIT_TEMP,            0.000331455},
-    //     {ALG_PARAM_ID_TEMP_DECAY_RATE,      99.9826},
-    //     {ALG_PARAM_ID_EPSILON,              0.114253},
-    // },
-    // // sm bts params - 0.78617
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_SM_BTS},
-    //     {ALG_PARAM_ID_INIT_TEMP,            0.00186814},
-    //     {ALG_PARAM_ID_TEMP_DECAY_RATE,      99.9783},
-    //     {ALG_PARAM_ID_EPSILON,              0.137702},
-    // },
-    // // sm dents params - 0.788781
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                     ALG_ID_SM_DENTS},
-    //     {ALG_PARAM_ID_INIT_TEMP,                1.00182e-05},
-    //     {ALG_PARAM_ID_TEMP_DECAY_RATE,          0.0267174},
-    //     {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.425027},
-    //     {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    9407.49},
-    //     {ALG_PARAM_ID_EPSILON,                  0.189496},
-    // },
+    // ch bts params - 0.645296
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,            0.000331455},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,      99.9826},
+        {ALG_PARAM_ID_EPSILON,              0.114253},
+    },
+    // sm bts params - 0.78617
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_SM_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,            0.00186814},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,      99.9783},
+        {ALG_PARAM_ID_EPSILON,              0.137702},
+    },
+    // sm dents params - 0.788781
+    {
+        {XPR_OR_ALG_ID_TAG,                     ALG_ID_SM_DENTS},
+        {ALG_PARAM_ID_INIT_TEMP,                1.00182e-05},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,          0.0267174},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.425027},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    9407.49},
+        {ALG_PARAM_ID_EPSILON,                  0.189496},
+    },
 };

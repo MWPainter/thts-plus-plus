@@ -49,6 +49,7 @@
 #include "main_mo/configs/xpr_config_411_debug.h"
 #include "main_mo/configs/xpr_config_420_dst_stoch_clm.h"
 #include "main_mo/configs/xpr_config_420a_dst_stoch_clm.h"
+#include "main_mo/configs/xpr_config_421_dst_stoch_clm.h"
 
 #include "main_mo/configs/xpr_config_440_dst_improved.h"
 #include "main_mo/configs/xpr_config_450_dst_improved_stoch.h"
@@ -131,6 +132,7 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     CONFIG_411,
     CONFIG_420,
     CONFIG_420a,
+    CONFIG_421,
     
     CONFIG_440,
     CONFIG_450,

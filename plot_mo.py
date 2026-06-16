@@ -1058,7 +1058,7 @@ def make_many_scalability_plots(filenames, fname_base, filter_algs=None, chvi_re
         # legend_loc="lower left",
         font_scale=1.7,
         title="EUM vs Search Time",
-        x_axis_lab="Search Time",
+        x_axis_lab="Environment Size",
         y_axis_lab="EUM",
         use_legend=add_legends[0],
     )
@@ -1092,7 +1092,7 @@ def make_many_scalability_plots(filenames, fname_base, filter_algs=None, chvi_re
         legend_loc="upper right",
         font_scale=1.7,
         title="Normalised Hypervolume vs Search Time",
-        x_axis_lab="Search Time",
+        x_axis_lab="Environment Size",
         y_axis_lab="Normalised Hypervolume",
         use_legend=add_legends[1],
     )
@@ -1113,7 +1113,7 @@ def make_many_scalability_plots(filenames, fname_base, filter_algs=None, chvi_re
         legend_loc="upper left",
         font_scale=1.7,
         title="#Backups vs Search Time",
-        x_axis_lab="Search Time",
+        x_axis_lab="Environment Size",
         y_axis_lab="#Backups",
         use_legend=add_legends[2],
     )
@@ -1128,7 +1128,7 @@ def make_many_scalability_plots(filenames, fname_base, filter_algs=None, chvi_re
         legend_loc="upper left",
         font_scale=1.7,
         title="#Trials vs Search Time",
-        x_axis_lab="Search Time",
+        x_axis_lab="Environment Size",
         y_axis_lab="#Trials",
         use_legend=add_legends[3],
     )
@@ -1240,6 +1240,24 @@ if __name__ == "__main__":
             chvi_reversed_filenames=chvi_reversed_filenames,
             add_legends=[False, False, True, True])
 
+    if "421" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
+        print("Plotting: ", "421")
+        filenames = glob.glob("mo_eval_logs/421_*/**/eval_log.txt", recursive=True)
+        fname_base = "dst/421_dst_calm_stoch_ch5"
+        make_many_eval_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH5, 
+            chvi_reversed_filenames=chvi_reversed_filenames,
+            add_legends=[False, False, True, True])
+        fname_base = "dst/421_dst_calm_stoch_ch6"
+        make_many_eval_plots(
+            filenames, 
+            fname_base, 
+            filter_algs=FILTER_ALGS_CH6, 
+            chvi_reversed_filenames=chvi_reversed_filenames,
+            add_legends=[False, False, True, True])
+
     # if "440" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
     #     print("Plotting: ", "440")
     #     filenames = glob.glob("mo_eval_logs/440_*/**/eval_log.txt", recursive=True)
@@ -1311,6 +1329,7 @@ if __name__ == "__main__":
     if "720" in sys.argv or "all" in sys.argv or "dst" in sys.argv:
         print("Plotting: ", "720")
         filenames = glob.glob("mo_eval_logs/720_*/**/eval_log.txt", recursive=True)
+        filenames += glob.glob("mo_eval_logs/720b_*/**/eval_log.txt", recursive=True)
         chvi_reversed_filenames = glob.glob("mo_eval_logs/720a_*/**/eval_log.txt", recursive=True)
         fname_base = "dst_scale/720_dst_scaling_stoch_calm_ch5"
         make_many_scalability_plots(
