@@ -155,7 +155,8 @@ namespace thts {
             /**
              * Returns and instance of MoThtsManager to use for this run
             */
-            void _add_thts_manager_params_to_args(MoThtsManagerArgs& manager_args, std::shared_ptr<MoThtsEnv> env);
+            void _add_thts_manager_params_to_args(
+                MoThtsManagerArgs& manager_args, std::shared_ptr<MoThtsEnv> env, bool use_zero_heuristic=false);
             double get_default_q_utility_helper();
             std::shared_ptr<MoThtsManager> get_thts_manager(std::shared_ptr<MoThtsEnv> env);
 

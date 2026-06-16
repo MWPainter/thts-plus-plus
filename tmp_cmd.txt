@@ -334,10 +334,12 @@ python plot_mo.py 421
 
 
 make && clear && 
-./run_memory_limited 16G ./moexpr eval 520 &&
-python plot_mo.py 520 &&
 ./run_memory_limited 16G ./moexpr eval 550 &&
 python plot_mo.py 550 &&
+./run_memory_limited 16G ./moexpr eval 520 &&
+python plot_mo.py 520 &&
+./run_memory_limited 16G ./moexpr eval 420 &&
+python plot_mo.py 420 &&
 ./run_memory_limited 16G ./moexpr eval 720 &&
 python plot_mo.py 720 &&
 ./run_memory_limited 16G ./moexpr eval 500 &&
@@ -346,6 +348,3 @@ python plot_mo.py 500 &&
 python plot_mo.py 421
 
 
-
-./run_memory_limited 16G ./moexpr eval 420 &&
-python plot_mo.py 420 &&

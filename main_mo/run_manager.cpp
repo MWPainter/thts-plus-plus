@@ -957,7 +957,7 @@ namespace thts {
     /**
      * Helper to add params to a manager args object for MoThtsManager level params
      */
-    void RunManager::_add_thts_manager_params_to_args(MoThtsManagerArgs& manager_args, shared_ptr<MoThtsEnv> env)
+    void RunManager::_add_thts_manager_params_to_args(MoThtsManagerArgs& manager_args, shared_ptr<MoThtsEnv> env, bool use_zero_heuristic)
     {
         manager_args.num_threads = get_num_search_threads();
         manager_args.num_envs = std::max(get_num_search_threads(), get_num_eval_threads());
@@ -972,8 +972,14 @@ namespace thts {
         }
         else
         {
-            // manager_args.mo_heuristic_fn = make_shared<MoZeroHeuristicFn>(manager_args.reward_dim);
-            manager_args.mo_heuristic_fn = make_shared<ConstMoHeuristicFn>(get_env_value_upper_bound());
+            if (use_zero_heuristic)
+            {
+                manager_args.mo_heuristic_fn = make_shared<MoZeroHeuristicFn>(manager_args.reward_dim);
+            }
+            else 
+            {
+                manager_args.mo_heuristic_fn = make_shared<ConstMoHeuristicFn>(get_env_value_upper_bound());
+            }
         }
         manager_args.heuristic_weight_global = get_heuristic_weight_global();
         manager_args.heuristic_weight_local = get_heuristic_weight_local();
@@ -1024,7 +1030,7 @@ namespace thts {
                 manager_args.use_doubling_N_term = true;
                 manager_args.min_log2_N = get_min_log2_N();
             }
-            _add_thts_manager_params_to_args(manager_args,env);
+            _add_thts_manager_params_to_args(manager_args,env,true);
             return make_shared<CztManager>(manager_args);
         }
 

@@ -30,7 +30,6 @@ namespace thts {
     void CzBall::update_avg_return(const Eigen::ArrayXd& trial_return) {
         lock_guard<mutex> lg(stats_lock);
         num_backups++;
-        avg_return_or_value *= (double) (num_backups - 1) / (double) num_backups;
         avg_return_or_value += (trial_return - avg_return_or_value) / (double) num_backups;
     }
 
