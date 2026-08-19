@@ -30,40 +30,40 @@
 // #include "main_mo/configs/xpr_config_031_debug.h"
 // #include "main_mo/configs/xpr_config_040_debug.h"
 // #include "main_mo/configs/xpr_config_041_debug.h"
-#include "main_mo/configs/xpr_config_050_debug.h"
-#include "main_mo/configs/xpr_config_051_debug.h"
-#include "main_mo/configs/xpr_config_052_debug.h"
-#include "main_mo/configs/xpr_config_053_debug.h"
-#include "main_mo/configs/xpr_config_060_debug.h"
-#include "main_mo/configs/xpr_config_061_debug.h"
-#include "main_mo/configs/xpr_config_062_debug.h"
-#include "main_mo/configs/xpr_config_070_debug.h"
-#include "main_mo/configs/xpr_config_071_debug.h"
-#include "main_mo/configs/xpr_config_072_debug.h"
+// #include "main_mo/configs/xpr_config_050_debug.h"
+// #include "main_mo/configs/xpr_config_051_debug.h"
+// #include "main_mo/configs/xpr_config_052_debug.h"
+// #include "main_mo/configs/xpr_config_053_debug.h"
+// #include "main_mo/configs/xpr_config_060_debug.h"
+// #include "main_mo/configs/xpr_config_061_debug.h"
+// #include "main_mo/configs/xpr_config_062_debug.h"
+// #include "main_mo/configs/xpr_config_070_debug.h"
+// #include "main_mo/configs/xpr_config_071_debug.h"
+// #include "main_mo/configs/xpr_config_072_debug.h"
 
 #include "main_mo/configs/xpr_config_400_dst.h"
 #include "main_mo/configs/xpr_config_400a_dst.h"
-#include "main_mo/configs/xpr_config_401_debug.h"
+// #include "main_mo/configs/xpr_config_401_debug.h"
 #include "main_mo/configs/xpr_config_410_dst_stoch.h"
 #include "main_mo/configs/xpr_config_410a_dst_stoch.h"
-#include "main_mo/configs/xpr_config_411_debug.h"
+// #include "main_mo/configs/xpr_config_411_debug.h"
 #include "main_mo/configs/xpr_config_420_dst_stoch_clm.h"
 #include "main_mo/configs/xpr_config_420a_dst_stoch_clm.h"
-#include "main_mo/configs/xpr_config_421_dst_stoch_clm.h"
+// #include "main_mo/configs/xpr_config_421_dst_stoch_clm.h"
 
-#include "main_mo/configs/xpr_config_440_dst_improved.h"
-#include "main_mo/configs/xpr_config_450_dst_improved_stoch.h"
-#include "main_mo/configs/xpr_config_460_dst_improved_stoch_clm.h"
+// #include "main_mo/configs/xpr_config_440_dst_improved.h"
+// #include "main_mo/configs/xpr_config_450_dst_improved_stoch.h"
+// #include "main_mo/configs/xpr_config_460_dst_improved_stoch_clm.h"
 
 #include "main_mo/configs/xpr_config_500_fruit_tree.h"
-#include "main_mo/configs/xpr_config_510_fruit_tree_stoch.h"
+// #include "main_mo/configs/xpr_config_510_fruit_tree_stoch.h"
 #include "main_mo/configs/xpr_config_520_resource_gather.h"
-#include "main_mo/configs/xpr_config_530_resource_gather_timed.h"
+// #include "main_mo/configs/xpr_config_530_resource_gather_timed.h"
 #include "main_mo/configs/xpr_config_540_breakable_bottles.h"
 #include "main_mo/configs/xpr_config_550_four_room.h"
-#include "main_mo/configs/xpr_config_560_four_room_timed.h"
-#include "main_mo/configs/xpr_config_580_resource_gather_cpp.h"
-#include "main_mo/configs/xpr_config_590_resource_gather_timed_cpp.h"
+// #include "main_mo/configs/xpr_config_560_four_room_timed.h"
+// #include "main_mo/configs/xpr_config_580_resource_gather_cpp.h"
+// #include "main_mo/configs/xpr_config_590_resource_gather_timed_cpp.h"
 
 #include "main_mo/configs/xpr_config_700_dst.h"
 #include "main_mo/configs/xpr_config_700a_dst.h"
@@ -75,14 +75,14 @@
 #include "main_mo/configs/xpr_config_720a_dst_stoch_clm.h"
 #include "main_mo/configs/xpr_config_720b_dst_stoch_clm.h"
 
-#include "main_mo/configs/xpr_config_800_dim_scaling.h"
-#include "main_mo/configs/xpr_config_801_dim_scaling.h"
-#include "main_mo/configs/xpr_config_802_dim_scaling.h"
-#include "main_mo/configs/xpr_config_810_dim_scaling.h"
-#include "main_mo/configs/xpr_config_811_dim_scaling.h"
-#include "main_mo/configs/xpr_config_812_dim_scaling.h"
-#include "main_mo/configs/xpr_config_821_dim_scaling.h"
-#include "main_mo/configs/xpr_config_822_dim_scaling.h"
+// #include "main_mo/configs/xpr_config_800_dim_scaling.h"
+// #include "main_mo/configs/xpr_config_801_dim_scaling.h"
+// #include "main_mo/configs/xpr_config_802_dim_scaling.h"
+// #include "main_mo/configs/xpr_config_810_dim_scaling.h"
+// #include "main_mo/configs/xpr_config_811_dim_scaling.h"
+// #include "main_mo/configs/xpr_config_812_dim_scaling.h"
+// #include "main_mo/configs/xpr_config_821_dim_scaling.h"
+// #include "main_mo/configs/xpr_config_822_dim_scaling.h"
 
 // ---------------------------------------------------------------------------------------------------------------------
 // List of all configs
@@ -113,40 +113,40 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     // CONFIG_031,
     // CONFIG_040,
     // CONFIG_041,
-    CONFIG_050,
-    CONFIG_051,
-    CONFIG_052,
-    CONFIG_053,
-    CONFIG_060,
-    CONFIG_061,
-    CONFIG_062,
-    CONFIG_070,
-    CONFIG_071,
-    CONFIG_072,
+    // CONFIG_050,
+    // CONFIG_051,
+    // CONFIG_052,
+    // CONFIG_053,
+    // CONFIG_060,
+    // CONFIG_061,
+    // CONFIG_062,
+    // CONFIG_070,
+    // CONFIG_071,
+    // CONFIG_072,
 
     CONFIG_400,
     CONFIG_400a,
-    CONFIG_401,
+    // CONFIG_401,
     CONFIG_410,
     CONFIG_410a,
-    CONFIG_411,
+    // CONFIG_411,
     CONFIG_420,
     CONFIG_420a,
-    CONFIG_421,
+    // CONFIG_421,
     
-    CONFIG_440,
-    CONFIG_450,
-    CONFIG_460,
+    // CONFIG_440,
+    // CONFIG_450,
+    // CONFIG_460,
 
     CONFIG_500,
-    CONFIG_510,
+    // CONFIG_510,
     CONFIG_520,
-    CONFIG_530,
+    // CONFIG_530,
     CONFIG_540,
     CONFIG_550,
-    CONFIG_560,
-    CONFIG_580,
-    CONFIG_590,
+    // CONFIG_560,
+    // CONFIG_580,
+    // CONFIG_590,
     
     CONFIG_700,
     CONFIG_700a,
@@ -158,12 +158,12 @@ static const std::vector<std::vector<ConfigMap>> ALL_CONFIGS =
     CONFIG_720a,
     CONFIG_720b,
 
-    CONFIG_800,
-    CONFIG_801,
-    CONFIG_802,
-    CONFIG_810,
-    CONFIG_811,
-    CONFIG_812,
-    CONFIG_821,
-    CONFIG_822,
+    // CONFIG_800,
+    // CONFIG_801,
+    // CONFIG_802,
+    // CONFIG_810,
+    // CONFIG_811,
+    // CONFIG_812,
+    // CONFIG_821,
+    // CONFIG_822,
 };

@@ -46,53 +46,53 @@ static const std::vector<ConfigMap> CONFIG_720 =
         {ALG_PARAM_ID_BIAS,                         1.64006},
         {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  15},
     },
-    // // ch standard cheby params - 0.633909
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_STANDARD_CHEBY},
-    //     {ALG_PARAM_ID_BIAS,                 1580.53},
-    // },
-    // // ch hvuct params - 0.626447
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_HVUCT},
-    //     {ALG_PARAM_ID_BIAS,                 5.4156},
-    // },
-    // // ch pareto params - 0.654793
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_PARETO},
-    //     {ALG_PARAM_ID_BIAS,                 20.15138},
-    // },
-    // // ch uct params - 0.68596
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_UCT},
-    //     {ALG_PARAM_ID_BIAS,                 4.20985},
-    // },
+    // ch standard cheby params - 0.633909
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_STANDARD_CHEBY},
+        {ALG_PARAM_ID_BIAS,                 1580.53},
+    },
+    // ch hvuct params - 0.626447
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_HVUCT},
+        {ALG_PARAM_ID_BIAS,                 5.4156},
+    },
+    // ch pareto params - 0.654793
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_PARETO},
+        {ALG_PARAM_ID_BIAS,                 20.15138},
+    },
+    // ch uct params - 0.68596
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_UCT},
+        {ALG_PARAM_ID_BIAS,                 4.20985},
+    },
     // ch czt params - 0.624028
     {
         {XPR_OR_ALG_ID_TAG,                         ALG_ID_CH_CZT},
         {ALG_PARAM_ID_BIAS,                         200.676},
         {ALG_PARAM_ID_CZT_BALL_SPLIT_VISIT_THRESH,  222},
     },
-    // // ch bts params - 0.645296
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_BTS},
-    //     {ALG_PARAM_ID_INIT_TEMP,            0.000331455},
-    //     {ALG_PARAM_ID_TEMP_DECAY_RATE,      99.9826},
-    //     {ALG_PARAM_ID_EPSILON,              0.114253},
-    // },
-    // // sm bts params - 0.78617
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                 ALG_ID_SM_BTS},
-    //     {ALG_PARAM_ID_INIT_TEMP,            0.00186814},
-    //     {ALG_PARAM_ID_TEMP_DECAY_RATE,      99.9783},
-    //     {ALG_PARAM_ID_EPSILON,              0.137702},
-    // },
-    // // sm dents params - 0.788781
-    // {
-    //     {XPR_OR_ALG_ID_TAG,                     ALG_ID_SM_DENTS},
-    //     {ALG_PARAM_ID_INIT_TEMP,                1.00182e-05},
-    //     {ALG_PARAM_ID_TEMP_DECAY_RATE,          0.0267174},
-    //     {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.425027},
-    //     {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    9407.49},
-    //     {ALG_PARAM_ID_EPSILON,                  0.189496},
-    // },
+    // ch bts params - 0.645296
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_CH_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,            0.000331455},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,      99.9826},
+        {ALG_PARAM_ID_EPSILON,              0.114253},
+    },
+    // sm bts params - 0.78617
+    {
+        {XPR_OR_ALG_ID_TAG,                 ALG_ID_SM_BTS},
+        {ALG_PARAM_ID_INIT_TEMP,            0.00186814},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,      99.9783},
+        {ALG_PARAM_ID_EPSILON,              0.137702},
+    },
+    // sm dents params - 0.788781
+    {
+        {XPR_OR_ALG_ID_TAG,                     ALG_ID_SM_DENTS},
+        {ALG_PARAM_ID_INIT_TEMP,                1.00182e-05},
+        {ALG_PARAM_ID_TEMP_DECAY_RATE,          0.0267174},
+        {ALG_PARAM_ID_INIT_ENTROPY_COEFF,       0.425027},
+        {ALG_PARAM_ID_ENTROPY_COEFF_ZERO_AT,    9407.49},
+        {ALG_PARAM_ID_EPSILON,                  0.189496},
+    },
 };

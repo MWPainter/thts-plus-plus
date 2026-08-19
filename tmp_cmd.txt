@@ -348,3 +348,40 @@ python plot_mo.py 500 &&
 python plot_mo.py 421
 
 
+
+
+
+
+
+
+
+
+
+
+
+--------
+FINAL RUNS AFTER everything
+--------
+
+
+make clean && make &&
+./run_memory_limited 16G ./moexpr eval 400 &&
+./run_memory_limited 16G ./moexpr eval 400a &&
+./run_memory_limited 16G ./moexpr eval 410 &&
+./run_memory_limited 16G ./moexpr eval 410a &&
+./run_memory_limited 16G ./moexpr eval 420 &&
+./run_memory_limited 16G ./moexpr eval 420a &&
+./run_memory_limited 16G ./moexpr eval 500 &&
+./run_memory_limited 16G ./moexpr eval 520 &&
+./run_memory_limited 16G ./moexpr eval 540 &&
+./run_memory_limited 16G ./moexpr eval 550 &&
+./run_memory_limited 16G ./moexpr eval 700 &&
+./run_memory_limited 16G ./moexpr eval 700a &&
+./run_memory_limited 16G ./moexpr eval 700b &&
+./run_memory_limited 16G ./moexpr eval 710 &&
+./run_memory_limited 16G ./moexpr eval 710a &&
+./run_memory_limited 16G ./moexpr eval 710b &&
+./run_memory_limited 16G ./moexpr eval 720 &&
+./run_memory_limited 16G ./moexpr eval 720a &&
+./run_memory_limited 16G ./moexpr eval 720b &&
+python plot_mo.py 400 410 420 500 520 540 550 700 710 720
